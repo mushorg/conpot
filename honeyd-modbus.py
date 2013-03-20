@@ -14,9 +14,9 @@
 # failure to use of improper use of this tool.
 
 import struct
-import sys
 import time
 
+from gevent.server import StreamServer
 
 
 class ModbusServer(object):
@@ -45,17 +45,24 @@ class ModbusServer(object):
 
     logFile = "conpot.log"
 
-    def getModbus(self):
-        data=sys.stdin.read()
-        self.writeLog("here1")
-        self.processData(data)
+    def getModbus(self, socket, address):
+        print ('New connection from %s:%s' % address)
+        self.fileobj = socket.makefile()
+        while True:
+            line = self.fileobj.readline()
+            if not line:
+                print ("client disconnected")
+                break
+            if line.strip().lower() == 'quit':
+                print ("client quit")
+                break
+            self.processData(line)
         
     def processData(self, data):
 
         datalen = data.__len__()
         self.dataLen = hex(datalen)
         headers1 = struct.unpack(datalen*'b',data)
-
 
         datalen -= 8 # Removing the 'hhhb' part
         
@@ -102,26 +109,21 @@ class ModbusServer(object):
             # This is specific for funcID 1
             headers = struct.unpack('!hhhbbhh' + (templen-12) * 'b', data)
 
-           
             self.refNum = headers[5]
             self.bitCount = headers[6]
 
             Data = (self.bitCount/8)*'\x00'
             byteCount = self.bitCount/8
 
-
             temphdr = struct.pack('BBB',self.unitID, self.funcCode, byteCount)
             packetLen = temphdr.__len__() + byteCount
-
 
             #Packet length screwed up
             rcr = struct.pack('hhhBBhh',self.transID, self.protoID, packetLen,
                               self.unitID,self.funcCode,self.refNum,byteCount)
 
-                        
-            sys.stdout.write(rcr+Data)
-            sys.stdout.flush()
-            
+            self.fileobj.write(rcr+Data)
+            self.fileobj.flush()
 
         elif code == 3:
             # Read multiple registers response
@@ -139,8 +141,7 @@ class ModbusServer(object):
             # Diagnostics
             #print "Diagnostics"
             dg = self.modbusTCPhdr + self.modbusHdr + self.Data
-            
-            
+
         elif code == 16:
             # # Write multiple registers response, it is the same as the
             # query packet with out the data, so we need to take the
@@ -155,7 +156,6 @@ class ModbusServer(object):
             # This is specific for funcID 16
             headers = struct.unpack('!hhhbbhh'+(templen-12)*'b',data)
 
-            
             self.refNum = headers[5]
             self.wordCount = headers[6]
 
@@ -168,12 +168,10 @@ class ModbusServer(object):
             temphdr = struct.pack('bbhh',self.unitID, self.funcCode,self.refNum, self.wordCount)
             packetLen = temphdr.__len__()
 
-
             wmr = struct.pack('hhhbbhh',self.transID, self.protoID, packetLen, self.unitID,self.funcCode,self.refNum,self.wordCount)
 
-                        
-            sys.stdout.write(wmr)
-            sys.stdout.flush()
+            self.fileobj.write(wmr)
+            self.fileobj.flush()
 
         else:
 
@@ -200,17 +198,15 @@ class ModbusServer(object):
 
             funcException = struct.pack('hhhBBB',self.transID, self.protoID, packetLen, self.unitID,self.funcCode,illegalFunc)
             
-            sys.stdout.write(funcException)
-            sys.stdout.flush()
+            self.fileobj.write(funcException)
+            self.fileobj.flush()
 
     def writeLog(self,string):    
-        fileobject = open(self.logFile, 'a')
-        fileobject.write("Scadahoneynet, Modbus simulation Log" + ":" + \
-                         (time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()) + ":" + string + "\n"))
-        fileobject.close()
+        with open(self.logFile, 'a')as log_file:
+            log_file.write("Scadahoneynet, Modbus simulation Log" + ":" +
+                          (time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()) + ":" + string + "\n"))
 
 
-    def main(self):
-        self.getModbus()
-
-ModbusServer().main()
+if __name__ == "__main__":
+    modbus_server = ModbusServer()
+    server = StreamServer(('0.0.0.0', 502), modbus_server.getModbus)
