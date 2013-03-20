@@ -1,13 +1,5 @@
-#! /opt/local/bin/python2.1
-
-import cgi,smtplib,sys,re
-
-# Mail information, to get mail whenever the page is accessed.
-mailer="email.blah.com"
-fromuser = "Scada-Honeynet@blah.com"
-touser = "blah@blah.com"
-
-
+import sys
+import re
 
 GetHttpHeader = "HTTP/1.1 200 OK\n Date: Thu, 14 Jul 2005 11:26:45 GMT\n Server: Apache/1.3.33 (Debian GNU/Linux)\n Last-Modified: Thu, 02 Dec 2004 17:41:30 GMT\n ETag: ""b6e5-148a-41af53ca""\n Accept-Ranges: bytes\n Content-Length: 5258\n Content-Type: text/html; charset=iso-8859-1\n\n <!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.01 Transitional//EN"">\n"
 
@@ -79,7 +71,7 @@ GetSlashResponse2= "HTTP/1.1 200 OK\n Date: Thu, 14 Jul 2005 11:26:45 GMT\n Serv
 
 data=sys.stdin.readline()
 
-if(re.compile('Diag', re.IGNORECASE).search(data)):
+if re.compile('Diag', re.IGNORECASE).search(data):
     print DiagnosticPage
 elif(re.compile('Prot', re.IGNORECASE).search(data)):
     print ProtocolPage
@@ -87,8 +79,3 @@ elif(re.compile('Stat', re.IGNORECASE).search(data)):
     print StatPage
 else:
     print MainPage
-
-# Uncoment if you want to get mail.
-#mailing = smtplib.SMTP(mailer)
-#mailing.sendmail(fromuser,touser,"page accessed")
-#mailing.quit()

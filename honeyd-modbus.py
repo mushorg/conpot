@@ -1,3 +1,5 @@
+# Version 0.1, Venkat Pothamsetty, vpothams@cisco.com
+
 # This  program is free software; you may redistribute and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; Version 2.
@@ -10,41 +12,38 @@
 # The authors or our employer, will not be liable for any direct,
 # indirect, special or consequential damages from the use of or
 # failure to use of improper use of this tool.
-# (Version 0.1, Venkat Pothamsetty, vpothams@cisco.com)
 
-
-#! /usr/bin/python2
-
-import string, socket, struct, thread, os,sys
-from struct import *
-from time import *
+import struct
+import sys
+import time
 
 
 
-class modbusSrvr:
-    
+class ModbusServer(object):
     # Default class values, will fillup when we receive the packet,
     # This class variable method may not work if threaded.
-    transID = '\x00\x00'
-    protoID = '\x00\x00'
-    
-    # We need to fill this length while sending the packet
-    modbusLen = '\x00'
-    
-    unitID = '\x00'
-    funcCode = '\x00'
-    refNum = '\x00\x00'
-    wordCount = '\x00\x00'
-    bitCount = '\x00\x00'
-    
-    # Data, the length will be different too
-    Data = '\x00\x00'
-    dataLen = '\x00'
 
-    modbusTCPHdr = transID+protoID
-    modbusHdr=unitID+funcCode
+    def __init__(self):
+        self.transID = '\x00\x00'
+        self.protoID = '\x00\x00'
+    
+        # We need to fill this length while sending the packet
+        self.modbusLen = '\x00'
 
-    logFile = "/var/log/scadahoneynet.log"
+        self.unitID = '\x00'
+        self.funcCode = '\x00'
+        self.refNum = '\x00\x00'
+        self.wordCount = '\x00\x00'
+        self.bitCount = '\x00\x00'
+
+        # Data, the length will be different too
+        self.Data = '\x00\x00'
+        self.dataLen = '\x00'
+
+        self.modbusTCPHdr = self.transID + self.protoID
+        self.modbusHdr= self.unitID + self.funcCode
+
+    logFile = "conpot.log"
 
     def getModbus(self):
         data=sys.stdin.read()
@@ -58,11 +57,11 @@ class modbusSrvr:
         headers1 = struct.unpack(datalen*'b',data)
 
 
-        datalen = datalen - 8 # Removing the 'hhhb' part 
+        datalen -= 8 # Removing the 'hhhb' part
         
         # It always has transID(2 bytes), protoID(2bytes), len(2bytes)
         # unitID(1 byte) and funcID (1byte)
-        headers = struct.unpack('hhhbb'+datalen*'b',data)
+        headers = struct.unpack('hhhbb' + datalen * 'b', data)
         #print headers
         
         # Build your datastructure
@@ -73,7 +72,7 @@ class modbusSrvr:
         self.unitID = headers[3]
         self.funcCode = headers[4]
 
-        self.writeLog("Got functionCode:%d\n" %(self.funcCode))
+        self.writeLog("Got functionCode:%d\n" % self.funcCode)
         
         self.sendResponse(data,self.funcCode)
             
@@ -93,7 +92,7 @@ class modbusSrvr:
         # read_fifo_queue(24),program_ConCept(40),firmware_replace(25),
         # program_584_984_2(126), report_local_addr_mb(127)
         
-        if(code == 1):
+        if code == 1:
             # Read coils response
             # The query has a refnum and a bitcount (say 16) the
             # response has a bytecount (of therefore 8) and the
@@ -101,7 +100,7 @@ class modbusSrvr:
             templen = int(self.dataLen,16)
             
             # This is specific for funcID 1
-            headers = struct.unpack('!hhhbbhh'+(templen-12)*'b',data)
+            headers = struct.unpack('!hhhbbhh' + (templen-12) * 'b', data)
 
            
             self.refNum = headers[5]
@@ -116,14 +115,15 @@ class modbusSrvr:
 
 
             #Packet length screwed up
-            rcr = struct.pack('hhhBBhh',self.transID, self.protoID, packetLen, self.unitID,self.funcCode,self.refNum,byteCount)
+            rcr = struct.pack('hhhBBhh',self.transID, self.protoID, packetLen,
+                              self.unitID,self.funcCode,self.refNum,byteCount)
 
                         
             sys.stdout.write(rcr+Data)
             sys.stdout.flush()
             
 
-        elif(code == 3):
+        elif code == 3:
             # Read multiple registers response
             # The query has a word count of 24. The answer came in with data
             # of 48 bytes with bytecount with data as all zeros. Some times
@@ -132,16 +132,16 @@ class modbusSrvr:
 
             self.writeLog("Multiple registers response")
             
-        elif(code == 4):
+        elif code == 4:
             self.writeLog("Sending read_input_regs response")
             
-        elif(code == 8):
+        elif code == 8:
             # Diagnostics
             #print "Diagnostics"
-            dg = modbusTCPhdr + modbusHdr + Data
+            dg = self.modbusTCPhdr + self.modbusHdr + self.Data
             
             
-        elif(code == 16):
+        elif code == 16:
             # # Write multiple registers response, it is the same as the
             # query packet with out the data, so we need to take the
             # query packet, strip the data and send it again.
@@ -180,7 +180,7 @@ class modbusSrvr:
             # Send unknown exception function code
             templen = int(self.dataLen,16)
             
-            templen=templen-8
+            templen -= 8
             
             # This is specific for modbusTCPHdr + ModbusHdr
             headers = struct.unpack('!hhhBB'+templen*'b',data)
@@ -192,7 +192,7 @@ class modbusSrvr:
                         
             illegalFunc = ord('\x01')
             
-            self.funcCode = self.funcCode + ord('\x80')
+            self.funcCode += ord('\x80')
 
             temphdr = struct.pack('BBB',self.unitID, self.funcCode, illegalFunc)
             packetLen = temphdr.__len__()
@@ -205,10 +205,12 @@ class modbusSrvr:
 
     def writeLog(self,string):    
         fileobject = open(self.logFile, 'a')
-        fileobject.write("Scadahoneynet, Modbus simulation Log" +":"+(strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime()) +":"+ string +"\n"))
+        fileobject.write("Scadahoneynet, Modbus simulation Log" + ":" + \
+                         (time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()) + ":" + string + "\n"))
         fileobject.close()
 
 
     def main(self):
         self.getModbus()
-modbusSrvr().main()
+
+ModbusServer().main()

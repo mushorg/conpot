@@ -1,5 +1,4 @@
-#! /usr/bin/python
-
+# (Version 0.1, Venkat Pothamsetty, vpothams@cisco.com)
 
 # This  program is free software; you may redistribute and/or
 # modify it under the terms of the GNU General Public License
@@ -13,10 +12,11 @@
 # The authors or our employer, will not be liable for any direct,
 # indirect, special or consequential damages from the use of or
 # failure to use of improper use of this tool.
-# (Version 0.1, Venkat Pothamsetty, vpothams@cisco.com)
 
-
-import socket,re,string,thread,time,sys,os
+import re
+import string
+import time
+import sys
 
 
 # The default response.
