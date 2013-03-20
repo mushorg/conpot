@@ -1,4 +1,4 @@
-conpot
+Conpot
 ======
 
-ICS honeypot
+Conpot is a ICS Honeypot test. code is based on http://scadahoneynet.sourceforge.net/
