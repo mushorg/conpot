@@ -20,25 +20,20 @@ import sys
 
 
 ListCommandResponse = "150 Opening BINARY mode data connection\ndrwx------  1 user          ftp\n"
-
 SystResponse = "215 UNIX Type: BlahWorks\r\n"
-
-HelpResponse = "214-The following commands are recognized (* =>'s unimplemented).\n USER    PORT    STOR    MSAM*   RNTO    NLST    MKD     CDUP\n PASS    PASV    APPE    MRSQ*   ABOR    SITE    XMKD    XCUP\n ACCT*   TYPE    MLFL*   MRCP*   DELE    SYST    RMD     STOU\n SMNT*   STRU    MAIL*   ALLO    CWD     STAT    XRMD    SIZE\n REIN*   MODE    MSND*   REST    XCWD    HELP    PWD     MDTM\n QUIT    RETR    MSOM*   RNFR    LIST    NOOP    XPWD\n"
-
-QuitRespnse = "221 Goodbye.\r"
-
-PermissionDenied="550 Permission denied\r\n"
-
+HelpResponse = """214-The following commands are recognized (* =>'s unimplemented).\n USER    PORT    STOR    MSAM*   RNTO    NLST    MKD     CDUP\n PASS    PASV    APPE    MRSQ*   ABOR    SITE    XMKD    XCUP\n ACCT*   TYPE    MLFL*   MRCP*   DELE    SYST    RMD     STOU\n SMNT*   STRU    MAIL*   ALLO    CWD     STAT    XRMD    SIZE\n REIN*   MODE    MSND*   REST    XCWD    HELP    PWD     MDTM\n QUIT    RETR    MSOM*   RNFR    LIST    NOOP    XPWD\n"""
+QuitResponse = "221 Goodbye.\r"
+PermissionDenied = "550 Permission denied\r\n"
 UnKnownResponse = "502 command not implemented.\r"
-
 CWD = "root"
+
 
 class HoneyFTPd:
 
-    logFile = "/var/log/scadahoneynet.log"
+    logFile = "scadahoneynet.log"
     def startFTP(self):
 
-        sys.stdout.write('220 FTP server (VxWorks version 2.6) ready.\r\n')
+        sys.stdout.write('220 FTP server (VxWorks version 5.3.2) ready.\r\n')
         sys.stdout.flush()
 
         while 1:
@@ -47,23 +42,22 @@ class HoneyFTPd:
 
     def implementCommands(self,data):
     # If the client sends USER command
-        if(re.compile('user', re.IGNORECASE).search(data)):
+        if re.compile('user', re.IGNORECASE).search(data):
 
             self.writeLog("Got a user command")
-            sys.stdout.write('331 Guest login ok, send your complete e-mail address as a password.\r\n') #Send Login OK, which means the client will ask the user for
+            sys.stdout.write('331 Guest login ok, send your complete e-mail address as a password.\r\n')  # Send Login OK, which means the client will ask the user for
             sys.stdout.flush()
             return
         
-        elif (re.compile('pass', re.IGNORECASE).search(data)):#Password
+        elif re.compile('pass', re.IGNORECASE).search(data):  # Password
 
             self.writeLog("Got the password")
             # The client will send the PASS command next
-            sys.stdout.write('230 User Logged in\r\n')# The command says the the username and password are OK
+            sys.stdout.write('230 User Logged in\r\n')  # The command says the the username and password are OK
             sys.stdout.flush()
             return
 
-        
-        elif (re.compile('help', re.IGNORECASE).search(data)):#Password
+        elif re.compile('help', re.IGNORECASE).search(data):  # Password
 
             self.writeLog("Got the help command")
             # The client will send the PASS command next
@@ -71,7 +65,7 @@ class HoneyFTPd:
             sys.stdout.flush()
             return
     
-        elif (re.compile('list', re.IGNORECASE).search(data)):#Password
+        elif re.compile('list', re.IGNORECASE).search(data):  # Password
 
             # Without the IP address knowledge, you cannot open up the
             # data port, which you can with the stand alone script.
@@ -79,41 +73,39 @@ class HoneyFTPd:
             sys.stdout.write("425 Cant build data connection: Connection Timeout\r\n")
             sys.stdout.flush()
             sys.exit()
-            
-            
             #conn.send('250 Changed directory \r\n')# The command says the the username and password are OK
             return
 
-
-        elif (re.compile('cwd', re.IGNORECASE).search(data)):#Password
+        elif re.compile('cwd', re.IGNORECASE).search(data):  # Password
             self.writeLog("Got a cwd command")
-            f=string.splitfields(data,' ')
+            f=string.splitfields(data, ' ')
             directory = f[1]
-            sys.stdout.write('250 Changed directory %s \r\n' %(directory))# The command says the the username and password are OK
+            sys.stdout.write('250 Changed directory %s \r\n' % directory)  # The command says the the username and password are OK
             sys.stdout.flush()
             return
 
-        elif (re.compile('port', re.IGNORECASE).search(data)):#Password
-            
-            #sys.stdout.write('200 Port set OK\r\n') #After this you need to connect back to the port and listen for a command.  Convert each of the last numbers to hex and combine the two hexnumbers, convert the combined hex number to decimal and you should get the port number.#m,n=(hex(int(f[4])),hex(int(f[5]))
+        elif re.compile('port', re.IGNORECASE).search(data):  # Password
+            # sys.stdout.write('200 Port set OK\r\n')
+            # After this you need to connect back to the port and listen for a command.
+            # Convert each of the last numbers to hex and combine the two hexnumbers, convert the combined hex number
+            # to decimal and you should get the port number.#m,n=(hex(int(f[4])),hex(int(f[5]))
             sys.stdout.write("425 Cant build data connection: Connection Timeout\r\n")
             sys.stdout.flush()
-            f=string.splitfields(data,',')
-            m,n=(hex(int(f[4])),hex(int(f[5])))
-            x,y = (string.splitfields(m,'x'),string.splitfields(n,'x'))
-            s='0x'+x[1]+y[1]
-            port = int(s,16)
+            f = string.splitfields(data, ',')
+            m, n = (hex(int(f[4])), hex(int(f[5])))
+            x, y = (string.splitfields(m, 'x'), string.splitfields(n, 'x'))
+            s = '0x' + x[1] + y[1]
+            port = int(s, 16)
             self.PORTport = port
             return
             
-        elif (re.compile('quit', re.IGNORECASE).search(data)):#QUIT
+        elif re.compile('quit', re.IGNORECASE).search(data):  # QUIT
             self.writeLog("Got a QUIT command")
             sys.stdout.write("")
             sys.stdout.flush(QuitResponse)
             return
 
-        
-        elif (re.compile('syst', re.IGNORECASE).search(data)):
+        elif re.compile('syst', re.IGNORECASE).search(data):
             self.writeLog("Got a syst command")
             sys.stdout.write(SystResponse)
             sys.stdout.flush()
@@ -128,9 +120,9 @@ class HoneyFTPd:
         
     def writeLog(self,string):    
         fileobject = open(self.logFile, 'a')
-        fileobject.write("Scadahoneynet, FTP Log" +":"+(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()) +":"+ string +"\n"))
+        fileobject.write("Scadahoneynet, FTP Log" + ":" + (time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()) +
+                                                           ":" + string + "\n"))
         fileobject.close()
-              
 
     def main(self):
         self.startFTP()
