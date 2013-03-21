@@ -1,16 +1,10 @@
 import struct
 
-import modbus_tk
 import modbus_tk.modbus_tcp as modbus_tcp
-import threading
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
-from modbus_tk.hooks import call_hooks
 
 from gevent.server import StreamServer
-
-
-logger = modbus_tk.utils.create_logger(name="console", record_format="%(message)s")
 
 
 class ModbusServer(modbus.Server):
@@ -21,8 +15,8 @@ class ModbusServer(modbus.Server):
         #creates a slave with id 0
         slave1 = self.add_slave(1)
         #add 2 blocks of holding registers
-        slave1.add_block("a", mdef.HOLDING_REGISTERS, 1, 100)#address 0, length 100
-        slave1.add_block("b", mdef.HOLDING_REGISTERS, 200, 20)#address 200, length 20
+        slave1.add_block("a", mdef.HOLDING_REGISTERS, 1, 100)  # address 0, length 100
+        slave1.add_block("b", mdef.HOLDING_REGISTERS, 200, 20)  # address 200, length 20
 
         #creates another slave with id 5
         slave5 = self.add_slave(5)
