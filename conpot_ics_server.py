@@ -1,4 +1,5 @@
 import struct
+import logging
 
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
@@ -6,6 +7,9 @@ from modbus_tk import modbus
 
 from gevent.server import StreamServer
 
+FORMAT = '%(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger('modbus_tk')
 
 class ModbusServer(modbus.Server):
 
@@ -27,24 +31,22 @@ class ModbusServer(modbus.Server):
         slave1.set_values("a", 1, range(100))
 
     def handle(self, socket, address):
-        print ('New connection from %s:%s' % address)
+        print 'New connection from %s:%s' % address
         self.fileobj = socket.makefile()
         while True:
             request = self.fileobj.read(7)
             if not request:
-                print ("client disconnected")
+                print "client disconnected"
                 break
             if request.strip().lower() == 'quit':
-                print ("client quit")
+                print "client quit"
                 break
             tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
             while len(request) < (length + 6):
                 new_byte = self.fileobj.read(1)
                 request += new_byte
-            print "got:", repr(request)
             query = modbus_tcp.TcpQuery()
             response = self._databank.handle_request(query, request)
-            print "send:", repr(response)
             if response:
                 self.fileobj.write(response)
                 self.fileobj.flush()
