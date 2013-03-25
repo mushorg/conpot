@@ -5,11 +5,14 @@ import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
 
+import slave_base
+
 from gevent.server import StreamServer
 
 FORMAT = '%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger('modbus_tk')
+
 
 class ModbusServer(modbus.Server):
 
@@ -53,6 +56,6 @@ class ModbusServer(modbus.Server):
 
 
 if __name__ == "__main__":
-    modbus_server = ModbusServer()
+    modbus_server = ModbusServer(databank=slave_base.SlaveBase())
     server = StreamServer(('localhost', 502), modbus_server.handle)
     server.serve_forever()
