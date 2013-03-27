@@ -6,12 +6,12 @@ class HPFriendsLogger(object):
 
     def __init__(self):
         try:
-            self.hpc = hpfeeds.new(config.hpfeeds_host, config.hpfeeds_port,
-                                   config.hpfeeds_ident, config.hpfeeds_secret)
+            self.hpc = hpfeeds.new(config.hpfriends_host, config.hpfriends_port,
+                                   config.hpfriends_ident, config.hpfriends_secret)
             self.hpc.connect()
         except Exception as e:
             raise
 
     def insert(self, data):
-        for chan in config.hpfeeds_channels:
+        for chan in config.hpfriends_channels:
             self.hpc.publish(chan, data)

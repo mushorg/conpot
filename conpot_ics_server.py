@@ -1,12 +1,15 @@
 import struct
 import logging
+from pprint import pprint
 
 from gevent.server import StreamServer
 
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
-from modules import slave_db
+from modules import slave_db, feeder
+
+import config
 
 
 FORMAT = '%(message)s'
@@ -17,6 +20,8 @@ logger = logging.getLogger('modbus_tk')
 class ModbusServer(modbus.Server):
 
     def __init__(self, databank=None):
+        if config.hpfriends_enabled:
+            self.friends_feeder = feeder.HPFriendsLogger()
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
         #creates a slave with id 0
@@ -51,10 +56,15 @@ class ModbusServer(modbus.Server):
             query = modbus_tcp.TcpQuery()
             response = self._databank.handle_request(query, request)
             if self._databank.slave:
-                print "slave", self._databank.slave,
-                print self._databank.slave.function_code,
-                print self._databank.slave_id,
-                print repr(self._databank.request_pdu)
+                data = {
+                    "remote": address,
+                    "slave_id": self._databank.slave_id,
+                    "function_code": self._databank.slave.function_code,
+                    "request_pdu": self._databank.request_pdu.encode("hex"),
+                }
+                pprint(data)
+                if config.hpfriends_enabled:
+                    self.friends_feeder.insert(data)
             if response:
                 self.fileobj.write(response)
                 self.fileobj.flush()
@@ -62,7 +72,7 @@ class ModbusServer(modbus.Server):
 
 if __name__ == "__main__":
     modbus_server = ModbusServer(databank=slave_db.SlaveBase())
-    connection = ('localhost', 502)
+    connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
     print "Serving on:", connection
     server.serve_forever()
