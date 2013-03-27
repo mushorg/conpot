@@ -34,4 +34,5 @@ nosetests.xml
 .project
 .pydevproject
 .idea
+config.py
 modbus_tk

@@ -1,0 +1,9 @@
+host = "127.0.0.1"
+port = 502
+
+hpfriends_enabled = False
+hpfriends_host = ""
+hpfriends_port = 20000
+hpfriends_ident = ""
+hpfriends_secret = ""
+hpfriends_channels = ""
