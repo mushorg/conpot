@@ -1,13 +1,13 @@
 import struct
 import logging
 
+from gevent.server import StreamServer
+
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
+from modules import slave_db
 
-import slave_base
-
-from gevent.server import StreamServer
 
 FORMAT = '%(message)s'
 logging.basicConfig(format=FORMAT)
@@ -16,7 +16,7 @@ logger = logging.getLogger('modbus_tk')
 
 class ModbusServer(modbus.Server):
 
-    def __init__(self, port=502, address='127.0.0.1', timeout_in_sec=1, databank=None):
+    def __init__(self, databank=None):
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
         #creates a slave with id 0
@@ -50,12 +50,19 @@ class ModbusServer(modbus.Server):
                 request += new_byte
             query = modbus_tcp.TcpQuery()
             response = self._databank.handle_request(query, request)
+            if self._databank.slave:
+                print "slave", self._databank.slave,
+                print self._databank.slave.function_code,
+                print self._databank.slave_id,
+                print repr(self._databank.request_pdu)
             if response:
                 self.fileobj.write(response)
                 self.fileobj.flush()
 
 
 if __name__ == "__main__":
-    modbus_server = ModbusServer(databank=slave_base.SlaveBase())
-    server = StreamServer(('localhost', 502), modbus_server.handle)
+    modbus_server = ModbusServer(databank=slave_db.SlaveBase())
+    connection = ('localhost', 502)
+    server = StreamServer(connection, modbus_server.handle)
+    print "Serving on:", connection
     server.serve_forever()

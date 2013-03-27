@@ -5,6 +5,7 @@ from modbus_tk import defines
 
 from modules.slave import MBSlave
 
+
 class SlaveBase(Databank):
     """
     Database keeping track of the slaves.
