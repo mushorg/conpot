@@ -1,8 +1,9 @@
 import struct
 
-from modbus_tk.modbus import Databank
+from modbus_tk.modbus import Databank, DuplicatedKeyError
 from modbus_tk import defines
 
+from modules.slave import MBSlave
 
 class SlaveBase(Databank):
     """
@@ -10,6 +11,18 @@ class SlaveBase(Databank):
     """
     def __init__(self):
         Databank.__init__(self)
+
+    def add_slave(self, slave_id):
+        """
+        Add a new slave with the given id
+        """
+        if (slave_id <= 0) or (slave_id > 255):
+            raise Exception("Invalid slave id %d" % slave_id)
+        if not slave_id in self._slaves:
+            self._slaves[slave_id] = MBSlave(slave_id)
+            return self._slaves[slave_id]
+        else:
+            raise DuplicatedKeyError("Slave %d already exists" % slave_id)
 
     def handle_request(self, query, request):
         """
