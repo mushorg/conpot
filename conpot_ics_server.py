@@ -1,5 +1,7 @@
 import struct
 import logging
+import json
+
 from pprint import pprint
 
 from gevent.server import StreamServer
@@ -64,7 +66,7 @@ class ModbusServer(modbus.Server):
                 }
                 pprint(data)
                 if config.hpfriends_enabled:
-                    self.friends_feeder.insert(data)
+                    self.friends_feeder.insert(json.dumps(data))
             if response:
                 self.fileobj.write(response)
                 self.fileobj.flush()

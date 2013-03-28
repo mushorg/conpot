@@ -6,4 +6,4 @@ hpfriends_host = ""
 hpfriends_port = 20000
 hpfriends_ident = ""
 hpfriends_secret = ""
-hpfriends_channels = ""
+hpfriends_channels = ["", ]
