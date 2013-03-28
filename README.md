@@ -10,11 +10,11 @@ Code is based on http://scadahoneynet.sourceforge.net/ and examples from https:/
 
 You need Python2.7 and pip:
 
-    [sudo] apt-get install python2.7 python-pip git
+    apt-get install python2.7 python-pip git unzip
 
 For the requiremenst covered by PyPi, run:
 
-    [sudo] pip install -r requirements.txt
+    pip install -r requirements.txt
 
 For hpfeeds:
 
@@ -26,7 +26,16 @@ For hpfeeds:
 And modbus_tk
 
     cd /opt
-    wget https://code.google.com/p/modbus-tk/downloads/detail?name=modbus-tk-0.4.2.zip
-    unzip modbus-tk-0.4.2.zip
-    cd modbus-tk-0.4.2
+    wget https://modbus-tk.googlecode.com/files/modbus-tk-0.4.2.zip
+    unzip modbus-tk-0.4.2.zip -d modbus_tk
+    cd modbus_tk
     python setup.py install
+
+And finally ConPot:
+
+    cd /opt
+    git clone git@github.com:glastopf/conpot.git
+    cd /opt/conpot
+    cp config.py.dist config.py
+
+Edit the config.py appropriately.
