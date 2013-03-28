@@ -9,7 +9,7 @@ from gevent.server import StreamServer
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
-from modules import slave_db, feeder
+from modules import slave_db, feeder, sqlite_log
 
 import config
 
@@ -22,6 +22,8 @@ logger = logging.getLogger('modbus_tk')
 class ModbusServer(modbus.Server):
 
     def __init__(self, databank=None):
+        if config.sqlite_enabled:
+            self.sqlite_logger = sqlite_log.SQLiteLogger()
         if config.hpfriends_enabled:
             self.friends_feeder = feeder.HPFriendsLogger()
         """Constructor: initializes the server settings"""
@@ -65,6 +67,8 @@ class ModbusServer(modbus.Server):
                     "request_pdu": self._databank.request_pdu.encode("hex"),
                 }
                 pprint(data)
+                if config.sqlite_enabled:
+                    self.sqlite_logger.insert_event(data)
                 if config.hpfriends_enabled:
                     self.friends_feeder.insert(json.dumps(data))
             if response:

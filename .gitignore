@@ -36,3 +36,4 @@ nosetests.xml
 .idea
 config.py
 modbus_tk
+conpot.db
