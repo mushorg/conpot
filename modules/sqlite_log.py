@@ -2,7 +2,9 @@ import sqlite3
 
 
 class SQLiteLogger(object):
-
+    """
+    TODO: Handle asynchronous inserts.
+    """
     def _create_db(self):
         cursor = self.conn.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS events
@@ -29,13 +31,3 @@ class SQLiteLogger(object):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM events")
         print cursor.fetchall()
-
-
-if __name__ == "__main__":
-    data = {'function_code': 1,
-            'remote': ('127.0.0.1', 1293),
-            'request_pdu': '010000000a',
-            'slave_id': 5}
-    sl = SQLiteLogger()
-    sl.insert_event(data)
-    sl.select_data()
