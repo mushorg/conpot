@@ -1,6 +1,7 @@
 import struct
 import logging
 import json
+import uuid
 
 from pprint import pprint
 
@@ -45,6 +46,7 @@ class ModbusServer(modbus.Server):
     def handle(self, socket, address):
         print 'New connection from %s:%s' % address
         self.fileobj = socket.makefile()
+        session_id = str(uuid.uuid4())
         while True:
             request = self.fileobj.read(7)
             if not request:
@@ -61,6 +63,7 @@ class ModbusServer(modbus.Server):
             response = self._databank.handle_request(query, request)
             if self._databank.slave:
                 data = {
+                    "session_id": session_id,
                     "remote": address,
                     "slave_id": self._databank.slave_id,
                     "function_code": self._databank.slave.function_code,
