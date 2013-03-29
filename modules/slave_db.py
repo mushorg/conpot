@@ -27,7 +27,8 @@ class SlaveBase(Databank):
 
     def handle_request(self, query, request):
         """
-        When a request is received, handle it and returns the response pdu
+        Handles a request. Return value is a tuple where element 0 is the response object and element 1 is a dictionary
+        of items to log.
         """
         request_pdu = None
         response_pdu = ""
@@ -36,29 +37,35 @@ class SlaveBase(Databank):
 
         try:
             #extract the pdu and the slave id
-            self.slave_id, self.request_pdu = query.parse_request(request)
-
             slave_id, request_pdu = query.parse_request(request)
             #get the slave and let him executes the action
             if slave_id == 0:
                 #broadcast
                 for key in self._slaves:
-                return
                     self._slaves[key].handle_request(request_pdu, broadcast=True)
+                    return
             else:
                 slave = self.get_slave(slave_id)
                 response_pdu = slave.handle_request(request_pdu)
                 #make the full response
                 response = query.build_response(response_pdu)
-                return response
-        except Exception as excpt:
         except IOError as excpt:
             print("handle request failed: " + str(excpt))
-        except:
-            print("handle request failed: unknown error")
+            func_code = 1
+            if len(request_pdu) > 0:
+                (func_code, ) = struct.unpack(">B", request_pdu[0])
+            #If the request was not handled correctly, return a server error response
+            response = struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
 
-        #If the request was not handled correctly, return a server error response
-        func_code = 1
-        if len(self.request_pdu) > 0:
-            (func_code, ) = struct.unpack(">B", self.request_pdu[0])
-        return struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
+        if slave:
+            function_code = slave.function_code
+
+        return (response, {'request_pdu': request_pdu.encode('hex'),
+                           'slave_id': slave_id,
+                           'function_code': function_code,
+                           'response_pdu': response_pdu.encode('hex')})
+#        except:
+#            print("handle request failed: unknown error")
+
+
+
