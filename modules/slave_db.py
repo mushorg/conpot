@@ -29,26 +29,30 @@ class SlaveBase(Databank):
         """
         When a request is received, handle it and returns the response pdu
         """
-        self.request_pdu = None
-        self.slave_id = None
-        self.slave = None
+        request_pdu = None
+        response_pdu = ""
+        slave_id = None
+        function_code = None
+
         try:
             #extract the pdu and the slave id
             self.slave_id, self.request_pdu = query.parse_request(request)
 
+            slave_id, request_pdu = query.parse_request(request)
             #get the slave and let him executes the action
-            if self.slave_id == 0:
+            if slave_id == 0:
                 #broadcast
                 for key in self._slaves:
-                    self._slaves[key].handle_request(self.request_pdu, broadcast=True)
                 return
+                    self._slaves[key].handle_request(request_pdu, broadcast=True)
             else:
-                self.slave = self.get_slave(self.slave_id)
-                response_pdu = self.slave.handle_request(self.request_pdu)
+                slave = self.get_slave(slave_id)
+                response_pdu = slave.handle_request(request_pdu)
                 #make the full response
                 response = query.build_response(response_pdu)
                 return response
         except Exception as excpt:
+        except IOError as excpt:
             print("handle request failed: " + str(excpt))
         except:
             print("handle request failed: unknown error")
