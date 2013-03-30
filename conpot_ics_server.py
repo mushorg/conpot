@@ -46,7 +46,10 @@ class ModbusServer(modbus.Server):
     def handle(self, socket, address):
         print 'New connection from %s:%s' % address
         self.fileobj = socket.makefile()
+
         session_id = str(uuid.uuid4())
+        session_data = {'session_id': session_id, 'remote': address, 'data': []}
+
         while True:
             request = self.fileobj.read(7)
             if not request:
@@ -60,23 +63,19 @@ class ModbusServer(modbus.Server):
                 new_byte = self.fileobj.read(1)
                 request += new_byte
             query = modbus_tcp.TcpQuery()
-            response = self._databank.handle_request(query, request)
-            if self._databank.slave:
-                data = {
-                    "session_id": session_id,
-                    "remote": address,
-                    "slave_id": self._databank.slave_id,
-                    "function_code": self._databank.slave.function_code,
-                    "request_pdu": self._databank.request_pdu.encode("hex"),
-                }
-                pprint(data)
-                if config.sqlite_enabled:
-                    self.sqlite_logger.insert_event(data)
-                if config.hpfriends_enabled:
-                    self.friends_feeder.insert(json.dumps(data))
+            response, data = self._databank.handle_request(query, request)
+            session_data['data'].append(data)
+            #reconstruct the dictionary as the sqlite module expects it
+            basic_data = dict({'remote': address}.items() + data.items())
+            pprint(basic_data)
+            if config.sqlite_enabled:
+                self.sqlite_logger.insert_event(basic_data)
             if response:
                 self.fileobj.write(response)
                 self.fileobj.flush()
+
+        if config.hpfriends_enabled:
+            self.friends_feeder.insert(json.dumps(session_data))
 
 
 if __name__ == "__main__":
