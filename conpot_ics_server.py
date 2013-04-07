@@ -45,13 +45,13 @@ class ModbusServer(modbus.Server):
 
     def handle(self, socket, address):
         print 'New connection from %s:%s' % address
-        self.fileobj = socket.makefile()
+        fileobj = socket.makefile()
 
         session_id = str(uuid.uuid4())
         session_data = {'session_id': session_id, 'remote': address, 'data': []}
 
         while True:
-            request = self.fileobj.read(7)
+            request = fileobj.read(7)
             if not request:
                 print "client disconnected"
                 break
@@ -60,7 +60,7 @@ class ModbusServer(modbus.Server):
                 break
             tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
             while len(request) < (length + 6):
-                new_byte = self.fileobj.read(1)
+                new_byte = fileobj.read(1)
                 request += new_byte
             query = modbus_tcp.TcpQuery()
             response, data = self._databank.handle_request(query, request)
@@ -71,8 +71,8 @@ class ModbusServer(modbus.Server):
             if config.sqlite_enabled:
                 self.sqlite_logger.insert_event(basic_data)
             if response:
-                self.fileobj.write(response)
-                self.fileobj.flush()
+                fileobj.write(response)
+                fileobj.flush()
 
         if config.hpfriends_enabled:
             self.friends_feeder.insert(json.dumps(session_data))
