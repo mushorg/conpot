@@ -1,0 +1,39 @@
+<slaves>
+    <slave id="1">
+        <blocks>
+            <block name="a">
+                <!-- Will be parsed with eval() -->
+                <type>HOLDING_REGISTERS</type>
+                <starting_address>1</starting_address>
+                <size>100</size>
+                <values>
+                    <value>
+                        <address>1</address>
+                        <!-- Will be parsed with eval() -->
+                        <content>range(100)</content>
+                    </value>
+                </values>
+            </block>
+            <block name="b">
+                <type>HOLDING_REGISTERS</type>
+                <starting_address>200</starting_address>
+                <size>20</size>
+            </block>
+        </blocks>
+    </slave>
+    <slave id="5">
+        <blocks>
+            <block name="c">
+                <!-- Will be parsed with eval() -->
+                <type>COILS</type>
+                <starting_address>0</starting_address>
+                <size>100</size>
+            </block>
+            <block name="d">
+                <type>HOLDING_REGISTERS</type>
+                <starting_address>0</starting_address>
+                <size>100</size>
+            </block>
+        </blocks>
+    </slave>
+</slaves>

@@ -4,6 +4,8 @@ import json
 import uuid
 
 from pprint import pprint
+import xml.etree.ElementTree as ET
+
 
 from gevent.server import StreamServer
 
@@ -17,31 +19,38 @@ import config
 
 FORMAT = '%(message)s'
 logging.basicConfig(format=FORMAT)
-logger = logging.getLogger('modbus_tk')
-
+logger = logging.getLogger(__name__)
 
 class ModbusServer(modbus.Server):
 
     def __init__(self, databank=None):
+
         if config.sqlite_enabled:
             self.sqlite_logger = sqlite_log.SQLiteLogger()
         if config.hpfriends_enabled:
             self.friends_feeder = feeder.HPFriendsLogger()
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
-        #creates a slave with id 0
-        slave1 = self.add_slave(1)
-        #add 2 blocks of holding registers
-        slave1.add_block("a", mdef.HOLDING_REGISTERS, 1, 100)  # address 0, length 100
-        slave1.add_block("b", mdef.HOLDING_REGISTERS, 200, 20)  # address 200, length 20
 
-        #creates another slave with id 5
-        slave5 = self.add_slave(5)
-        slave5.add_block("c", mdef.COILS, 0, 100)
-        slave5.add_block("d", mdef.HOLDING_REGISTERS, 0, 100)
-
-        #set the values of registers at address 0
-        slave1.set_values("a", 1, range(100))
+        #read and parse XML template
+        tree = ET.parse('templates/default.xml')
+        for xml_slave in tree.getroot():
+            slave_id = int(xml_slave.attrib['id'])
+            slave = self.add_slave(slave_id)
+            logger.debug('Added slave with id {0}.'.format(slave_id))
+            for block in xml_slave.iter(tag='block'):
+                name = block.attrib['name']
+                type_ = eval('mdef.' + block.find('type').text)
+                start_addr = int(block.find('starting_address').text)
+                size = int(block.find('size').text)
+                slave.add_block(name, type_, start_addr, size)
+                logger.debug('Added block {0} to slave {1}.'
+                             '(type={2}, start={3}, size={4})'.format(name, slave_id, type_, start_addr, size))
+                for value in block.iter(tag='value'):
+                    addr = int(value.find('address').text)
+                    value_ = eval(value.find('content').text)
+                    slave.set_values(name, addr, value_)
+                    logger.debug('Setting value at addr {0} to {1}.'.format(addr, value.find('content').text))
 
     def handle(self, socket, address):
         print 'New connection from %s:%s' % address
@@ -79,6 +88,7 @@ class ModbusServer(modbus.Server):
 
 
 if __name__ == "__main__":
+    logger.setLevel(logging.DEBUG)
     modbus_server = ModbusServer(databank=slave_db.SlaveBase())
     connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
