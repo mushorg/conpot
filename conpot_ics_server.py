@@ -77,7 +77,7 @@ class ModbusServer(modbus.Server):
 
             logger.debug('Modbus traffic: {0}. ({1})'.format(basic_data, session_id))
             if config.sqlite_enabled:
-                self.sqlite_logger.insert_event(basic_data)
+                self.sqlite_logger.insert_queue.put(basic_data)
             if response:
                 fileobj.write(response)
                 fileobj.flush()
