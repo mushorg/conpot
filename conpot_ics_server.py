@@ -3,9 +3,7 @@ import logging
 import json
 import uuid
 
-from pprint import pprint
 import xml.etree.ElementTree as ET
-
 
 from gevent.server import StreamServer
 
@@ -17,7 +15,7 @@ from modules import slave_db, feeder, sqlite_log
 import config
 
 
-FORMAT = '%(message)s'
+FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
@@ -53,19 +51,19 @@ class ModbusServer(modbus.Server):
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, value.find('content').text))
 
     def handle(self, socket, address):
-        print 'New connection from %s:%s' % address
+        session_id = str(uuid.uuid4())
+        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
         fileobj = socket.makefile()
 
-        session_id = str(uuid.uuid4())
         session_data = {'session_id': session_id, 'remote': address, 'data': []}
 
         while True:
             request = fileobj.read(7)
             if not request:
-                print "client disconnected"
+                logger.info('Client disconnected. ({0})'.format(session_id))
                 break
-            if request.strip().lower() == 'quit':
-                print "client quit"
+            if request.strip().lower() == 'quit.':
+                logger.info('Client quit. ({0})'.format(session_id))
                 break
             tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
             while len(request) < (length + 6):
@@ -76,7 +74,8 @@ class ModbusServer(modbus.Server):
             session_data['data'].append(data)
             #reconstruct the dictionary as the sqlite module expects it
             basic_data = dict({'remote': address}.items() + data.items())
-            pprint(basic_data)
+
+            logger.debug('Modbus traffic: {0}. ({1})'.format(basic_data, session_id))
             if config.sqlite_enabled:
                 self.sqlite_logger.insert_event(basic_data)
             if response:
@@ -92,5 +91,5 @@ if __name__ == "__main__":
     modbus_server = ModbusServer('templates/default.xml', databank=slave_db.SlaveBase())
     connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
-    print "Serving on:", connection
+    logger.info("Serving on: {0}".format(connection))
     server.serve_forever()
