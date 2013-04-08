@@ -21,9 +21,9 @@ FORMAT = '%(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger(__name__)
 
-class ModbusServer(modbus.Server):
 
-    def __init__(self, databank=None):
+class ModbusServer(modbus.Server):
+    def __init__(self, template, databank=None):
 
         if config.sqlite_enabled:
             self.sqlite_logger = sqlite_log.SQLiteLogger()
@@ -33,7 +33,7 @@ class ModbusServer(modbus.Server):
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
 
         #read and parse XML template
-        tree = ET.parse('templates/default.xml')
+        tree = ET.parse(template)
         for xml_slave in tree.getroot():
             slave_id = int(xml_slave.attrib['id'])
             slave = self.add_slave(slave_id)
@@ -89,7 +89,7 @@ class ModbusServer(modbus.Server):
 
 if __name__ == "__main__":
     logger.setLevel(logging.DEBUG)
-    modbus_server = ModbusServer(databank=slave_db.SlaveBase())
+    modbus_server = ModbusServer('templates/default.xml', databank=slave_db.SlaveBase())
     connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
     print "Serving on:", connection
