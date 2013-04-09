@@ -1,10 +1,13 @@
 # Command Responder (GET/GETNEXT)
 # Based on examples from http://pysnmp.sourceforge.net/
 
-from pyasn1.codec.ber import encoder, decoder
-from pysnmp.proto import api
 import time
 import bisect
+
+from pyasn1.codec.ber import encoder, decoder
+from pysnmp.proto import api
+from pysnmp.entity import engine
+from pysnmp.smi import builder
 
 import gevent
 from gevent import socket
@@ -35,16 +38,44 @@ class Uptime(object):
 
 class SNMPServer(DatagramServer):
 
+    def _import_mib(self):
+        snmpEngine = engine.SnmpEngine()
+        mibBuilder = snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
+        mibSources = mibBuilder.getMibSources() + (
+            builder.DirMibSource('.'),
+        )
+        mibBuilder.setMibSources(*mibSources)
+
+        # Create and put on-line my managed object
+        deliveryTime, = mibBuilder.importSymbols('TRS-MIB', 'trsDeliveryTime')
+        Integer32, = snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI', 'Integer32')
+
+        MibScalarInstance, = mibBuilder.importSymbols('SNMPv2-SMI', 'MibScalarInstance')
+
+        class MyDeliveryTime(Integer32):
+
+            def readGet(self, name, val, idx, (acFun, acCtx)):
+                return name, self.syntax.clone(42)
+
+        deliveryTimeInstance = MibScalarInstance(
+            deliveryTime.name, (0,), deliveryTime.syntax
+        )
+        mibBuilder.exportSymbols('TRS-MIB', deliveryTimeInstance=deliveryTimeInstance)  # creating MIB
+
     def handle(self, msg, address):
+        mibInstr = [SysDescr(), Uptime()]  # sorted by object name
+        mibInstrIdx = {}
+        for mibVar in mibInstr:
+            mibInstrIdx[mibVar.name] = mibVar
+
         while msg:
-            msgVer = api.decodeMessageVersion(msg)
-
+            msg_version = api.decodeMessageVersion(msg)
+            print "msg_version", msg_version
             try:
-                pMod = api.protoModules[msgVer]
+                pMod = api.protoModules[msg_version]
             except KeyError:
-                print 'Unsupported SNMP version %s' % msgVer
+                print 'Unsupported SNMP version %s' % msg_version
                 return
-
             reqMsg, msg = decoder.decode(msg, asn1Spec=pMod.Message(),)
             rspMsg = pMod.apiMessage.getResponse(reqMsg)
             rspPDU = pMod.apiMessage.getPDU(rspMsg)
@@ -66,18 +97,18 @@ class SNMPServer(DatagramServer):
                     else:
                         # Report value if OID is found
                         varBinds.append(
-                            (mibInstr[nextIdx].name, mibInstr[nextIdx](msgVer))
+                            (mibInstr[nextIdx].name, mibInstr[nextIdx](msg_version))
                         )
 
             elif reqPDU.isSameTypeWith(pMod.GetRequestPDU()):
                 for oid, val in pMod.apiPDU.getVarBinds(reqPDU):
-                    if not oid in mibInstrIdx.has_key:
-                        # No such instance
+                    if not oid in mibInstrIdx:
+                        print "No such instance"
                         pMod.apiPDU.setNoSuchInstanceError(rspPDU, errorIndex)
                         varBinds = pMod.apiPDU.getVarBinds(reqPDU)
                         break
 
-                    varBinds.append((oid, mibInstrIdx[oid](msgVer)))
+                    varBinds.append((oid, mibInstrIdx[oid](msg_version)))
 
             else:
                 # Report unsupported request type
@@ -85,15 +116,7 @@ class SNMPServer(DatagramServer):
 
             pMod.apiPDU.setVarBinds(rspPDU, varBinds)
             data = encoder.encode(rspMsg)
-            #self.socket.sendto(encoder.encode(rspMsg), address)
-            self.socket.sendto('Received %s bytes' % len(data), address)
-
-
-mibInstr = [SysDescr(), Uptime()]  # sorted by object name
-
-mibInstrIdx = {}
-for mibVar in mibInstr:
-    mibInstrIdx[mibVar.name] = mibVar
+            self.socket.sendto(data, address)
 
 
 if __name__ == "__main__":
