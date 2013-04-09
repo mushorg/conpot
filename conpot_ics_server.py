@@ -70,12 +70,15 @@ class ModbusServer(modbus.Server):
                 new_byte = fileobj.read(1)
                 request += new_byte
             query = modbus_tcp.TcpQuery()
-            response, data = self._databank.handle_request(query, request)
-            session_data['data'].append(data)
-            #reconstruct the dictionary as the sqlite module expects it
-            basic_data = dict({'remote': address}.items() + data.items())
 
+            #logdata is a dictionary containing request_pdu, slave_id, function_code and response_pdu
+            response, logdata = self._databank.handle_request(query, request)
+            session_data['data'].append(logdata)
+
+            #reconstruct the dictionary as the sqlite module expects it
+            basic_data = dict({'remote': address}.items() + logdata.items())
             logger.debug('Modbus traffic: {0}. ({1})'.format(basic_data, session_id))
+
             if config.sqlite_enabled:
                 self.sqlite_logger.insert_queue.put(basic_data)
             if response:
