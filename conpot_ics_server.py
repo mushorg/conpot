@@ -51,6 +51,14 @@ class ModbusServer(modbus.Server):
                     slave.set_values(name, addr, value)
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
 
+        #parse snmp configuration
+        oids = dom.xpath('//conpot_template/snmp/oids/*')
+        for o in oids:
+            #TODO: Pass oid and value to snmp module
+            oid = o.attrib['oid']
+            value = o.xpath('./value/text()')
+
+
     def handle(self, socket, address):
         session_id = str(uuid.uuid4())
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))

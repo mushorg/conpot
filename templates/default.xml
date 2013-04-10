@@ -1,39 +1,73 @@
-<slaves>
-    <slave id="1">
-        <blocks>
-            <block name="a">
-                <!-- Will be parsed with eval() -->
-                <type>HOLDING_REGISTERS</type>
-                <starting_address>0</starting_address>
-                <size>100</size>
-                <values>
-                    <value>
-                        <address>0</address>
-                        <!-- Will be parsed with eval() -->
-                        <content>range(100)</content>
-                    </value>
-                </values>
-            </block>
-            <block name="b">
-                <type>HOLDING_REGISTERS</type>
-                <starting_address>200</starting_address>
-                <size>20</size>
-            </block>
-        </blocks>
-    </slave>
-    <slave id="5">
-        <blocks>
-            <block name="c">
-                <!-- Will be parsed with eval() -->
-                <type>COILS</type>
-                <starting_address>0</starting_address>
-                <size>100</size>
-            </block>
-            <block name="d">
-                <type>HOLDING_REGISTERS</type>
-                <starting_address>100</starting_address>
-                <size>100</size>
-            </block>
-        </blocks>
-    </slave>
-</slaves>
+<conpot_template name="example_template">
+    <slaves>
+        <slave id="1">
+            <blocks>
+                <block name="a">
+                    <!-- Will be parsed with eval() -->
+                    <type>HOLDING_REGISTERS</type>
+                    <starting_address>0</starting_address>
+                    <size>100</size>
+                    <values>
+                        <value>
+                            <address>0</address>
+                            <!-- Will be parsed with eval() -->
+                            <content>range(100)</content>
+                        </value>
+                    </values>
+                </block>
+                <block name="b">
+                    <type>HOLDING_REGISTERS</type>
+                    <starting_address>200</starting_address>
+                    <size>20</size>
+                </block>
+            </blocks>
+        </slave>
+        <slave id="5">
+            <blocks>
+                <block name="c">
+                    <!-- Will be parsed with eval() -->
+                    <type>COILS</type>
+                    <starting_address>0</starting_address>
+                    <size>100</size>
+                </block>
+                <block name="d">
+                    <type>HOLDING_REGISTERS</type>
+                    <starting_address>100</starting_address>
+                    <size>100</size>
+                </block>
+            </blocks>
+        </slave>
+    </slaves>
+    <snmp>
+        <oids>
+            <!-- sysDescr -->
+            <oid oid="1.3.6.1.2.1.1.1.0">
+                <value>Siemens, SIMATIC, S7-400</value>
+            </oid>
+            <!-- sysObjectID -->
+            <oid oid="1.3.6.1.2.1.1.2.0">
+                <value>0.0</value>
+            </oid>
+            <!-- sysUptime -->
+            <oid oid="1.3.6.1.2.1.1.3.0">
+                <value>note: This needs to tick!</value>
+            </oid>
+            <!-- sysContact -->
+            <oid oid="1.3.6.1.2.1.1.4.0">
+                <value>Siemens AG</value>
+            </oid>
+            <!-- sysName -->
+            <oid oid="1.3.6.1.2.1.1.5.0">
+                <value>CP 443-1 EX40</value>
+            </oid>
+            <!-- sysLocation -->
+            <oid oid="1.3.6.1.2.1.1.6.0">
+                <value>Northpole</value>
+            </oid>
+            <!-- sysServices -->
+            <oid oid="1.3.6.1.2.1.1.7.0">
+                <value>72</value>
+            </oid>
+        </oids>
+    </snmp>
+</conpot_template>
