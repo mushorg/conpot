@@ -3,9 +3,8 @@ import logging
 import json
 import uuid
 
-import xml.etree.ElementTree as ET
-
 from gevent.server import StreamServer
+from lxml import etree
 
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
@@ -30,25 +29,27 @@ class ModbusServer(modbus.Server):
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
 
-        #read and parse XML template
-        tree = ET.parse(template)
-        for xml_slave in tree.getroot():
-            slave_id = int(xml_slave.attrib['id'])
-            slave = self.add_slave(slave_id)
-            logger.debug('Added slave with id {0}.'.format(slave_id))
-            for block in xml_slave.iter(tag='block'):
-                name = block.attrib['name']
-                type_ = eval('mdef.' + block.find('type').text)
-                start_addr = int(block.find('starting_address').text)
-                size = int(block.find('size').text)
-                slave.add_block(name, type_, start_addr, size)
-                logger.debug('Added block {0} to slave {1}.'
-                             '(type={2}, start={3}, size={4})'.format(name, slave_id, type_, start_addr, size))
-                for value in block.iter(tag='value'):
-                    addr = int(value.find('address').text)
-                    value_ = eval(value.find('content').text)
-                    slave.set_values(name, addr, value_)
-                    logger.debug('Setting value at addr {0} to {1}.'.format(addr, value.find('content').text))
+        dom = etree.parse(template)
+
+        #parse slave configuration
+        slaves = dom.xpath('//conpot_template/slaves/*')
+        for s in slaves:
+            id = int(s.attrib['id'])
+            slave = self.add_slave(id)
+            logger.debug('Added slave with id {0}.'.format(id))
+            for b in s.xpath('./blocks/*'):
+                name = b.attrib['name']
+                type = eval('mdef.' + b.xpath('./type/text()')[0])
+                start_addr = int(b.xpath('./starting_address/text()')[0])
+                size = int(b.xpath('./size/text()')[0])
+                slave.add_block(name, type, start_addr, size)
+                logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'
+                              .format(name, id, type, start_addr, size))
+                for v in b.xpath('./values/*'):
+                    addr = int(v.xpath('./address/text()')[0])
+                    value = eval(v.xpath('./content/text()')[0])
+                    slave.set_values(name, addr, value)
+                    logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
 
     def handle(self, socket, address):
         session_id = str(uuid.uuid4())

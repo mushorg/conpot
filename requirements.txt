@@ -1,2 +1,6 @@
 gevent
+<<<<<<< HEAD
 pysnmp
+=======
+lxml
+>>>>>>> switched to lxml
