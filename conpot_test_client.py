@@ -16,8 +16,15 @@ if __name__ == "__main__":
         master = modbus_tcp.TcpMaster(port=config.port)
         master.set_timeout(1.0)
 
-        print master.execute(slave=1, function_code=cst.READ_HOLDING_REGISTERS, starting_address=0, quantity_of_x=2)
-        print master.execute(slave=5, function_code=cst.READ_COILS, starting_address=0, quantity_of_x=2)
+        #read 8 first bits from discrete output on slave 1
+        print master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
+        #try to set first 8 bits to 11111111
+        master.execute(1, cst.WRITE_MULTIPLE_COILS, 1, output_value=[1,1,1,1,1,1,1,1])
+        #read first 8 bit (check if they have changes...)
+        print master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
+
+        #print master.execute(slave=1, function_code=cst.READ_HOLDING_REGISTERS, starting_address=0, quantity_of_x=2)
+        #print master.execute(slave=5, function_code=cst.READ_COILS, starting_address=0, quantity_of_x=2)
         #logger.info(master.execute(1, cst.READ_DISCRETE_INPUTS, 0, 8))
         #logger.info(master.execute(1, cst.READ_INPUT_REGISTERS, 100, 3))
         #logger.info(master.execute(1, cst.READ_HOLDING_REGISTERS, 100, 12))
