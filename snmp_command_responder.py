@@ -19,20 +19,23 @@ class SNMPDispatcher(DatagramServer):
     def __init__(self):
         pass
 
+    def registerRecvCbFun(self, recvCbFun):
+        self.recvCbFun = recvCbFun
+
     def handle(self, msg, address):
-        print repr(msg), address
+        print "in", repr(msg), address
+        self.recvCbFun(self, self.transportDomain, address, msg)
 
     def registerTransport(self, tDomain, transport):
         DatagramServer.__init__(self, transport, self.handle)
-
-    def registerRecvCbFun(self, recvCbFun):
-        print "recvCbFun", recvCbFun
+        self.transportDomain = tDomain
 
     def registerTimerCbFun(self, timerCbFun, tickInterval=None):
-        print "timerCbFun", timerCbFun
+        pass
 
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
-        print outgoingMessage, transportDomain, transportAddress
+        print "out", repr(outgoingMessage), transportDomain, transportAddress
+        self.socket.sendto(outgoingMessage, transportAddress)
 
 
 class CommandResponder(object):
