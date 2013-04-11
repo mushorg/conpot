@@ -13,6 +13,10 @@ from modules import snmp_engine as engine
 
 import config as conpot_config
 
+from pysnmp import debug
+
+debug.setLogger(debug.Debug('all'))
+
 
 class SNMPDispatcher(DatagramServer):
 
