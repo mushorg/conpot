@@ -45,7 +45,7 @@ class ModbusServer(modbus.Server):
                 size = int(b.xpath('./size/text()')[0])
                 slave.add_block(name, type, start_addr, size)
                 logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'
-                              .format(name, id, type, start_addr, size))
+                .format(name, id, type, start_addr, size))
                 for v in b.xpath('./values/*'):
                     addr = int(v.xpath('./address/text()')[0])
                     value = eval(v.xpath('./content/text()')[0])

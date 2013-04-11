@@ -18,7 +18,7 @@
                 </block>
                 <block name="b">
                     <!-- CONTACTS/DISCRETE_INPUTS aka. binary input.
-                         Map modbus addresses 10001-10032 to map S7-200 PLC input starting from I0.0  -->
+                         Map modbus addresses 10001-10032 to S7-200 PLC inputs starting from I0.0  -->
                     <type>DISCRETE_INPUTS</type>
                     <starting_address>10001</starting_address>
                     <size>32</size>
@@ -82,7 +82,7 @@
             </oid>
             <!-- sysLocation -->
             <oid oid="1.3.6.1.2.1.1.6.0">
-                <value>Northpole</value>
+                <value></value>
             </oid>
             <!-- sysServices -->
             <oid oid="1.3.6.1.2.1.1.7.0">
