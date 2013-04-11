@@ -2,6 +2,7 @@ import struct
 import logging
 import json
 import uuid
+import random
 
 from gevent.server import StreamServer
 from lxml import etree

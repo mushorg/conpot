@@ -1,39 +1,59 @@
-<conpot_template name="example_template">
+<conpot_template name="S7-200" description="Rough simulation of a basic Siemens S7-200 CPU with 2 slaves">
     <slaves>
         <slave id="1">
             <blocks>
                 <block name="a">
-                    <!-- Will be parsed with eval() -->
-                    <type>HOLDING_REGISTERS</type>
-                    <starting_address>0</starting_address>
-                    <size>100</size>
+                    <!-- COILS/DISCRETE_OUTPUTS aka. binary output, power on/power off
+                         Here we map modbus addresses 1 to 127 to S7-200 PLC Addresses Q0.0 to Q15.7 -->
+                    <type>COILS</type>
+                    <starting_address>1</starting_address>
+                    <size>128</size>
                     <values>
                         <value>
-                            <address>0</address>
+                            <address>1</address>
                             <!-- Will be parsed with eval() -->
-                            <content>range(100)</content>
+                            <content>[random.randint(0,1) for b in range(0,128)]</content>
                         </value>
                     </values>
                 </block>
                 <block name="b">
-                    <type>HOLDING_REGISTERS</type>
-                    <starting_address>200</starting_address>
-                    <size>20</size>
+                    <!-- CONTACTS/DISCRETE_INPUTS aka. binary input.
+                         Map modbus addresses 10001-10032 to map S7-200 PLC input starting from I0.0  -->
+                    <type>DISCRETE_INPUTS</type>
+                    <starting_address>10001</starting_address>
+                    <size>32</size>
+                    <values>
+                        <value>
+                            <address>10001</address>
+                            <!-- Will be parsed with eval() -->
+                            <content>[random.randint(0,1) for b in range(0,32)]</content>
+                        </value>
+                    </values>
                 </block>
             </blocks>
         </slave>
-        <slave id="5">
+        <slave id="2">
+            <!-- This slaves does some measuring. (analog inputs).
+                 Map modbus addresses 30001-30009 to S7 PLC analog input bits AIW0-AIW8 -->
             <blocks>
                 <block name="c">
                     <!-- Will be parsed with eval() -->
-                    <type>COILS</type>
-                    <starting_address>0</starting_address>
-                    <size>100</size>
+                    <type>ANALOG_INPUTS</type>
+                    <starting_address>30001</starting_address>
+                    <size>8</size>
+                    <values>
+                        <value>
+                            <address>30001</address>
+                            <!-- Will be parsed with eval() -->
+                            <content>[random.randint(0,1) for b in range(0,8)]</content>
+                        </value>
+                    </values>
                 </block>
                 <block name="d">
+                    <!-- Maps to S7-200 PLC addresses HoldStart+8 -->
                     <type>HOLDING_REGISTERS</type>
-                    <starting_address>100</starting_address>
-                    <size>100</size>
+                    <starting_address>40001</starting_address>
+                    <size>8</size>
                 </block>
             </blocks>
         </slave>
@@ -42,7 +62,7 @@
         <oids>
             <!-- sysDescr -->
             <oid oid="1.3.6.1.2.1.1.1.0">
-                <value>Siemens, SIMATIC, S7-400</value>
+                <value>Siemens, SIMATIC, S7-200</value>
             </oid>
             <!-- sysObjectID -->
             <oid oid="1.3.6.1.2.1.1.2.0">
