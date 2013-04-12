@@ -9,11 +9,11 @@ import modbus_tk
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
-import config
+import config as conpot_config
 
 if __name__ == "__main__":
     try:
-        master = modbus_tcp.TcpMaster(port=config.port)
+        master = modbus_tcp.TcpMaster(host="localhost", port=conpot_config.port)
         master.set_timeout(1.0)
 
         #read 8 first bits from discrete output on slave 1
