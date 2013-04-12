@@ -1,10 +1,10 @@
 import sqlite3
 
-import gevent
-from gevent.queue import Queue
-
-
 class SQLiteLogger(object):
+    def __init__(self):
+        self.conn = sqlite3.connect("conpot.db")
+        self._create_db()
+
     def _create_db(self):
         cursor = self.conn.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS events
@@ -17,23 +17,11 @@ class SQLiteLogger(object):
                 request_pdu TEXT
             )""")
 
-    def insert_event(self, event):
+    def log(self, event):
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO events(remote, slave_id, function_code, request_pdu) VALUES (?, ?, ?, ?)",
                        (str(event["remote"]), event["slave_id"], event["function_code"], event["request_pdu"]))
         self.conn.commit()
-
-    def _worker(self):
-        while True:
-            item = self.insert_queue.get()
-            self.insert_event(item)
-            self.insert_queue
-
-    def __init__(self):
-        self.conn = sqlite3.connect("conpot.db")
-        self._create_db()
-        self.insert_queue = Queue()
-        self.worker = gevent.spawn(self._worker)
 
     def select_data(self):
         cursor = self.conn.cursor()

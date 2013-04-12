@@ -12,6 +12,6 @@ class HPFriendsLogger(object):
         except Exception as e:
             raise
 
-    def insert(self, data):
+    def log(self, data):
         for chan in config.hpfriends_channels:
             self.hpc.publish(chan, data)
