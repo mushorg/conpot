@@ -33,7 +33,7 @@
             </blocks>
         </slave>
         <slave id="2">
-            <!-- This slaves does some measuring. (analog inputs).
+            <!-- This slave does some measuring. (analog inputs).
                  Map modbus addresses 30001-30009 to S7 PLC analog input bits AIW0-AIW8 -->
             <blocks>
                 <block name="c">
