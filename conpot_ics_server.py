@@ -15,6 +15,7 @@ import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
 from modules import slave_db, feeder, sqlite_log
+import snmp_command_responder
 
 import config
 
@@ -57,14 +58,6 @@ class ModbusServer(modbus.Server):
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
 
         logger.info('Conpot initialized using the {0} template.'.format(template_name))
-
-        #parse snmp configuration
-        oids = dom.xpath('//conpot_template/snmp/oids/*')
-        for o in oids:
-            #TODO: Pass oid and value to snmp module
-            oid = o.attrib['oid']
-            value = o.xpath('./value/text()')
-
 
     def handle(self, socket, address):
         session_id = str(uuid.uuid4())
@@ -119,10 +112,31 @@ class ModbusServer(modbus.Server):
                 for pdu_data in event['data']:
                     self.sqlite_logger.log(dict({'remote': event['remote']}.items() + pdu_data.items()))
 
+def create_snmp_server(template):
+    snmp_server = snmp_command_responder.CommandResponder()
+    dom = etree.parse(template)
+    mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+    for mib in mibs:
+        mib_name = mib.attrib['name']
+        for symbol in mib:
+            symbol_name = symbol.attrib['name']
+            value = symbol.xpath('./value/text()')[0]
+            snmp_server.register(mib_name, symbol_name, value)
+    return snmp_server
+
+
 if __name__ == "__main__":
+    servers = []
+
     logger.setLevel(logging.DEBUG)
     modbus_server = ModbusServer('templates/default.xml', databank=slave_db.SlaveBase())
     connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
-    logger.info("Serving on: {0}".format(connection))
-    server.serve_forever()
+    logger.info('Modbus server started on: {0}'.format(connection))
+    servers.append(gevent.spawn(server.serve_forever))
+
+    snmp_server = create_snmp_server('templates/default.xml')
+    logger.info('SNMP server started.')
+    servers.append(gevent.spawn(snmp_server.serve_forever))
+
+    gevent.joinall(servers)

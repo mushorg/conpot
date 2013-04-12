@@ -1,6 +1,8 @@
 # Command Responder (GET/GETNEXT)
 # Based on examples from http://pysnmp.sourceforge.net/
 
+import logging
+
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import cmdrsp, context
 from pysnmp.carrier.asynsock.dgram import udp
@@ -13,6 +15,7 @@ from modules import snmp_engine as engine
 
 import config as conpot_config
 
+logger = logging.getLogger(__name__)
 
 class SNMPDispatcher(DatagramServer):
 
@@ -49,6 +52,20 @@ class CommandResponder(object):
             snmpEngine.registerTransportDispatcher(SNMPDispatcher())
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
+    def register(self, mibname, symbolname, value):
+        s = self._get_mibSymbol(mibname, symbolname)
+        logger.info('Registered: {0}'.format(s))
+        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI', 'MibScalarInstance')
+        scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('PYSNMP-EXAMPLE-MIB', scalar)
+
+
+    def _get_mibSymbol(self, mibname, symbolname):
+        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        if mibname in modules:
+            if symbolname in modules[mibname]:
+                return modules[mibname][symbolname]
+
     def __init__(self):
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -64,8 +81,10 @@ class CommandResponder(object):
             udp_sock
         )
 
-        # SNMPv3/USM setup
+        #TODO: Figure out why v1 is not working
+        config.addV1System(self.snmpEngine, 'test-agent', 'public')
 
+        # SNMPv3/USM setup
         # user: usr-md5-des, auth: MD5, priv DES
         config.addV3User(
             self.snmpEngine, 'usr-md5-des',
@@ -101,8 +120,11 @@ class CommandResponder(object):
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.BulkCommandResponder(self.snmpEngine, snmpContext)
 
+    def serve_forever(self):
+        self.snmpEngine.transportDispatcher.serve_forever()
+
 
 if __name__ == "__main__":
     server = CommandResponder()
     print 'Starting echo server on port 161'
-    server.snmpEngine.transportDispatcher.serve_forever()
+    server.serve_forever()

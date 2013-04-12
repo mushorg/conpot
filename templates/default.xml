@@ -59,35 +59,30 @@
         </slave>
     </slaves>
     <snmp>
-        <oids>
-            <!-- sysDescr -->
-            <oid oid="1.3.6.1.2.1.1.1.0">
-                <value>Siemens, SIMATIC, S7-200</value>
-            </oid>
-            <!-- sysObjectID -->
-            <oid oid="1.3.6.1.2.1.1.2.0">
-                <value>0.0</value>
-            </oid>
-            <!-- sysUptime -->
-            <oid oid="1.3.6.1.2.1.1.3.0">
-                <value>note: This needs to tick!</value>
-            </oid>
-            <!-- sysContact -->
-            <oid oid="1.3.6.1.2.1.1.4.0">
-                <value>Siemens AG</value>
-            </oid>
-            <!-- sysName -->
-            <oid oid="1.3.6.1.2.1.1.5.0">
-                <value>CP 443-1 EX40</value>
-            </oid>
-            <!-- sysLocation -->
-            <oid oid="1.3.6.1.2.1.1.6.0">
-                <value></value>
-            </oid>
-            <!-- sysServices -->
-            <oid oid="1.3.6.1.2.1.1.7.0">
-                <value>72</value>
-            </oid>
-        </oids>
+        <mibs>
+            <mib name="SNMPv2-MIB">
+                <symbol name="sysDescr">
+                    <value>Siemens, SIMATIC, S7-200</value>
+                </symbol>
+                <symbol name="sysObjectID">
+                    <value>0.0</value>
+                </symbol>
+                <symbol name="sysUpTime">
+                    <value>0</value>
+                </symbol>
+                <symbol name="sysContact">
+                    <value>Siemens AG</value>
+                </symbol>
+                <symbol name="sysName">
+                    <value>CP 443-1 EX40</value>
+                </symbol>
+                <symbol name="sysLocation">
+                    <value> </value>
+                </symbol>
+                <symbol name="sysServices">
+                    <value>72</value>
+                </symbol>
+            </mib>
+        </mibs>
     </snmp>
 </conpot_template>
