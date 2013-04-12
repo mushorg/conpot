@@ -26,7 +26,7 @@ class SNMPDispatcher(DatagramServer):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
-        print "in", repr(msg), address
+        #print "in", repr(msg), address
         self.recvCbFun(self, self.transportDomain, address, msg)
 
     def registerTransport(self, tDomain, transport):
@@ -37,7 +37,7 @@ class SNMPDispatcher(DatagramServer):
         pass
 
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
-        print "out", repr(outgoingMessage), transportDomain, transportAddress
+        #print "out", repr(outgoingMessage), transportDomain, transportAddress
         self.socket.sendto(outgoingMessage, transportAddress)
 
     def getTimerResolution(self):
@@ -57,7 +57,7 @@ class CommandResponder(object):
         logger.info('Registered: {0}'.format(s))
         MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI', 'MibScalarInstance')
         scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
-        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('PYSNMP-EXAMPLE-MIB', scalar)
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
 
 
     def _get_mibSymbol(self, mibname, symbolname):
