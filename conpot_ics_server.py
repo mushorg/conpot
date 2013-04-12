@@ -34,6 +34,7 @@ class ModbusServer(modbus.Server):
 
         #parse slave configuration
         slaves = dom.xpath('//conpot_template/slaves/*')
+        template_name = dom.xpath('//conpot_template/@name')[0]
         for s in slaves:
             id = int(s.attrib['id'])
             slave = self.add_slave(id)
@@ -51,6 +52,8 @@ class ModbusServer(modbus.Server):
                     value = eval(v.xpath('./content/text()')[0])
                     slave.set_values(name, addr, value)
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
+
+        logger.info('Conpot initialized using the {0} template.'.format(template_name))
 
         #parse snmp configuration
         oids = dom.xpath('//conpot_template/snmp/oids/*')
