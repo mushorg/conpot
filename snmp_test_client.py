@@ -2,6 +2,7 @@ from pysnmp.entity import engine, config
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
 
+
 # Create SNMP engine instance
 snmpEngine = engine.SnmpEngine()
 
@@ -11,11 +12,11 @@ snmpEngine = engine.SnmpEngine()
 
 # user: usr-sha-aes, auth: SHA, priv AES
 config.addV3User(
-    snmpEngine, 'usr-sha-aes',
+    snmpEngine, 'usr-sha-aes128',
     config.usmHMACSHAAuthProtocol, 'authkey1',
     config.usmAesCfb128Protocol, 'privkey1'
 )
-config.addTargetParams(snmpEngine, 'my-creds', 'usr-sha-aes', 'authPriv')
+config.addTargetParams(snmpEngine, 'my-creds', 'usr-sha-aes128', 'authPriv')
 
 #
 # Setup transport endpoint and bind it with security settings yielding
@@ -37,8 +38,6 @@ config.addTargetAddr(
 
 # Error/response receiver
 def cbFun(sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
-    print "foo"
-    print repr(varBindTable)
     if errorIndication:
         print(errorIndication)
     elif errorStatus:

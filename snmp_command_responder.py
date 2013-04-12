@@ -13,15 +13,11 @@ from modules import snmp_engine as engine
 
 import config as conpot_config
 
-from pysnmp import debug
-
-debug.setLogger(debug.Debug('all'))
-
 
 class SNMPDispatcher(DatagramServer):
 
     def __init__(self):
-        pass
+        self.__timerResolution = 0.5
 
     def registerRecvCbFun(self, recvCbFun):
         self.recvCbFun = recvCbFun
@@ -40,6 +36,9 @@ class SNMPDispatcher(DatagramServer):
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
         print "out", repr(outgoingMessage), transportDomain, transportAddress
         self.socket.sendto(outgoingMessage, transportAddress)
+
+    def getTimerResolution(self):
+        return self.__timerResolution
 
 
 class CommandResponder(object):
