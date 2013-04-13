@@ -81,8 +81,8 @@ class CommandResponder(object):
             udp_sock
         )
 
-        #TODO: Figure out why v1 is not working
-        config.addV1System(self.snmpEngine, 'test-agent', 'public')
+        #SNMPv1
+        config.addV1System(self.snmpEngine, 'public-read', 'public')
 
         # SNMPv3/USM setup
         # user: usr-md5-des, auth: MD5, priv DES
@@ -104,6 +104,8 @@ class CommandResponder(object):
         )
 
         # Allow full MIB access for each user at VACM
+        config.addVacmUser(self.snmpEngine, 1, 'public-read', 'noAuthNoPriv',
+                           (1, 3, 6, 1, 2, 1))
         config.addVacmUser(self.snmpEngine, 3, 'usr-md5-des', 'authPriv',
                            (1, 3, 6, 1, 2, 1), (1, 3, 6, 1, 2, 1))
         config.addVacmUser(self.snmpEngine, 3, 'usr-sha-none', 'authNoPriv',
