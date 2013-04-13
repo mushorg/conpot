@@ -9,6 +9,8 @@ import modbus_tk
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
+import sys
+sys.path.append('./')
 import config as conpot_config
 
 if __name__ == "__main__":

@@ -2,6 +2,9 @@ from pysnmp.entity import engine, config
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
 
+import sys
+sys.path.append('./')
+import config as conpot_config
 
 # Create SNMP engine instance
 snmpEngine = engine.SnmpEngine()
@@ -31,7 +34,7 @@ config.addSocketTransport(
 )
 config.addTargetAddr(
     snmpEngine, 'my-router',
-    udp.domainName, ('127.0.0.1', 161),
+    udp.domainName, (conpot_config.snmp_host, conpot_config.snmp_port),
     'my-creds'
 )
 
