@@ -9,3 +9,7 @@ hpfriends_port = 20000
 hpfriends_ident = ""
 hpfriends_secret = ""
 hpfriends_channels = ["", ]
+
+snmp_host = "127.0.0.1"
+snmp_port = 161
+
