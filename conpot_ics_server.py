@@ -113,9 +113,14 @@ class ModbusServer(modbus.Server):
                     self.sqlite_logger.log(dict({'remote': event['remote']}.items() + pdu_data.items()))
 
 def create_snmp_server(template):
-    snmp_server = snmp_command_responder.CommandResponder()
     dom = etree.parse(template)
     mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+    #only enable snmp server if we have configuration items
+    if not mibs:
+        snmp_server = None
+    else:
+        snmp_server = snmp_command_responder.CommandResponder()
+
     for mib in mibs:
         mib_name = mib.attrib['name']
         for symbol in mib:
@@ -136,7 +141,8 @@ if __name__ == "__main__":
     servers.append(gevent.spawn(server.serve_forever))
 
     snmp_server = create_snmp_server('templates/default.xml')
-    logger.info('SNMP server started.')
-    servers.append(gevent.spawn(snmp_server.serve_forever))
+    if snmp_server:
+        logger.info('SNMP server started.')
+        servers.append(gevent.spawn(snmp_server.serve_forever))
 
     gevent.joinall(servers)
