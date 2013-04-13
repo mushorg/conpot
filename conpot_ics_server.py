@@ -2,6 +2,8 @@ import struct
 import logging
 import json
 import uuid
+import random
+import socket
 
 import gevent
 from gevent.server import StreamServer
@@ -10,6 +12,7 @@ from gevent.queue import Queue
 from lxml import etree
 
 import modbus_tk.modbus_tcp as modbus_tcp
+import modbus_tk.defines as mdef
 from modbus_tk import modbus
 from modules import slave_db, feeder, sqlite_log, snmp_command_responder
 
