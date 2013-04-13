@@ -67,9 +67,6 @@
                 <symbol name="sysObjectID">
                     <value>0.0</value>
                 </symbol>
-                <symbol name="sysUpTime">
-                    <value>0</value>
-                </symbol>
                 <symbol name="sysContact">
                     <value>Siemens AG</value>
                 </symbol>
