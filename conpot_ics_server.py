@@ -18,10 +18,7 @@ from modules import slave_db, feeder, sqlite_log, snmp_command_responder
 
 import config
 
-
-FORMAT = '%(asctime)-15s %(message)s'
-logging.basicConfig(format=FORMAT)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class ModbusServer(modbus.Server):
@@ -59,7 +56,6 @@ class ModbusServer(modbus.Server):
         logger.info('Conpot initialized using the {0} template.'.format(template_name))
 
     def handle(self, socket, address):
-        print gevent.getcurrent().__dict__
         session_id = str(uuid.uuid4())
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
 
@@ -131,6 +127,14 @@ def create_snmp_server(template):
 
 
 if __name__ == "__main__":
+
+    root_logger = logging.getLogger()
+
+    console_log = logging.StreamHandler()
+    console_log.setLevel(logging.DEBUG)
+    console_log.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
+    root_logger.addHandler(console_log)
+
     servers = []
 
     logger.setLevel(logging.DEBUG)
