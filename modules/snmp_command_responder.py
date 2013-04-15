@@ -79,27 +79,6 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def addSocketTransport(self, snmpEngine, transportDomain, transport):
-        """Add transport object to socket dispatcher of snmpEngine"""
-        if not snmpEngine.transportDispatcher:
-            snmpEngine.registerTransportDispatcher(SNMPDispatcher())
-        snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
-
-    def register(self, mibname, symbolname, value):
-        s = self._get_mibSymbol(mibname, symbolname)
-        logger.info('Registered: {0}'.format(s))
-        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
-                                                                                                        'MibScalarInstance')
-        scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
-        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
-
-
-    def _get_mibSymbol(self, mibname, symbolname):
-        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
-        if mibname in modules:
-            if symbolname in modules[mibname]:
-                return modules[mibname][symbolname]
-
     def __init__(self):
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -155,6 +134,27 @@ class CommandResponder(object):
         cmdrsp.SetCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
         cmdrsp.BulkCommandResponder(self.snmpEngine, snmpContext)
+
+    def addSocketTransport(self, snmpEngine, transportDomain, transport):
+        """Add transport object to socket dispatcher of snmpEngine"""
+        if not snmpEngine.transportDispatcher:
+            snmpEngine.registerTransportDispatcher(SNMPDispatcher())
+        snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
+
+    def register(self, mibname, symbolname, value):
+        s = self._get_mibSymbol(mibname, symbolname)
+        logger.info('Registered: {0}'.format(s))
+        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
+                                                                                                        'MibScalarInstance')
+        scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
+
+
+    def _get_mibSymbol(self, mibname, symbolname):
+        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        if mibname in modules:
+            if symbolname in modules[mibname]:
+                return modules[mibname][symbolname]
 
     def serve_forever(self):
         self.snmpEngine.transportDispatcher.serve_forever()
