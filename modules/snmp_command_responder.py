@@ -5,7 +5,11 @@ import logging
 
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import cmdrsp, context
+
 from pysnmp.carrier.asynsock.dgram import udp
+from pysnmp.proto import api
+from pysnmp.proto.api import verdec
+from pyasn1.codec.ber import decoder
 
 import gevent
 from gevent import socket
@@ -17,8 +21,8 @@ import config as conpot_config
 
 logger = logging.getLogger(__name__)
 
-class SNMPDispatcher(DatagramServer):
 
+class SNMPDispatcher(DatagramServer):
     def __init__(self):
         self.__timerResolution = 0.5
 
@@ -26,7 +30,13 @@ class SNMPDispatcher(DatagramServer):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
-        #print "in", repr(msg), address
+
+        #0 = v1, 1 = v2, 3 = v3
+        version = verdec.decodeMessageVersion(msg)
+
+        if version == 0 or version == 1:
+            self.log_v1(msg, address, 'in', version)
+
         self.recvCbFun(self, self.transportDomain, address, msg)
 
     def registerTransport(self, tDomain, transport):
@@ -36,8 +46,32 @@ class SNMPDispatcher(DatagramServer):
     def registerTimerCbFun(self, timerCbFun, tickInterval=None):
         pass
 
+    def log_v1(self, msg, address, direction, version):
+
+        if direction == 'in':
+            direction = 'request from'
+        else:
+            direction = 'reply to'
+
+        pMod = api.protoModules[version]
+
+        rspMsg, wholeMsg = decoder.decode(msg, asn1Spec=pMod.Message())
+        community_name = rspMsg.getComponentByPosition(1)
+        request_pdu = pMod.apiMessage.getPDU(rspMsg)
+        request_type = request_pdu.__class__.__name__
+
+        #will there ever be more than one item?
+        for oid, val in pMod.apiPDU.getVarBinds(request_pdu):
+            logger.debug('SNMPv{0} {1} {2}, Type: {3}, Community: {4}, '
+                         'Oid: {5}, Value: {6}'.format(version + 1, direction, address, request_type,
+                                                       community_name, oid, val))
+
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
-        #print "out", repr(outgoingMessage), transportDomain, transportAddress
+
+        version = verdec.decodeMessageVersion(outgoingMessage)
+        if version == 0 or version == 1:
+            self.log_v1(outgoingMessage, transportAddress, 'out', version)
+
         self.socket.sendto(outgoingMessage, transportAddress)
 
     def getTimerResolution(self):
@@ -45,7 +79,6 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
         if not snmpEngine.transportDispatcher:
@@ -55,7 +88,8 @@ class CommandResponder(object):
     def register(self, mibname, symbolname, value):
         s = self._get_mibSymbol(mibname, symbolname)
         logger.info('Registered: {0}'.format(s))
-        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI', 'MibScalarInstance')
+        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
+                                                                                                        'MibScalarInstance')
         scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
 
