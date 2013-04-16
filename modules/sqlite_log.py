@@ -12,15 +12,17 @@ class SQLiteLogger(object):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 remote TEXT,
-                slave_id INT,
-                function_code INT,
-                request_pdu TEXT
+                protocol TEXT,
+                request TEXT,
+                response TEXT
             )""")
 
     def log(self, event):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO events(remote, slave_id, function_code, request_pdu) VALUES (?, ?, ?, ?)",
-                       (str(event["remote"]), event["slave_id"], event["function_code"], event["request_pdu"]))
+        #if event['data_type'] == 'modbus':
+        for entry in event['data'].values():
+            cursor.execute("INSERT INTO events(remote, protocol, request, response) VALUES (?, ?, ?, ?)",
+                (str(event["remote"]), event['data_type'], entry.get('request'), entry.get('response')))
         self.conn.commit()
 
     def select_data(self):

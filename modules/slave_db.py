@@ -60,10 +60,10 @@ class SlaveBase(Databank):
         if slave:
             function_code = slave.function_code
 
-        return (response, {'request_pdu': request_pdu.encode('hex'),
+        return (response, {'request': request_pdu.encode('hex'),
                            'slave_id': slave_id,
                            'function_code': function_code,
-                           'response_pdu': response_pdu.encode('hex')})
+                           'response': response_pdu.encode('hex')})
 #        except:
 #            print("handle request failed: unknown error")
 

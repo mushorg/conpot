@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class SNMPDispatcher(DatagramServer):
-    def __init__(self):
+    def __init__(self, log_queue):
+        self.log_queue = log_queue
         self.__timerResolution = 0.5
 
     def registerRecvCbFun(self, recvCbFun):
@@ -31,11 +32,7 @@ class SNMPDispatcher(DatagramServer):
 
     def handle(self, msg, address):
 
-        #0 = v1, 1 = v2, 3 = v3
-        version = verdec.decodeMessageVersion(msg)
-
-        if version == 0 or version == 1:
-            self.log_v1(msg, address, 'in', version)
+        self.log(msg, address, 'in')
 
         self.recvCbFun(self, self.transportDomain, address, msg)
 
@@ -46,32 +43,44 @@ class SNMPDispatcher(DatagramServer):
     def registerTimerCbFun(self, timerCbFun, tickInterval=None):
         pass
 
-    def log_v1(self, msg, address, direction, version):
+    def log(self, msg, address, direction):
+        #TODO: log snmp request/response at the same time.
 
         if direction == 'in':
             direction = 'request from'
+            log_key = 'request'
         else:
             direction = 'reply to'
+            log_key = 'response'
 
-        pMod = api.protoModules[version]
+        #0 = v1, 1 = v2, 3 = v3
+        version = verdec.decodeMessageVersion(msg)
+        if version == 0 or version == 1:
+            pMod = api.protoModules[version]
 
-        rspMsg, wholeMsg = decoder.decode(msg, asn1Spec=pMod.Message())
-        community_name = rspMsg.getComponentByPosition(1)
-        request_pdu = pMod.apiMessage.getPDU(rspMsg)
-        request_type = request_pdu.__class__.__name__
+            rspMsg, wholeMsg = decoder.decode(msg, asn1Spec=pMod.Message())
+            community_name = rspMsg.getComponentByPosition(1)
+            request_pdu = pMod.apiMessage.getPDU(rspMsg)
+            request_type = request_pdu.__class__.__name__
 
-        #will there ever be more than one item?
-        for oid, val in pMod.apiPDU.getVarBinds(request_pdu):
-            logger.debug('SNMPv{0} {1} {2}, Type: {3}, Community: {4}, '
-                         'Oid: {5}, Value: {6}'.format(version + 1, direction, address, request_type,
-                                                       community_name, oid, val))
+            session_id = request_pdu.getComponentByPosition(0)
+            #will there ever be more than one item?
+            for oid, val in pMod.apiPDU.getVarBinds(request_pdu):
+                logger.debug('SNMPv{0} {1} {2}, Type: {3}, Community: {4}, '
+                             'Oid: {5}, Value: {6}'.format(version + 1, direction, address, request_type,
+                                                           community_name, oid, val))
+
+        #raw data (all snmp version)
+        self.log_queue.put(
+            {'remote': address,
+             'data_type': 'snmp',
+             'data': {
+                 0: {log_key: msg.encode('hex')}
+             }}
+        )
 
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
-
-        version = verdec.decodeMessageVersion(outgoingMessage)
-        if version == 0 or version == 1:
-            self.log_v1(outgoingMessage, transportAddress, 'out', version)
-
+        self.log(outgoingMessage, transportAddress, 'out')
         self.socket.sendto(outgoingMessage, transportAddress)
 
     def getTimerResolution(self):
@@ -79,7 +88,8 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self):
+    def __init__(self, log_queue):
+        self.log_queue = log_queue
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
         # Transport setup
@@ -138,7 +148,7 @@ class CommandResponder(object):
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
         if not snmpEngine.transportDispatcher:
-            snmpEngine.registerTransportDispatcher(SNMPDispatcher())
+            snmpEngine.registerTransportDispatcher(SNMPDispatcher(self.log_queue))
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
     def register(self, mibname, symbolname, value):

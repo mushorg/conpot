@@ -95,29 +95,31 @@ class ModbusServer(modbus.Server):
 
         self.log_queue.put(session_data)
 
-    def log_worker(self):
-        if config.sqlite_enabled:
-            self.sqlite_logger = sqlite_log.SQLiteLogger()
+def log_worker(log_queue):
+    if config.sqlite_enabled:
+        sqlite_logger = sqlite_log.SQLiteLogger()
+    if config.hpfriends_enabled:
+        friends_feeder = feeder.HPFriendsLogger()
+
+    while True:
+        event = log_queue.get()
+        assert 'data_type' in event
+
         if config.hpfriends_enabled:
-            self.friends_feeder = feeder.HPFriendsLogger()
+            friends_feeder.log(json.dumps(event))
 
-        while True:
-            event = self.log_queue.get()
-            if config.hpfriends_enabled:
-                self.friends_feeder.log(json.dumps(event))
+        if config.sqlite_enabled:
+            sqlite_logger.log(event)
 
-            if config.sqlite_enabled:
-                for pdu_data in event['data']:
-                    self.sqlite_logger.log(dict({'remote': event['remote']}.items() + pdu_data.items()))
 
-def create_snmp_server(template):
+def create_snmp_server(template, log_queue):
     dom = etree.parse(template)
     mibs = dom.xpath('//conpot_template/snmp/mibs/*')
     #only enable snmp server if we have configuration items
     if not mibs:
         snmp_server = None
     else:
-        snmp_server = snmp_command_responder.CommandResponder()
+        snmp_server = snmp_command_responder.CommandResponder(log_queue)
 
     for mib in mibs:
         mib_name = mib.attrib['name']
@@ -139,14 +141,17 @@ if __name__ == "__main__":
 
     servers = []
 
+    log_queue = Queue()
+    gevent.spawn(log_worker, log_queue)
+
     logger.setLevel(logging.DEBUG)
-    modbus_server = ModbusServer('templates/default.xml', databank=slave_db.SlaveBase())
+    modbus_server = ModbusServer('templates/default.xml', log_queue, databank=slave_db.SlaveBase())
     connection = (config.host, config.port)
     server = StreamServer(connection, modbus_server.handle)
     logger.info('Modbus server started on: {0}'.format(connection))
     servers.append(gevent.spawn(server.serve_forever))
 
-    snmp_server = create_snmp_server('templates/default.xml')
+    snmp_server = create_snmp_server('templates/default.xml', log_queue)
     if snmp_server:
         logger.info('SNMP server started.')
         servers.append(gevent.spawn(snmp_server.serve_forever))
