@@ -4,6 +4,7 @@ import json
 import uuid
 import random
 import socket
+import time
 
 import gevent
 from gevent.server import StreamServer
@@ -22,10 +23,9 @@ logger = logging.getLogger()
 
 
 class ModbusServer(modbus.Server):
-    def __init__(self, template, databank=None):
+    def __init__(self, template, log_queue, databank=None):
 
-        self.log_queue = Queue()
-        gevent.spawn(self.log_worker)
+        self.log_queue = log_queue
 
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
@@ -57,12 +57,13 @@ class ModbusServer(modbus.Server):
 
     def handle(self, socket, address):
         session_id = str(uuid.uuid4())
+        start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
 
         socket.settimeout(5)
         fileobj = socket.makefile()
 
-        session_data = {'session_id': session_id, 'remote': address, 'data': []}
+        session_data = {'session_id': session_id, 'remote': address, 'data_type': 'modbus', 'data': {}}
 
         try:
             while True:
@@ -79,9 +80,10 @@ class ModbusServer(modbus.Server):
                     request += new_byte
                 query = modbus_tcp.TcpQuery()
 
-                #logdata is a dictionary containing request_pdu, slave_id, function_code and response_pdu
+                #logdata is a dictionary containing request, slave_id, function_code and response
                 response, logdata = self._databank.handle_request(query, request)
-                session_data['data'].append(logdata)
+                elapse_ms = int(time.time() - start_time) * 1000
+                session_data['data'][elapse_ms] = logdata
 
                 logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session_id))
 
