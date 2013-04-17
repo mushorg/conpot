@@ -2,6 +2,7 @@
 # Based on examples from http://pysnmp.sourceforge.net/
 
 import logging
+from datetime import datetime
 
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import cmdrsp, context
@@ -73,6 +74,7 @@ class SNMPDispatcher(DatagramServer):
         #raw data (all snmp version)
         self.log_queue.put(
             {'remote': address,
+             'timestamp': datetime.utcnow(),
              'data_type': 'snmp',
              'data': {
                  0: {log_key: msg.encode('hex')}

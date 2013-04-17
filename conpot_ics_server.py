@@ -5,6 +5,7 @@ import uuid
 import random
 import socket
 import time
+from datetime import datetime
 
 import gevent
 from gevent.server import StreamServer
@@ -57,13 +58,13 @@ class ModbusServer(modbus.Server):
 
     def handle(self, socket, address):
         session_id = str(uuid.uuid4())
+        session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),'data_type': 'modbus', 'data': {}}
+
         start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
 
         socket.settimeout(5)
         fileobj = socket.makefile()
-
-        session_data = {'session_id': session_id, 'remote': address, 'data_type': 'modbus', 'data': {}}
 
         try:
             while True:
@@ -104,6 +105,7 @@ def log_worker(log_queue):
     while True:
         event = log_queue.get()
         assert 'data_type' in event
+        assert 'timestamp' in event
 
         if config.hpfriends_enabled:
             friends_feeder.log(json.dumps(event))
