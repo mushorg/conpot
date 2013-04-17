@@ -1,6 +1,6 @@
 # Conpot
 
-Conpot is an ICS honeypot.
+Conpot is an ICS honeypot with the goal to collect intelligence about the motives and methods of adversaries targeting industrial control systems
 
 ## Origin
 
