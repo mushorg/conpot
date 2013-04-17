@@ -1,6 +1,6 @@
 # Conpot
 
-Conpot is a ICS honeypot.
+Conpot is an ICS honeypot.
 
 ## Origin
 
