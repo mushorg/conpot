@@ -9,6 +9,7 @@ before_install:
  - pwd
  - "sudo apt-get -qq update"
  - "sudo apt-get -qq install python2.7 python-pip git unzip"
+ - "sudo apt-get -qq install python-dev libevent-dev"
  - cd /tmp
  - git clone git://github.com/rep/hpfeeds.git hpfeeds
  - cd hpfeeds
