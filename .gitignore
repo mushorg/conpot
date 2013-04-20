@@ -37,3 +37,4 @@ nosetests.xml
 config.py
 modbus_tk
 conpot.db
+docs/build
