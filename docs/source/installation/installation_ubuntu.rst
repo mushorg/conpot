@@ -6,13 +6,21 @@ Installation
 
 You need Python2.7 and pip:
 
+::
+
     apt-get install python2.7 python-pip git unzip
+    apt-get install libxml2-dev libxslt-dev
+    apt-get install python-dev libevent-dev
 
 For the requiremenst covered by PyPi, run:
+
+::
 
     pip install -r requirements.txt
 
 For hpfeeds:
+
+::
 
     cd /opt
     git clone git://github.com/rep/hpfeeds.git
@@ -21,6 +29,8 @@ For hpfeeds:
 
 And modbus_tk
 
+::
+
     cd /opt
     wget https://modbus-tk.googlecode.com/files/modbus-tk-0.4.2.zip
     unzip modbus-tk-0.4.2.zip -d modbus_tk
@@ -28,6 +38,8 @@ And modbus_tk
     python setup.py install
 
 And finally ConPot:
+
+::
 
     cd /opt
     git clone git@github.com:glastopf/conpot.git
@@ -38,6 +50,8 @@ Edit the config.py appropriately.
 
 Example output
 --------------
+
+::
 
     box$ python conpot_ics_server.py 
     2013-04-12 16:09:25,620 Added slave with id 1.
