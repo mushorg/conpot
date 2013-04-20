@@ -3,17 +3,26 @@ import uuid
 import random
 import socket
 import time
+import logging
+
 from datetime import datetime
 
 import modbus_tk.modbus_tcp as modbus_tcp
 import modbus_tk.defines as mdef
 from modbus_tk import modbus
 
+from gevent.server import StreamServer
+
 from lxml import etree
+
+import config
+
+logger = logging.getLogger(__name__)
 
 
 class ModbusServer(modbus.Server):
-    def __init__(self, template, log_queue, logger, databank=None):
+
+    def __init__(self, template, log_queue, databank=None):
 
         self.log_queue = log_queue
 
@@ -84,3 +93,9 @@ class ModbusServer(modbus.Server):
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
 
         self.log_queue.put(session_data)
+
+    def get_server(self):
+        connection = (config.host, config.port)
+        server = StreamServer(connection, self.handle)
+        logger.info('Modbus server started on: {0}'.format(connection))
+        return server

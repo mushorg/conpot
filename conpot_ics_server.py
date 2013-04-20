@@ -2,7 +2,6 @@ import logging
 import json
 
 import gevent
-from gevent.server import StreamServer
 from gevent.queue import Queue
 
 from lxml import etree
@@ -65,11 +64,9 @@ if __name__ == "__main__":
     gevent.spawn(log_worker, log_queue)
 
     logger.setLevel(logging.DEBUG)
-    modbus_handler = modbus_server.ModbusServer('templates/default.xml', log_queue, logger, databank=slave_db.SlaveBase())
-    connection = (config.host, config.port)
-    server = StreamServer(connection, modbus_handler.handle)
-    logger.info('Modbus server started on: {0}'.format(connection))
-    servers.append(gevent.spawn(server.serve_forever))
+    modbus_server = modbus_server.ModbusServer('templates/default.xml', log_queue,
+                                               databank=slave_db.SlaveBase()).get_server()
+    servers.append(gevent.spawn(modbus_server.serve_forever))
 
     snmp_server = create_snmp_server('templates/default.xml', log_queue)
     if snmp_server:
