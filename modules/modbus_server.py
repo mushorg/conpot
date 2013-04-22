@@ -16,7 +16,6 @@ from gevent.server import StreamServer
 from lxml import etree
 
 from modules import slave_db
-import config
 
 logger = logging.getLogger(__name__)
 
@@ -98,8 +97,8 @@ class ModbusServer(modbus.Server):
 
         self.log_queue.put(session_data)
 
-    def get_server(self):
-        connection = (config.host, config.port)
+    def get_server(self, host, port):
+        connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('Modbus server started on: {0}'.format(connection))
         return server

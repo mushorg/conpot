@@ -65,7 +65,7 @@ if __name__ == "__main__":
     gevent.spawn(log_worker, log_queue)
 
     logger.setLevel(logging.DEBUG)
-    modbus_daemon = modbus_server.ModbusServer('templates/default.xml', log_queue).get_server()
+    modbus_daemon = modbus_server.ModbusServer('templates/default.xml', log_queue).get_server(config.host, config.port)
     servers.append(gevent.spawn(modbus_daemon.serve_forever))
 
     snmp_server = create_snmp_server('templates/default.xml', log_queue)
