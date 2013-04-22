@@ -6,9 +6,10 @@ from gevent.queue import Queue
 
 from lxml import etree
 
-from modules import feeder, sqlite_log, snmp_command_responder, modbus_server
+from modules import snmp_command_responder, modbus_server
 
 import config
+from modules.loggers import sqlite_log, feeder
 
 logger = logging.getLogger()
 
