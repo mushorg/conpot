@@ -6,7 +6,7 @@ from gevent.queue import Queue
 
 from lxml import etree
 
-from modules import slave_db, feeder, sqlite_log, snmp_command_responder, modbus_server
+from modules import feeder, sqlite_log, snmp_command_responder, modbus_server
 
 import config
 
@@ -64,9 +64,8 @@ if __name__ == "__main__":
     gevent.spawn(log_worker, log_queue)
 
     logger.setLevel(logging.DEBUG)
-    modbus_server = modbus_server.ModbusServer('templates/default.xml', log_queue,
-                                               databank=slave_db.SlaveBase()).get_server()
-    servers.append(gevent.spawn(modbus_server.serve_forever))
+    modbus_daemon = modbus_server.ModbusServer('templates/default.xml', log_queue).get_server()
+    servers.append(gevent.spawn(modbus_daemon.serve_forever))
 
     snmp_server = create_snmp_server('templates/default.xml', log_queue)
     if snmp_server:

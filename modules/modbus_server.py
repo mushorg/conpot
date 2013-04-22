@@ -15,6 +15,7 @@ from gevent.server import StreamServer
 
 from lxml import etree
 
+from modules import slave_db
 import config
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class ModbusServer(modbus.Server):
 
-    def __init__(self, template, log_queue, databank=None):
+    def __init__(self, template, log_queue, databank=slave_db.SlaveBase()):
 
         self.log_queue = log_queue
 
