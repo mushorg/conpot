@@ -30,9 +30,12 @@ class ModbusServer(modbus.Server):
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
 
-        dom = etree.parse(template)
+        #not sure how this class remember slave configuration across instance creation, i guess there are some
+        #well hidden away class variables somewhere.
+        self.remove_all_slaves()
 
         #parse slave configuration
+        dom = etree.parse(template)
         slaves = dom.xpath('//conpot_template/slaves/*')
         template_name = dom.xpath('//conpot_template/@name')[0]
         for s in slaves:
