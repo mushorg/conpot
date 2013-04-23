@@ -1,15 +1,14 @@
-host = "127.0.0.1"
-port = 502
-
-sqlite_enabled = False
-
-hpfriends_enabled = False
-hpfriends_host = ""
-hpfriends_port = 20000
-hpfriends_ident = ""
-hpfriends_secret = ""
-hpfriends_channels = ["", ]
+modbus_host = "127.0.0.1"
+modbus_port = 502
 
 snmp_host = "127.0.0.1"
 snmp_port = 161
 
+sqlite_enabled = False
+
+hpfriends_enabled = False
+hpfriends_host = "hpfriends.honeycloud.net"
+hpfriends_port = 20000
+hpfriends_ident = "3Ykf9Znv"
+hpfriends_secret = "4nFRhpm44QkG9cvD"
+hpfriends_channels = ["conpot.events", ]
