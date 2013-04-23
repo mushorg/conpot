@@ -1,7 +1,7 @@
 import struct
 import uuid
-import random
 import socket
+import random
 import time
 import logging
 
@@ -22,9 +22,10 @@ logger = logging.getLogger(__name__)
 
 class ModbusServer(modbus.Server):
 
-    def __init__(self, template, log_queue, databank=slave_db.SlaveBase()):
+    def __init__(self, template, log_queue, databank=slave_db.SlaveBase(), timeout=5):
 
         self.log_queue = log_queue
+        self.timeout = timeout
 
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
@@ -57,19 +58,17 @@ class ModbusServer(modbus.Server):
 
         logger.info('Conpot initialized using the {0} template.'.format(template_name))
 
-    def handle(self, socket, address):
+    def handle(self, sock, address):
+        sock.settimeout(self.timeout)
         session_id = str(uuid.uuid4())
         session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),'data_type': 'modbus', 'data': {}}
 
         start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
 
-        socket.settimeout(5)
-        fileobj = socket.makefile()
-
         try:
             while True:
-                request = fileobj.read(7)
+                request = sock.recv(7)
                 if not request:
                     logger.info('Client disconnected. ({0})'.format(session_id))
                     break
@@ -78,7 +77,7 @@ class ModbusServer(modbus.Server):
                     break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
-                    new_byte = fileobj.read(1)
+                    new_byte = sock.recv(1)
                     request += new_byte
                 query = modbus_tcp.TcpQuery()
 
@@ -90,8 +89,7 @@ class ModbusServer(modbus.Server):
                 logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session_id))
 
                 if response:
-                    fileobj.write(response)
-                    fileobj.flush()
+                    sock.sendall(response)
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
 
