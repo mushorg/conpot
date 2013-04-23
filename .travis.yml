@@ -25,9 +25,10 @@ install:
  - cd $REPO
  - pip install -r requirements.txt --use-mirrors
 # command to run tests
-script: 
+script:
  - echo $REPO
  - pwd
+ - cp config.py.dist config.py
  - nosetests
 notifications:
  irc:
