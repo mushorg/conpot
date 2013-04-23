@@ -17,6 +17,7 @@
 
 
 import unittest
+from datetime import datetime
 
 from modules import modbus_server
 from gevent.queue import Queue
@@ -32,7 +33,7 @@ import modbus_tk.modbus_tcp as modbus_tcp
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.log_queue = Queue()
-        modbus = modbus_server.ModbusServer('tests/data/basic_modbus_template.xml', self.log_queue)
+        modbus = modbus_server.ModbusServer('tests/data/basic_modbus_template.xml', self.log_queue, timeout=0.1)
         print modbus._databank
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
@@ -64,3 +65,31 @@ class TestBase(unittest.TestCase):
         actual_bit = master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
         self.assertSequenceEqual(set_bits, actual_bit)
 
+    def test_modbus_logging(self):
+        """
+        Objective: Test if modbus generates logging messages as expected.
+        Expected output is a dictionary with the following structure:
+        {'timestamp': datetime.datetime(2013, 4, 23, 18, 47, 38, 532960),
+         'remote': ('127.0.0.1', 60991),
+         'data_type': 'modbus',
+         'session_id': '01bd90d6-76f4-43cb-874f-5c8f254367f5',
+         'data': {0: {'function_code': 1, 'slave_id': 1, 'request': '0100010080', 'response': '0110ffffffffffffffffffffffffffffffff'}}}
+
+        """
+        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master.set_timeout(1.0)
+        #issue request to modbus server
+        master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
+
+        #extract the generated logentry
+        log_item = self.log_queue.get(True, 2)
+
+        #self.assertIn('timestamp', log_item)
+        self.assertIsInstance(log_item['timestamp'], datetime)
+        #we expect session_id to be 36 characters long (32 x char, 4 x dashes)
+        self.assertTrue(len(log_item['session_id']), log_item)
+        self.assertEqual('127.0.0.1', log_item['remote'][0])
+        self.assertEquals('modbus', log_item['data_type'])
+        #testing the actual modbus data
+        self.assertEquals('0100010080', log_item['data'][0]['request'])
+        self.assertEquals('0110ffffffffffffffffffffffffffffffff', log_item['data'][0]['response'])
