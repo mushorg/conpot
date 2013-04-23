@@ -90,7 +90,9 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, log_queue):
+    def __init__(self, log_queue, server_config=None):
+        if not server_config:
+            server_config = conpot_config
         self.log_queue = log_queue
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -98,7 +100,7 @@ class CommandResponder(object):
 
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
         udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
-        udp_sock.bind((conpot_config.snmp_host, conpot_config.snmp_port))
+        udp_sock.bind((server_config.snmp_host, server_config.snmp_port))
         # UDP over IPv4
         self.addSocketTransport(
             self.snmpEngine,

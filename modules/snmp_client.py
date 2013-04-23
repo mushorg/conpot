@@ -8,7 +8,9 @@ import config as conpot_config
 
 
 class SNMPClient(object):
-    def __init__(self):
+    def __init__(self, client_config=None):
+        if not client_config:
+            client_config = conpot_config
         # Create SNMP engine instance
         self.snmpEngine = engine.SnmpEngine()
 
@@ -31,7 +33,7 @@ class SNMPClient(object):
         )
         config.addTargetAddr(
             self.snmpEngine, 'my-router',
-            udp.domainName, (conpot_config.snmp_host, conpot_config.snmp_port),
+            udp.domainName, (client_config.snmp_host, client_config.snmp_port),
             'my-creds'
         )
 

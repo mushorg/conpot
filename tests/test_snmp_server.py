@@ -17,13 +17,14 @@
 
 
 import unittest
-import conpot_ics_server
 
-import gevent
+from lxml import etree
+
 from gevent.queue import Queue
 from gevent import monkey
 
 from modules import snmp_client
+from modules import snmp_command_responder
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()
@@ -31,9 +32,27 @@ monkey.patch_all()
 
 class TestBase(unittest.TestCase):
 
+    class MockConfig(object):
+        def __init__(self):
+            self.snmp_host = "127.0.0.1"
+            self.snmp_port = 1337
+
     def setUp(self):
         self.log_queue = Queue()
-        self.snmp_server = conpot_ics_server.create_snmp_server('templates/default.xml', self.log_queue)
+        dom = etree.parse('templates/default.xml')
+        mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+        #only enable snmp server if we have configuration items
+        if not mibs:
+            raise Exception("No configuration for SNMP server")
+        else:
+            self.snmp_server = snmp_command_responder.CommandResponder(self.log_queue, server_config=self.MockConfig())
+
+        for mib in mibs:
+            mib_name = mib.attrib['name']
+            for symbol in mib:
+                symbol_name = symbol.attrib['name']
+                value = symbol.xpath('./value/text()')[0]
+                self.snmp_server.register(mib_name, symbol_name, value)
         self.snmp_server.snmpEngine.transportDispatcher.start()
 
     def tearDown(self):
@@ -50,6 +69,6 @@ class TestBase(unittest.TestCase):
                 self.result = val.prettyPrint()
 
     def test_snmp(self):
-        client = snmp_client.SNMPClient()
+        client = snmp_client.SNMPClient(client_config=self.MockConfig())
         client.get_command(callback=self.mock_callback)
         self.assertEqual("Siemens, SIMATIC, S7-200", self.result)

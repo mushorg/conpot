@@ -29,7 +29,7 @@ script:
  - echo $REPO
  - pwd
  - cp config.py.dist config.py
- - sudo nosetests
+ - nosetests
 notifications:
  irc:
   - "irc.freenode.org#glastopf"
