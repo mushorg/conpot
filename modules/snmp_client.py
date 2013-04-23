@@ -48,13 +48,15 @@ class SNMPClient(object):
             for oid, val in varBindTable:
                 print('%s = %s' % (oid.prettyPrint(), val.prettyPrint()))
 
-    def get_command(self):
+    def get_command(self, callback=None):
+        if not callback:
+            callback = self.cbFun
         # Prepare and send a request message
         cmdgen.GetCommandGenerator().sendReq(
             self.snmpEngine,
             'my-router',
             (((1, 3, 6, 1, 2, 1, 1, 1, 0), None), ),
-            self.cbFun
+            callback
         )
 
         # Run I/O dispatcher which would send pending queries and process responses
