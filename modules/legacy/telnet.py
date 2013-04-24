@@ -22,6 +22,7 @@ import sys
 # The default response.
 HelpResponse = "help                           Print this list\nioHelp                         Print I/O utilities help info\ndbgHelp                        Print debugger help info\nnfsHelp                        Print nfs help info\nnetHelp                        Print network help info\nspyHelp                        Print task histogrammer help info\ntimexHelp                      Print execution timer help info\nh         [n]                  Print (or set) shell history\ni         [task]               Summary of tasks' TCBs\nti        task                 Complete info on TCB for task\nsp        adr,args...          Spawn a task, pri=100, opt=0, stk=20000\ntaskSpawn name,pri,opt,stk,adr,args... Spawn a task\ntd        task                 Delete a task\nts        task                 Suspend a task\n"
 
+
 class HoneyTelnetd:
     PWD = ""
     logFile = "/var/log/scadahoneynet.log"

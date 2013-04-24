@@ -49,7 +49,7 @@ class TestBase(unittest.TestCase):
         master.set_timeout(1.0)
         actual_bits = master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
         #the test template sets all bits to 1 in the range 1-128
-        expected_bits = [1 for b in range(0,128)]
+        expected_bits = [1 for b in range(0, 128)]
         self.assertSequenceEqual(actual_bits, expected_bits)
 
     def test_write_read_coils(self):

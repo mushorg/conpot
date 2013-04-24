@@ -1,5 +1,6 @@
 # Copyright (c) 2009-2010 Denis Bilenko. See LICENSE for details.
-"""UDP/SSL server"""
+
+
 import sys
 import errno
 import traceback
