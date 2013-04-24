@@ -17,7 +17,7 @@ and size. ``ANALOG_INPUTS`` hold data in byte size.
 In the ``<values />`` section you take the starting address and fill the field with values. The content is evaluated so
 you can easily fill it with random values.
 
-::
+.. code-block:: xml
 
     <block name="a">
         <!-- COILS/DISCRETE_OUTPUTS aka. binary output, power on/power off
@@ -43,7 +43,7 @@ SNMP template
 In the ``<snmp />`` section you define a management information base (MIB). MIBs consist of a ``<symbol>`` with a name
 attribute, and its ``<value>``.
 
-::
+.. code-block:: xml
 
     <symbol name="sysDescr">
         <value>Siemens, SIMATIC, S7-200</value>
