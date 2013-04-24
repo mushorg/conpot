@@ -19,12 +19,15 @@
 import unittest
 
 from lxml import etree
+from datetime import datetime
 
 from gevent.queue import Queue
 from gevent import monkey
 
 from modules import snmp_client
 from modules import snmp_command_responder
+
+from pysnmp.proto import rfc1902
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()
@@ -68,7 +71,24 @@ class TestBase(unittest.TestCase):
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
 
-    def test_snmp(self):
+    def test_snmp_get(self):
         client = snmp_client.SNMPClient(client_config=self.MockConfig())
-        client.get_command(callback=self.mock_callback)
+        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
+        client.get_command(OID, callback=self.mock_callback)
         self.assertEqual("Siemens, SIMATIC, S7-200", self.result)
+        log_item = self.log_queue.get(True, 2)
+        self.assertIsInstance(log_item['timestamp'], datetime)
+        self.assertEqual('127.0.0.1', log_item['remote'][0])
+        self.assertEquals('snmp', log_item['data_type'])
+
+    def test_snmp_set(self):
+        client = snmp_client.SNMPClient(client_config=self.MockConfig())
+        OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
+        client.set_command(OID, callback=self.mock_callback)
+        # FIXME: no log entry for set commands
+        client.get_command(OID, callback=self.mock_callback)
+        self.assertEqual("test comment", self.result)
+        get_log_item = self.log_queue.get(True, 5)
+        self.assertIsInstance(get_log_item['timestamp'], datetime)
+        self.assertEqual('127.0.0.1', get_log_item['remote'][0])
+        self.assertEquals('snmp', get_log_item['data_type'])

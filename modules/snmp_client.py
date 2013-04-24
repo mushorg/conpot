@@ -4,6 +4,7 @@
 from pysnmp.entity import engine, config
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
+from pysnmp.proto import rfc1902
 
 import sys
 sys.path.append('./')
@@ -53,21 +54,34 @@ class SNMPClient(object):
             for oid, val in varBindTable:
                 print('%s = %s' % (oid.prettyPrint(), val.prettyPrint()))
 
-    def get_command(self, callback=None):
+    def get_command(self, OID=((1, 3, 6, 1, 2, 1, 1, 1, 0), None), callback=None):
         if not callback:
             callback = self.cbFun
         # Prepare and send a request message
         cmdgen.GetCommandGenerator().sendReq(
             self.snmpEngine,
             'my-router',
-            (((1, 3, 6, 1, 2, 1, 1, 1, 0), None), ),
-            callback
+            (OID,),
+            callback,
         )
 
         # Run I/O dispatcher which would send pending queries and process responses
         self.snmpEngine.transportDispatcher.runDispatcher()
 
+    def set_command(self, OID, callback=None):
+        if not callback:
+            callback = self.cbFun
+        cmdgen.SetCommandGenerator().sendReq(
+            self.snmpEngine,
+            'my-router',
+            (OID,),
+            callback,
+        )
+
 
 if __name__ == "__main__":
     snmp_client = SNMPClient()
-    snmp_client.get_command()
+    OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
+    snmp_client.set_command(OID)
+    OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), None)
+    #snmp_client.get_command(OID)

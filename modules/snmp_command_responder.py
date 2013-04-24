@@ -163,7 +163,6 @@ class CommandResponder(object):
         scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
 
-
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
         if mibname in modules:
