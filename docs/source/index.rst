@@ -11,8 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   development/index
    installation/index
+   usage
+   development/index
 
 
 Indices and tables
