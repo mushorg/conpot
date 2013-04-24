@@ -231,7 +231,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Conpot', u'Conpot Documentation',
-   u'Glastopf Developers', 'Conpot', 'One line description of project.',
+   u'Glastopf Developers', 'Conpot', 'ICS/SCADA honeypot.',
    'Miscellaneous'),
 ]
 

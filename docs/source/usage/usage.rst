@@ -1,12 +1,14 @@
-Using Conpot
+Customization
 ============
 
-Creating custom profiles
+The default profile
 ------------------------
 
-Conpot comes with a ``default.xml`` profile in the templates directory.
+Conpot is shipped with a default profile(``default.xml``) which provides basic emulation of a
+`Siemens S7-200 CPU <https://www.automation.siemens.com/mcms/programmable-logic-controller/en/simatic-s7-controller/s7-200/pages/default.aspx?HTTPS=REDIR>`_
+with a few expansion modules installed. The attack surface of the default emulation includes the Modbus and SNMP protocols.
 
-Modbus template
+Modbus
 ~~~~~~~~~~~~~~~
 
 The ``<slave />`` section allows you to define the slaves. Every slave definition is separated into ``<blocks />``.
@@ -37,7 +39,7 @@ you can easily fill it with random values.
 ``HOLDING_REGISTERS`` can be considered as temporary data storage. You define them with the starting address and their
 size. Holding registers don't have any initial value.
 
-SNMP template
+SNMP
 ~~~~~~~~~~~~~
 
 In the ``<snmp />`` section you define a management information base (MIB). MIBs consist of a ``<symbol>`` with a name

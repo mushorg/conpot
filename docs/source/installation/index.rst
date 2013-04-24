@@ -3,8 +3,8 @@
 Installation
 ===========
 
-Basics instruction on how to install Glastopf
+Basics instruction on how to install Conpot
 
 .. toctree::
 
-    installation_ubuntu
+    ubuntu

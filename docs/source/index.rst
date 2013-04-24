@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
 
    installation/index
-   usage
+   usage/index
    development/index
 
 

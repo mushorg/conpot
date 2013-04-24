@@ -38,3 +38,4 @@ config.py
 modbus_tk
 conpot.db
 docs/build
+.DS_Store

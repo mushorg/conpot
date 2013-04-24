@@ -1,4 +1,4 @@
-Conpot Installation - Ubuntu 12.04 LTS
+Ubuntu 12.04 LTS
 ======================================
 
 Installation
