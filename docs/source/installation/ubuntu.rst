@@ -32,8 +32,7 @@ And modbus_tk
 ::
 
     cd /opt
-    wget https://modbus-tk.googlecode.com/files/modbus-tk-0.4.2.zip
-    unzip modbus-tk-0.4.2.zip -d modbus_tk
+    git clone git@github.com:glastopf/modbus-tk.git
     cd modbus_tk
     python setup.py install
 
