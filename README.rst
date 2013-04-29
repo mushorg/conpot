@@ -26,4 +26,4 @@ Thanks to JetBrains for free PyCharm licenses!
 
 INSTALL
 -------
-Install instruction can be found on `here <https://github.com/glastopf/conpot/blob/master/docs/source/installation/installation_ubuntu.rst>`_.
+Install instruction can be found on `here <https://github.com/glastopf/conpot/blob/master/docs/source/installation/ubuntu.rst>`_.
