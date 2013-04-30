@@ -1,21 +1,19 @@
 import struct
 import uuid
 import socket
-import random
 import time
 import logging
 
 from datetime import datetime
 
 import modbus_tk.modbus_tcp as modbus_tcp
-import modbus_tk.defines as mdef
 from modbus_tk import modbus
 
 from gevent.server import StreamServer
 
 from lxml import etree
 
-from modules import slave_db
+from conpot.modules import slave_db
 
 logger = logging.getLogger(__name__)
 

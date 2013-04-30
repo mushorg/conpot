@@ -19,12 +19,13 @@
 import unittest
 from datetime import datetime
 
-from modules import modbus_server
 from gevent.queue import Queue
 from gevent.server import StreamServer
 from gevent import monkey
 
 #we need to monkey patch for modbus_tcp.TcpMaster
+from conpot.modules import modbus_server
+
 monkey.patch_all()
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp

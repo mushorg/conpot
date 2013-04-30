@@ -3,7 +3,7 @@ import struct
 from modbus_tk.modbus import Databank, DuplicatedKeyError
 from modbus_tk import defines
 
-from modules.slave import MBSlave
+from conpot.modules.slave import MBSlave
 
 
 class SlaveBase(Databank):

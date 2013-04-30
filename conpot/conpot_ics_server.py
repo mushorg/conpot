@@ -23,11 +23,10 @@ import gevent
 from gevent.queue import Queue
 
 from lxml import etree
-
-from modules import snmp_command_responder, modbus_server
+from conpot.modules import modbus_server, snmp_command_responder
 
 import config
-from modules.loggers import sqlite_log, feeder
+from conpot.modules.loggers import sqlite_log, feeder
 
 logger = logging.getLogger()
 
@@ -68,7 +67,7 @@ def create_snmp_server(template, log_queue):
     return snmp_server
 
 
-if __name__ == "__main__":
+def main():
 
     root_logger = logging.getLogger()
 
@@ -93,3 +92,7 @@ if __name__ == "__main__":
         servers.append(gevent.spawn(snmp_server.serve_forever))
 
     gevent.joinall(servers)
+
+
+if __name__ == "__main__":
+    main()

@@ -17,17 +17,15 @@
 
 
 import unittest
-
-from lxml import etree
 from datetime import datetime
 
+from lxml import etree
 from gevent.queue import Queue
 from gevent import monkey
-
-from modules import snmp_client
-from modules import snmp_command_responder
-
 from pysnmp.proto import rfc1902
+
+from conpot.modules import snmp_client
+from conpot.modules import snmp_command_responder
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()
