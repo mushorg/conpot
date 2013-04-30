@@ -1,6 +1,20 @@
 Releasing Conpot
 ================
 
+Testing
+-------
+
+Make sure all tests are passing:
+
+  nosetests
+
+Check Usage
+-----------
+
+Run the server to see if he loads properly.
+
+  python conpot
+
 Setup.py
 --------
 
@@ -8,8 +22,8 @@ Bump the version number in the setup.py before tagging:
 
   version='$VERSION_NUMBER$'
 
-Tagging
--------
+Tagging and Pushing
+-------------------
 
 Make sure to add a git tag before making a new release:
 
@@ -18,6 +32,8 @@ Make sure to add a git tag before making a new release:
 
 $VERSION_NUMBER$ should be latest pypi version +1
 
+Mess ups
+~~~~~~~~
 
 If you fucked up a tag, you can fix it using the following procedure:
 
@@ -32,3 +48,13 @@ Delete the old tag:
 Delete the old tag on remote:
 
   git push origin :refs/tags/old_tag
+
+Release
+-------
+
+Build the package:
+
+  python setup.py sdist
+
+Get the PKG-INFO from the .tgz in dist/package.tgz
+Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz
