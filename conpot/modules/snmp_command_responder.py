@@ -17,6 +17,8 @@ from gevent import socket
 
 from conpot.modules.legacy.udp_server import DatagramServer
 
+import snmp_engine as engine
+
 import config as conpot_config
 
 logger = logging.getLogger(__name__)
