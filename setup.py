@@ -16,7 +16,7 @@ def get_requirements():
 setup(
     name='Conpot',
     version='0.1.0',
-    packages=find_packages(),
+    packages=find_packages(exclude=["*.pyc", "config.py"]),
     entry_points = {
         'console_scripts': [
             'conpot = conpot.conpot_ics_server:main',
@@ -24,7 +24,7 @@ setup(
     },
     package_data = {
         '': ['*.txt', '*.rst'],
-        'conpot': ['*.xml'],
+        'conpot': ['*.xml', 'config.py.dist'],
     },
     url='http://conpot.org',
     license='GPL 2',
@@ -32,6 +32,7 @@ setup(
     author_email='glastopf@public.honeynet.org',
     long_description=open('README.rst').read(),
     test_suite='nose.collector',
+    tests_require="nose",
     install_requires=get_requirements(),
     dependency_links = [
         "git+git://github.com/rep/hpfeeds.git"
