@@ -23,18 +23,17 @@ from gevent.queue import Queue
 from gevent.server import StreamServer
 from gevent import monkey
 
-#we need to monkey patch for modbus_tcp.TcpMaster
 from conpot.modules import modbus_server
-
-monkey.patch_all()
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
+#we need to monkey patch for modbus_tcp.TcpMaster
+monkey.patch_all()
 
 
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.log_queue = Queue()
-        modbus = modbus_server.ModbusServer('tests/data/basic_modbus_template.xml', self.log_queue, timeout=0.1)
+        modbus = modbus_server.ModbusServer('conpot/tests/data/basic_modbus_template.xml', self.log_queue, timeout=0.1)
         print modbus._databank
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
