@@ -8,6 +8,9 @@ from datetime import datetime
 
 import modbus_tk.modbus_tcp as modbus_tcp
 from modbus_tk import modbus
+# Following imports are required for modbus template evaluation
+import modbus_tk.defines as mdef
+import random
 
 from gevent.server import StreamServer
 
