@@ -30,6 +30,9 @@ from conpot.modules import modbus_server, snmp_command_responder
 import config
 from conpot.modules.loggers import sqlite_log, feeder
 
+
+__version__ = "0.1.0"
+
 logger = logging.getLogger()
 
 
@@ -69,8 +72,21 @@ def create_snmp_server(template, log_queue):
     return snmp_server
 
 
-def main():
+def logo():
+    print """
+                       _
+   ___ ___ ___ ___ ___| |_
+  |  _| . |   | . | . |  _|
+  |___|___|_|_|  _|___|_|
+              |_|
 
+  Version {0}
+  Glastopf Project
+""".format(__version__)
+
+
+def main():
+    logo()
     root_logger = logging.getLogger()
 
     console_log = logging.StreamHandler()
