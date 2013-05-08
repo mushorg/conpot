@@ -24,6 +24,7 @@ from gevent.server import StreamServer
 from gevent import monkey
 
 from conpot.modules import modbus_server
+from modbus_tk.modbus import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 #we need to monkey patch for modbus_tcp.TcpMaster
@@ -64,6 +65,17 @@ class TestBase(unittest.TestCase):
         #read 8 bit
         actual_bit = master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
         self.assertSequenceEqual(set_bits, actual_bit)
+
+    def test_read_nonexistent_slave(self):
+        """
+        Objective: Test if the correct exception is raised when trying to read from nonexistent slave.
+        """
+        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master.set_timeout(1.0)
+        with self.assertRaises(ModbusError) as cm:
+            master.execute(slave=5, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=1)
+
+        self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
 
     def test_modbus_logging(self):
         """

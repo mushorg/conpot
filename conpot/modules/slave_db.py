@@ -1,6 +1,7 @@
 import struct
 
-from modbus_tk.modbus import Databank, DuplicatedKeyError
+from modbus_tk.modbus import Databank, DuplicatedKeyError, MissingKeyError
+
 from modbus_tk import defines
 
 from conpot.modules.slave import MBSlave
@@ -34,6 +35,7 @@ class SlaveBase(Databank):
         response_pdu = ""
         slave_id = None
         function_code = None
+        slave = None
 
         try:
             #extract the pdu and the slave id
@@ -49,13 +51,14 @@ class SlaveBase(Databank):
                 response_pdu = slave.handle_request(request_pdu)
                 #make the full response
                 response = query.build_response(response_pdu)
-        except IOError as excpt:
+        except (IOError, MissingKeyError) as excpt:
             print("handle request failed: " + str(excpt))
             func_code = 1
             if len(request_pdu) > 0:
                 (func_code, ) = struct.unpack(">B", request_pdu[0])
             #If the request was not handled correctly, return a server error response
-            response = struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
+            r = struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
+            response = query.build_response(r)
 
         if slave:
             function_code = slave.function_code
@@ -64,8 +67,7 @@ class SlaveBase(Databank):
                            'slave_id': slave_id,
                            'function_code': function_code,
                            'response': response_pdu.encode('hex')})
-#        except:
-#            print("handle request failed: unknown error")
+
 
 
 
