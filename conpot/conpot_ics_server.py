@@ -15,9 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+import sys
 import logging
 import json
+import argparse
+import os.path
 
 import gevent
 from gevent.queue import Queue
@@ -76,17 +78,30 @@ def main():
     console_log.setFormatter(logging.Formatter("%(asctime)-15s %(message)s"))
     root_logger.addHandler(console_log)
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--template",
+                        help="define the template to use",
+                        type=str,
+                        default="templates/default.xml"
+                        )
+    args = parser.parse_args()
+    if not os.path.isfile(args.template):
+        print("Invalid template path/name")
+        print("bye")
+        sys.exit(1)
+    else:
+        print("Using template {0}".format(args.template))
     servers = []
 
     log_queue = Queue()
     gevent.spawn(log_worker, log_queue)
 
     logger.setLevel(logging.DEBUG)
-    modbus_daemon = modbus_server.ModbusServer("templates/default.xml", log_queue).get_server(config.modbus_host,
+    modbus_daemon = modbus_server.ModbusServer(args.template, log_queue).get_server(config.modbus_host,
                                                                                               config.modbus_port)
     servers.append(gevent.spawn(modbus_daemon.serve_forever))
 
-    snmp_server = create_snmp_server("templates/default.xml", log_queue)
+    snmp_server = create_snmp_server(args.template, log_queue)
     if snmp_server:
         logger.info("SNMP server started.")
         servers.append(gevent.spawn(snmp_server.serve_forever))
