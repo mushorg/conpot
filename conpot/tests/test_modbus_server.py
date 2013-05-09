@@ -26,9 +26,9 @@ from modbus_tk.modbus import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
-from conpot import modbus_server
-
 #we need to monkey patch for modbus_tcp.TcpMaster
+from conpot.modbus import modbus_server
+
 monkey.patch_all()
 
 

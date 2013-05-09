@@ -19,7 +19,7 @@
 import logging
 
 from lxml import etree
-from conpot.modules.snmp_command_responder import CommandResponder
+from conpot.snmp.snmp_command_responder import CommandResponder
 
 logger = logging.getLogger()
 

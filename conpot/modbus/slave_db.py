@@ -4,7 +4,7 @@ from modbus_tk.modbus import Databank, DuplicatedKeyError, MissingKeyError
 
 from modbus_tk import defines
 
-from conpot.modules.slave import MBSlave
+from conpot.modbus.slave import MBSlave
 
 
 class SlaveBase(Databank):

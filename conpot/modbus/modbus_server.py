@@ -15,8 +15,7 @@ import random
 from gevent.server import StreamServer
 
 from lxml import etree
-
-from conpot.modules import slave_db
+from conpot.modbus import slave_db
 
 logger = logging.getLogger(__name__)
 

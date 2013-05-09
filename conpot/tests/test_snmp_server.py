@@ -24,10 +24,11 @@ from gevent.queue import Queue
 from gevent import monkey
 from pysnmp.proto import rfc1902
 
-from conpot.modules import snmp_client
-from conpot.modules import snmp_command_responder
+from conpot.snmp import snmp_client
 
 #we need to monkey patch for modbus_tcp.TcpMaster
+from conpot.snmp import snmp_command_responder
+
 monkey.patch_all()
 
 

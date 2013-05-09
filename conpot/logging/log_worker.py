@@ -1,7 +1,7 @@
 import json
 
-from conpot.loggers.sqlite_log import SQLiteLogger
-from conpot.loggers.feeder import HPFriendsLogger
+from conpot.logging.sqlite_log import SQLiteLogger
+from conpot.logging.feeder import HPFriendsLogger
 
 
 class LogWorker(object):
