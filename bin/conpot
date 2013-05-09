@@ -101,12 +101,11 @@ def main():
     snmp_port = config.getint('snmp', 'port')
     snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue)
 
-    #add greenlets to list
-    servers = []
-    servers.append(gevent.spawn(modbus_server.serve_forever))
-    servers.append(gevent.spawn(snmp_server.start()))
-
     try:
+        #add greenlets to list
+        servers = []
+        servers.append(gevent.spawn(modbus_server.serve_forever))
+        servers.append(gevent.spawn(snmp_server.start()))
         gevent.joinall(servers)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
@@ -114,6 +113,7 @@ def main():
         snmp_server.stop()
         modbus_server.stop()
 
+    #just being nice and cosy!
     gevent.joinall(servers, 2)
 
 

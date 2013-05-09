@@ -169,6 +169,10 @@ class CommandResponder(object):
     def serve_forever(self):
         self.snmpEngine.transportDispatcher.serve_forever()
 
+    def stop(self):
+        self.snmpEngine.transportDispatcher.stop_accepting()
+
+
 
 if __name__ == "__main__":
     server = CommandResponder()

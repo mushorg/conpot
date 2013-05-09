@@ -46,3 +46,6 @@ class SNMPServer(object):
             logger.info('Starting SNMP server.')
             self.snmp_server.serve_forever()
 
+    def stop(self):
+        if self.snmp_server:
+            self.snmp_server.stop()
