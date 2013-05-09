@@ -13,7 +13,12 @@ class LogWorker(object):
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
         if config.getboolean('hpfriends', 'enabled'):
-            self.friends_feeder = HPFriendsLogger()
+            host = self.config.get('hpfriends', 'host')
+            port = self.config.getint('hpfriends', 'port')
+            ident = self.config.get('hpfriends', 'ident')
+            secret = self.config.get('hpfriends', 'secret')
+            channels = eval(self.config.get('hpfriends', 'channels'))
+            self.friends_feeder = HPFriendsLogger(host, port, ident, secret, channels)
         self.enabled = True
 
     def start(self):

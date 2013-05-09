@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013  Johnny Vestergaard <jkv@unixcluster.dk>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,20 +15,22 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import unittest
 
-import hpfeeds
+from conpot.logging.feeder import HPFriendsLogger
 
-class HPFriendsLogger(object):
+class Test_Loggers(unittest.TestCase):
 
-    def __init__(self, host, port, ident, secret, channels):
-        self.channels = channels
-        try:
-            self.hpc = hpfeeds.new(host, port, ident, secret)
-            self.hpc.connect()
+    def test_hpfriends(self):
+        """
+        Objective: Test if data can be published to hpfriends without errors.
+        """
 
-        except Exception as e:
-            raise
+        host = 'hpfriends.honeycloud.net'
+        port = 20000
+        ident = 'HBmU08rR'
+        secret = 'XDNNuMGYUuWFaWyi'
+        channels = ["test.test", ]
+        hpf = HPFriendsLogger(host, port, ident, secret, channels)
 
-    def log(self, data):
-        for chan in self.channels:
-            self.hpc.publish(chan, data)
+        hpf.log('some some test data')
