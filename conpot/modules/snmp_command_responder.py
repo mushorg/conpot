@@ -15,7 +15,7 @@ from pyasn1.codec.ber import decoder
 import gevent
 from gevent import socket
 
-from conpot.modules.legacy.udp_server import DatagramServer
+from conpot.udp_server import DatagramServer
 
 import snmp_engine as engine
 
