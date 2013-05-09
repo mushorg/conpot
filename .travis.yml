@@ -26,7 +26,6 @@ install:
  - pip install -r requirements.txt --use-mirrors
 # command to run tests
 script:
- - cp conpot/config.py.dist config.py
  - nosetests
 notifications:
  irc:

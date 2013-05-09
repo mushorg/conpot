@@ -17,19 +17,22 @@
 
 
 import hpfeeds
-import config
-
 
 class HPFriendsLogger(object):
 
-    def __init__(self):
+    def __init__(self, config):
+        self.config = config
+        host = self.config.get('hpfriends', 'host')
+        port = self.config.getint('hpfriends', 'port')
+        ident = self.config.get('hpfriends', 'ident')
+        secret = self.config.get('hpfriends', 'secret')
+        self.channels = eval(self.config.get('hpfriends', 'channels'))
         try:
-            self.hpc = hpfeeds.new(config.hpfriends_host, config.hpfriends_port,
-                                   config.hpfriends_ident, config.hpfriends_secret)
+            self.hpc = hpfeeds.new(host, port, ident, secret)
             self.hpc.connect()
         except Exception as e:
             raise
 
     def log(self, data):
-        for chan in config.hpfriends_channels:
+        for chan in self.channels:
             self.hpc.publish(chan, data)

@@ -33,20 +33,17 @@ monkey.patch_all()
 
 class TestBase(unittest.TestCase):
 
-    class MockConfig(object):
-        def __init__(self):
-            self.snmp_host = "127.0.0.1"
-            self.snmp_port = 1337
-
     def setUp(self):
+        self.host = '127.0.0.1'
+        self.port = 1337
         self.log_queue = Queue()
-        dom = etree.parse('templates/default.xml')
+        dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = snmp_command_responder.CommandResponder(self.log_queue, server_config=self.MockConfig())
+            self.snmp_server = snmp_command_responder.CommandResponder(self.host, self.port, self.log_queue)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
@@ -70,7 +67,7 @@ class TestBase(unittest.TestCase):
                 self.result = val.prettyPrint()
 
     def test_snmp_get(self):
-        client = snmp_client.SNMPClient(client_config=self.MockConfig())
+        client = snmp_client.SNMPClient(self.host, self.port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.get_command(OID, callback=self.mock_callback)
         self.assertEqual("Siemens, SIMATIC, S7-200", self.result)
@@ -80,7 +77,7 @@ class TestBase(unittest.TestCase):
         self.assertEquals('snmp', log_item['data_type'])
 
     def test_snmp_set(self):
-        client = snmp_client.SNMPClient(client_config=self.MockConfig())
+        client = snmp_client.SNMPClient(self.host, self.port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
         client.set_command(OID, callback=self.mock_callback)
         # FIXME: no log entry for set commands

@@ -19,8 +19,6 @@ from conpot.modules.legacy.udp_server import DatagramServer
 
 import snmp_engine as engine
 
-import config as conpot_config
-
 logger = logging.getLogger(__name__)
 
 
@@ -91,9 +89,7 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, log_queue, server_config=None):
-        if not server_config:
-            server_config = conpot_config
+    def __init__(self, host, port, log_queue):
         self.log_queue = log_queue
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -101,7 +97,7 @@ class CommandResponder(object):
 
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
         udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
-        udp_sock.bind((server_config.snmp_host, server_config.snmp_port))
+        udp_sock.bind((host, port))
         # UDP over IPv4
         self.addSocketTransport(
             self.snmpEngine,

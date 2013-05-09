@@ -6,15 +6,9 @@ from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
 from pysnmp.proto import rfc1902
 
-import sys
-sys.path.append('./')
-import config as conpot_config
-
-
 class SNMPClient(object):
-    def __init__(self, client_config=None):
-        if not client_config:
-            client_config = conpot_config
+    def __init__(self, host, port):
+
         # Create SNMP engine instance
         self.snmpEngine = engine.SnmpEngine()
 
@@ -37,7 +31,7 @@ class SNMPClient(object):
         )
         config.addTargetAddr(
             self.snmpEngine, 'my-router',
-            udp.domainName, (client_config.snmp_host, client_config.snmp_port),
+            udp.domainName, (host, port),
             'my-creds'
         )
 
@@ -77,7 +71,6 @@ class SNMPClient(object):
             (OID,),
             callback,
         )
-
 
 if __name__ == "__main__":
     snmp_client = SNMPClient()

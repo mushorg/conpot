@@ -20,7 +20,6 @@ from conpot.modules import slave_db
 
 logger = logging.getLogger(__name__)
 
-
 class ModbusServer(modbus.Server):
 
     def __init__(self, template, log_queue, databank=slave_db.SlaveBase(), timeout=5):
