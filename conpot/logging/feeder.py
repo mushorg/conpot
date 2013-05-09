@@ -18,17 +18,17 @@
 
 import hpfeeds
 
+
 class HPFriendsLogger(object):
 
     def __init__(self, host, port, ident, secret, channels):
         self.channels = channels
-        try:
-            self.hpc = hpfeeds.new(host, port, ident, secret)
-            self.hpc.connect()
 
-        except Exception as e:
-            raise
+        self.hpc = hpfeeds.new(host, port, ident, secret, reconnect=False)
 
     def log(self, data):
-        for chan in self.channels:
-            self.hpc.publish(chan, data)
+        #hpfeed lib supports passing list of channels
+        self.hpc.publish(self.channels, data)
+        error_msg = self.hpc.wait()
+        return error_msg
+

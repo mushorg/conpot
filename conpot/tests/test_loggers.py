@@ -33,4 +33,5 @@ class Test_Loggers(unittest.TestCase):
         channels = ["test.test", ]
         hpf = HPFriendsLogger(host, port, ident, secret, channels)
 
-        hpf.log('some some test data')
+        error_message = hpf.log('some some test data')
+        self.assertIsNone(error_message, 'Unexpected error message: {0}'.format(error_message))
