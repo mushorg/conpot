@@ -22,11 +22,12 @@ from datetime import datetime
 from gevent.queue import Queue
 from gevent.server import StreamServer
 from gevent import monkey
-
-from conpot.modules import modbus_server
 from modbus_tk.modbus import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
+
+from conpot import modbus_server
+
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()
 
