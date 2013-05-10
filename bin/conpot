@@ -33,6 +33,7 @@ from conpot.modbus.modbus_server import ModbusServer
 logger = logging.getLogger(__name__)
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
+
 def logo():
     print """
                        _
@@ -44,6 +45,7 @@ def logo():
   Version {0}
   Glastopf Project
 """.format(conpot.__version__)
+
 
 def setup_logging():
     root_logger = logging.getLogger()
@@ -59,13 +61,6 @@ def main():
     logo()
     setup_logging()
 
-    config = ConfigParser()
-    config_file = 'conpot.cfg'
-    if not os.path.isfile(config_file):
-        config_file = os.path.join(package_directory, 'conpot.cfg')
-        logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(config_file))
-    config.read(config_file)
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--template",
                         help="define the template to use",
@@ -77,6 +72,13 @@ def main():
                         default=os.path.join(package_directory, 'conpot.cfg')
                         )
     args = parser.parse_args()
+
+    config = ConfigParser()
+    config_file = 'conpot.cfg'
+    if not os.path.isfile(config_file):
+        config_file = os.path.join(package_directory, 'conpot.cfg')
+        logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(config_file))
+    config.read(config_file)
 
     if not os.path.isfile(args.template):
         logger.error('Template not found: {0}'.format(args.template))
