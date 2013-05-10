@@ -1,8 +1,6 @@
 import json
 import logging
 
-import gevent
-
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.feeder import HPFriendsLogger
 
