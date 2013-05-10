@@ -63,13 +63,15 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--template",
-                        help="define the template to use",
-                        default=os.path.join(package_directory, 'templates/default.xml')
+                        help="the template to use",
+                        default=os.path.join(package_directory, 'templates/default.xml'),
+                        metavar="template.xml"
                         )
 
     parser.add_argument("-c", "--config",
-                        help="define the configuration file to use",
-                        default=os.path.join(package_directory, 'conpot.cfg')
+                        help="the configuration file to use",
+                        default=os.path.join(package_directory, 'conpot.cfg'),
+                        metavar="config.cfg"
                         )
     args = parser.parse_args()
 
