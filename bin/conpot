@@ -74,11 +74,10 @@ def main():
     args = parser.parse_args()
 
     config = ConfigParser()
-    config_file = 'conpot.cfg'
-    if not os.path.isfile(config_file) and args.config == 'conpot.cfg':
-        config_file = os.path.join(package_directory, 'conpot.cfg')
-        logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(config_file))
-    config.read(config_file)
+    if not os.path.isfile(args.config):
+        args.config = os.path.join(package_directory, 'conpot.cfg')
+        logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(args.config))
+    config.read(args.config)
 
     if not os.path.isfile(args.template):
         logger.error('Template not found: {0}'.format(args.template))
