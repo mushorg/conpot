@@ -17,14 +17,18 @@
 
 
 import hpfeeds
+import gevent
 
 
 class HPFriendsLogger(object):
 
     def __init__(self, host, port, ident, secret, channels):
         self.channels = channels
-
-        self.hpc = hpfeeds.new(host, port, ident, secret, reconnect=False)
+        try:
+            with gevent.Timeout(2):
+                self.hpc = hpfeeds.new(host, port, ident, secret, reconnect=False)
+        except:
+            raise Exception("Connection to HPFriends timed out")
 
     def log(self, data):
         #hpfeed lib supports passing list of channels

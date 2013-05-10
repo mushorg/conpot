@@ -1,7 +1,12 @@
 import json
+import logging
+
+import gevent
 
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.feeder import HPFriendsLogger
+
+logger = logging.getLogger(__name__)
 
 
 class LogWorker(object):
@@ -13,12 +18,16 @@ class LogWorker(object):
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
         if config.getboolean('hpfriends', 'enabled'):
-            host = self.config.get('hpfriends', 'host')
-            port = self.config.getint('hpfriends', 'port')
-            ident = self.config.get('hpfriends', 'ident')
-            secret = self.config.get('hpfriends', 'secret')
-            channels = eval(self.config.get('hpfriends', 'channels'))
-            self.friends_feeder = HPFriendsLogger(host, port, ident, secret, channels)
+            host = config.get('hpfriends', 'host')
+            port = config.getint('hpfriends', 'port')
+            ident = config.get('hpfriends', 'ident')
+            secret = config.get('hpfriends', 'secret')
+            channels = eval(config.get('hpfriends', 'channels'))
+            try:
+                self.friends_feeder = HPFriendsLogger(host, port, ident, secret, channels)
+            except Exception as e:
+                logger.exception(e.message)
+                self.friends_feeder = None
         self.enabled = True
 
     def start(self):
