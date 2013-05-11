@@ -1,6 +1,0 @@
-include README.md
-include distribute_setup.py
-include requirements.txt
-include templates/*.xml
-recursive-exclude *.pyc
-recursive-exclude tests *.pyc

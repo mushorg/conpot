@@ -19,7 +19,7 @@ setup(
     packages=find_packages(exclude=["*.pyc", "config.py"]),
     package_data = {
         '': ['*.txt', '*.rst'],
-        'conpot': ['*.xml', 'config.py.dist'],
+        'conpot': ['templates/*.xml', 'conpot.cfg', "tests/data/*"],
     },
     url='http://conpot.org',
     license='GPL 2',
