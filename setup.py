@@ -3,6 +3,8 @@ use_setuptools()
 
 from setuptools import setup, find_packages
 
+import conpot
+
 
 def get_requirements():
     with open('requirements.txt') as req_file_h:
@@ -15,7 +17,7 @@ def get_requirements():
 
 setup(
     name='Conpot',
-    version='0.1.0',
+    version=conpot.__version__,
     packages=find_packages(exclude=["*.pyc", "config.py"]),
     package_data = {
         '': ['*.txt', '*.rst'],
