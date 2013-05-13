@@ -45,7 +45,7 @@ setup(
     tests_require="nose",
     install_requires=get_requirements(),
     dependency_links = [
-        "git+git://github.com/rep/hpfeeds.git"
-        "git+git://github.com/glastopf/modbus-tk.git"
+        "git+https://github.com/rep/hpfeeds.git#egg=hpfeeds",
+        "git+https://github.com/glastopf/modbus-tk.git#egg=modbus_tk"
     ],
 )

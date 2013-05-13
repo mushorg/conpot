@@ -1,5 +1,5 @@
 gevent
 pysnmp
 lxml
-https://github.com/glastopf/modbus-tk/zipball/master
-https://github.com/rep/hpfeeds/zipball/master
+modbus_tk
+hpfeeds
