@@ -69,6 +69,10 @@ class SNMPDispatcher(DatagramServer):
                 logger.debug('SNMPv{0} {1} {2}, Type: {3}, Community: {4}, '
                              'Oid: {5}, Value: {6}'.format(version + 1, direction, address, request_type,
                                                            community_name, oid, val))
+        elif version == 3:
+            logger.debug('SNMPv3 {0}: {1}. (Decoding not supported yet.)'.format(log_key, msg.encode('hex')))
+        else:
+            logger.debug('Unknown SNMP {0}: {1}'.format(log_key, msg.encode('hex')))
 
         #raw data (all snmp version)
         self.log_queue.put(
