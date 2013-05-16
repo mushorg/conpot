@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Releasing Conpot &mdash; Conpot 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Development" href="index.html" />
+    <link rel="prev" title="Guidelines" href="guidelines.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="guidelines.html" title="Guidelines"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Development</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="releasing-conpot">
+<h1>Releasing Conpot<a class="headerlink" href="#releasing-conpot" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>Make sure all tests are passing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">nosetests</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="check-usage">
+<h2>Check Usage<a class="headerlink" href="#check-usage" title="Permalink to this headline">¶</a></h2>
+<p>Run the server to see if he loads properly.</p>
+<div class="highlight-python"><pre>python conpot</pre>
+</div>
+</div>
+<div class="section" id="setup-py">
+<h2>Setup.py<a class="headerlink" href="#setup-py" title="Permalink to this headline">¶</a></h2>
+<p>Bump the version number in the setup.py before tagging:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">version</span><span class="o">=</span><span class="s">&#39;$VERSION_NUMBER$&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tagging-and-pushing">
+<h2>Tagging and Pushing<a class="headerlink" href="#tagging-and-pushing" title="Permalink to this headline">¶</a></h2>
+<p>Make sure to add a git tag before making a new release:</p>
+<div class="highlight-python"><pre>git tag -a $VERSION_NUMBER$
+git push --tag</pre>
+</div>
+<p>$VERSION_NUMBER$ should be latest pypi version +1</p>
+<div class="section" id="mess-ups">
+<h3>Mess ups<a class="headerlink" href="#mess-ups" title="Permalink to this headline">¶</a></h3>
+<p>If you fucked up a tag, you can fix it using the following procedure:</p>
+<p>Renaming:</p>
+<div class="highlight-python"><pre>git tag new_tag old_tag</pre>
+</div>
+<p>Delete the old tag:</p>
+<div class="highlight-python"><pre>git tag -d old_tag</pre>
+</div>
+<p>Delete the old tag on remote:</p>
+<div class="highlight-python"><pre>git push origin :refs/tags/old_tag</pre>
+</div>
+</div>
+</div>
+<div class="section" id="release">
+<h2>Release<a class="headerlink" href="#release" title="Permalink to this headline">¶</a></h2>
+<p>Build the package:</p>
+<div class="highlight-python"><pre>python setup.py sdist</pre>
+</div>
+<p>Get the PKG-INFO from the .tgz in dist/package.tgz
+Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Releasing Conpot</a><ul>
+<li><a class="reference internal" href="#testing">Testing</a></li>
+<li><a class="reference internal" href="#check-usage">Check Usage</a></li>
+<li><a class="reference internal" href="#setup-py">Setup.py</a></li>
+<li><a class="reference internal" href="#tagging-and-pushing">Tagging and Pushing</a><ul>
+<li><a class="reference internal" href="#mess-ups">Mess ups</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#release">Release</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="guidelines.html"
+                        title="previous chapter">Guidelines</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/development/releasing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="guidelines.html" title="Guidelines"
+             >previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Development</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Glastopf Developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Customization &mdash; Conpot 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="Usage" href="index.html" />
+    <link rel="next" title="Development" href="../development/index.html" />
+    <link rel="prev" title="Usage" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../development/index.html" title="Development"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Usage"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Usage</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="customization">
+<h1>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-default-profile">
+<h2>The default profile<a class="headerlink" href="#the-default-profile" title="Permalink to this headline">¶</a></h2>
+<p>Conpot is shipped with a default profile(<tt class="docutils literal"><span class="pre">default.xml</span></tt>) which provides basic emulation of a
+<a class="reference external" href="https://www.automation.siemens.com/mcms/programmable-logic-controller/en/simatic-s7-controller/s7-200/pages/default.aspx?HTTPS=REDIR">Siemens S7-200 CPU</a>
+with a few expansion modules installed. The attack surface of the default emulation includes the Modbus and SNMP protocols.</p>
+<div class="section" id="modbus">
+<h3>Modbus<a class="headerlink" href="#modbus" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">&lt;slave</span> <span class="pre">/&gt;</span></tt> section allows you to define the slaves. Every slave definition is separated into <tt class="docutils literal"><span class="pre">&lt;blocks</span> <span class="pre">/&gt;</span></tt>.</p>
+<p>An binary output block has the type <tt class="docutils literal"><span class="pre">COILS</span></tt>, binary input blocks <tt class="docutils literal"><span class="pre">DISCRETE_INPUTS</span></tt>. You define the starting address
+and size. <tt class="docutils literal"><span class="pre">ANALOG_INPUTS</span></tt> hold data in byte size.</p>
+<p>In the <tt class="docutils literal"><span class="pre">&lt;values</span> <span class="pre">/&gt;</span></tt> section you take the starting address and fill the field with values. The content is evaluated so
+you can easily fill it with random values.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;block</span> <span class="na">name=</span><span class="s">&quot;a&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- COILS/DISCRETE_OUTPUTS aka. binary output, power on/power off</span>
+<span class="c">         Here we map modbus addresses 1 to 127 to S7-200 PLC Addresses Q0.0 to Q15.7 --&gt;</span>
+    <span class="nt">&lt;type&gt;</span>COILS<span class="nt">&lt;/type&gt;</span>
+    <span class="nt">&lt;starting_address&gt;</span>1<span class="nt">&lt;/starting_address&gt;</span>
+    <span class="nt">&lt;size&gt;</span>128<span class="nt">&lt;/size&gt;</span>
+    <span class="nt">&lt;values&gt;</span>
+        <span class="nt">&lt;value&gt;</span>
+            <span class="nt">&lt;address&gt;</span>1<span class="nt">&lt;/address&gt;</span>
+            <span class="c">&lt;!-- Will be parsed with eval() --&gt;</span>
+            <span class="nt">&lt;content&gt;</span>[random.randint(0,1) for b in range(0,128)]<span class="nt">&lt;/content&gt;</span>
+        <span class="nt">&lt;/value&gt;</span>
+    <span class="nt">&lt;/values&gt;</span>
+<span class="nt">&lt;/block&gt;</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">HOLDING_REGISTERS</span></tt> can be considered as temporary data storage. You define them with the starting address and their
+size. Holding registers don&#8217;t have any initial value.</p>
+</div>
+<div class="section" id="snmp">
+<h3>SNMP<a class="headerlink" href="#snmp" title="Permalink to this headline">¶</a></h3>
+<p>In the <tt class="docutils literal"><span class="pre">&lt;snmp</span> <span class="pre">/&gt;</span></tt> section you define a management information base (MIB). MIBs consist of a <tt class="docutils literal"><span class="pre">&lt;symbol&gt;</span></tt> with a name
+attribute, and its <tt class="docutils literal"><span class="pre">&lt;value&gt;</span></tt>.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;sysDescr&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;value&gt;</span>Siemens, SIMATIC, S7-200<span class="nt">&lt;/value&gt;</span>
+<span class="nt">&lt;/symbol&gt;</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Customization</a><ul>
+<li><a class="reference internal" href="#the-default-profile">The default profile</a><ul>
+<li><a class="reference internal" href="#modbus">Modbus</a></li>
+<li><a class="reference internal" href="#snmp">SNMP</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../development/index.html"
+                        title="next chapter">Development</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/usage/usage.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../development/index.html" title="Development"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Usage"
+             >previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Usage</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Glastopf Developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
