@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Frequently Asked Questions &mdash; Conpot 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Conpot 0.1.0 documentation" href="index.html" />
+    <link rel="prev" title="Releasing Conpot" href="development/releasing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="development/releasing.html" title="Releasing Conpot"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Conpot 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="frequently-asked-questions">
+<h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="sharing-data">
+<h2>Sharing Data<a class="headerlink" href="#sharing-data" title="Permalink to this headline">¶</a></h2>
+<p><strong>With whom do we share?</strong></p>
+<p>Everyone who is interested and potentially shares data, results or helps improving the tool.</p>
+<p><strong>What&#8217;s the data volume?</strong></p>
+<p>Conpot has build-in support for HPFeeds, a generic data sharing
+protocol we are using in the Honeynet Project. This means that
+potentially we are going to get all the data from every sensor with
+HPFeeds enabled.</p>
+<p>Right now there is only a very small number of deployed sensors.
+HPFeeds is not enabled by default and probably nobody is using a HMI
+to attract adversaries yet. So if you are lucky you will see an event
+every other day. We know that with a HMI the traffic will be significantly
+higher as your sensor will be found using search engines.</p>
+<p><strong>What is the data format?</strong></p>
+<p>Raw data in JSON formatting.</p>
+<p><strong>How do I get the data?</strong></p>
+<p>There is a Python <a class="reference external" href="https://github.com/glastopf/conpot/blob/master/bin/conpot_hpf_client">client</a>
+which uses the HPFeeds library. About 40 lines of code. From there it&#8217;s
+quite easy to write the data to a database.
+You can find an explanation on how it works
+<a class="reference external" href="http://heipei.github.io/2013/05/11/Using-hpfriends-the-social-data-sharing-platform/">here</a>.</p>
+<p><strong>What do I have to do?</strong></p>
+<p>If you want to have access to the Conpot data, you have to create a
+<a class="reference external" href="http://hpfriends.honeycloud.net/">HPFriends</a> account. As soon as you accept
+the share, you can create an authkey. You can modify the client with
+the auth keys credentials. The client should be self explaining. You
+can extend the client so it fits your needs (e.g. logging to a database).</p>
+<p><strong>How do I test this?</strong></p>
+<p>As soon as you have Conpot set-up it should be easy to create some traffic for testing.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Frequently Asked Questions</a><ul>
+<li><a class="reference internal" href="#sharing-data">Sharing Data</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="development/releasing.html"
+                        title="previous chapter">Releasing Conpot</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/faq.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="development/releasing.html" title="Releasing Conpot"
+             >previous</a> |</li>
+        <li><a href="index.html">Conpot 0.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Glastopf Developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
