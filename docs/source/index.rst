@@ -14,6 +14,7 @@ Contents:
    installation/index
    usage/index
    development/index
+   faq
 
 
 Indices and tables
