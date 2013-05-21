@@ -26,13 +26,15 @@ logger = logging.getLogger()
 
 class SNMPServer(object):
     def __init__(self, host, port, template, log_queue):
+        self.host = host
+        self.port = port
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             self.snmp_server = None
         else:
-            self.snmp_server = CommandResponder(host, port, log_queue)
+            self.snmp_server = CommandResponder(self.host, self.port, log_queue)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
@@ -43,7 +45,7 @@ class SNMPServer(object):
 
     def start(self):
         if self.snmp_server:
-            logger.info('Starting SNMP server.')
+            logger.info('SNMP server started on: {0}'.format((self.host, self.port)))
             self.snmp_server.serve_forever()
 
     def stop(self):
