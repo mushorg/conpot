@@ -3,8 +3,8 @@
 
 set -e
 
-TMP_REPO=`mktemp -d -t conpot-site`
-TMP_HTML=`mktemp -d -t conpot-site`
+TMP_REPO=`mktemp -d -t conpot-site.XXX`
+TMP_HTML=`mktemp -d -t conpot-site.XXX`
 
 make html
 cp -R build/html/* $TMP_HTML
