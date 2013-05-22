@@ -4,54 +4,27 @@ Ubuntu 12.04 LTS
 Installation
 ------------
 
-You need Python2.7 and pip:
-
+The stable version of ConPot can be downloaded from PyPI:
 ::
 
-    apt-get install python2.7 python-pip git unzip
-    apt-get install libxml2-dev libxslt-dev
-    apt-get install python-dev libevent-dev
+    pip install conpot
 
-For the requiremenst covered by PyPi, run:
 
-::
-
-    pip install -r requirements.txt
-
-For hpfeeds:
-
-::
-
-    cd /opt
-    git clone git://github.com/rep/hpfeeds.git
-    cd hpfeeds/
-    python setup.py install
-
-And modbus_tk
-
-::
-
-    cd /opt
-    git clone git@github.com:glastopf/modbus-tk.git
-    cd modbus_tk
-    python setup.py install
-
-And finally ConPot:
-
+The development version can be cloned from github:
 ::
 
     cd /opt
     git clone git@github.com:glastopf/conpot.git
-    cd /opt/conpot
+    cd conpot
+    python setup.py install
 
-Edit the config.py appropriately.
 
-Example output
+Example usage
 --------------
 
 ::
 
-    box$ python conpot_ics_server.py 
+    box$ conpot
     2013-04-12 16:09:25,620 Added slave with id 1.
     2013-04-12 16:09:25,621 Added block a to slave 1. (type=1, start=1, size=128)
     2013-04-12 16:09:25,622 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
