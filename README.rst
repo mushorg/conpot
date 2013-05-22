@@ -10,6 +10,14 @@ ABOUT
 Conpot is an ICS honeypot with the goal to collect intelligence about the motives and
 methods of adversaries targeting industrial control systems
 
+DOCUMENTATION
+-------------
+
+The build of the documentations `source <https://github.com/glastopf/conpot/tree/master/docs/source>`_ can be 
+found `here <http://glastopf.github.io/conpot/>`_. There you will also find the instructions on how to 
+`install <http://glastopf.github.io/conpot/installation/ubuntu.html>`_ conpot and the 
+`FAQ <http://glastopf.github.io/conpot/faq.html>`_.
+
 HPFEEDS
 -------
 
@@ -23,10 +31,6 @@ SUPPORT
 -------
 
 Thanks to JetBrains for free PyCharm licenses!
-
-INSTALL
--------
-Install instruction can be found `here <https://github.com/glastopf/conpot/blob/master/docs/source/installation/ubuntu.rst>`_.
 
 SAMPLE OUTPUT
 -------------
