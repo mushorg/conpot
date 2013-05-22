@@ -43,7 +43,6 @@ And finally ConPot:
     cd /opt
     git clone git@github.com:glastopf/conpot.git
     cd /opt/conpot
-    cp config.py.dist config.py
 
 Edit the config.py appropriately.
 

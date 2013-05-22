@@ -18,7 +18,7 @@ def get_requirements():
 setup(
     name="Conpot",
     version=conpot.__version__,
-    packages=find_packages(exclude=["*.pyc", "config.py"]),
+    packages=find_packages(exclude=["*.pyc",]),
     package_data={
         "": ["*.txt", "*.rst"],
         "conpot": ["templates/*.xml", "conpot.cfg", "tests/data/*"],
