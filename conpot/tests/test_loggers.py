@@ -17,7 +17,7 @@
 
 import unittest
 
-from conpot.logging.feeder import HPFriendsLogger
+from conpot.logging.hpfriends import HPFriendsLogger
 
 class Test_Loggers(unittest.TestCase):
 

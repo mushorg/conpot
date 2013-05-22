@@ -2,7 +2,7 @@ import json
 import logging
 
 from conpot.logging.sqlite_log import SQLiteLogger
-from conpot.logging.feeder import HPFriendsLogger
+from conpot.logging.hpfriends import HPFriendsLogger
 
 logger = logging.getLogger(__name__)
 
