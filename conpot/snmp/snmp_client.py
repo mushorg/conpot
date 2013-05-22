@@ -6,6 +6,7 @@ from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
 from pysnmp.proto import rfc1902
 
+
 class SNMPClient(object):
     def __init__(self, host, port):
 
@@ -66,6 +67,16 @@ class SNMPClient(object):
         if not callback:
             callback = self.cbFun
         cmdgen.SetCommandGenerator().sendReq(
+            self.snmpEngine,
+            'my-router',
+            (OID,),
+            callback,
+        )
+
+    def walk_command(self, OID, callback=None):
+        if not callback:
+            callback = self.cbFun
+        cmdgen.NextCommandGenerator().sendReq(
             self.snmpEngine,
             'my-router',
             (OID,),
