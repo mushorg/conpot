@@ -5,12 +5,10 @@ import logging
 from datetime import datetime
 
 from pysnmp.entity import config
-from pysnmp.entity.rfc3413 import cmdrsp, context
+from pysnmp.entity.rfc3413 import context
+from conpot.snmp import conpot_cmdrsp
 
 from pysnmp.carrier.asynsock.dgram import udp
-from pysnmp.proto import api
-from pysnmp.proto.api import verdec
-from pyasn1.codec.ber import decoder
 
 import gevent
 from gevent import socket
@@ -31,9 +29,7 @@ class SNMPDispatcher(DatagramServer):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
-
         self.log(msg, address, 'in')
-
         self.recvCbFun(self, self.transportDomain, address, msg)
 
     def registerTransport(self, tDomain, transport):
@@ -47,32 +43,9 @@ class SNMPDispatcher(DatagramServer):
         #TODO: log snmp request/response at the same time.
 
         if direction == 'in':
-            direction = 'request from'
             log_key = 'request'
         else:
-            direction = 'reply to'
             log_key = 'response'
-
-        #0 = v1, 1 = v2, 3 = v3
-        version = verdec.decodeMessageVersion(msg)
-        if version == 0 or version == 1:
-            pMod = api.protoModules[version]
-
-            rspMsg, wholeMsg = decoder.decode(msg, asn1Spec=pMod.Message())
-            community_name = rspMsg.getComponentByPosition(1)
-            request_pdu = pMod.apiMessage.getPDU(rspMsg)
-            request_type = request_pdu.__class__.__name__
-
-            session_id = request_pdu.getComponentByPosition(0)
-            #will there ever be more than one item?
-            for oid, val in pMod.apiPDU.getVarBinds(request_pdu):
-                logger.debug('SNMPv{0} {1} {2}, Type: {3}, Community: {4}, '
-                             'Oid: {5}, Value: {6}'.format(version + 1, direction, address, request_type,
-                                                           community_name, oid, val))
-        elif version == 3:
-            logger.debug('SNMPv3 {0}: {1}. (Decoding not supported yet.)'.format(log_key, msg.encode('hex')))
-        else:
-            logger.debug('Unknown SNMP {0}: {1}'.format(log_key, msg.encode('hex')))
 
         #raw data (all snmp version)
         self.log_queue.put(
@@ -145,10 +118,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        cmdrsp.GetCommandResponder(self.snmpEngine, snmpContext)
-        cmdrsp.SetCommandResponder(self.snmpEngine, snmpContext)
-        cmdrsp.NextCommandResponder(self.snmpEngine, snmpContext)
-        cmdrsp.BulkCommandResponder(self.snmpEngine, snmpContext)
+        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext)
+        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext)
+        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext)
+        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext)
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
