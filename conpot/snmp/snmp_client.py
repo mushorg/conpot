@@ -43,7 +43,7 @@ class SNMPClient(object):
         elif errorStatus:
             print('%s at %s' % (
                 errorStatus.prettyPrint(),
-                errorIndex and varBindTable[-1][int(errorIndex)-1] or '?')
+                errorIndex and varBindTable[-1][int(errorIndex) - 1] or '?')
             )
         else:
             for oid, val in varBindTable:
@@ -52,7 +52,7 @@ class SNMPClient(object):
     def get_command(self, OID=((1, 3, 6, 1, 2, 1, 1, 1, 0), None), callback=None):
         if not callback:
             callback = self.cbFun
-        # Prepare and send a request message
+            # Prepare and send a request message
         cmdgen.GetCommandGenerator().sendReq(
             self.snmpEngine,
             'my-router',
@@ -82,6 +82,7 @@ class SNMPClient(object):
             (OID,),
             callback,
         )
+
 
 if __name__ == "__main__":
     snmp_client = SNMPClient()

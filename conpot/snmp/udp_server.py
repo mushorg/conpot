@@ -113,7 +113,7 @@ class DatagramServer(BaseServer):
         if self.delay >= 0:
             self.stop_accepting()
             self._start_receving_timer = core.timer(self.delay, self.start_accepting)
-            self.delay = min(self.max_delay, self.delay*2)
+            self.delay = min(self.max_delay, self.delay * 2)
         sys.exc_clear()
 
     def is_fatal_error(self, ex):

@@ -6,16 +6,14 @@ from datetime import datetime
 
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
-from conpot.snmp import conpot_cmdrsp
-
 from pysnmp.carrier.asynsock.dgram import udp
-
+from pysnmp.entity import engine
 import gevent
 from gevent import socket
 
+from conpot.snmp import conpot_cmdrsp
 from conpot.snmp.udp_server import DatagramServer
 
-import snmp_engine as engine
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +146,6 @@ class CommandResponder(object):
 
     def stop(self):
         self.snmpEngine.transportDispatcher.stop_accepting()
-
 
 
 if __name__ == "__main__":
