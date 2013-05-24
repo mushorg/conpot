@@ -1,8 +1,9 @@
 import struct
-
+import logging
 from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError
 from modbus_tk import defines, utils
 
+logger = logging.getLogger(__name__)
 
 class MBSlave(Slave):
 
@@ -33,12 +34,13 @@ class MBSlave(Slave):
                 response_pdu = self._fn_code_map[self.function_code](request_pdu)
                 if response_pdu:
                     if broadcast:
-                        print("broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
+                        #not really sure whats going on here - better log it!
+                        logger.info("broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
                         return ""
                     else:
                         return struct.pack(">B", self.function_code) + response_pdu
                 raise Exception("No response for function %d" % self.function_code)
 
             except ModbusError as e:
-                print(str(e))
+                logger.error('Exception caught: {0}. (A proper response will be sent to the peer)'.format(e))
                 return struct.pack(">BB", self.function_code + 128, e.get_exception_code())

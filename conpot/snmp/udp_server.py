@@ -2,8 +2,8 @@
 
 
 import sys
+import logging
 import errno
-import traceback
 from gevent import socket
 from gevent import core
 from gevent.baseserver import BaseServer
@@ -11,6 +11,7 @@ from gevent.baseserver import BaseServer
 
 __all__ = ['DatagramServer']
 
+logger = logging.getLogger(__name__)
 
 class DatagramServer(BaseServer):
     """A generic UDP server. Receive UDP package on a listening socket and spawns user-provided *handle*
@@ -96,8 +97,8 @@ class DatagramServer(BaseServer):
             else:
                 spawn(self._handle, msg, address)
             return
-        except:
-            traceback.print_exc()
+        except Exception as ex:
+            logger.exception('Exception caught:'.format(ex))
             ex = sys.exc_info()[1]
             if self.is_fatal_error(ex):
                 self.kill()
@@ -108,8 +109,8 @@ class DatagramServer(BaseServer):
                 sys.stderr.write('%s: Failed.\n' % (self, ))
             else:
                 sys.stderr.write('%s: Failed to handle request from %s\n' % (self, address, ))
-        except Exception:
-            traceback.print_exc()
+        except Exception as ex:
+            logger.exception('Exception caught:'.format(ex))
         if self.delay >= 0:
             self.stop_accepting()
             self._start_receving_timer = core.timer(self.delay, self.start_accepting)

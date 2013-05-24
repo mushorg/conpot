@@ -11,6 +11,7 @@ class SlaveBase(Databank):
     """
     Database keeping track of the slaves.
     """
+
     def __init__(self):
         Databank.__init__(self)
 
@@ -52,12 +53,11 @@ class SlaveBase(Databank):
                 #make the full response
                 response = query.build_response(response_pdu)
         except (IOError, MissingKeyError) as excpt:
-            print("handle request failed: " + str(excpt))
             func_code = 1
             if len(request_pdu) > 0:
                 (func_code, ) = struct.unpack(">B", request_pdu[0])
-            #If the request was not handled correctly, return a server error response
-            r = struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
+                #If the request was not handled correctly, return a server error response
+            r = struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
 
         if slave:
