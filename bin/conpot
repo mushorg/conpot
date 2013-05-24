@@ -73,6 +73,11 @@ def main():
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
                         )
+
+    parser.add_argument("-m", "--mibpath",
+                        help="path to compiled MIB files. (compiled with build-pysnmp-mib)",
+                        default=os.getcwd())
+
     args = parser.parse_args()
 
     config = ConfigParser()
@@ -102,7 +107,7 @@ def main():
 
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
-    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue)
+    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpath)
 
     try:
         #add greenlets to list

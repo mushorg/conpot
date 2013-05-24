@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import os
 import unittest
 from datetime import datetime
 
@@ -44,7 +45,7 @@ class TestBase(unittest.TestCase):
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = snmp_command_responder.CommandResponder(self.host, self.port, self.log_queue)
+            self.snmp_server = snmp_command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd())
 
         for mib in mibs:
             mib_name = mib.attrib['name']

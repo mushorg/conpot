@@ -15,7 +15,6 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
 import logging
 
 from lxml import etree
@@ -25,7 +24,7 @@ logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue):
+    def __init__(self, host, port, template, log_queue, mibpath):
         self.host = host
         self.port = port
         dom = etree.parse(template)
@@ -34,7 +33,7 @@ class SNMPServer(object):
         if not mibs:
             self.snmp_server = None
         else:
-            self.snmp_server = CommandResponder(self.host, self.port, log_queue)
+            self.snmp_server = CommandResponder(self.host, self.port, log_queue, mibpath)
 
         for mib in mibs:
             mib_name = mib.attrib['name']

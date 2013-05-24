@@ -2,12 +2,14 @@
 # Based on examples from http://pysnmp.sourceforge.net/
 
 import logging
+import os
 from datetime import datetime
 
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity import engine
+from pysnmp.smi import builder
 import gevent
 from gevent import socket
 
@@ -64,12 +66,18 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, log_queue):
+    def __init__(self, host, port, log_queue, mibpath):
+
         self.log_queue = log_queue
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
-        # Transport setup
 
+        #path to custom mibs
+        mibBuilder = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
+        mibSources = mibBuilder.getMibSources() + (builder.DirMibSource(mibpath),)
+        mibBuilder.setMibSources(*mibSources)
+
+        # Transport setup
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
         udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
         udp_sock.bind((host, port))
@@ -128,12 +136,15 @@ class CommandResponder(object):
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
     def register(self, mibname, symbolname, value):
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
         logger.info('Registered: {0}'.format(s))
+
         MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
                                                                                                         'MibScalarInstance')
-        scalar = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
-        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols('SNMPv2-MIB', scalar)
+
+        x = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
