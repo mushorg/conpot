@@ -2,7 +2,6 @@
 # Based on examples from http://pysnmp.sourceforge.net/
 
 import logging
-import os
 from datetime import datetime
 
 from pysnmp.entity import config

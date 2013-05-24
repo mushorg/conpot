@@ -28,7 +28,7 @@ from pysnmp.proto import rfc1902
 from conpot.snmp import snmp_client
 
 #we need to monkey patch for modbus_tcp.TcpMaster
-from conpot.snmp import snmp_command_responder
+from conpot.snmp import command_responder
 
 monkey.patch_all()
 
@@ -45,7 +45,7 @@ class TestBase(unittest.TestCase):
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = snmp_command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd())
+            self.snmp_server = command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd())
 
         for mib in mibs:
             mib_name = mib.attrib['name']

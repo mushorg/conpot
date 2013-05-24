@@ -18,7 +18,7 @@
 import logging
 
 from lxml import etree
-from conpot.snmp.snmp_command_responder import CommandResponder
+from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
 
@@ -31,22 +31,22 @@ class SNMPServer(object):
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
-            self.snmp_server = None
+            self.cmd_responder = None
         else:
-            self.snmp_server = CommandResponder(self.host, self.port, log_queue, mibpath)
+            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
                 value = symbol.xpath('./value/text()')[0]
-                self.snmp_server.register(mib_name, symbol_name, value)
+                self.cmd_responder.register(mib_name, symbol_name, value)
 
     def start(self):
-        if self.snmp_server:
+        if self.cmd_responder:
             logger.info('SNMP server started on: {0}'.format((self.host, self.port)))
-            self.snmp_server.serve_forever()
+            self.cmd_responder.serve_forever()
 
     def stop(self):
-        if self.snmp_server:
-            self.snmp_server.stop()
+        if self.cmd_responder:
+            self.cmd_responder.stop()
