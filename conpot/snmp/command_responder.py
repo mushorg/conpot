@@ -21,14 +21,12 @@ logger = logging.getLogger(__name__)
 
 class SNMPDispatcher(DatagramServer):
     def __init__(self, log_queue):
-        self.log_queue = log_queue
         self.__timerResolution = 0.5
 
     def registerRecvCbFun(self, recvCbFun):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
-        self.log(msg, address, 'in')
         self.recvCbFun(self, self.transportDomain, address, msg)
 
     def registerTransport(self, tDomain, transport):
@@ -38,26 +36,7 @@ class SNMPDispatcher(DatagramServer):
     def registerTimerCbFun(self, timerCbFun, tickInterval=None):
         pass
 
-    def log(self, msg, address, direction):
-        #TODO: log snmp request/response at the same time.
-
-        if direction == 'in':
-            log_key = 'request'
-        else:
-            log_key = 'response'
-
-        #raw data (all snmp version)
-        self.log_queue.put(
-            {'remote': address,
-             'timestamp': datetime.utcnow(),
-             'data_type': 'snmp',
-             'data': {
-                 0: {log_key: msg.encode('hex')}
-             }}
-        )
-
     def sendMessage(self, outgoingMessage, transportDomain, transportAddress):
-        self.log(outgoingMessage, transportAddress, 'out')
         self.socket.sendto(outgoingMessage, transportAddress)
 
     def getTimerResolution(self):
@@ -123,10 +102,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext)
-        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext)
-        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext)
-        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext)
+        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
+        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
+        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
+        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
