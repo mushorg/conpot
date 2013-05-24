@@ -1,7 +1,7 @@
-Conpot 1.0.1 (release 2013-05-13)
+Conpot 0.1.1 (release 2013-05-13)
     * Fixed root logger.
     * Updated documentation.
     * Various minor cleanups.
 
-Conpot 1.0.0 (release 2013-05-10)
+Conpot 0.1.0 (release 2013-05-10)
     * First release.
