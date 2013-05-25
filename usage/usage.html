@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Customization &mdash; Conpot 0.1.0 documentation</title>
+    <title>Customization &mdash; Conpot 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.0',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.1.1 documentation" href="../index.html" />
     <link rel="up" title="Usage" href="index.html" />
     <link rel="next" title="Development" href="../development/index.html" />
     <link rel="prev" title="Usage" href="index.html" /> 
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="Usage"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Usage</a> &raquo;</li> 
       </ul>
     </div>  
@@ -91,6 +91,24 @@ attribute, and its <tt class="docutils literal"><span class="pre">&lt;value&gt;<
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;sysDescr&quot;</span><span class="nt">&gt;</span>
     <span class="nt">&lt;value&gt;</span>Siemens, SIMATIC, S7-200<span class="nt">&lt;/value&gt;</span>
 <span class="nt">&lt;/symbol&gt;</span>
+</pre></div>
+</div>
+<p>In the following example we will show how to include other MIBs. As an example we will add the ifNumber symbol from
+the IF-MIB.
+First we have to download the IF-MIB and also the IANAifType-MIB since IF-MIB depends on this:</p>
+<div class="highlight-python"><pre>wget http://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib
+wget ftp://ftp.cisco.com/pub/mibs/v2/IF-MIB.my</pre>
+</div>
+<p>Then compile the MIBs to python code:</p>
+<div class="highlight-python"><pre>build-pysnmp-mib IF-MIB.my &gt; IF-MIB.py
+build-pysnmp-mib ianaiftype-mib &gt; IANAifType-MIB.py</pre>
+</div>
+<p>Finally add you custom snmp configuration to the template:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;mib</span> <span class="na">name=</span><span class="s">&quot;IF-MIB&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;ifNumber&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;value&gt;</span>2<span class="nt">&lt;/value&gt;</span>
+    <span class="nt">&lt;/symbol&gt;</span>
+<span class="nt">&lt;/mib&gt;</span>
 </pre></div>
 </div>
 </div>
@@ -155,7 +173,7 @@ attribute, and its <tt class="docutils literal"><span class="pre">&lt;value&gt;<
         <li class="right" >
           <a href="index.html" title="Usage"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Usage</a> &raquo;</li> 
       </ul>
     </div>

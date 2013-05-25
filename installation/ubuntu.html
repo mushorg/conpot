@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Ubuntu 12.04 LTS &mdash; Conpot 0.1.0 documentation</title>
+    <title>Ubuntu 12.04 LTS &mdash; Conpot 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.0',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.1.1 documentation" href="../index.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Usage" href="../usage/index.html" />
     <link rel="prev" title="Installation" href="index.html" /> 
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="index.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Installation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -55,37 +55,19 @@
 <h1>Ubuntu 12.04 LTS<a class="headerlink" href="#ubuntu-12-04-lts" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You need Python2.7 and pip:</p>
-<div class="highlight-python"><pre>apt-get install python2.7 python-pip git unzip
-apt-get install libxml2-dev libxslt-dev
-apt-get install python-dev libevent-dev</pre>
+<p>The stable version of ConPot can be downloaded from PyPI:</p>
+<div class="highlight-python"><pre>pip install conpot</pre>
 </div>
-<p>For the requiremenst covered by PyPi, run:</p>
-<div class="highlight-python"><pre>pip install -r requirements.txt</pre>
-</div>
-<p>For hpfeeds:</p>
-<div class="highlight-python"><pre>cd /opt
-git clone git://github.com/rep/hpfeeds.git
-cd hpfeeds/
-python setup.py install</pre>
-</div>
-<p>And modbus_tk</p>
-<div class="highlight-python"><pre>cd /opt
-git clone git@github.com:glastopf/modbus-tk.git
-cd modbus_tk
-python setup.py install</pre>
-</div>
-<p>And finally ConPot:</p>
+<p>The development version can be cloned from github:</p>
 <div class="highlight-python"><pre>cd /opt
 git clone git@github.com:glastopf/conpot.git
-cd /opt/conpot
-cp config.py.dist config.py</pre>
+cd conpot
+python setup.py install</pre>
 </div>
-<p>Edit the config.py appropriately.</p>
 </div>
-<div class="section" id="example-output">
-<h2>Example output<a class="headerlink" href="#example-output" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>box$ python conpot_ics_server.py
+<div class="section" id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>box$ conpot
 2013-04-12 16:09:25,620 Added slave with id 1.
 2013-04-12 16:09:25,621 Added block a to slave 1. (type=1, start=1, size=128)
 2013-04-12 16:09:25,622 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
@@ -111,7 +93,7 @@ cp config.py.dist config.py</pre>
   <ul>
 <li><a class="reference internal" href="#">Ubuntu 12.04 LTS</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#example-output">Example output</a></li>
+<li><a class="reference internal" href="#example-usage">Example usage</a></li>
 </ul>
 </li>
 </ul>
@@ -156,7 +138,7 @@ cp config.py.dist config.py</pre>
         <li class="right" >
           <a href="index.html" title="Installation"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Installation</a> &raquo;</li> 
       </ul>
     </div>
