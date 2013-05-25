@@ -6,6 +6,8 @@ set -e
 TMP_REPO=`mktemp -d -t conpot-site.XXX`
 TMP_HTML=`mktemp -d -t conpot-site.XXX`
 
+git show HEAD:conpot/__init__.py > source/conpot_version.py
+
 make html
 cp -R build/html/* $TMP_HTML
 
