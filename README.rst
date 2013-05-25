@@ -45,7 +45,7 @@ SAMPLE OUTPUT
       |___|___|_|_|  _|___|_|
                   |_|
     
-      Version 0.1.0
+      Version 0.2
       Glastopf Project
     
     2013-05-11 18:47:16,434 Starting Conpot using template found in: /Users/jkv/repos/conpot/conpot/templates/default.xml
