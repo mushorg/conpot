@@ -64,7 +64,7 @@ Then compile the MIBs to python code::
     build-pysnmp-mib IF-MIB.my > IF-MIB.py
     build-pysnmp-mib ianaiftype-mib > IANAifType-MIB.py
 
-Finally add you custom snmp configuration to the template:
+Finally add your custom snmp configuration to the template:
 
 .. code-block:: xml
 
