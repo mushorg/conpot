@@ -1,3 +1,9 @@
+Conpot 0.2 (release 2013-05-25)
+    * Added support for loading of MIBs (issue #46).
+    * All dependencies are now installed automatically (issue #39).
+    * Fixed logging of SNMPv3 requests (issue #24).
+    * HPFriends client added.
+
 Conpot 0.1.1 (release 2013-05-13)
     * Fixed root logger.
     * Updated documentation.
