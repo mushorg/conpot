@@ -116,7 +116,7 @@ class CommandResponder(object):
     def register(self, mibname, symbolname, value):
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
-        logger.info('Registered: {0}'.format(s))
+        logger.info('Registered OID {0} ({1}, {2}) : {3}'.format(s.name, s.label, mibname, value))
 
         MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
                                                                                                         'MibScalarInstance')

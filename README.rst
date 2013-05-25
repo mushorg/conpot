@@ -56,7 +56,7 @@ SAMPLE OUTPUT
     2013-05-11 18:47:16,436 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
     2013-05-11 18:47:16,437 Conpot initialized using the S7-200 template.
     2013-05-11 18:47:16,437 Modbus server started on: ('X.Y.Z.P', 502)
-    2013-05-11 18:47:16,569 Registered: MibScalar((1, 3, 6, 1, 2, 1, 1, 1), DisplayString())
+    2013-05-11 18:47:16,569 Registered OID (1, 3, 6, 1, 2, 1, 1, 1) (sysDescr, SNMPv2-MIB) : Siemens, SIMATIC, S7-200
     <snip>
     2013-05-11 18:47:16,570 Starting SNMP server.
     <attackers reads from modbus>
