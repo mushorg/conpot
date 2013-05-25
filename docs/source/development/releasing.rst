@@ -22,7 +22,7 @@ Run the server to see if he loads properly.
 Setup.py
 --------
 
-Bump the version number in the setup.py before tagging:
+Bump the version number in conpot/__init__.py before tagging:
 
 ::
 
