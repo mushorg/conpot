@@ -1,4 +1,7 @@
-Conpot 0.2 (release 2013-05-25)
+Conpot 0.2.1 (release 2013-05-29)
+    * Fixed modbus_tk install issue
+
+Conpot 0.2.0 (release 2013-05-25)
     * Added support for loading of MIBs (issue #46).
     * All dependencies are now installed automatically (issue #39).
     * Fixed logging of SNMPv3 requests (issue #24).
