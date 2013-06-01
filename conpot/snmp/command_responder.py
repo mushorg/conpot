@@ -114,14 +114,32 @@ class CommandResponder(object):
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
     def register(self, mibname, symbolname, value):
+
+        if symbolname.count('.') and symbolname[0].isdigit() == False:
+
+            # Prepare necessary data for a mibscalar with additional instance identifier
+            part_symbol = symbolname.partition('.')
+            symbolname = part_symbol[0]
+            instanceid = tuple(int(i) for i in part_symbol[2].split('.'))
+
+        elif symbolname[0].isdigit() == True:
+
+            # Using pure MIB-less ASN.1 notation is not supported at this moment.
+            logger.info('Registration of OID {0} failed: ASN.1 not supported yet.'.format(symbolname))
+            return
+
+        else:
+
+            # Prepare data for a mibscalar with default instance identifier (.0)
+            instanceid = (0,)
+
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
-        logger.info('Registered OID {0} ({1}, {2}) : {3}'.format(s.name, s.label, mibname, value))
+        logger.info('Registered OID {0} instance {1} ({2}, {3}) : {4}'.format(s.name, instanceid, s.label, mibname, value))
 
-        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
-                                                                                                        'MibScalarInstance')
+        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI','MibScalarInstance')
 
-        x = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
+        x = MibScalarInstance(s.name, instanceid, s.syntax.clone(value))
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
 
     def _get_mibSymbol(self, mibname, symbolname):
