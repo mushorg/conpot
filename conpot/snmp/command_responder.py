@@ -113,16 +113,19 @@ class CommandResponder(object):
             snmpEngine.registerTransportDispatcher(SNMPDispatcher(self.log_queue))
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
-    def register(self, mibname, symbolname, value):
+    def register(self, mibname, symbolname, instance, value):
+        """Register OID"""
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
-        logger.info('Registered OID {0} ({1}, {2}) : {3}'.format(s.name, s.label, mibname, value))
 
-        MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
-                                                                                                        'MibScalarInstance')
+        if s is not None:
+            MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI','MibScalarInstance')
+            x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
+            self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
+            logger.info('Registered OID {0} instance {1} ({2}, {3}) : {4}'.format(s.name, instance, s.label, mibname, value))
 
-        x = MibScalarInstance(s.name, (0,), s.syntax.clone(value))
-        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
+        else:
+            logger.info('Registration of symbol {0} failed. OID not found in {1}'.format(symbolname, mibname))
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols

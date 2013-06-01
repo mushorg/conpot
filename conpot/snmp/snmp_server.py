@@ -39,8 +39,14 @@ class SNMPServer(object):
             mib_name = mib.attrib['name']
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
+
+                try:
+                    symbol_instance = tuple(int(i) for i in symbol.attrib['instance'].split('.'))
+                except KeyError:
+                    symbol_instance = (0,)
+
                 value = symbol.xpath('./value/text()')[0]
-                self.cmd_responder.register(mib_name, symbol_name, value)
+                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value)
 
     def start(self):
         if self.cmd_responder:
