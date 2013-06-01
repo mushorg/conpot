@@ -49,8 +49,12 @@ class TestBase(unittest.TestCase):
             mib_name = mib.attrib['name']
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
+                try:
+                    symbol_instance = tuple(int(i) for i in symbol.attrib['instance'].split('.'))
+                except KeyError:
+                    symbol_instance = (0,)
                 value = symbol.xpath('./value/text()')[0]
-                self.snmp_server.register(mib_name, symbol_name, value)
+                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value)
         self.snmp_server.snmpEngine.transportDispatcher.start()
 
     def tearDown(self):
