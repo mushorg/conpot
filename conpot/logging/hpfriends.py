@@ -26,7 +26,7 @@ class HPFriendsLogger(object):
         self.channels = channels
         try:
             with gevent.Timeout(2):
-                self.hpc = hpfeeds.new(host, port, ident, secret, reconnect=False)
+                self.hpc = hpfeeds.new(host, port, ident, secret)
         except:
             raise Exception("Connection to HPFriends timed out")
 
