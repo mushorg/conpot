@@ -40,9 +40,12 @@ class SNMPServer(object):
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
 
-                try:
-                    symbol_instance = tuple(int(i) for i in symbol.attrib['instance'].split('.'))
-                except KeyError:
+                if 'instance' in symbol.attrib:
+                    # convert instance to integer-filled tuple
+                    symbol_instance = symbol.attrib['instance'].split('.')
+                    symbol_instance = tuple(map(int, symbol_instance))
+                else:
+                    # use default instance (0)
                     symbol_instance = (0,)
 
                 value = symbol.xpath('./value/text()')[0]
