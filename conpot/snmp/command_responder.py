@@ -90,13 +90,13 @@ class CommandResponder(object):
 
         # Allow full MIB access for each user at VACM
         config.addVacmUser(self.snmpEngine, 1, 'public-read', 'noAuthNoPriv',
-                           (1, 3, 6, 1, 2, 1))
+                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
         config.addVacmUser(self.snmpEngine, 3, 'usr-md5-des', 'authPriv',
-                           (1, 3, 6, 1, 2, 1), (1, 3, 6, 1, 2, 1))
+                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
         config.addVacmUser(self.snmpEngine, 3, 'usr-sha-none', 'authNoPriv',
-                           (1, 3, 6, 1, 2, 1), (1, 3, 6, 1, 2, 1))
+                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
         config.addVacmUser(self.snmpEngine, 3, 'usr-sha-aes128', 'authPriv',
-                           (1, 3, 6, 1, 2, 1), (1, 3, 6, 1, 2, 1))
+                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
 
         # Get default SNMP context this SNMP engine serves
         snmpContext = context.SnmpContext(self.snmpEngine)
