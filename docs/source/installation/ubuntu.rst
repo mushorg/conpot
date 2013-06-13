@@ -4,6 +4,12 @@ Ubuntu 12.04 LTS
 Installation
 ------------
 
+If you want to use BACnet, you have to install the library manually:
+::
+
+    easy_install bacpypes
+
+
 The stable version of ConPot can be downloaded from PyPI:
 ::
 
