@@ -1,5 +1,7 @@
 import json
 import logging
+import uuid
+from datetime import datetime
 
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.hpfriends import HPFriendsLogger
@@ -36,10 +38,18 @@ class LogWorker(object):
             assert 'timestamp' in event
 
             if self.friends_feeder:
-                self.friends_feeder.log(json.dumps(event))
+                self.friends_feeder.log(json.dumps(event, default=self.json_default))
 
             if self.sqlite_logger:
                 self.sqlite_logger.log(event)
 
     def stop(self):
         self.enabled = False
+
+    def json_default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, uuid.UUID):
+            return str(obj)
+        else:
+            return None
