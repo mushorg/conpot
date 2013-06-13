@@ -2,9 +2,9 @@ from gevent import socket
 from gevent.server import StreamServer
 from ConfigParser import ConfigParser
 
-from bacpypes.comm import PDU
 from bacpypes.debugging import Logging
 from bacpypes.app import LocalDeviceObject, Application
+from bacpypes.apdu import APDU, apdu_types, unconfirmed_request_types, PDU
 
 
 class BACnetApp(Application, Logging):
@@ -13,13 +13,14 @@ class BACnetApp(Application, Logging):
         Application.__init__(self, device, address)
 
     def request(self, apdu):
-        Application.request(self, apdu)
+        print "ret", apdu
+        self.ret_val = apdu
 
     def indication(self, apdu):
         Application.indication(self, apdu)
 
     def response(self, apdu):
-        Application.response(self, apdu)
+        print "response"
 
     def confirmation(self, apdu):
         Application.confirmation(self, apdu)
@@ -41,13 +42,21 @@ class BACnetServer():
         bacnet_app = BACnetApp(self.thisDevice, self.config.get('BACpypes', 'address'))
         fp = sock.makefile()
         while True:
-            msg = fp.readline()
-            print msg
+            msg = fp.read(6)
             if msg:
-                apdu = PDU(msg)
-                bacnet_app.indication(apdu)
-                print apdu
-                fp.write(apdu)
+                f = PDU()
+                f.pduData = msg
+                # TODO: Handle other types of PDU besides APDU
+                b = APDU()
+                b.decode(f)
+                b.debug_contents()
+                atype = apdu_types.get(b.apduType)
+                # This is easy to handle as long as atype is UnconfirmedRequestPDU
+                atype = unconfirmed_request_types.get(b.apduService)
+                c = atype()
+                c.decode(b)
+                bacnet_app.indication(c)
+                fp.write("bar")
                 fp.flush()
             else:
                 break
