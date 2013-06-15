@@ -3,3 +3,5 @@ pysnmp
 lxml
 modbus_tk
 hpfeeds
+bottle
+jinja2
