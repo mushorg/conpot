@@ -5,3 +5,5 @@ modbus_tk
 hpfeeds
 bottle
 jinja2
+beautifulsoup4
+requests
