@@ -16,10 +16,9 @@ app = Bottle()
 
 class HTTPServer(object):
 
-    def __init__(self, www_host="0.0.0.0", www_port=8080, www_path="./www",
-                 snmp_host="127.0.0.1", snmp_port=161):
+    def __init__(self, www_host="0.0.0.0", www_port=8080, www_path="./www", snmp_port=161):
         self.host, self.port = www_host, int(www_port)
-        self.snmp_host, self.snmp_port = snmp_host, snmp_port
+        self.snmp_host, self.snmp_port = "127.0.0.1", snmp_port
         self.template_env = Environment(loader=FileSystemLoader(www_path))
         self._route()
 

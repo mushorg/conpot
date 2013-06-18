@@ -120,7 +120,7 @@ def main():
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
-    http_server = HTTPServer(http_host, http_port, args.www, snmp_host, snmp_port)
+    http_server = HTTPServer(http_host, http_port, args.www, snmp_port)
 
     try:
         servers = list()
