@@ -24,6 +24,7 @@ install:
  - pwd
  - cd $REPO
  - pip install -r requirements.txt --use-mirrors
+ - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 # command to run tests
 script:
  - nosetests
