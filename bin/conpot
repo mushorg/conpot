@@ -65,27 +65,28 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-w", "--www",
-                        help="HMI public www path",
+                        help="public www path",
                         default=os.path.join(package_directory, 'www/'),
                         metavar="www/"
                         )
-
+    parser.add_argument("-r", "--www-root",
+                        help="www root page",
+                        default="index.htm",
+                        metavar="page.htm"
+                        )
     parser.add_argument("-t", "--template",
                         help="the template to use",
                         default=os.path.join(package_directory, 'templates/default.xml'),
                         metavar="template.xml"
                         )
-
     parser.add_argument("-c", "--config",
                         help="the configuration file to use",
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
                         )
-
     parser.add_argument("-m", "--mibpath",
                         help="path to compiled MIB files. (compiled with build-pysnmp-mib)",
                         default=os.getcwd())
-
     args = parser.parse_args()
 
     config = ConfigParser()
@@ -120,10 +121,10 @@ def main():
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
-    http_server = HTTPServer(log_queue, http_host, http_port, args.www, snmp_port)
+    http_server = HTTPServer(log_queue, args, http_host, http_port, snmp_port)
 
+    servers = list()
     try:
-        servers = list()
         servers.append(gevent.spawn(modbus_server.serve_forever))
         servers.append(gevent.spawn(snmp_server.start))
         servers.append(gevent.spawn(http_server.run))

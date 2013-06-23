@@ -6,7 +6,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 from gevent.wsgi import WSGIServer
-from bottle import Bottle, static_file, request
+from bottle import Bottle, static_file, request, redirect
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 from conpot.snmp import snmp_client
@@ -18,11 +18,12 @@ app = Bottle()
 
 class HTTPServer(object):
 
-    def __init__(self, log_queue, www_host="0.0.0.0", www_port=8080, www_path="./www", snmp_port=161):
-        self.www_path = www_path
+    def __init__(self, log_queue, args, www_host="0.0.0.0", www_port=8080, snmp_port=161):
+        self.www_path = args.www
+        self.www_root = args.www_root
         self.host, self.port = www_host, int(www_port)
         self.snmp_host, self.snmp_port = "127.0.0.1", snmp_port
-        self.template_env = Environment(loader=FileSystemLoader(www_path))
+        self.template_env = Environment(loader=FileSystemLoader(self.www_path))
         self._route()
         self.log_queue = log_queue
 
@@ -60,15 +61,15 @@ class HTTPServer(object):
         logger.info("HTTP request from {0}: {1} {2}".format(request.remote_addr, request.method, request.fullpath))
         self._log(request)
         if not path or path == "/":
-            path = "index.html"
+            redirect(self.www_root)
         client = snmp_client.SNMPClient(self.snmp_host, self.snmp_port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.get_command(OID, callback=self.mock_callback)
         try:
             template = self.template_env.get_template(path)
+            return template.render(id=self.result)
         except TemplateNotFound:
-            template = self.template_env.get_template("index.html")
-        return template.render(id=self.result)
+            redirect(self.www_root)
 
     def run(self):
         logger.info('HTTP server started on: {0}'.format((self.host, self.port)))
