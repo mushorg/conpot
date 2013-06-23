@@ -16,17 +16,20 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import conpot_dynrsp
 
 from lxml import etree
 from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
 
-
 class SNMPServer(object):
     def __init__(self, host, port, template, log_queue, mibpath):
         self.host = host
         self.port = port
+
+        conpot_dynrsp.init()
+
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
@@ -40,16 +43,29 @@ class SNMPServer(object):
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
 
+                # retrieve instance from template
                 if 'instance' in symbol.attrib:
-                    # convert instance to integer-filled tuple
+                    # convert instance to (int-)tuple
                     symbol_instance = symbol.attrib['instance'].split('.')
                     symbol_instance = tuple(map(int, symbol_instance))
                 else:
                     # use default instance (0)
                     symbol_instance = (0,)
 
+                # retrieve value from template
                 value = symbol.xpath('./value/text()')[0]
-                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value)
+        
+                # retrieve engine from template
+                if len(symbol.xpath('./engine')) > 0:
+                    engine_type = symbol.find('./engine').attrib['type']
+                    engine_aux = symbol.findtext('./engine')
+                else:
+                    # disable dynamic responses (static)
+                    engine_type = 'static'
+                    engine_aux = '' 
+
+                # register this MIB instance to the command responder
+                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
 
     def start(self):
         if self.cmd_responder:

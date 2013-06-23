@@ -2,6 +2,8 @@
 # Based on examples from http://pysnmp.sourceforge.net/
 
 import logging
+import conpot_dynrsp
+
 from datetime import datetime
 
 from pysnmp.entity import config
@@ -107,13 +109,14 @@ class CommandResponder(object):
         conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
         conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
 
+
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
         if not snmpEngine.transportDispatcher:
             snmpEngine.registerTransportDispatcher(SNMPDispatcher(self.log_queue))
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
-    def register(self, mibname, symbolname, instance, value):
+    def register(self, mibname, symbolname, instance, value, engine_type, engine_aux):
         """Register OID"""
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
@@ -122,10 +125,12 @@ class CommandResponder(object):
             MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI','MibScalarInstance')
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
-            logger.info('Registered OID {0} instance {1} ({2}, {3}) : {4}'.format(s.name, instance, s.label, mibname, value))
+            
+            conpot_dynrsp.response_table[s.name+instance] = [engine_type,engine_aux,value]
+            logger.info('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp {5}[{6}]'.format(s.name, instance, s.label, mibname, value, engine_type, engine_aux))
 
         else:
-            logger.info('Registration of symbol {0} failed. OID not found in {1}'.format(symbolname, mibname))
+            logger.info('Skipped:    OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols

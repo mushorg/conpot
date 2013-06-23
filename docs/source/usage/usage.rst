@@ -91,3 +91,52 @@ symbols that need identifiers to initialize several instances of a single symbol
             </mib>
 
 If not specified, the default instance (0) is being assumed.
+
+Several symbols feature dynamic values. Conpot can be instructed to deliver dynamic content by adding the engine
+definition to the template. Example:
+
+.. code-block:: xml
+
+            <mib name="SNMPv2-MIB">
+                <symbol name="sysUpTime">
+                    <value>0</value>
+                    <engine type="sysuptime"></engine>
+                </symbol>
+            </mib>
+
+The example above always responds with the time in milliseconds since conpot was initialized.
+
+Currently, the following engine types are implemented:
+
+* increment
+    Increments the value each time it is requested. Default incrementor: 1, resetting to initial value at 2147483647.
+    Modified example:    <engine type="increment">1:100</engine>    ( => increment by 1, reset at 100 )
+
+* decrement
+    Decrements the value each time it is requested. Default decrementor: 1, resetting to initial value at -2147483648.
+    Modified example:    <engine type="decrement">1:0</engine>    ( => decrement by 1, reset at 0 )
+
+* randominc
+    Randomly increments the value each time it is requested. Default incrementor range: 1-65535,
+    resetting to initial value at 2147418112.
+    Modified example:    <engine type="randominc">1:100:999</engine>    ( => increment by rand(1,100), reset at 999 )
+
+* randomdec
+    Randomly decrements the value each time it is requested. Default decrementor range: 1-65535,
+    resetting to initial value at -2147418113.
+    Modified example:    <engine type="randomdec">1:100:-999</engine>    ( => increment by rand(1,100), reset at -999 )
+
+* randomint
+    Randomly assigns an integer. Default range: 1-65535.
+    Modified example:    <engine type="randomint">1:100</engine>    ( => assign a random integer between 1 and 100)
+
+* sysuptime
+    Assigns the current uptime of the conpot process measured in milliseconds.
+    Modified example:    <engine type="sysuptime"></engine>    ( => additional values will not be processed )
+
+* evaluate
+    Assigns the result of value evaluated as python code ( eval ).
+    Modified example:    <engine type="evaluate">random.randrange(0,100,10)</engine>    ( => assign a random int between 0 and 100 in steps of 10 )
+
+* static
+    Do not assign any value. This is default of no <engine> field is supplied and will always deliver the initial value.
