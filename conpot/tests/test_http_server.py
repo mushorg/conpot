@@ -25,10 +25,17 @@ from gevent import monkey
 import gevent
 import requests
 
-#we need to monkey patch for modbus_tcp.TcpMaster
-monkey.patch_all()
 from conpot.snmp import command_responder
 from conpot.hmi import web_server
+
+#we need to monkey patch for modbus_tcp.TcpMaster
+monkey.patch_all()
+
+
+class MockArgs(object):
+    def __init__(self):
+        self.www = "conpot/www/"
+        self.www_root = "index.html"
 
 
 class TestBase(unittest.TestCase):
@@ -37,7 +44,8 @@ class TestBase(unittest.TestCase):
         self.snmp_host = '127.0.0.1'
         self.snmp_port = 1337
         self.log_queue = Queue()
-        http_server = web_server.HTTPServer(self.log_queue, "127.0.0.1", 8080, "conpot/www/", self.snmp_port)
+        args = MockArgs()
+        http_server = web_server.HTTPServer(self.log_queue, args, "127.0.0.1", 8080, self.snmp_port)
         self.http_worker = gevent.spawn(http_server.run)
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
@@ -66,5 +74,5 @@ class TestBase(unittest.TestCase):
     def test_http_request(self):
         # TODO: This is a bit ugly...
         gevent.sleep(1)
-        ret = requests.get("http://127.0.0.1:8080/")
+        ret = requests.get("http://127.0.0.1:8080")
         self.assertIn("Siemens, SIMATIC, S7-200", ret.text)

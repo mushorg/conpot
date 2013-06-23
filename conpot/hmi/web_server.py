@@ -57,7 +57,7 @@ class HTTPServer(object):
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
 
-    def root_page(self, path=None):
+    def root_page(self, path='/index.html'):
         logger.info("HTTP request from {0}: {1} {2}".format(request.remote_addr, request.method, request.fullpath))
         self._log(request)
         if not path or path == "/":
