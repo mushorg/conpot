@@ -45,29 +45,29 @@ SAMPLE OUTPUT
       |___|___|_|_|  _|___|_|
                   |_|
     
-      Version 0.2.1
+      Version 0.2.2
       Glastopf Project
-    
-    2013-05-11 18:47:16,434 Starting Conpot using template found in: /Users/jkv/repos/conpot/conpot/templates/default.xml
-    2013-05-11 18:47:16,435 Starting Conpot using configuration found in: /Users/jkv/repos/conpot/conpot/conpot.cfg
-    <configuration of slaves>
-    2013-05-11 18:47:16,435 Added slave with id 1.
-    2013-05-11 18:47:16,435 Added block a to slave 1. (type=1, start=1, size=128)
-    2013-05-11 18:47:16,436 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
-    2013-05-11 18:47:16,437 Conpot initialized using the S7-200 template.
-    2013-05-11 18:47:16,437 Modbus server started on: ('X.Y.Z.P', 502)
-    2013-05-11 18:47:16,569 Registered OID (1, 3, 6, 1, 2, 1, 1, 1) (sysDescr, SNMPv2-MIB) : Siemens, SIMATIC, S7-200
-    <snip>
-    2013-05-11 18:47:16,570 Starting SNMP server.
-    <attackers reads from modbus>
-    2013-05-11 18:49:42,315 Modbus traffic from X.Y.Z.P: {'function_code': 1, 'slave_id': 1, 'request': '0100010080', 'response': '011056412da0b5b5972c8e6f9204b561870b'} (1bfd5020-b0a1-41d1-b1ec-00a68321edca)
-    2013-05-11 18:49:42,326 Client disconnected. (1bfd5020-b0a1-41d1-b1ec-00a68321edca)
-    2013-05-11 18:49:42,326 New connection from X.Y.Z.P:49790. (3488c9d3-6e6d-4280-b3e1-32d70aa9f3aa)
-    <attackers write to modbus - if seen in the wild this would VERY malicious!>
-    2013-05-11 18:49:42,326 Modbus traffic from X.Y.Z.P: {'function_code': 15, 'slave_id': 1, 'request': '0f0001000801c9', 'response': '0f00010008'} (3488c9d3-6e6d-4280-b3e1-32d70aa9f3aa)
-    <attacker probes with snmp (snmpwalk -Os -c public -v 1 X.Y.Z.P system)>
-    2013-05-11 18:49:51,112 SNMPv1 request from ('X.Y.Z.P', 60934), Type: GetNextRequestPDU, Community: public, Oid: 1.3.6.1.2.1.1, Value: 
-    2013-05-11 18:49:51,118 SNMPv1 reply to ('X.Y.Z.P', 60934), Type: GetResponsePDU, Community: public, Oid: 1.3.6.1.2.1.1.1.0, Value: Siemens, SIMATIC, S7-200
-    2013-05-11 18:49:51,119 SNMPv1 request from ('X.Y.Z.P', 60934), Type: GetNextRequestPDU, Community: public, Oid: 1.3.6.1.2.1.1.1.0, Value: 
-    2013-05-11 18:49:51,121 SNMPv1 reply to ('X.Y.Z.P', 60934), Type: GetResponsePDU, Community: public, Oid: 1.3.6.1.2.1.1.2.0, Value: 0.0
+
+    2013-06-23 23:39:56,593 Starting Conpot using template found in: /opt/conpot/conpot/templates/default.xml
+    2013-06-23 23:39:56,593 Starting Conpot using configuration found in: /opt/conpot/conpot/conpot.cfg
+    2013-06-23 23:39:56,593 Starting Conpot using www templates found in: /opt/conpot/conpot/www/
+    2013-06-23 23:39:56,594 Added slave with id 1.
+    2013-06-23 23:39:56,594 Added block a to slave 1. (type=1, start=1, size=128)
+    2013-06-23 23:39:56,595 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
+    2013-06-23 23:39:56,595 Added block b to slave 1. (type=2, start=10001, size=32)
+    2013-06-23 23:39:56,595 Setting value at addr 10001 to [random.randint(0,1) for b in range(0,32)].
+    2013-06-23 23:39:56,595 Added slave with id 2.
+    2013-06-23 23:39:56,595 Added block c to slave 2. (type=4, start=30001, size=8)
+    2013-06-23 23:39:56,595 Setting value at addr 30001 to [random.randint(0,1) for b in range(0,8)].
+    2013-06-23 23:39:56,596 Added block d to slave 2. (type=3, start=40001, size=8)
+    2013-06-23 23:39:56,596 Conpot initialized using the S7-200 template.
+    2013-06-23 23:39:56,596 Modbus server started on: ('0.0.0.0', 502)
+    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 1) instance (0,) (sysDescr, SNMPv2-MIB) : Siemens, SIMATIC, S7-200
+    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 2) instance (0,) (sysObjectID, SNMPv2-MIB) : 0.0
+    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 4) instance (0,) (sysContact, SNMPv2-MIB) : Siemens AG
+    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 5) instance (0,) (sysName, SNMPv2-MIB) : CP 443-1 EX40
+    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 6) instance (0,) (sysLocation, SNMPv2-MIB) :
+    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 7) instance (0,) (sysServices, SNMPv2-MIB) : 72
+    2013-06-23 23:39:56,685 SNMP server started on: ('0.0.0.0', 161)
+    2013-06-23 23:39:56,685 HTTP server started on: ('0.0.0.0', 80)
 
