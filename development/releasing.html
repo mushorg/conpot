@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Releasing Conpot &mdash; Conpot 0.2.1 documentation</title>
+    <title>Releasing Conpot &mdash; Conpot 0.2.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.2.1',
+        VERSION:     '0.2.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.2.1 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.2.2 documentation" href="../index.html" />
     <link rel="up" title="Development" href="index.html" />
     <link rel="next" title="Frequently Asked Questions" href="../faq.html" />
     <link rel="prev" title="Guidelines" href="guidelines.html" /> 
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="guidelines.html" title="Guidelines"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Development</a> &raquo;</li> 
       </ul>
     </div>  
@@ -53,8 +53,8 @@
             
   <div class="section" id="releasing-conpot">
 <h1>Releasing Conpot<a class="headerlink" href="#releasing-conpot" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="check-tests">
+<h2>Check Tests<a class="headerlink" href="#check-tests" title="Permalink to this headline">¶</a></h2>
 <p>Make sure all tests are passing:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">nosetests</span>
 </pre></div>
@@ -75,7 +75,8 @@
 </div>
 <div class="section" id="tagging-and-pushing">
 <h2>Tagging and Pushing<a class="headerlink" href="#tagging-and-pushing" title="Permalink to this headline">¶</a></h2>
-<p>Make sure to add a git tag before making a new release:</p>
+<p>Commit all the changes you want to have in the tag.
+Make sure to add a git tag before making a new release:</p>
 <div class="highlight-python"><pre>git tag -a $VERSION_NUMBER$
 git push --tag</pre>
 </div>
@@ -96,11 +97,18 @@ git push --tag</pre>
 </div>
 <div class="section" id="release">
 <h2>Release<a class="headerlink" href="#release" title="Permalink to this headline">¶</a></h2>
-<p>Build the package:</p>
+<div class="section" id="build-the-package">
+<h3>Build the package:<a class="headerlink" href="#build-the-package" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><pre>python setup.py sdist</pre>
 </div>
 <p>Get the PKG-INFO from the .tgz in dist/package.tgz
 Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
+</div>
+<div class="section" id="update-the-documentation">
+<h3>Update the documentation:<a class="headerlink" href="#update-the-documentation" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>./docs/update-site.sh</pre>
+</div>
+</div>
 </div>
 </div>
 
@@ -113,14 +121,18 @@ Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Releasing Conpot</a><ul>
-<li><a class="reference internal" href="#testing">Testing</a></li>
+<li><a class="reference internal" href="#check-tests">Check Tests</a></li>
 <li><a class="reference internal" href="#check-usage">Check Usage</a></li>
 <li><a class="reference internal" href="#setup-py">Setup.py</a></li>
 <li><a class="reference internal" href="#tagging-and-pushing">Tagging and Pushing</a><ul>
 <li><a class="reference internal" href="#mess-ups">Mess ups</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#release">Release</a></li>
+<li><a class="reference internal" href="#release">Release</a><ul>
+<li><a class="reference internal" href="#build-the-package">Build the package:</a></li>
+<li><a class="reference internal" href="#update-the-documentation">Update the documentation:</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -165,7 +177,7 @@ Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
         <li class="right" >
           <a href="guidelines.html" title="Guidelines"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
           <li><a href="index.html" >Development</a> &raquo;</li> 
       </ul>
     </div>
