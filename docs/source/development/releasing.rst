@@ -1,6 +1,12 @@
 Releasing Conpot
 ================
 
+Update Readme
+-------------
+
+Update the README with the sample output and the new version.
+
+
 Check Tests
 -----------
 
