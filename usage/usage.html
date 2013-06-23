@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Customization &mdash; Conpot 0.2 documentation</title>
+    <title>Customization &mdash; Conpot 0.2.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.2',
+        VERSION:     '0.2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,9 +23,9 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.2 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.2.1 documentation" href="../index.html" />
     <link rel="up" title="Usage" href="index.html" />
-    <link rel="next" title="Development" href="../development/index.html" />
+    <link rel="next" title="Human Machine Interfaces (HMI)" href="hmi.html" />
     <link rel="prev" title="Usage" href="index.html" /> 
   </head>
   <body>
@@ -36,12 +36,12 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../development/index.html" title="Development"
+          <a href="hmi.html" title="Human Machine Interfaces (HMI)"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Usage"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Usage</a> &raquo;</li> 
       </ul>
     </div>  
@@ -111,6 +111,21 @@ build-pysnmp-mib ianaiftype-mib &gt; IANAifType-MIB.py</pre>
 <span class="nt">&lt;/mib&gt;</span>
 </pre></div>
 </div>
+<p>The value of the ifNumber symbol (2) implies that there is more than one interface - therefore there might be related
+symbols that need identifiers to initialize several instances of a single symbol. To apply an instance id, add the
+&#8220;instance&#8221; attribute to the symbol. Example:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;mib</span> <span class="na">name=</span><span class="s">&quot;IF-MIB&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;ifDescr&quot;</span> <span class="na">instance=</span><span class="s">&quot;1&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;value&gt;</span>This is the first interface<span class="nt">&lt;/value&gt;</span>
+    <span class="nt">&lt;/symbol&gt;</span>
+
+    <span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;ifDescr&quot;</span> <span class="na">instance=</span><span class="s">&quot;2&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;value&gt;</span>This is the second interface<span class="nt">&lt;/value&gt;</span>
+    <span class="nt">&lt;/symbol&gt;</span>
+<span class="nt">&lt;/mib&gt;</span>
+</pre></div>
+</div>
+<p>If not specified, the default instance (0) is being assumed.</p>
 </div>
 </div>
 </div>
@@ -137,8 +152,8 @@ build-pysnmp-mib ianaiftype-mib &gt; IANAifType-MIB.py</pre>
   <p class="topless"><a href="index.html"
                         title="previous chapter">Usage</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../development/index.html"
-                        title="next chapter">Development</a></p>
+  <p class="topless"><a href="hmi.html"
+                        title="next chapter">Human Machine Interfaces (HMI)</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/usage/usage.txt"
@@ -168,12 +183,12 @@ build-pysnmp-mib ianaiftype-mib &gt; IANAifType-MIB.py</pre>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../development/index.html" title="Development"
+          <a href="hmi.html" title="Human Machine Interfaces (HMI)"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Usage"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Usage</a> &raquo;</li> 
       </ul>
     </div>

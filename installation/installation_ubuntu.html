@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Ubuntu 12.04 LTS &mdash; Conpot 0.2.1 documentation</title>
+    <title>Conpot Installation - Ubuntu 12.04 LTS &mdash; Conpot 0.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.2.1',
+        VERSION:     '0.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,9 +23,8 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.2.1 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Usage" href="../usage/index.html" />
     <link rel="prev" title="Installation" href="index.html" /> 
   </head>
   <body>
@@ -36,12 +35,9 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../usage/index.html" title="Usage"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
           <a href="index.html" title="Installation"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Installation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -51,35 +47,11 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="ubuntu-12-04-lts">
-<h1>Ubuntu 12.04 LTS<a class="headerlink" href="#ubuntu-12-04-lts" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>The stable version of ConPot can be downloaded from PyPI:</p>
-<div class="highlight-python"><pre>pip install conpot</pre>
-</div>
-<p>The development version can be cloned from github:</p>
-<div class="highlight-python"><pre>cd /opt
-git clone git@github.com:glastopf/conpot.git
-cd conpot
-python setup.py install</pre>
-</div>
-</div>
-<div class="section" id="example-usage">
-<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>box$ conpot
-2013-04-12 16:09:25,620 Added slave with id 1.
-2013-04-12 16:09:25,621 Added block a to slave 1. (type=1, start=1, size=128)
-2013-04-12 16:09:25,622 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
-2013-04-12 16:09:25,623 Added block d to slave 2. (type=3, start=40001, size=8)
-2013-04-12 16:09:25,623 Conpot initialized using the S7-200 template.
-2013-04-12 16:09:25,623 Serving on: ('0.0.0.0', 502)
-2013-04-12 16:09:27,141 New connection from 127.0.0.1:61493. (b763654f-c9d8-45ae-b35a-824dfc220911)
-2013-04-12 16:09:27,141 Modbus traffic from 127.0.0.1: {'request_pdu': '0100010008', 'function_code': 1, 'slave_id': 1, 'response_pdu': '010132'} (b763654f-c9d8-45ae-b35a-824dfc220911)
-2013-04-12 16:09:27,142 Modbus traffic from 127.0.0.1: {'request_pdu': '0f0001000801ff', 'function_code': 15, 'slave_id': 1, 'response_pdu': '0f00010008'} (b763654f-c9d8-45ae-b35a-824dfc220911)
-2013-04-12 16:09:27,143 Modbus traffic from 127.0.0.1: {'request_pdu': '0100010008', 'function_code': 1, 'slave_id': 1, 'response_pdu': '0101ff'} (b763654f-c9d8-45ae-b35a-824dfc220911)
-2013-04-12 16:09:27,144 Client disconnected. (b763654f-c9d8-45ae-b35a-824dfc220911)</pre>
-</div>
+  <div class="section" id="conpot-installation-ubuntu-12-04-lts">
+<h1>Conpot Installation - Ubuntu 12.04 LTS<a class="headerlink" href="#conpot-installation-ubuntu-12-04-lts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p>Install the dependencies:</p>
 </div>
 </div>
 
@@ -91,9 +63,8 @@ python setup.py install</pre>
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Ubuntu 12.04 LTS</a><ul>
-<li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#example-usage">Example usage</a></li>
+<li><a class="reference internal" href="#">Conpot Installation - Ubuntu 12.04 LTS</a><ul>
+<li><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 </ul>
 </li>
 </ul>
@@ -101,12 +72,9 @@ python setup.py install</pre>
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
                         title="previous chapter">Installation</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="../usage/index.html"
-                        title="next chapter">Usage</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../_sources/installation/ubuntu.txt"
+    <li><a href="../_sources/installation/installation_ubuntu.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -133,12 +101,9 @@ python setup.py install</pre>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../usage/index.html" title="Usage"
-             >next</a> |</li>
-        <li class="right" >
           <a href="index.html" title="Installation"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
           <li><a href="index.html" >Installation</a> &raquo;</li> 
       </ul>
     </div>

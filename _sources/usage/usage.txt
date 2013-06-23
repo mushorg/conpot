@@ -73,3 +73,21 @@ Finally add your custom snmp configuration to the template:
                     <value>2</value>
                 </symbol>
             </mib>
+
+The value of the ifNumber symbol (2) implies that there is more than one interface - therefore there might be related
+symbols that need identifiers to initialize several instances of a single symbol. To apply an instance id, add the
+"instance" attribute to the symbol. Example:
+
+.. code-block:: xml
+
+            <mib name="IF-MIB">
+                <symbol name="ifDescr" instance="1">
+                    <value>This is the first interface</value>
+                </symbol>
+
+                <symbol name="ifDescr" instance="2">
+                    <value>This is the second interface</value>
+                </symbol>
+            </mib>
+
+If not specified, the default instance (0) is being assumed.

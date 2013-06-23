@@ -1,0 +1,168 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Human Machine Interfaces (HMI) &mdash; Conpot 0.2.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.2.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Conpot 0.2.1 documentation" href="../index.html" />
+    <link rel="up" title="Usage" href="index.html" />
+    <link rel="next" title="Development" href="../development/index.html" />
+    <link rel="prev" title="Customization" href="usage.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../development/index.html" title="Development"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Customization"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Usage</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="human-machine-interfaces-hmi">
+<h1>Human Machine Interfaces (HMI)<a class="headerlink" href="#human-machine-interfaces-hmi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-default-hmi">
+<h2>The default HMI<a class="headerlink" href="#the-default-hmi" title="Permalink to this headline">¶</a></h2>
+<p>Yes, Conpot comes with a default &#8216;HMI&#8217;. If you run Conpot with the default configuration and no additional
+parameters, it will serve the default page on port 80. The default page is just a plain text file which gets
+the &#8216;sysDescr&#8217; from the SNMP server. For example:</p>
+<div class="highlight-python"><pre>System is running: Siemens, SIMATIC, S7-200</pre>
+</div>
+</div>
+<div class="section" id="creating-your-own-hmi">
+<h2>Creating your own HMI<a class="headerlink" href="#creating-your-own-hmi" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="manual-hmi-creation">
+<h3>Manual HMI creation<a class="headerlink" href="#manual-hmi-creation" title="Permalink to this headline">¶</a></h3>
+<p>The probably most painless way to customize your HMI is by modifying the default page. If you don&#8217;t want to
+mess with the default files (&#8216;recommended&#8217;) you can create a directory holding a custom index.html. In order
+to use the custom HTML page you have to start Conpot with the following parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># conpot -w &lt;your new directory&gt; -r &lt;root page&gt;</span>
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># conpot -w www/ -r index.html</span>
+</pre></div>
+</div>
+<p>We use jinja2 as template engine. Please refer to the default HMI template (<tt class="docutils literal"><span class="pre">conpot/www/index.html</span></tt>) for a
+minimal example.</p>
+</div>
+<div class="section" id="crawling-an-existing-hmi">
+<h3>Crawling an existing HMI<a class="headerlink" href="#crawling-an-existing-hmi" title="Permalink to this headline">¶</a></h3>
+<p>We recommend to use the crawler only against your own applications! Usage on your own risk.
+Improper usage will most likely damage the system.</p>
+<p>In case you have access to a HTML HMI you can use to crawler to create a copy that&#8217;s compatible with Conpot&#8217;s
+HTTP server.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># hmi_crawler --target http://&lt;taget_domain&gt; --www &lt;target_dir&gt;</span>
+<span class="c"># hmi_crawler -t http://localhost:80 -w dump/</span>
+</pre></div>
+</div>
+<p>This will dump a copy of the target web content into <tt class="docutils literal"><span class="pre">www</span></tt>. If you run Conpot now:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># conpot -w dump/ -r index.html</span>
+</pre></div>
+</div>
+<p>It will server the dumped web page as HMI.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Human Machine Interfaces (HMI)</a><ul>
+<li><a class="reference internal" href="#the-default-hmi">The default HMI</a></li>
+<li><a class="reference internal" href="#creating-your-own-hmi">Creating your own HMI</a><ul>
+<li><a class="reference internal" href="#manual-hmi-creation">Manual HMI creation</a></li>
+<li><a class="reference internal" href="#crawling-an-existing-hmi">Crawling an existing HMI</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="previous chapter">Customization</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../development/index.html"
+                        title="next chapter">Development</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/usage/hmi.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../development/index.html" title="Development"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Customization"
+             >previous</a> |</li>
+        <li><a href="../index.html">Conpot 0.2.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Usage</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Glastopf Developers.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
