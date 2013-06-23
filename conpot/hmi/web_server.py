@@ -19,6 +19,7 @@ app = Bottle()
 class HTTPServer(object):
 
     def __init__(self, log_queue, www_host="0.0.0.0", www_port=8080, www_path="./www", snmp_port=161):
+        self.www_path = www_path
         self.host, self.port = www_host, int(www_port)
         self.snmp_host, self.snmp_port = "127.0.0.1", snmp_port
         self.template_env = Environment(loader=FileSystemLoader(www_path))
@@ -26,9 +27,9 @@ class HTTPServer(object):
         self.log_queue = log_queue
 
     def _route(self):
+        app.route('/static/<filepath:path>', method="GET", callback=self.server_static)
         app.route(['/', '/index.html', "/<path:path>"], method=["GET", "POST"], callback=self.root_page)
         app.route('/favicon.ico', method="GET", callback=self.favicon)
-        app.route('/static/<filepath:path>', method="GET", callback=self.server_static)
 
     def _log(self, request):
         log_dict = {
@@ -40,7 +41,7 @@ class HTTPServer(object):
         self.log_queue.put(log_dict)
 
     def server_static(self, filepath):
-        return static_file(filepath, root='./static')
+        return static_file(filepath, root=self.www_path + '/static')
 
     def favicon(self):
         return None
