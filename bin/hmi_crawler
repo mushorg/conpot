@@ -142,6 +142,8 @@ if __name__ == "__main__":
     Please be aware that a crawler might break your web application.
     This tool is supposed to be only used against web application owned by you.
 
+    Usage on your own risk!
+
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
