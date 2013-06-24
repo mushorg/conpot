@@ -68,12 +68,12 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
-            response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
+            response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(rspVarBinds[0][0]), reference_value)
 
             # if there were changes to the dynamic value table, craft a new response
             if response_class:
-                dynamic_value = self.dyn_rsp.response_table[tuple(varBinds[0][0])][2]
-                rspModBinds = [(tuple(varBinds[0][0]), response_class(dynamic_value))]
+                dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
+                rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
                 rspVarBinds = rspModBinds
         
         finally:
@@ -103,16 +103,15 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         try:
             while 1:
                 rspVarBinds = mgmtFun(varBinds, (acFun, acCtx))
-
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
-                response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
+                response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(rspVarBinds[0][0]), reference_value)
 
                 # if there were changes to the dynamic value table, craft a new response
                 if response_class:
-                    dynamic_value = self.dyn_rsp.response_table[tuple(varBinds[0][0])][2]
-                    rspModBinds = [(tuple(varBinds[0][0]), response_class(dynamic_value))]
+                    dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
+                    rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
                     rspVarBinds = rspModBinds
 
                 # send response

@@ -182,8 +182,8 @@ class DynamicResponder(object):
                 if not dynamic_aux:
                     dynamic_aux = 0
     
-                uptime_delta = datetime.now() - self.start_time + dynamic_aux
-                self.response_table[OID][2] = round((uptime_delta.days * 24 * 60 * 60 + uptime_delta.seconds) * 100 + uptime_delta.microseconds / 10000)
+                uptime_delta = datetime.now() - self.start_time
+                self.response_table[OID][2] = round((uptime_delta.days * 24 * 60 * 60 + uptime_delta.seconds) * 100 + uptime_delta.microseconds / 10000) + int(dynamic_aux)
     
                 return response_class
     

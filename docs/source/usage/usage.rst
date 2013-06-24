@@ -128,11 +128,11 @@ Currently, the following engine types are implemented:
 
 * randomint
     Randomly assigns an integer. Default range: 1-65535.
-    Modified example:    <engine type="randomint">1:100</engine>    ( => assign a random integer between 1 and 100)
+    Modified example:    <engine type="randomint">1:100</engine>    ( => assign a random integer between 1 and 100 )
 
 * sysuptime
     Assigns the current uptime of the conpot process measured in milliseconds.
-    Modified example:    <engine type="sysuptime"></engine>    ( => additional values will not be processed )
+    Modified example:    <engine type="sysuptime"></engine>    ( => additional value will be used as a head-start )
 
 * evaluate
     Assigns the result of value evaluated as python code ( eval ).
