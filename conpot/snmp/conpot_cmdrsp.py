@@ -1,6 +1,5 @@
 import sys
 import logging
-import conpot_dynrsp
 from datetime import datetime
 
 from pysnmp.entity.rfc3413 import cmdrsp
@@ -47,7 +46,8 @@ class conpot_extension(object):
         self.log_queue.put(log_dict)
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -68,11 +68,11 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
-            response_class = conpot_dynrsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
+            response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
 
             # if there were changes to the dynamic value table, craft a new response
             if response_class:
-                dynamic_value = conpot_dynrsp.response_table[tuple(varBinds[0][0])][2]
+                dynamic_value = self.dyn_rsp.response_table[tuple(varBinds[0][0])][2]
                 rspModBinds = [(tuple(varBinds[0][0]), response_class(dynamic_value))]
                 rspVarBinds = rspModBinds
         
@@ -86,7 +86,8 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
 
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -106,11 +107,11 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
-                response_class = conpot_dynrsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
+                response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(varBinds[0][0]), reference_value)
 
                 # if there were changes to the dynamic value table, craft a new response
                 if response_class:
-                    dynamic_value = conpot_dynrsp.response_table[tuple(varBinds[0][0])][2]
+                    dynamic_value = self.dyn_rsp.response_table[tuple(varBinds[0][0])][2]
                     rspModBinds = [(tuple(varBinds[0][0]), response_class(dynamic_value))]
                     rspVarBinds = rspModBinds
 
@@ -131,7 +132,8 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -181,7 +183,8 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 
 
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         conpot_extension.__init__(self, log_queue)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
@@ -204,7 +207,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             self.releaseStateInformation(stateReference)
 
             # update dynamic table with new value
-            conpot_dynrsp.response_table[tuple(rspVarBinds[0][0])][2] = rspVarBinds[0][1]
+            self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2] = rspVarBinds[0][1]
 
         except ( pysnmp.smi.error.NoSuchObjectError,
                  pysnmp.smi.error.NoSuchInstanceError ):

@@ -16,9 +16,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import conpot_dynrsp
 
 from lxml import etree
+from conpot.snmp.dynrsp import DynamicResponder
 from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
@@ -28,7 +28,7 @@ class SNMPServer(object):
         self.host = host
         self.port = port
 
-        conpot_dynrsp.init()
+        dyn_rsp = DynamicResponder()
 
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
@@ -36,7 +36,7 @@ class SNMPServer(object):
         if not mibs:
             self.cmd_responder = None
         else:
-            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath)
+            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath, dyn_rsp)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
