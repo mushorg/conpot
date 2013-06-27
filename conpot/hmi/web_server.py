@@ -35,12 +35,12 @@ app = Bottle()
 
 class HTTPServer(object):
 
-    def __init__(self, log_queue, args, www_host="0.0.0.0", www_port=8080, snmp_port=161):
-        self.www_path = args.www
-        self.www_root = args.www_root
-        self.host, self.port = www_host, int(www_port)
+    def __init__(self, log_queue, http_host="0.0.0.0", http_port=8080, http_path='www/', http_root='index.htm', snmp_port=161):
+        self.http_path = http_path
+        self.http_root = http_root
+        self.host, self.port = http_host, int(http_port)
         self.snmp_host, self.snmp_port = "127.0.0.1", snmp_port
-        self.template_env = Environment(loader=FileSystemLoader(self.www_path))
+        self.template_env = Environment(loader=FileSystemLoader(self.http_path))
         self._route()
         self.log_queue = log_queue
 
@@ -59,7 +59,7 @@ class HTTPServer(object):
         self.log_queue.put(log_dict)
 
     def server_static(self, filepath):
-        return static_file(filepath, root=self.www_path + '/static')
+        return static_file(filepath, root=self.http_path + '/static')
 
     def favicon(self):
         return None
@@ -78,7 +78,7 @@ class HTTPServer(object):
         logger.info("HTTP request from {0}: {1} {2}".format(request.remote_addr, request.method, request.fullpath))
         self._log(request)
         if not path or path == "/":
-            redirect(self.www_root)
+            redirect(self.http_root)
         client = snmp_client.SNMPClient(self.snmp_host, self.snmp_port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.get_command(OID, callback=self.mock_callback)
@@ -86,7 +86,7 @@ class HTTPServer(object):
             template = self.template_env.get_template(path)
             return template.render(id=self.result)
         except TemplateNotFound:
-            redirect(self.www_root)
+            redirect(self.http_root)
 
     def run(self):
         logger.info('HTTP server started on: {0}'.format((self.host, self.port)))

@@ -46,7 +46,7 @@ class TestBase(unittest.TestCase):
         self.snmp_port = 1337
         self.log_queue = Queue()
         self.dyn_rsp = DynamicResponder()
-        http_server = web_server.HTTPServer(self.log_queue, "127.0.0.1", 8080, "conpot/www/", self.snmp_port)
+        http_server = web_server.HTTPServer(self.log_queue, http_host="127.0.0.1", http_port=8080, http_path="conpot/www/", snmp_port=self.snmp_port)
         self.http_worker = gevent.spawn(http_server.run)
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
