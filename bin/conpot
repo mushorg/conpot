@@ -123,7 +123,8 @@ def main():
     http_port = config.getint('http', 'port')
     http_path = args.www
     http_root = args.www_root
-    http_server = HTTPServer(log_queue, http_path, http_root, http_host, http_port, snmp_port)
+    http_server = HTTPServer(log_queue, http_path=http_path, http_root=http_root,
+                             http_host=http_host, http_port=http_port, snmp_port=snmp_port)
 
     servers = list()
     try:
