@@ -46,7 +46,8 @@ class conpot_extension(object):
         self.log_queue.put(log_dict)
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -61,17 +62,32 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
         rspVarBinds = None
         try:
+            # generate response
             rspVarBinds = mgmtFun(v2c.apiPDU.getVarBinds(PDU), (acFun, acCtx))
+
+            # determine the correct response class and update the dynamic value table
+            reference_class = rspVarBinds[0][1].__class__.__name__
+            reference_value = rspVarBinds[0][1]
+            response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(rspVarBinds[0][0]), reference_value)
+
+            # if there were changes to the dynamic value table, craft a new response
+            if response_class:
+                dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
+                rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
+                rspVarBinds = rspModBinds
+        
         finally:
             self.log(snmp_version, 'Get', addr, varBinds, rspVarBinds)
 
-        self.sendRsp(
-            snmpEngine, stateReference, 0, 0, rspVarBinds)
+        # send response
+        self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
         self.releaseStateInformation(stateReference)
 
 
+
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -87,7 +103,18 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         try:
             while 1:
                 rspVarBinds = mgmtFun(varBinds, (acFun, acCtx))
+                # determine the correct response class and update the dynamic value table
+                reference_class = rspVarBinds[0][1].__class__.__name__
+                reference_value = rspVarBinds[0][1]
+                response_class = self.dyn_rsp.updateDynamicValues(reference_class, tuple(rspVarBinds[0][0]), reference_value)
 
+                # if there were changes to the dynamic value table, craft a new response
+                if response_class:
+                    dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
+                    rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
+                    rspVarBinds = rspModBinds
+
+                # send response
                 try:
                     self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
                 except error.StatusInformation:
@@ -95,6 +122,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                     varBinds[idx] = (rspVarBinds[idx][0], varBinds[idx][1])
                 else:
                     break
+
         finally:
             self.log(snmp_version, 'GetNext', addr, varBinds, rspVarBinds)
 
@@ -103,7 +131,8 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
 
@@ -146,21 +175,21 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             self.log(snmp_version, 'Bulk', addr, varBinds, rspVarBinds)
 
         if len(rspVarBinds):
-            self.sendRsp(
-                snmpEngine, stateReference, 0, 0, rspVarBinds
-            )
+            self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
             self.releaseStateInformation(stateReference)
         else:
             raise pysnmp.smi.error.SmiError()
 
 
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue):
+    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+        self.dyn_rsp = dyn_rsp
         conpot_extension.__init__(self, log_queue)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
         (acFun, acCtx) = acInfo
+
         mgmtFun = self.snmpContext.getMibInstrum(contextName).writeVars
 
         varBinds = v2c.apiPDU.getVarBinds(PDU)
@@ -168,12 +197,17 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
 
         # rfc1905: 4.2.5.1-13
         rspVarBinds = None
+
         try:
             rspVarBinds = mgmtFun(v2c.apiPDU.getVarBinds(PDU), (acFun, acCtx))
-            self.sendRsp(
-                snmpEngine, stateReference, 0, 0, rspVarBinds
-            )
+
+            # generate response
+            self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
             self.releaseStateInformation(stateReference)
+
+            # update dynamic table with new value
+            self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2] = rspVarBinds[0][1]
+
         except ( pysnmp.smi.error.NoSuchObjectError,
                  pysnmp.smi.error.NoSuchInstanceError ):
             e = pysnmp.smi.error.NotWritableError()

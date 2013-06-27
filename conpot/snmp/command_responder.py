@@ -2,6 +2,7 @@
 # Based on examples from http://pysnmp.sourceforge.net/
 
 import logging
+
 from datetime import datetime
 
 from pysnmp.entity import config
@@ -44,9 +45,11 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, log_queue, mibpath):
+    def __init__(self, host, port, log_queue, mibpath, dyn_rsp):
 
         self.log_queue = log_queue
+        self.dyn_rsp = dyn_rsp
+
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
 
@@ -102,10 +105,11 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
-        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
-        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
-        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue)
+        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
@@ -113,7 +117,7 @@ class CommandResponder(object):
             snmpEngine.registerTransportDispatcher(SNMPDispatcher(self.log_queue))
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
-    def register(self, mibname, symbolname, instance, value):
+    def register(self, mibname, symbolname, instance, value, engine_type='static', engine_aux=None):
         """Register OID"""
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
@@ -122,10 +126,12 @@ class CommandResponder(object):
             MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI','MibScalarInstance')
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
-            logger.info('Registered OID {0} instance {1} ({2}, {3}) : {4}'.format(s.name, instance, s.label, mibname, value))
+            
+            self.dyn_rsp.response_table[s.name+instance] = [engine_type,engine_aux,value]
+            logger.info('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp {5}[{6}]'.format(s.name, instance, s.label, mibname, value, engine_type, engine_aux))
 
         else:
-            logger.info('Registration of symbol {0} failed. OID not found in {1}'.format(symbolname, mibname))
+            logger.info('Skipped:    OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols

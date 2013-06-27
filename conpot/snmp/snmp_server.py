@@ -18,38 +18,54 @@
 import logging
 
 from lxml import etree
+from conpot.snmp.dynrsp import DynamicResponder
 from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
-
 
 class SNMPServer(object):
     def __init__(self, host, port, template, log_queue, mibpath):
         self.host = host
         self.port = port
+
+        dyn_rsp = DynamicResponder()
+
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             self.cmd_responder = None
         else:
-            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath)
+            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath, dyn_rsp)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
 
+                # retrieve instance from template
                 if 'instance' in symbol.attrib:
-                    # convert instance to integer-filled tuple
+                    # convert instance to (int-)tuple
                     symbol_instance = symbol.attrib['instance'].split('.')
                     symbol_instance = tuple(map(int, symbol_instance))
                 else:
                     # use default instance (0)
                     symbol_instance = (0,)
 
+                # retrieve value from template
                 value = symbol.xpath('./value/text()')[0]
-                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value)
+        
+                # retrieve engine from template
+                if len(symbol.xpath('./engine')) > 0:
+                    engine_type = symbol.find('./engine').attrib['type']
+                    engine_aux = symbol.findtext('./engine')
+                else:
+                    # disable dynamic responses (static)
+                    engine_type = 'static'
+                    engine_aux = '' 
+
+                # register this MIB instance to the command responder
+                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
 
     def start(self):
         if self.cmd_responder:

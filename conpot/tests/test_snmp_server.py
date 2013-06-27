@@ -30,6 +30,8 @@ from pysnmp.proto import rfc1902
 monkey.patch_all()
 from conpot.snmp import snmp_client
 from conpot.snmp import command_responder
+from conpot.snmp.dynrsp import DynamicResponder
+
 
 
 class TestBase(unittest.TestCase):
@@ -37,24 +39,44 @@ class TestBase(unittest.TestCase):
         self.host = '127.0.0.1'
         self.port = 1337
         self.log_queue = Queue()
+        self.dyn_rsp = DynamicResponder()
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd())
+            self.snmp_server = command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd(), self.dyn_rsp)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:
                 symbol_name = symbol.attrib['name']
-                try:
-                    symbol_instance = tuple(int(i) for i in symbol.attrib['instance'].split('.'))
-                except KeyError:
+
+                # retrieve instance from template
+                if 'instance' in symbol.attrib:
+                    # convert instance to (int-)tuple
+                    symbol_instance = symbol.attrib['instance'].split('.')
+                    symbol_instance = tuple(map(int, symbol_instance))
+                else:
+                    # use default instance (0)
                     symbol_instance = (0,)
+
+                # retrieve value from template
                 value = symbol.xpath('./value/text()')[0]
-                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value)
+
+                # retrieve engine from template
+                if len(symbol.xpath('./engine')) > 0:
+                    engine_type = symbol.find('./engine').attrib['type']
+                    engine_aux = symbol.findtext('./engine')
+                else:
+                    # disable dynamic responses (static)
+                    engine_type = 'static'
+                    engine_aux = ''
+
+                # register this MIB instance to the command responder
+                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+
         self.snmp_server.snmpEngine.transportDispatcher.start()
 
     def tearDown(self):
