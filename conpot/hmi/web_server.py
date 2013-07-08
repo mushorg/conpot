@@ -1,82 +1,42 @@
+# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 import logging
-from datetime import datetime
-from pprint import pprint
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
-from gevent.wsgi import WSGIServer
-from bottle import Bottle, static_file, request
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
-
-from conpot.snmp import snmp_client
-
+from lxml import etree
+from conpot.hmi.command_responder import CommandResponder
 
 logger = logging.getLogger()
-app = Bottle()
-
 
 class HTTPServer(object):
+    def __init__(self, host, port, template, log_queue, docpath, snmp_port=161):
+        self.host = host
+        self.port = port
+        self.docpath = docpath
+        self.snmp_host = '127.0.0.1'
+        self.snmp_port = snmp_port
 
-    def __init__(self, log_queue, www_host="0.0.0.0", www_port=8080, www_path="./www", snmp_port=161):
-        self.host, self.port = www_host, int(www_port)
-        self.snmp_host, self.snmp_port = "127.0.0.1", snmp_port
-        self.template_env = Environment(loader=FileSystemLoader(www_path))
-        self._route()
-        self.log_queue = log_queue
+        self.cmd_responder = CommandResponder(host, port, template, log_queue, docpath, self.snmp_host, self.snmp_port)    
 
-    def _route(self):
-        app.route(['/', '/index.html', "/<path:path>"], method=["GET", "POST"], callback=self.root_page)
-        app.route('/favicon.ico', method="GET", callback=self.favicon)
-        app.route('/static/<filepath:path>', method="GET", callback=self.server_static)
+    def start(self):
+        if self.cmd_responder:
+            logger.info('HTTP server started on: {0}'.format((self.host, self.port)))
+            self.cmd_responder.serve_forever()
 
-    def _log(self, request):
-        log_dict = {
-            'remote': request.remote_addr,
-            'timestamp': datetime.utcnow(),
-            'data_type': 'http',
-            'data': {0: {'request': '{0} {1}'.format(request.method, request.fullpath)}}
-        }
-        self.log_queue.put(log_dict)
-
-    def server_static(self, filepath):
-        return static_file(filepath, root='./static')
-
-    def favicon(self):
-        return None
-
-    def mock_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
-        self.result = None
-        if errorIndication:
-            self.result = errorIndication
-        elif errorStatus:
-            self.result = errorStatus.prettyPrint()
-        else:
-            for oid, val in varBindTable:
-                self.result = val.prettyPrint()
-
-    def root_page(self, path=None):
-        logger.info("HTTP request from {0}: {1} {2}".format(request.remote_addr, request.method, request.fullpath))
-        self._log(request)
-        if not path or path == "/":
-            path = "index.html"
-        client = snmp_client.SNMPClient(self.snmp_host, self.snmp_port)
-        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
-        client.get_command(OID, callback=self.mock_callback)
-        try:
-            template = self.template_env.get_template(path)
-        except TemplateNotFound:
-            template = self.template_env.get_template("index.html")
-        return template.render(id=self.result)
-
-    def run(self):
-        logger.info('HTTP server started on: {0}'.format((self.host, self.port)))
-        try:
-            WSGIServer((self.host, self.port), app, log=None).serve_forever()
-        except KeyboardInterrupt:
-            return 0
-
-
-if __name__ == '__main__':
-    http_server = HTTPServer()
-    http_server.run()
+    def stop(self):
+        if self.cmd_responder:
+            self.cmd_responder.stop()
