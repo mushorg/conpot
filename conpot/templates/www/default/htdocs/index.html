@@ -1,0 +1,35 @@
+<HTML>
+
+    <HEAD>
+        <TITLE>Overview - <condata source="snmp" key="1.3.6.1.2.1.1.1.0" /></TITLE>
+    </HEAD>
+
+    <BODY>
+
+        <h2><condata source="snmp" key="1.3.6.1.2.1.1.5.0" /></h2>
+        <hr>
+        &nbsp;<br>
+
+        <b>Status:</b><br>
+        &nbsp;<br>
+        <table border="0">
+
+            <tr>
+
+                <td style="width:150px;"><b>Current time:</b></td>
+                <td><condata source="eval" key="time.strftime('%H:%M:%S', time.localtime())" /></td>
+
+            </tr>
+
+            <tr>
+
+                <td style="width:150px;"><b>System uptime:</b></td>
+                <td><condata source="snmp" key="1.3.6.1.2.1.1.3.0" /> timeticks (deciseconds)</td>
+
+            </tr>
+
+        </table>
+
+    </BODY>
+
+</HTML>

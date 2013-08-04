@@ -27,7 +27,7 @@ import requests
 
 from conpot.snmp import command_responder
 from conpot.snmp.dynrsp import DynamicResponder
-from conpot.hmi import web_server
+from conpot.http import web_server
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()
@@ -46,8 +46,8 @@ class TestBase(unittest.TestCase):
         self.snmp_port = 1337
         self.log_queue = Queue()
         self.dyn_rsp = DynamicResponder()
-        http_server = web_server.HTTPServer(self.log_queue, http_host="127.0.0.1", http_port=8080, http_path="conpot/www/", snmp_port=self.snmp_port)
-        self.http_worker = gevent.spawn(http_server.run)
+        http_server = web_server.HTTPServer('127.0.0.1', 8080, 'conpot/templates/default.xml', self.log_queue, 'conpot/templates/www/default', self.snmp_port)
+        self.http_worker = gevent.spawn(http_server.start)
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
@@ -92,7 +92,22 @@ class TestBase(unittest.TestCase):
         self.http_worker.kill()
 
     def test_http_request(self):
-        # TODO: This is a bit ugly...
+
+        # TODO: johnnykv: This is a bit ugly...
+        # TODO: creolis:  A bit more flexible now, but still ugly...
+
+        # get reference value from template
+        dom = etree.parse('conpot/templates/default.xml')
+        sysName = dom.xpath('//conpot_template/snmp/mibs/mib[@name="SNMPv2-MIB"]/symbol[@name="sysName"]/value')
+
+        if sysName:
+            assert_reference = sysName[0].xpath('./text()')[0]
+
         gevent.sleep(1)
-        ret = requests.get("http://127.0.0.1:8080/")
-        self.assertIn("Siemens, SIMATIC, S7-200", ret.text)
+        ret = requests.get("http://127.0.0.1:8080/index.html")
+
+        if assert_reference:
+            print "asserting {0}".format(assert_reference)
+            self.assertIn(assert_reference, ret.text)
+        else:
+            raise Exception("Assertion failed. Reference OID 'sysName' missing.")

@@ -121,22 +121,20 @@ def main():
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
-    http_path = args.www
-    http_root = args.www_root
-    http_server = HTTPServer(log_queue, http_path=http_path, http_root=http_root,
-                             http_host=http_host, http_port=http_port, snmp_port=snmp_port)
+    http_server = HTTPServer(http_host, http_port, args.template, log_queue, args.www, snmp_port)
 
     servers = list()
     try:
         servers.append(gevent.spawn(modbus_server.serve_forever))
         servers.append(gevent.spawn(snmp_server.start))
-        servers.append(gevent.spawn(http_server.run))
+        servers.append(gevent.spawn(http_server.start))
         gevent.joinall(servers)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
         log_worker.stop()
         snmp_server.stop()
         modbus_server.stop()
+        http_server.stop()
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
