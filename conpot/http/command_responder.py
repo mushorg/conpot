@@ -53,7 +53,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def get_entity_headers(self, rqfilename, headers, configuration):
 
-        xml_headers = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' + rqfilename + '"]/headers/*')
+        xml_headers = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/headers/*')
 
         if xml_headers:
 
@@ -65,7 +65,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def get_status_headers(self, status, headers, configuration):
 
-        xml_headers = configuration.xpath('//conpot_template/hmi/statuscodes/status[@name="' +
+        xml_headers = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
                                           str(status) + '"]/headers/*')
 
         if xml_headers:
@@ -95,13 +95,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("%s %d %s\r\n" %
                              (self.protocol_version, code, message))
 
-        # there are certain situations where variables are (not yet) registered
-        # ( e.g. corrupted request syntax ). In this case, we set them manually.
-        if hasattr(self, 'path'):
-            requeststring = self.path
-        else:
-            requeststring = ''
-
         # the following two headers are omitted, which is why we override
         # send_response() at all. We do this one on our own...
 
@@ -130,7 +123,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         source = 'filesystem'
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//conpot_template/hmi/statuscodes/status[@name="' +
+        entity_proxy = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
                                            str(status) +
                                            '"]/proxy')
 
@@ -156,6 +149,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             except IOError:
                 payload = ''
                 print "HMI:DEBUG: could not load '" + str(status) + ".status' from filesystem. Sending empty reply."
+
+            # there might be template data that can be substituted within the
+            # payload. We only substitute data that is going to be displayed
+            # by the browser:
+
+            templated = False
+            for header in headers:
+                if header[0].lower() == 'content-type' and header[1].lower() == 'text/html':
+                    templated = True
+
+            if templated:
+                # perform template substitution on payload
+                payload = self.substitute_template_fields(payload)
 
             # Calculate and append a content length header
             headers.append(('Content-Length', payload.__len__()))
@@ -233,13 +239,13 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         rqparams = requeststring.partition('?')[2]
 
         # handle ALIAS tag
-        entity_alias = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' + rqfilename + '"]/alias')
+        entity_alias = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/alias')
         if entity_alias:
             rqfilename = entity_alias[0].xpath('./text()')[0]
             print "HMI:DEBUG: requested entity is an alias to " + rqfilename
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' + rqfilename + '"]/proxy')
+        entity_proxy = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/proxy')
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
@@ -252,7 +258,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # handle STATUS tag
             # ( filesystem only, since proxied requests come with their own status )
-            entity_status = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' + rqfilename + '"]/status')
+            entity_status = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/status')
             if entity_status:
                 status = int(entity_status[0].xpath('./text()')[0])
             else:
@@ -452,7 +458,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
 
             # try to find a configuration item for this GET request
-            entity_xml = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' +
+            entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
                                              self.path.partition('?')[0] + '"]')
 
             if entity_xml:
@@ -500,7 +506,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 print "HMI:DEBUG: *** PROTOCOL ANOMALY *** GET request carried payload: {0}".format(get_data)
 
         # try to find a configuration item for this GET request
-        entity_xml = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' +
+        entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
                                          self.path.partition('?')[0] + '"]')
 
         if entity_xml:
@@ -547,7 +553,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 print "HMI:DEBUG: POST request carried payload: {0}".format(post_data)
 
         # try to find a configuration item for this POST request
-        entity_xml = configuration.xpath('//conpot_template/hmi/htdocs/node[@name="' +
+        entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
                                          self.path.partition('?')[0] + '"]')
 
         if entity_xml:
@@ -702,7 +708,7 @@ class SubHTTPServer(ThreadedHTTPServer):
         # for the first time in order to reduce further handling..
         self.configuration = etree.parse(template)
 
-        xml_config = self.configuration.xpath('//conpot_template/hmi/global/config/*')
+        xml_config = self.configuration.xpath('//conpot_template/http/global/config/*')
         if xml_config:
 
             # retrieve all headers assigned to this status code
@@ -738,7 +744,7 @@ class SubHTTPServer(ThreadedHTTPServer):
 
         # load global headers from XML
         self.global_headers = []
-        xml_headers = self.configuration.xpath('//conpot_template/hmi/global/headers/*')
+        xml_headers = self.configuration.xpath('//conpot_template/http/global/headers/*')
         if xml_headers:
 
             # retrieve all headers assigned to this status code
