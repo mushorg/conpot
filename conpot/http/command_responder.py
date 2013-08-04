@@ -154,14 +154,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # payload. We only substitute data that is going to be displayed
             # by the browser:
 
-            templated = False
-            for header in headers:
-                if header[0].lower() == 'content-type' and header[1].lower() == 'text/html':
-                    templated = True
-
-            if templated:
-                # perform template substitution on payload
-                payload = self.substitute_template_fields(payload)
+            # perform template substitution on payload
+            payload = self.substitute_template_fields(payload)
 
             # Calculate and append a content length header
             headers.append(('Content-Length', payload.__len__()))
