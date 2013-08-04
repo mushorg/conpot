@@ -103,8 +103,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def substitute_template_fields(self, payload):
 
-        print "HMI:DEBUG: parsing response payload"
-
         # initialize parser with our payload
         parser = TemplateParser(payload, self.server.snmp_host, self.server.snmp_port)
 
@@ -130,7 +128,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
-            print "HMI:DEBUG: requested status " + str(status) + " is proxied to " + target
 
         # the requested resource resides on our filesystem,
         # so we try retrieve all metadata and the resource itself from there.
@@ -148,7 +145,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             except IOError:
                 payload = ''
-                print "HMI:DEBUG: could not load '" + str(status) + ".status' from filesystem. Sending empty reply."
 
             # there might be template data that can be substituted within the
             # payload. We only substitute data that is going to be displayed
@@ -202,7 +198,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    print "HMI:DEBUG: could not load status " + str(status) + " from proxy. Falling back to 503."
                     (status, headers, payload) = self.load_status(status,
                                                                   requeststring,
                                                                   headers,
@@ -216,7 +211,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     status = 503
                     payload = ''
                     headers.append(('Content-Length', 0))
-                    print "HMI:DEBUG: could not load status " + str(status) + " from proxy. Falling back to 503."
 
             return status, headers, payload
 
@@ -236,14 +230,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         entity_alias = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/alias')
         if entity_alias:
             rqfilename = entity_alias[0].xpath('./text()')[0]
-            print "HMI:DEBUG: requested entity is an alias to " + rqfilename
 
         # handle PROXY tag
         entity_proxy = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/proxy')
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
-            print "HMI:DEBUG: requested entity is proxied to " + target
 
         # the requested resource resides on our filesystem,
         # so we try retrieve all metadata and the resource itself from there.
@@ -268,7 +260,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     payload = f.read()
 
             except IOError:
-                print "HMI:DEBUG: could not retrieve " + rqfilename + " from filesytem. Replying with empty payload."
                 payload = ''
 
             # there might be template data that can be substituted within the
@@ -308,7 +299,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             except:
                 status = 503
-                print "HMI:DEBUG: could not retrieve " + rqfilename + " from proxy. Falling back to 503."
                 (status, headers, payload) = self.load_status(status, requeststring, headers, configuration, docpath)
 
             return status, headers, payload
@@ -329,8 +319,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if trace_data_length:
             unsupported_request_data = self.rfile.read(int(trace_data_length))
-
-        print "HMI:DEBUG: Method not implemented (yet). Falling back to 501."
 
         # there are certain situations where variables are (not yet) registered
         # ( e.g. corrupted request syntax ). In this case, we set them manually.
@@ -361,7 +349,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # logging
         self.log(self.request_version, self.command, self.client_address, (self.path,
                                                                            self.headers.headers,
-                                                                           unsupported_request_data))
+                                                                           unsupported_request_data), status)
 
     def do_TRACE(self):
         """Handle TRACE requests."""
@@ -382,15 +370,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if trace_data_length:
             trace_data = self.rfile.read(int(trace_data_length))
-            if trace_data:
-                print "HMI:DEBUG: *** PROTOCOL ANOMALY *** TRACE request carried payload: {0}".format(trace_data)
 
         # check configuration: are we allowed to use this method?
         if self.server.disable_method_trace is True:
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            print "HMI:DEBUG: requested method disabled by configuration. falling back to http status 501"
             (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
             
         else:
@@ -417,7 +402,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
         # logging
-        self.log(self.request_version, self.command, self.client_address, (self.path, self.headers.headers, trace_data))
+        self.log(self.request_version,
+                 self.command,
+                 self.client_address,
+                 (self.path, self.headers.headers, trace_data),
+                 status)
 
     def do_HEAD(self):
         """Handle HEAD requests."""
@@ -438,15 +427,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if head_data_length:
             head_data = self.rfile.read(int(head_data_length))
-            if head_data:
-                print "HMI:DEBUG: *** PROTOCOL ANOMALY *** HEAD request carried payload: {0}".format(head_data)
 
         # check configuration: are we allowed to use this method?
         if self.server.disable_method_head is True:
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            print "HMI:DEBUG: requested method disabled by configuration. falling back to http status 501"
             (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
             
         else:
@@ -463,7 +449,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 # No config item could be found. Fall back to a standard 404..
                 status = 404
                 (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
-                print "HMI:DEBUG: requested entity not found. falling back to http status 404"
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -475,7 +460,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
 
         # logging
-        self.log(self.request_version, self.command, self.client_address, (self.path, self.headers.headers, head_data))
+        self.log(self.request_version,
+                 self.command,
+                 self.client_address,
+                 (self.path, self.headers.headers, head_data),
+                 status)
 
     def do_GET(self):
         """Handle GET requests"""
@@ -496,8 +485,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if get_data_length:
             get_data = self.rfile.read(int(get_data_length))
-            if get_data:
-                print "HMI:DEBUG: *** PROTOCOL ANOMALY *** GET request carried payload: {0}".format(get_data)
 
         # try to find a configuration item for this GET request
         entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
@@ -510,7 +497,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            print "HMI:DEBUG: requested entity not found. falling back to http status 404"
             (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
 
         # send initial HTTP status line to client
@@ -526,7 +512,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
         # logging
-        self.log(self.request_version, self.command, self.client_address, (self.path, self.headers.headers, get_data))
+        self.log(self.request_version,
+                 self.command,
+                 self.client_address,
+                 (self.path, self.headers.headers, get_data),
+                 status)
 
     def do_POST(self):
         """Handle POST requests"""
@@ -543,8 +533,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if post_data_length:
             post_data = self.rfile.read(int(post_data_length))
-            if post_data:
-                print "HMI:DEBUG: POST request carried payload: {0}".format(post_data)
 
         # try to find a configuration item for this POST request
         entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
@@ -557,7 +545,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            print "HMI:DEBUG: requested entity not found. falling back to http status 404"
             (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
 
         # send initial HTTP status line to client
@@ -573,7 +560,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
         # logging
-        self.log(self.request_version, self.command, self.client_address, (self.path, self.headers.headers, post_data))
+        self.log(self.request_version,
+                 self.command,
+                 self.client_address,
+                 (self.path, self.headers.headers, post_data),
+                 status)
 
 
 class TemplateParser(HTMLParser):
@@ -615,8 +606,6 @@ class TemplateParser(HTMLParser):
         # only parse tags that are conpot template tags ( <condata /> )
         if tag == 'condata':
 
-            print "HMI:DEBUG: template tag found: {0} - {1}".format(tag, attrs)
-
             # initialize original tag (needed for value replacement)
             origin = '<' + tag
 
@@ -634,14 +623,9 @@ class TemplateParser(HTMLParser):
 
             # finalize original tag
             origin += ' />'
-            print "HMI:DEBUG: template restored original tag: {0}".format(origin)
 
             # we really need a key in order to do our work..
-            if not key:
-
-                    print "HMI:DEBUG: could not substitute tag (key missing)"
-
-            else:
+            if key:
 
                 # deal with snmp powered tags:
                 if source == 'snmp':
@@ -653,7 +637,6 @@ class TemplateParser(HTMLParser):
                     key = key.split('.')
                     key = (tuple(map(int, key)), None)
                     client.get_command(key, callback=self.mock_snmp_callback)
-                    print "HMI:DEBUG: template retrieved SNMP value: {0}".format(self.result)
 
                     self.payload = self.payload.replace(origin, self.result)
 
@@ -668,13 +651,7 @@ class TemplateParser(HTMLParser):
                     except:
                         pass
 
-                    print "HMI:DEBUG: template retrieved EVAL value: {0}".format(result)
-
                     self.payload = self.payload.replace(origin, result)
-
-                else:
-
-                    print "HMI:DEBUG: could not substitute tag (source not implemented)"
 
 
 class ThreadedHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
@@ -710,7 +687,6 @@ class SubHTTPServer(ThreadedHTTPServer):
 
                 if entity.attrib['name'] == 'protocol_version':
                     RequestHandlerClass.protocol_version = entity.text
-                    print "DEBUG: set proto version to " + entity.text
 
                 elif entity.attrib['name'] == 'update_header_date':
                     if entity.text.lower() == 'false':
@@ -718,23 +694,23 @@ class SubHTTPServer(ThreadedHTTPServer):
                         # DATE header auto update disabled by configuration ( default: enabled )
                     else:
                         self.update_header_date = True
-                        # DEBUG: DATE header auto update enabled by configuration ( default: enabled )
+                        # DATE header auto update enabled by configuration ( default: enabled )
 
                 elif entity.attrib['name'] == 'disable_method_head':
                     if entity.text.lower() == 'true':
                         self.disable_method_head = True
-                        # DEBUG: HEAD method disabled by configuration ( default: enabled )
+                        # HEAD method disabled by configuration ( default: enabled )
                     else:
                         self.disable_method_head = False
-                        # DEBUG: HEAD method enabled by configuration ( default: enabled )
+                        # HEAD method enabled by configuration ( default: enabled )
 
                 elif entity.attrib['name'] == 'disable_method_trace':
                     if entity.text.lower() == 'false':
                         self.disable_method_trace = False
-                        # DEBUG: TRACE method enabled by configuration ( default: enabled )
+                        # TRACE method enabled by configuration ( default: enabled )
                     else:
                         self.disable_method_trace = True
-                        # DEBUG: TRACE method disabled by configuration ( default: enabled )
+                        # TRACE method disabled by configuration ( default: enabled )
 
         # load global headers from XML
         self.global_headers = []
@@ -743,7 +719,6 @@ class SubHTTPServer(ThreadedHTTPServer):
 
             # retrieve all headers assigned to this status code
             for header in xml_headers:
-                print "checking header {0} and flag {1}".format(header.attrib['name'].lower(), self.update_header_date)
                 if header.attrib['name'].lower() == 'date' and self.update_header_date is True:
                     # All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT),
                     # without exception ( RFC-2616 )
@@ -766,7 +741,8 @@ class CommandResponder(object):
         self.httpd.serve_forever()
 
     def stop(self):
-        self.httpd.socket.close()
+        logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
+        self.httpd.shutdown()
 
 
 if __name__ == '__main__':

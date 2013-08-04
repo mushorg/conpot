@@ -35,6 +35,7 @@ class HTTPServer(object):
     def start(self):
         if self.cmd_responder:
             logger.info('HTTP server started on: {0}'.format((self.host, self.port)))
+
             self.cmd_responder.serve_forever()
 
     def stop(self):
