@@ -29,7 +29,7 @@ import conpot
 from conpot.logging.log_worker import LogWorker
 from conpot.snmp.snmp_server import SNMPServer
 from conpot.modbus.modbus_server import ModbusServer
-from conpot.hmi.web_server import HTTPServer
+from conpot.http.web_server import HTTPServer
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
