@@ -98,6 +98,8 @@
                 <entity name="disable_method_head">false</entity>
                 <!-- should we disable the HTTP TRACE method? -->
                 <entity name="disable_method_trace">false</entity>
+                <!-- should we disable the HTTP OPTIONS method? -->
+                <entity name="disable_method_options">false</entity>
 	    	</config>
 
             <!-- these headers will be sent with each response -->

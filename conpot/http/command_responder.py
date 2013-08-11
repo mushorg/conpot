@@ -159,7 +159,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             return status, headers, payload
 
         # the requested status code is configured to forward the
-        # originally targetted resource to a remote system.
+        # originally targeted resource to a remote system.
 
         elif source == 'proxy':
 
@@ -354,7 +354,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_TRACE(self):
         """Handle TRACE requests."""
 
-        # fetch configuration dependend variables from server instance
+        # fetch configuration dependent variables from server instance
         headers = []
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
@@ -411,7 +411,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_HEAD(self):
         """Handle HEAD requests."""
 
-        # fetch configuration dependend variables from server instance
+        # fetch configuration dependent variables from server instance
         headers = []
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
@@ -434,7 +434,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # Method disabled by configuration. Fall back to 501.
             status = 501
             (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
-            
+
         else:
 
             # try to find a configuration item for this GET request
@@ -466,10 +466,81 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                  (self.path, self.headers.headers, head_data),
                  status)
 
+    def do_OPTIONS(self):
+        """Handle OPTIONS requests."""
+
+        # fetch configuration dependent variables from server instance
+        headers = []
+        headers.extend(self.server.global_headers)
+        configuration = self.server.configuration
+        docpath = self.server.docpath
+
+        # retrieve OPTIONS body data
+        # ( sticking to the HTTP protocol, there should not be any body in HEAD requests,
+        #   an attacker could though use the body to inject data if not flushed correctly,
+        #   which is done by accessing the data like we do now - just to be secure.. )
+
+        options_data_length = self.headers.getheader('content-length')
+        options_data = None
+
+        if options_data_length:
+            options_data = self.rfile.read(int(options_data_length))
+
+        # check configuration: are we allowed to use this method?
+        if self.server.disable_method_options is True:
+
+            # Method disabled by configuration. Fall back to 501.
+            status = 501
+            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            
+        else:
+
+            status = 200
+            payload = ''
+
+            # Add ALLOW header to response. GET, POST and OPTIONS are static, HEAD and TRACE are dynamic
+            allowed_methods = 'GET'
+
+            if self.server.disable_method_head is False:
+                # add head to list of allowed methods
+                allowed_methods += ',HEAD'
+
+            allowed_methods += ',POST,OPTIONS'
+
+            if self.server.disable_method_trace is False:
+                allowed_methods += ',TRACE'
+
+            headers.append(('Allow', allowed_methods))
+
+            # Calculate and append a content length header
+            headers.append(('Content-Length', payload.__len__()))
+
+            # Append CC header
+            headers.append(('Connection', 'close'))
+
+            # Append CT header
+            headers.append(('Content-Type', 'text/html'))
+
+        # send initial HTTP status line to client
+        self.send_response(status)
+
+        # send all headers to client
+        for header in headers:
+            self.send_header(header[0], header[1])
+
+        self.end_headers()
+
+        # logging
+        self.log(self.request_version,
+                 self.command,
+                 self.client_address,
+                 (self.path, self.headers.headers, options_data),
+                 status)
+
     def do_GET(self):
         """Handle GET requests"""
 
-        # fetch configuration dependend variables from server instance
+        # fetch configuration dependent variables from server instance
         headers = []
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
@@ -521,7 +592,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_POST(self):
         """Handle POST requests"""
 
-        # fetch configuration dependend variables from server instance
+        # fetch configuration dependent variables from server instance
         headers = []
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
@@ -671,9 +742,10 @@ class SubHTTPServer(ThreadedHTTPServer):
         self.log_queue = log_queue
 
         # default configuration
-        self.update_header_date = True              # this preserves authenticity
-        self.disable_method_head = True            # considered to be safe
-        self.disable_method_trace = True            # considered to be unsafe
+        self.update_header_date = True             # this preserves authenticity
+        self.disable_method_head = False
+        self.disable_method_trace = False
+        self.disable_method_options = False
 
         # load the configuration from template and parse it
         # for the first time in order to reduce further handling..
@@ -682,7 +754,7 @@ class SubHTTPServer(ThreadedHTTPServer):
         xml_config = self.configuration.xpath('//conpot_template/http/global/config/*')
         if xml_config:
 
-            # retrieve all headers assigned to this status code
+            # retrieve all global configuration entities
             for entity in xml_config:
 
                 if entity.attrib['name'] == 'protocol_version':
@@ -697,11 +769,11 @@ class SubHTTPServer(ThreadedHTTPServer):
                         # DATE header auto update enabled by configuration ( default: enabled )
 
                 elif entity.attrib['name'] == 'disable_method_head':
-                    if entity.text.lower() == 'true':
-                        self.disable_method_head = True
+                    if entity.text.lower() == 'false':
+                        self.disable_method_head = False
                         # HEAD method disabled by configuration ( default: enabled )
                     else:
-                        self.disable_method_head = False
+                        self.disable_method_head = True
                         # HEAD method enabled by configuration ( default: enabled )
 
                 elif entity.attrib['name'] == 'disable_method_trace':
@@ -711,6 +783,14 @@ class SubHTTPServer(ThreadedHTTPServer):
                     else:
                         self.disable_method_trace = True
                         # TRACE method disabled by configuration ( default: enabled )
+
+                elif entity.attrib['name'] == 'disable_method_options':
+                    if entity.text.lower() == 'false':
+                        self.disable_method_options = False
+                        # OPTIONS method enabled by configuration ( default: enabled )
+                    else:
+                        self.disable_method_options = True
+                        # OPTIONS method disabled by configuration ( default: enabled )
 
         # load global headers from XML
         self.global_headers = []
