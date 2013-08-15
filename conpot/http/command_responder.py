@@ -17,6 +17,7 @@
 
 import logging
 import time
+import random
 
 from datetime import datetime
 
@@ -118,8 +119,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
            request to a remote system. If not available, generate
            a minimal response"""
 
-        source = 'filesystem'
-
         # handle PROXY tag
         entity_proxy = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
                                            str(status) +
@@ -128,10 +127,46 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
+        else:
+            source = 'filesystem'
 
-        # the requested resource resides on our filesystem,
-        # so we try retrieve all metadata and the resource itself from there.
+        # handle TARPIT tag
+        entity_tarpit = configuration.xpath('//conpot_template/http/statuscodes/status[@name="'
+                                            + str(status) +
+                                            '"]/tarpit')
 
+        if entity_tarpit:
+            tarpit = entity_tarpit[0].xpath('./text()')[0]
+        else:
+            tarpit = None
+
+        # check if we have to delay further actions due to global or local TARPIT configuration
+        if tarpit is not None:
+            # this node has its own delay configuration
+            lbound = tarpit.partition(';')[0]
+            ubound = tarpit.partition(';')[2]
+        else:
+            # no delay configuration for this node. check for global latency
+            if self.server.tarpit is not None:
+                # fall back to the globally configured latency
+                lbound = self.server.tarpit.partition(';')[0]
+                ubound = self.server.tarpit.partition(';')[2]
+            else:
+                lbound = None
+                ubound = None
+
+        if not lbound:
+            # no lower boundary found. Assume zero latency
+            pass
+        elif not ubound:
+            # no upper boundary found. Assume static latency
+            time.sleep(float(lbound))
+        else:
+            # both boundaries found. Assume random latency between lbound and ubound
+            time.sleep(random.uniform(float(lbound), float(ubound)))
+
+        # If the requested resource resides on our filesystem,
+        # we try retrieve all metadata and the resource itself from there.
         if source == 'filesystem':
 
             # retrieve headers from entities configuration block
@@ -220,8 +255,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         can be stored either local or on a remote system
         """
 
-        source = 'filesystem'
-
         # extract filename and GET parameters from request string
         rqfilename = requeststring.partition('?')[0]
         rqparams = requeststring.partition('?')[2]
@@ -236,10 +269,43 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
+        else:
+            source = 'filesystem'
 
-        # the requested resource resides on our filesystem,
-        # so we try retrieve all metadata and the resource itself from there.
+        # handle TARPIT tag
+        entity_tarpit = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/tarpit')
+        if entity_tarpit:
+            tarpit = entity_tarpit[0].xpath('./text()')[0]
+        else:
+            tarpit = None
 
+        # check if we have to delay further actions due to global or local TARPIT configuration
+        if tarpit is not None:
+            # this node has its own delay configuration
+            lbound = tarpit.partition(';')[0]
+            ubound = tarpit.partition(';')[2]
+        else:
+            # no delay configuration for this node. check for global latency
+            if self.server.tarpit is not None:
+                # fall back to the globally configured latency
+                lbound = self.server.tarpit.partition(';')[0]
+                ubound = self.server.tarpit.partition(';')[2]
+            else:
+                lbound = None
+                ubound = None
+
+        if not lbound:
+            # no lower boundary found. Assume zero latency
+            pass
+        elif not ubound:
+            # no upper boundary found. Assume static latency
+            time.sleep(float(lbound))
+        else:
+            # both boundaries found. Assume random latency between lbound and ubound
+            time.sleep(random.uniform(float(lbound), float(ubound)))
+
+        # If the requested resource resides on our filesystem,
+        # we try retrieve all metadata and the resource itself from there.
         if source == 'filesystem':
 
             # handle STATUS tag
@@ -746,6 +812,7 @@ class SubHTTPServer(ThreadedHTTPServer):
         self.disable_method_head = False
         self.disable_method_trace = False
         self.disable_method_options = False
+        self.tarpit = '0'
 
         # load the configuration from template and parse it
         # for the first time in order to reduce further handling..
@@ -763,34 +830,38 @@ class SubHTTPServer(ThreadedHTTPServer):
                 elif entity.attrib['name'] == 'update_header_date':
                     if entity.text.lower() == 'false':
                         self.update_header_date = False
-                        # DATE header auto update disabled by configuration ( default: enabled )
-                    else:
+                        # DATE header auto update disabled by configuration
+                    elif entity.text.lower() == 'true':
                         self.update_header_date = True
-                        # DATE header auto update enabled by configuration ( default: enabled )
+                        # DATE header auto update enabled by configuration
 
                 elif entity.attrib['name'] == 'disable_method_head':
                     if entity.text.lower() == 'false':
                         self.disable_method_head = False
-                        # HEAD method disabled by configuration ( default: enabled )
-                    else:
+                        # HEAD method enabled by configuration
+                    elif entity.text.lower() == 'true':
                         self.disable_method_head = True
-                        # HEAD method enabled by configuration ( default: enabled )
+                        # HEAD method disabled by configuration
 
                 elif entity.attrib['name'] == 'disable_method_trace':
                     if entity.text.lower() == 'false':
                         self.disable_method_trace = False
-                        # TRACE method enabled by configuration ( default: enabled )
-                    else:
+                        # TRACE method enabled by configuration
+                    elif entity.text.lower() == 'true':
                         self.disable_method_trace = True
-                        # TRACE method disabled by configuration ( default: enabled )
+                        # TRACE method disabled by configuration
 
                 elif entity.attrib['name'] == 'disable_method_options':
                     if entity.text.lower() == 'false':
                         self.disable_method_options = False
-                        # OPTIONS method enabled by configuration ( default: enabled )
-                    else:
+                        # OPTIONS method enabled by configuration
+                    elif entity.text.lower() == 'true':
                         self.disable_method_options = True
-                        # OPTIONS method disabled by configuration ( default: enabled )
+                        # OPTIONS method disabled by configuration
+
+                elif entity.attrib['name'] == 'tarpit':
+                    if entity.text:
+                        self.tarpit = entity.text
 
         # load global headers from XML
         self.global_headers = []

@@ -65,7 +65,7 @@
             <entity name="tarpit" command="set">0.0;0.2</entity>
             <entity name="tarpit" command="next">0.0;0.2</entity>
             <entity name="tarpit" command="bulk">0.3;1.0</entity>
-	    </config>
+        </config>
         <mibs>
             <mib name="SNMPv2-MIB">
                 <symbol name="sysDescr">
@@ -106,6 +106,8 @@
                 <entity name="disable_method_trace">false</entity>
                 <!-- should we disable the HTTP OPTIONS method? -->
                 <entity name="disable_method_options">false</entity>
+                <!-- TARPIT: how much latency should we introduce to any response by default? -->
+                <entity name="tarpit">0</entity>
 	    	</config>
 
             <!-- these headers will be sent with each response -->
@@ -127,6 +129,8 @@
 		        </headers>
             </node>
             <node name="/index.html">
+                <!-- this tarpit will override the globally set tarpit for this node -->
+                <tarpit>0.0;0.3</tarpit>
                 <headers>
                     <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
                     <entity name="Content-Type">text/html</entity>
@@ -134,7 +138,7 @@
                 </headers>
     	    </node>
             <node name="/index.htm">
-                <!-- this node will inherit everything from the referenced alias node without telling the browser -->
+                <!-- this node will inherit the payload from the referenced alias node without telling the browser -->
                 <alias>/index.html</alias>
             </node>
         </htdocs>
@@ -142,6 +146,13 @@
         <!-- how should the different status codes be handled -->
         <statuscodes>
             <status name="404">
+                    <!-- 404 (NOT FOUND) errors should be super fast and responsive -->
+                    <tarpit>0</tarpit>
+                    <entity name="Content-Type">text/html</entity>
+            </status>
+            <status name="501">
+                    <!-- 501 (NOT IMPLEMENTED) errors should be super fast and responsive -->
+                    <tarpit>0</tarpit>
                     <entity name="Content-Type">text/html</entity>
             </status>
         </statuscodes>
