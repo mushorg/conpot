@@ -50,12 +50,6 @@ class CommandResponder(object):
         self.log_queue = log_queue
         self.dyn_rsp = dyn_rsp
 
-        # Default Configuration: Individual response delays
-        self.tarpit_get = 0.0
-        self.tarpit_set = 0.0
-        self.tarpit_next = 0.0
-        self.tarpit_bulk = 0.0
-
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
 
