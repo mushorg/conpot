@@ -60,11 +60,11 @@
     </slaves>
     <snmp>
 		<config>
-                <!-- Configure individual delays for SNMP commands -->
-		        <entity name="tarpit" command="get">0.0;0.2</entity>
-                <entity name="tarpit" command="set">0.0;0.2</entity>
-                <entity name="tarpit" command="next">0.0;0.2</entity>
-                <entity name="tarpit" command="bulk">0.3;1.0</entity>
+            <!-- Configure individual delays for SNMP commands -->
+            <entity name="tarpit" command="get">0.0;0.2</entity>
+            <entity name="tarpit" command="set">0.0;0.2</entity>
+            <entity name="tarpit" command="next">0.0;0.2</entity>
+            <entity name="tarpit" command="bulk">0.3;1.0</entity>
 	    </config>
         <mibs>
             <mib name="SNMPv2-MIB">
