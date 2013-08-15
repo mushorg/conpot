@@ -23,6 +23,7 @@ from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
 
+
 class SNMPServer(object):
     def __init__(self, host, port, template, log_queue, mibpath):
         self.host = host
@@ -32,12 +33,32 @@ class SNMPServer(object):
 
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
-        #only enable snmp server if we have configuration items
+
+        # only enable snmp server if we have configuration items
         if not mibs:
             self.cmd_responder = None
         else:
             self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath, dyn_rsp)
 
+        # parse global snmp configuration
+        snmp_config = dom.xpath('//conpot_template/snmp/config/*')
+        if snmp_config:
+
+            for entity in snmp_config:
+
+                # TARPIT: individual response delays
+                if entity.attrib['name'].lower() == 'tarpit':
+
+                    if entity.attrib['command'].lower() == 'get':
+                        self.cmd_responder.resp_app_get.tarpit = entity.text
+                    elif entity.attrib['command'].lower() == 'set':
+                        self.cmd_responder.resp_app_set.tarpit = entity.text
+                    elif entity.attrib['command'].lower() == 'next':
+                        self.cmd_responder.resp_app_next.tarpit = entity.text
+                    elif entity.attrib['command'].lower() == 'bulk':
+                        self.cmd_responder.resp_app_bulk.tarpit = entity.text
+
+        # parse mibs and oid tables
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:

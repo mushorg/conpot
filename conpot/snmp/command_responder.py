@@ -50,6 +50,12 @@ class CommandResponder(object):
         self.log_queue = log_queue
         self.dyn_rsp = dyn_rsp
 
+        # Default Configuration: Individual response delays
+        self.tarpit_get = 0.0
+        self.tarpit_set = 0.0
+        self.tarpit_next = 0.0
+        self.tarpit_bulk = 0.0
+
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
 
@@ -105,10 +111,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
 
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
