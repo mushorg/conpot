@@ -9,6 +9,7 @@ from pysnmp.proto import error
 from pysnmp.proto.api import v2c
 import pysnmp.smi.error
 from pysnmp import debug
+import gevent
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,23 @@ class conpot_extension(object):
             log_dict['data'][0]['response'] = 'SNMPv{0} response: {1}'.format(version, res_varBinds)
 
         self.log_queue.put(log_dict)
+
+    def do_tarpit(self, delay):
+
+        # sleeps the thread for $delay ( should be either 1 float to apply a static period of time to sleep,
+        # or 2 floats seperated by semicolon to sleep a randomized period of time determined by ( rand[x;y] )
+
+        lbound, _, ubound = delay.partition(";")
+
+        if not lbound or lbound is None:
+            # no lower boundary found. Assume zero latency
+            pass
+        elif not ubound or ubound is None:
+            # no upper boundary found. Assume static latency
+            gevent.sleep(float(lbound))
+        else:
+            # both boundaries found. Assume random latency between lbound and ubound
+            gevent.sleep(random.uniform(float(lbound), float(ubound)))
 
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
@@ -87,18 +105,8 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             self.log(snmp_version, 'Get', addr, varBinds, rspVarBinds)
 
         # apply tarpit delay
-        if self.tarpit is not None:
-            lbound = self.tarpit.partition(';')[0]
-            ubound = self.tarpit.partition(';')[2]
-            if not lbound:
-                # no lower boundary found. Assume zero latency
-                pass
-            elif not ubound:
-                # no upper boundary found. Assume static latency
-                time.sleep(float(lbound))
-            else:
-                # both boundaries found. Assume random latency between lbound and ubound
-                time.sleep(random.uniform(float(lbound), float(ubound)))
+        if self.tarpit is not 0:
+            self.do_tarpit(self.tarpit)
 
         # send response
         self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
@@ -139,18 +147,8 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                     rspVarBinds = rspModBinds
 
                 # apply tarpit delay
-                if self.tarpit is not None:
-                    lbound = self.tarpit.partition(';')[0]
-                    ubound = self.tarpit.partition(';')[2]
-                    if not lbound:
-                        # no lower boundary found. Assume zero latency
-                        pass
-                    elif not ubound:
-                        # no upper boundary found. Assume static latency
-                        time.sleep(float(lbound))
-                    else:
-                        # both boundaries found. Assume random latency between lbound and ubound
-                        time.sleep(random.uniform(float(lbound), float(ubound)))
+                if self.tarpit is not 0:
+                    self.do_tarpit(self.tarpit)
 
                 # send response
                 try:
@@ -214,18 +212,8 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             self.log(snmp_version, 'Bulk', addr, varBinds, rspVarBinds)
 
         # apply tarpit delay
-        if self.tarpit is not None:
-            lbound = self.tarpit.partition(';')[0]
-            ubound = self.tarpit.partition(';')[2]
-            if not lbound:
-                # no lower boundary found. Assume zero latency
-                pass
-            elif not ubound:
-                # no upper boundary found. Assume static latency
-                time.sleep(float(lbound))
-            else:
-                # both boundaries found. Assume random latency between lbound and ubound
-                time.sleep(random.uniform(float(lbound), float(ubound)))
+        if self.tarpit is not 0:
+            self.do_tarpit(self.tarpit)
 
         # send response
         if len(rspVarBinds):
@@ -255,18 +243,8 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         rspVarBinds = None
 
         # apply tarpit delay
-        if self.tarpit is not None:
-            lbound = self.tarpit.partition(';')[0]
-            ubound = self.tarpit.partition(';')[2]
-            if not lbound:
-                # no lower boundary found. Assume zero latency
-                pass
-            elif not ubound:
-                # no upper boundary found. Assume static latency
-                time.sleep(float(lbound))
-            else:
-                # both boundaries found. Assume random latency between lbound and ubound
-                time.sleep(random.uniform(float(lbound), float(ubound)))
+        if self.tarpit is not 0:
+            self.do_tarpit(self.tarpit)
 
         try:
             rspVarBinds = mgmtFun(v2c.apiPDU.getVarBinds(PDU), (acFun, acCtx))

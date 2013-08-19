@@ -50,13 +50,13 @@ class SNMPServer(object):
                 if entity.attrib['name'].lower() == 'tarpit':
 
                     if entity.attrib['command'].lower() == 'get':
-                        self.cmd_responder.resp_app_get.tarpit = entity.text
+                        self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
                     elif entity.attrib['command'].lower() == 'set':
-                        self.cmd_responder.resp_app_set.tarpit = entity.text
+                        self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
                     elif entity.attrib['command'].lower() == 'next':
-                        self.cmd_responder.resp_app_next.tarpit = entity.text
+                        self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
                     elif entity.attrib['command'].lower() == 'bulk':
-                        self.cmd_responder.resp_app_bulk.tarpit = entity.text
+                        self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
 
         # parse mibs and oid tables
         for mib in mibs:
@@ -87,6 +87,33 @@ class SNMPServer(object):
 
                 # register this MIB instance to the command responder
                 self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+
+    def config_sanitize_tarpit(self, value):
+
+        # checks tarpit value for being either a single int or float,
+        # or a series of two concatenated integers and/or floats seperated by semicolon and returns
+        # either the (sanitized) value or zero.
+
+        if value is not None:
+
+            x, _, y = value.partition(';')
+
+            try:
+                _ = float(x)
+            except ValueError:
+                # first value is invalid, ignore the whole setting.
+                return 0
+
+            try:
+                _ = float(y)
+                # both values are fine.
+                return value
+            except ValueError:
+                # second value is invalid, use the first one.
+                return x
+
+        else:
+            return 0
 
     def start(self):
         if self.cmd_responder:
