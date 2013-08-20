@@ -105,10 +105,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
 
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):

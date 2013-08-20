@@ -23,6 +23,7 @@ from conpot.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
 
+
 class SNMPServer(object):
     def __init__(self, host, port, template, log_queue, mibpath):
         self.host = host
@@ -32,12 +33,32 @@ class SNMPServer(object):
 
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
-        #only enable snmp server if we have configuration items
+
+        # only enable snmp server if we have configuration items
         if not mibs:
             self.cmd_responder = None
         else:
             self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath, dyn_rsp)
 
+        # parse global snmp configuration
+        snmp_config = dom.xpath('//conpot_template/snmp/config/*')
+        if snmp_config:
+
+            for entity in snmp_config:
+
+                # TARPIT: individual response delays
+                if entity.attrib['name'].lower() == 'tarpit':
+
+                    if entity.attrib['command'].lower() == 'get':
+                        self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'set':
+                        self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'next':
+                        self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'bulk':
+                        self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
+
+        # parse mibs and oid tables
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:
@@ -66,6 +87,33 @@ class SNMPServer(object):
 
                 # register this MIB instance to the command responder
                 self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+
+    def config_sanitize_tarpit(self, value):
+
+        # checks tarpit value for being either a single int or float,
+        # or a series of two concatenated integers and/or floats seperated by semicolon and returns
+        # either the (sanitized) value or zero.
+
+        if value is not None:
+
+            x, _, y = value.partition(';')
+
+            try:
+                _ = float(x)
+            except ValueError:
+                # first value is invalid, ignore the whole setting.
+                return 0
+
+            try:
+                _ = float(y)
+                # both values are fine.
+                return value
+            except ValueError:
+                # second value is invalid, use the first one.
+                return x
+
+        else:
+            return 0
 
     def start(self):
         if self.cmd_responder:
