@@ -863,7 +863,7 @@ class SubHTTPServer(ThreadedHTTPServer):
             except ValueError:
                 # first value is invalid, ignore the whole setting.
                 logger.error("Invalid tarpit value: '{0}'. Assuming no latency.".format(value))
-                return '0'
+                return '0;0'
 
             try:
                 _ = float(y)
@@ -874,7 +874,7 @@ class SubHTTPServer(ThreadedHTTPServer):
                 return x
 
         else:
-            return '0'
+            return '0;0'
 
     def do_tarpit(self, delay):
 

@@ -103,7 +103,7 @@ class SNMPServer(object):
             except ValueError:
                 logger.error("Invalid tarpit value: '{0}'. Assuming no latency.".format(value))
                 # first value is invalid, ignore the whole setting.
-                return '0'
+                return '0;0'
 
             try:
                 _ = float(y)
@@ -114,7 +114,7 @@ class SNMPServer(object):
                 return x
 
         else:
-            return '0'
+            return '0;0'
 
     def start(self):
         if self.cmd_responder:
