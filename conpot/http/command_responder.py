@@ -136,34 +136,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                                             '"]/tarpit')
 
         if entity_tarpit:
-            tarpit = entity_tarpit[0].xpath('./text()')[0]
+            tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
         else:
             tarpit = None
 
         # check if we have to delay further actions due to global or local TARPIT configuration
         if tarpit is not None:
             # this node has its own delay configuration
-            lbound = tarpit.partition(';')[0]
-            ubound = tarpit.partition(';')[2]
+                self.server.do_tarpit(tarpit)
         else:
             # no delay configuration for this node. check for global latency
             if self.server.tarpit is not None:
                 # fall back to the globally configured latency
-                lbound = self.server.tarpit.partition(';')[0]
-                ubound = self.server.tarpit.partition(';')[2]
-            else:
-                lbound = None
-                ubound = None
-
-        if not lbound:
-            # no lower boundary found. Assume zero latency
-            pass
-        elif not ubound:
-            # no upper boundary found. Assume static latency
-            time.sleep(float(lbound))
-        else:
-            # both boundaries found. Assume random latency between lbound and ubound
-            time.sleep(random.uniform(float(lbound), float(ubound)))
+                self.server.do_tarpit(self.server.tarpit)
 
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
