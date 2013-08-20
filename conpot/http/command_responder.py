@@ -275,34 +275,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # handle TARPIT tag
         entity_tarpit = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/tarpit')
         if entity_tarpit:
-            tarpit = entity_tarpit[0].xpath('./text()')[0]
+            tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
         else:
             tarpit = None
 
         # check if we have to delay further actions due to global or local TARPIT configuration
         if tarpit is not None:
             # this node has its own delay configuration
-            lbound = tarpit.partition(';')[0]
-            ubound = tarpit.partition(';')[2]
+                self.server.do_tarpit(tarpit)
         else:
             # no delay configuration for this node. check for global latency
             if self.server.tarpit is not None:
                 # fall back to the globally configured latency
-                lbound = self.server.tarpit.partition(';')[0]
-                ubound = self.server.tarpit.partition(';')[2]
-            else:
-                lbound = None
-                ubound = None
-
-        if not lbound:
-            # no lower boundary found. Assume zero latency
-            pass
-        elif not ubound:
-            # no upper boundary found. Assume static latency
-            time.sleep(float(lbound))
-        else:
-            # both boundaries found. Assume random latency between lbound and ubound
-            time.sleep(random.uniform(float(lbound), float(ubound)))
+                self.server.do_tarpit(self.server.tarpit)
 
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
@@ -861,7 +846,7 @@ class SubHTTPServer(ThreadedHTTPServer):
 
                 elif entity.attrib['name'] == 'tarpit':
                     if entity.text:
-                        self.tarpit = entity.text
+                        self.tarpit = self.config_sanitize_tarpit(entity.text)
 
         # load global headers from XML
         self.global_headers = []
@@ -877,6 +862,50 @@ class SubHTTPServer(ThreadedHTTPServer):
                                                 time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime())))
                 else:
                     self.global_headers.append((header.attrib['name'], header.text))
+
+    def config_sanitize_tarpit(self, value):
+
+        # checks tarpit value for being either a single int or float,
+        # or a series of two concatenated integers and/or floats seperated by semicolon and returns
+        # either the (sanitized) value or zero.
+
+        if value is not None:
+
+            x, _, y = value.partition(';')
+
+            try:
+                _ = float(x)
+            except ValueError:
+                # first value is invalid, ignore the whole setting.
+                return 0
+
+            try:
+                _ = float(y)
+                # both values are fine.
+                return value
+            except ValueError:
+                # second value is invalid, use the first one.
+                return x
+
+        else:
+            return 0
+
+    def do_tarpit(self, delay):
+
+        # sleeps the thread for $delay ( should be either 1 float to apply a static period of time to sleep,
+        # or 2 floats seperated by semicolon to sleep a randomized period of time determined by ( rand[x;y] )
+
+        lbound, _, ubound = delay.partition(";")
+
+        if not lbound or lbound is None:
+            # no lower boundary found. Assume zero latency
+            pass
+        elif not ubound or ubound is None:
+            # no upper boundary found. Assume static latency
+            gevent.sleep(float(lbound))
+        else:
+            # both boundaries found. Assume random latency between lbound and ubound
+            gevent.sleep(random.uniform(float(lbound), float(ubound)))
 
 
 class CommandResponder(object):
