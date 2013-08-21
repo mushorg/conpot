@@ -45,7 +45,7 @@ class TestBase(unittest.TestCase):
 
     def test_read_coils(self):
         """
-        Objective: Test if we can extracted the expected bits from a slave using the modbus protocol.
+        Objective: Test if we can extract the expected bits from a slave using the modbus protocol.
         """
         master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
         master.set_timeout(1.0)

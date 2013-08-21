@@ -30,7 +30,8 @@ class HTTPServer(object):
         self.snmp_host = '127.0.0.1'
         self.snmp_port = snmp_port
 
-        self.cmd_responder = CommandResponder(host, port, template, log_queue, docpath, self.snmp_host, self.snmp_port)    
+        self.cmd_responder = CommandResponder(host, port, template, log_queue, docpath, self.snmp_host, self.snmp_port)
+        self.cmd_responder.httpd.allow_reuse_address = True
 
     def start(self):
         if self.cmd_responder:
@@ -41,3 +42,7 @@ class HTTPServer(object):
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+
+    def shutdown(self):
+        if self.cmd_responder:
+            self.cmd_responder.httpd.shutdown()

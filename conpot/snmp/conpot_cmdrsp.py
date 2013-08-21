@@ -69,7 +69,7 @@ class conpot_extension(object):
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
-        self.tarpit = '0'
+        self.tarpit = '0;0'
 
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -116,7 +116,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
-        self.tarpit = '0'
+        self.tarpit = '0;0'
 
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -168,7 +168,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
-        self.tarpit = '0'
+        self.tarpit = '0;0'
 
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -226,7 +226,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
-        self.tarpit = '0'
+        self.tarpit = '0;0'
 
         conpot_extension.__init__(self, log_queue)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
