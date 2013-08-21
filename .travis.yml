@@ -30,4 +30,4 @@ script:
  - nosetests
 notifications:
  irc:
-  - "irc.freenode.org#glastopf"
+  - "irc.freenode.org#conpot"
