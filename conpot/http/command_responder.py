@@ -143,7 +143,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # check if we have to delay further actions due to global or local TARPIT configuration
         if tarpit is not None:
             # this node has its own delay configuration
-                self.server.do_tarpit(tarpit)
+            self.server.do_tarpit(tarpit)
         else:
             # no delay configuration for this node. check for global latency
             if self.server.tarpit is not None:
@@ -267,7 +267,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # check if we have to delay further actions due to global or local TARPIT configuration
         if tarpit is not None:
             # this node has its own delay configuration
-                self.server.do_tarpit(tarpit)
+            self.server.do_tarpit(tarpit)
         else:
             # no delay configuration for this node. check for global latency
             if self.server.tarpit is not None:
@@ -799,35 +799,37 @@ class SubHTTPServer(ThreadedHTTPServer):
 
                 elif entity.attrib['name'] == 'update_header_date':
                     if entity.text.lower() == 'false':
-                        self.update_header_date = False
                         # DATE header auto update disabled by configuration
+                        self.update_header_date = False
                     elif entity.text.lower() == 'true':
-                        self.update_header_date = True
                         # DATE header auto update enabled by configuration
+                        self.update_header_date = True
 
                 elif entity.attrib['name'] == 'disable_method_head':
                     if entity.text.lower() == 'false':
-                        self.disable_method_head = False
                         # HEAD method enabled by configuration
+                        self.disable_method_head = False
                     elif entity.text.lower() == 'true':
-                        self.disable_method_head = True
                         # HEAD method disabled by configuration
+                        self.disable_method_head = True
+
 
                 elif entity.attrib['name'] == 'disable_method_trace':
                     if entity.text.lower() == 'false':
-                        self.disable_method_trace = False
                         # TRACE method enabled by configuration
+                        self.disable_method_trace = False
                     elif entity.text.lower() == 'true':
-                        self.disable_method_trace = True
                         # TRACE method disabled by configuration
+                        self.disable_method_trace = True
 
                 elif entity.attrib['name'] == 'disable_method_options':
                     if entity.text.lower() == 'false':
-                        self.disable_method_options = False
                         # OPTIONS method enabled by configuration
+                        self.disable_method_options = False
                     elif entity.text.lower() == 'true':
-                        self.disable_method_options = True
                         # OPTIONS method disabled by configuration
+                        self.disable_method_options = True
+
 
                 elif entity.attrib['name'] == 'tarpit':
                     if entity.text:
