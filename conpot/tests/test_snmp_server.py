@@ -93,6 +93,9 @@ class TestBase(unittest.TestCase):
                 self.result = val.prettyPrint()
 
     def test_snmp_get(self):
+        """
+        Objective: Test if we can get data via snmp_get
+        """
         client = snmp_client.SNMPClient(self.host, self.port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.get_command(OID, callback=self.mock_callback)
@@ -103,6 +106,9 @@ class TestBase(unittest.TestCase):
         self.assertEquals('snmp', log_item['data_type'])
 
     def test_snmp_set(self):
+        """
+        Objective: Test if we can set data via snmp_set
+        """
         client = snmp_client.SNMPClient(self.host, self.port)
         OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
         client.set_command(OID, callback=self.mock_callback)

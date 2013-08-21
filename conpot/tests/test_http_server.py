@@ -18,6 +18,7 @@
 
 import os
 import unittest
+import datetime
 
 from lxml import etree
 from gevent.queue import Queue
@@ -33,10 +34,9 @@ from conpot.http import web_server
 monkey.patch_all()
 
 
-class MockArgs(object):
-    def __init__(self):
-        self.www = "conpot/www/"
-        self.www_root = "index.html"
+#class MockArgs(object):
+#    def __init__(self):
+#        self.www = "conpot/www/"
 
 
 class TestBase(unittest.TestCase):
@@ -46,15 +46,25 @@ class TestBase(unittest.TestCase):
         self.snmp_port = 1337
         self.log_queue = Queue()
         self.dyn_rsp = DynamicResponder()
-        http_server = web_server.HTTPServer('127.0.0.1', 8080, 'conpot/templates/default.xml', self.log_queue, 'conpot/templates/www/default', self.snmp_port)
-        self.http_worker = gevent.spawn(http_server.start)
+        self.http_server = web_server.HTTPServer('127.0.0.1',
+                                                 8080,
+                                                 'conpot/templates/default.xml',
+                                                 self.log_queue,
+                                                 'conpot/templates/www/default',
+                                                 self.snmp_port)
+
+        self.http_worker = gevent.spawn(self.http_server.start)
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = command_responder.CommandResponder(self.snmp_host, self.snmp_port, self.log_queue, os.getcwd(), self.dyn_rsp)
+            self.snmp_server = command_responder.CommandResponder(self.snmp_host,
+                                                                  self.snmp_port,
+                                                                  self.log_queue,
+                                                                  os.getcwd(),
+                                                                  self.dyn_rsp)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
@@ -89,25 +99,61 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self):
         self.snmp_server.snmpEngine.transportDispatcher.stop()
-        self.http_worker.kill()
+        self.http_server.cmd_responder.httpd.shutdown()
+        self.http_server.cmd_responder.httpd.server_close()
 
-    def test_http_request(self):
+    def test_http_request_base(self):
+        """
+        Objective: Test if http service delivers data on request
+        """
 
-        # TODO: johnnykv: This is a bit ugly...
-        # TODO: creolis:  A bit more flexible now, but still ugly...
+        ret = requests.get("http://127.0.0.1:8080/tests/unittest_base.html")
+        self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
 
-        # get reference value from template
+    def test_http_backend_snmp(self):
+        """
+        Objective: Test if http backend is able to retrieve data from SNMP
+        """
+
+        # retrieve configuration from xml
         dom = etree.parse('conpot/templates/default.xml')
-        sysName = dom.xpath('//conpot_template/snmp/mibs/mib[@name="SNMPv2-MIB"]/symbol[@name="sysName"]/value')
 
+        # check for proper snmp support
+        sysName = dom.xpath('//conpot_template/snmp/mibs/mib[@name="SNMPv2-MIB"]/symbol[@name="sysName"]/value')
         if sysName:
             assert_reference = sysName[0].xpath('./text()')[0]
-
-        gevent.sleep(1)
-        ret = requests.get("http://127.0.0.1:8080/index.html")
-
-        if assert_reference:
-            print "asserting {0}".format(assert_reference)
-            self.assertIn(assert_reference, ret.text)
         else:
-            raise Exception("Assertion failed. Reference OID 'sysName' missing.")
+            assert_reference = None
+
+        if assert_reference is not None:
+            ret = requests.get("http://127.0.0.1:8080/tests/unittest_snmp.html")
+            self.assertIn(assert_reference, ret.text, "Could not find SNMP value in test output.")
+        else:
+            raise Exception("Assertion failed. Reference OID 'sysName' not found in SNMP template.")
+
+    def test_http_backend_tarpit(self):
+        """
+        Objective: Test if http tarpit delays responses properly
+        """
+
+        # retrieve configuration from xml
+        dom = etree.parse('conpot/templates/default.xml')
+
+        # check for proper tarpit support
+        tarpit = dom.xpath('//conpot_template/http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
+
+        if tarpit:
+            tarpit_delay = tarpit[0].xpath('./text()')[0]
+
+            # requesting file via HTTP along with measuring the timedelta
+            dt_req_start = datetime.datetime.now()
+            requests.get("http://127.0.0.1:8080/tests/unittest_tarpit.html")
+            dt_req_delta = datetime.datetime.now() - dt_req_start
+
+            # check if the request took at least the expected delay to be processed
+            self.assertLessEqual(int(tarpit_delay),
+                                 dt_req_delta.seconds,
+                                 "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(tarpit_delay,
+                                                                                            dt_req_delta.seconds))
+        else:
+            raise Exception("Assertion failed. Tarpit delay not found in HTTP template.")
