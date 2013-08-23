@@ -30,7 +30,7 @@ class TestBase(unittest.TestCase):
         Tests that the wrapper can process a valid mib file without errors.
         """
         result = mib2pysnmp('conpot/tests/data/VOGON-POEM-MIB.mib')
-        self.assertTrue('mibBuilder.exportSymbols("VOGON-POEM-MIB", vogon=vogon, poemNumber=poemNumber)' in result,
+        self.assertTrue('mibBuilder.exportSymbols("VOGON-POEM-MIB"' in result,
                         'mib2pysnmp did not generate the expected output. Output: {0}'.format(result))
 
     def test_wrapper_output(self):
