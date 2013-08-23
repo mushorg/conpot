@@ -35,11 +35,10 @@ def mib2pysnmp(mib_file):
         logger.critical('Error while parsing processing MIB file using {0}: {1}'.format(BUILD_SCRIPT, stderr_value))
         raise Exception(stderr_value)
     else:
-        logger.debug('Successfully processed {0}.')
+        logger.debug('Successfully compiled MIB file: {0}.'.format(mib_file))
         #string representation of the PySNMP MIB object
         pysnmp_string = '\n'.join(proc.stdout.readlines())
         return pysnmp_string
-
 
 if __name__ == '__main__':
     print mib2pysnmp(sys.argv[1])
