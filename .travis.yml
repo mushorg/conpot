@@ -2,7 +2,7 @@ language: python
 python:
   - "2.7"
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 before_install:
  - REPO=`pwd`
  - echo $REPO
