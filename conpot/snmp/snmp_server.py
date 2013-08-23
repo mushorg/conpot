@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue, mibpath):
+    def __init__(self, host, port, template, log_queue, mibpaths):
         self.host = host
         self.port = port
 
@@ -38,7 +38,7 @@ class SNMPServer(object):
         if not mibs:
             self.cmd_responder = None
         else:
-            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpath, dyn_rsp)
+            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
 
         # parse global snmp configuration
         snmp_config = dom.xpath('//conpot_template/snmp/config/*')

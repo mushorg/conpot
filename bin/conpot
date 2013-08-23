@@ -18,8 +18,11 @@
 
 import logging
 import os
+import shutil
 import argparse
 import sys
+import glob
+import tempfile
 from ConfigParser import ConfigParser
 
 import gevent
@@ -30,6 +33,7 @@ from conpot.logging.log_worker import LogWorker
 from conpot.snmp.snmp_server import SNMPServer
 from conpot.modbus.modbus_server import ModbusServer
 from conpot.http.web_server import HTTPServer
+from conpot.snmp.build_pysnmp_mib_wrapper import mib2pysnmp
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -84,9 +88,14 @@ def main():
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
                         )
-    parser.add_argument("-m", "--mibpath",
-                        help="path to compiled MIB files. (compiled with build-pysnmp-mib)",
+    parser.add_argument("-a", "--raw_mib",
+                        help="path to raw MIB files, the files must have .mib as extension."
+                             "(will automatically get compiled by build-pysnmp-mib)",
                         default=os.getcwd())
+    parser.add_argument("-m", "--mibpaths",
+                        action='append',
+                        help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
+                        default=[])
     args = parser.parse_args()
 
     config = ConfigParser()
@@ -102,6 +111,7 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
+
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
@@ -115,9 +125,19 @@ def main():
     m = ModbusServer(args.template, log_queue)
     modbus_server = m.get_server(modbus_host, modbus_port)
 
+    #temporary directory to hold the compiled mib files
+    tmp_mib_dir = tempfile.mkdtemp()
+    args.mibpaths.append(tmp_mib_dir)
+    for mib_file in glob.glob(os.path.join(args.raw_mib, '*.mib')):
+        pysnmp_str_obj = mib2pysnmp(mib_file)
+        #temporary directory to hold the compiled mib files
+        output_filename = os.path.basename(os.path.splitext(mib_file)[0]) + '.py'
+        with open(os.path.join(tmp_mib_dir, output_filename), 'w') as output:
+            output.write(pysnmp_str_obj)
+
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
-    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpath)
+    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths)
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
@@ -135,6 +155,9 @@ def main():
         snmp_server.stop()
         modbus_server.stop()
         http_server.stop()
+    finally:
+        if tmp_mib_dir:
+            shutil.rmtree(tmp_mib_dir)
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)

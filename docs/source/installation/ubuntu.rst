@@ -4,6 +4,12 @@ Ubuntu 12.04 LTS
 Installation
 ------------
 
+Install dependencies:
+::
+
+    sudo apt-get install libsmi2ldbl snmp-mibs-downloader
+
+
 The stable version of ConPot can be downloaded from PyPI:
 ::
 
