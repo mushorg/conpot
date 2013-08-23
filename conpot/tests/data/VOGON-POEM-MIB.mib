@@ -1,17 +1,21 @@
 VOGON-POEM-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-        enterprises
-                FROM RFC1155-SMI
-        OBJECT-TYPE
-                FROM RFC-1212;
 
-vogon         OBJECT IDENTIFIER ::= {enterprises 424242}
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, mib-2          FROM SNMPv2-SMI
+    MODULE-COMPLIANCE, OBJECT-GROUP,
+    NOTIFICATION-GROUP                       FROM SNMPv2-CONF
+    snmpTraps                                FROM SNMPv2-MIB;
+
+VOGON-POEM-MIB MODULE-IDENTITY
+    ::= { mib-2 42 }
+
+vogon         OBJECT IDENTIFIER ::= {mib-2 424242}
 
 
 poemNumber OBJECT-TYPE
   SYNTAX  Integer32
-  ACCESS  read-write
+  MAX-ACCESS  read-write
   STATUS  current
   DESCRIPTION
           "The number of vogon poems in this e-book."
