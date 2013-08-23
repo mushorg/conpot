@@ -60,7 +60,6 @@ class CommandResponder(object):
         for mibpath in mibpaths:
             mibSources += (builder.DirMibSource(mibpath),)
         mibBuilder.setMibSources(*mibSources)
-        print mibSources
 
         # Transport setup
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
@@ -140,7 +139,6 @@ class CommandResponder(object):
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
         if mibname in modules:
-            print mibname
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
 
