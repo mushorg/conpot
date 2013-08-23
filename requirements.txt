@@ -1,8 +1,8 @@
 gevent
 pysnmp
 lxml
-modbus_tk
-hpfeeds
+git+https://github.com/glastopf/modbus-tk.git#egg=modbus
+git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
 bottle
 jinja2
 beautifulsoup4
