@@ -1,0 +1,20 @@
+VOGON-POEM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        enterprises
+                FROM RFC1155-SMI
+        OBJECT-TYPE
+                FROM RFC-1212;
+
+vogon         OBJECT IDENTIFIER ::= {enterprises 424242}
+
+
+poemNumber OBJECT-TYPE
+  SYNTAX  Integer32
+  ACCESS  read-write
+  STATUS  current
+  DESCRIPTION
+          "The number of vogon poems in this e-book."
+  ::= {vogon 1}
+
+END
