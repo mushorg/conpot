@@ -29,16 +29,18 @@ def mib2pysnmp(mib_file):
     proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     return_code = proc.wait()
+    stderr = '\n'.join(proc.stderr.readlines())
+    #string representation of the PySNMP MIB object
+    stdout = '\n'.join(proc.stdout.readlines())
 
     if return_code != 0:
-        stderr_value = '\n'.join(proc.stderr.readlines())
-        logger.critical('Error while parsing processing MIB file using {0}: {1}'.format(BUILD_SCRIPT, stderr_value))
-        raise Exception(stderr_value)
+        logger.critical('Error while parsing processing MIB file using {0}. STDERR: {1}, STDOUT: {2}'
+                        .format(BUILD_SCRIPT, stderr, stdout))
+        raise Exception(stderr)
     else:
-        logger.debug('Successfully compiled MIB file: {0}.'.format(mib_file))
-        #string representation of the PySNMP MIB object
-        pysnmp_string = '\n'.join(proc.stdout.readlines())
-        return pysnmp_string
+        logger.debug('Successfully compiled MIB file: {0}. STDOUT: {1}, STDERR: {2} '
+                     .format(mib_file, stdout, stderr))
+        return stdout
 
 if __name__ == '__main__':
     print mib2pysnmp(sys.argv[1])
