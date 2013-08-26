@@ -16,12 +16,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-
 from lxml import etree
+import tempfile
+import shutil
+
 from conpot.snmp.dynrsp import DynamicResponder
 from conpot.snmp.command_responder import CommandResponder
 from conpot.snmp.build_pysnmp_mib_wrapper import find_and_compile_mibs
-import tempfile
 
 logger = logging.getLogger()
 
@@ -44,64 +45,66 @@ class SNMPServer(object):
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
 
-
-        tmp_mib_dir = tempfile.mkdtemp()
-        mibpaths.append(tmp_mib_dir)
-        find_and_compile_mibs(mibpaths, False)
-
         # only enable snmp server if we have configuration items
-        if not mibs:
-            self.cmd_responder = None
+        if mibs:
+            try:
+                tmp_mib_dir = tempfile.mkdtemp()
+                mibpaths.append(tmp_mib_dir)
+                find_and_compile_mibs(rawmibs_dir, tmp_mib_dir, True)
+                self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
+
+                # parse global snmp configuration
+                snmp_config = dom.xpath('//conpot_template/snmp/config/*')
+                if snmp_config:
+
+                    for entity in snmp_config:
+
+                        # TARPIT: individual response delays
+                        if entity.attrib['name'].lower() == 'tarpit':
+
+                            if entity.attrib['command'].lower() == 'get':
+                                self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
+                            elif entity.attrib['command'].lower() == 'set':
+                                self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
+                            elif entity.attrib['command'].lower() == 'next':
+                                self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
+                            elif entity.attrib['command'].lower() == 'bulk':
+                                self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
+
+                # parse mibs and oid tables
+                for mib in mibs:
+                    mib_name = mib.attrib['name']
+                    for symbol in mib:
+                        symbol_name = symbol.attrib['name']
+
+                        # retrieve instance from template
+                        if 'instance' in symbol.attrib:
+                            # convert instance to (int-)tuple
+                            symbol_instance = symbol.attrib['instance'].split('.')
+                            symbol_instance = tuple(map(int, symbol_instance))
+                        else:
+                            # use default instance (0)
+                            symbol_instance = (0,)
+
+                        # retrieve value from template
+                        value = symbol.xpath('./value/text()')[0]
+
+                        # retrieve engine from template
+                        if len(symbol.xpath('./engine')) > 0:
+                            engine_type = symbol.find('./engine').attrib['type']
+                            engine_aux = symbol.findtext('./engine')
+                        else:
+                            # disable dynamic responses (static)
+                            engine_type = 'static'
+                            engine_aux = ''
+
+                            # register this MIB instance to the command responder
+                        self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+            finally:
+                #cleanup compiled mib files
+                shutil.rmtree(tmp_mib_dir)
         else:
-            self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
-
-        # parse global snmp configuration
-        snmp_config = dom.xpath('//conpot_template/snmp/config/*')
-        if snmp_config:
-
-            for entity in snmp_config:
-
-                # TARPIT: individual response delays
-                if entity.attrib['name'].lower() == 'tarpit':
-
-                    if entity.attrib['command'].lower() == 'get':
-                        self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
-                    elif entity.attrib['command'].lower() == 'set':
-                        self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
-                    elif entity.attrib['command'].lower() == 'next':
-                        self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
-                    elif entity.attrib['command'].lower() == 'bulk':
-                        self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
-
-        # parse mibs and oid tables
-        for mib in mibs:
-            mib_name = mib.attrib['name']
-            for symbol in mib:
-                symbol_name = symbol.attrib['name']
-
-                # retrieve instance from template
-                if 'instance' in symbol.attrib:
-                    # convert instance to (int-)tuple
-                    symbol_instance = symbol.attrib['instance'].split('.')
-                    symbol_instance = tuple(map(int, symbol_instance))
-                else:
-                    # use default instance (0)
-                    symbol_instance = (0,)
-
-                # retrieve value from template
-                value = symbol.xpath('./value/text()')[0]
-        
-                # retrieve engine from template
-                if len(symbol.xpath('./engine')) > 0:
-                    engine_type = symbol.find('./engine').attrib['type']
-                    engine_aux = symbol.findtext('./engine')
-                else:
-                    # disable dynamic responses (static)
-                    engine_type = 'static'
-                    engine_aux = '' 
-
-                # register this MIB instance to the command responder
-                self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+            self.cmd_responder = None
 
     def config_sanitize_tarpit(self, value):
 
