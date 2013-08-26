@@ -125,16 +125,6 @@ def main():
     m = ModbusServer(args.template, log_queue)
     modbus_server = m.get_server(modbus_host, modbus_port)
 
-    #temporary directory to hold the compiled mib files
-    tmp_mib_dir = tempfile.mkdtemp()
-    args.mibpaths.append(tmp_mib_dir)
-    for mib_file in glob.glob(os.path.join(args.raw_mib, '*.mib')):
-        pysnmp_str_obj = mib2pysnmp(mib_file)
-        #temporary directory to hold the compiled mib files
-        output_filename = os.path.basename(os.path.splitext(mib_file)[0]) + '.py'
-        with open(os.path.join(tmp_mib_dir, output_filename), 'w') as output:
-            output.write(pysnmp_str_obj)
-
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
     snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths)

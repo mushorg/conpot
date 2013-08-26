@@ -20,12 +20,14 @@ import logging
 from lxml import etree
 from conpot.snmp.dynrsp import DynamicResponder
 from conpot.snmp.command_responder import CommandResponder
+from conpot.snmp.build_pysnmp_mib_wrapper import find_and_compile_mibs
+import tempfile
 
 logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue, mibpaths):
+    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs):
         self.host = host
         self.port = port
 
@@ -33,6 +35,11 @@ class SNMPServer(object):
 
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+
+
+        tmp_mib_dir = tempfile.mkdtemp()
+        mibpaths.append(tmp_mib_dir)
+        find_and_compile_mibs(mibpaths, False)
 
         # only enable snmp server if we have configuration items
         if not mibs:
