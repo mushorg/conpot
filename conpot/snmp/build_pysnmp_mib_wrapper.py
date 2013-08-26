@@ -17,6 +17,7 @@
 
 import subprocess
 import logging
+import os
 import sys
 
 
@@ -26,6 +27,7 @@ BUILD_SCRIPT = 'build-pysnmp-mib'
 
 
 def mib2pysnmp(mib_file):
+    logger.debug('Compiling mib file: {0}'.format(mib_file))
     proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     return_code = proc.wait()
@@ -41,6 +43,25 @@ def mib2pysnmp(mib_file):
     else:
         logger.debug('Successfully compiled MIB file: {0}'.format(mib_file))
         return stdout
+
+
+def find_and_compile_mibs(raw_mibs_dir, output_dir, recursive=True):
+    for file in _get_files(raw_mibs_dir, recursive):
+        #check if the file contains MIB definitions
+        if 'DEFINITIONS ::= BEGIN' in open(file, 'r').read():
+            pysnmp_str_obj = mib2pysnmp(file)
+            output_filename = os.path.basename(os.path.splitext(file)[0]) + '.py'
+            with open(os.path.join(output_dir, output_filename), 'w') as output:
+                output.write(pysnmp_str_obj)
+
+
+def _get_files(dir, recursive):
+    for dir_path, dirs, files in os.walk(dir):
+        for file in files:
+            yield os.path.join(dir_path, file)
+        if not recursive:
+            break
+
 
 if __name__ == '__main__':
     print mib2pysnmp(sys.argv[1])
