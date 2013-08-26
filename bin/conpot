@@ -111,7 +111,6 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
-
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
@@ -127,7 +126,7 @@ def main():
 
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
-    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths)
+    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
@@ -145,14 +144,9 @@ def main():
         snmp_server.stop()
         modbus_server.stop()
         http_server.stop()
-    finally:
-        if tmp_mib_dir:
-            shutil.rmtree(tmp_mib_dir)
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
-
-
 
 if __name__ == "__main__":
     main()
