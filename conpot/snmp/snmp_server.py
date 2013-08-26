@@ -27,7 +27,15 @@ logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs):
+    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs_dir):
+        """
+        :param host:        hostname or ip address on which to server the snmp service (string).
+        :param port:        listen port (integer).
+        :param template:    path to conpot xml configuration file (string).
+        :param log_queue:   shared log queue (list).
+        :param mibpaths:    collection of paths to search for COMPILED mib files (iterable collection of strings).
+        :param rawmibs_dir: directory to search for raw mib files, these files will get compiled by conpot (string).
+        """
         self.host = host
         self.port = port
 
