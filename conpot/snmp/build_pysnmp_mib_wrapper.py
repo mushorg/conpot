@@ -15,11 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from gevent import monkey
+monkey.patch_all()
+
 import subprocess
 import logging
 import os
 import sys
 import re
+
 
 logger = logging.getLogger(__name__)
 
