@@ -15,9 +15,6 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-monkey.patch_all()
-
 import subprocess
 import logging
 import os
@@ -32,6 +29,8 @@ BUILD_SCRIPT = 'build-pysnmp-mib'
 
 def mib2pysnmp(mib_file):
     logger.debug('Compiling mib file: {0}'.format(mib_file))
+    #force subprocess to use select
+    subprocess._has_poll = False
     proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     stdout, stderr = proc.communicate()
