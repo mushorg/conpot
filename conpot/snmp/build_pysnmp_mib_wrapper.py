@@ -64,7 +64,7 @@ def compile_mib(mib_file, output_dir):
 
 
 def _get_files(dir, recursive):
-    for dir_path, dirs, files in os.walk(dir):
+    for dir_path, dirs, files in os.walk(dir, followlinks=True):
         for file in files:
             yield os.path.join(dir_path, file)
         if not recursive:
