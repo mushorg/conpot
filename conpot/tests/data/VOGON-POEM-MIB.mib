@@ -7,7 +7,7 @@ IMPORTS
     NOTIFICATION-GROUP                       FROM SNMPv2-CONF
     snmpTraps                                FROM SNMPv2-MIB;
 
-vogonpoemMIB MODULE-IDENTITY
+vogonpoem MIB MODULE-IDENTITY
     LAST-UPDATED "200006140000Z"
     ORGANIZATION "Vogon inc."
     CONTACT-INFO

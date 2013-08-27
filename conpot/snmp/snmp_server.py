@@ -74,7 +74,7 @@ class SNMPServer(object):
                 # parse mibs and oid tables
                 for mib in mibs:
                     mib_name = mib.attrib['name']
-                    #compile the mib file if it found and not already loaded.
+                    # compile the mib file if it is found and not already loaded.
                     if mib_name in mib_file_map and not self.cmd_responder.has_mib(mib_name):
                         compile_mib(mib_file_map[mib_name], tmp_mib_dir)
                     for symbol in mib:
