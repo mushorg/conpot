@@ -22,7 +22,7 @@ import shutil
 
 from conpot.snmp.dynrsp import DynamicResponder
 from conpot.snmp.command_responder import CommandResponder
-from conpot.snmp.build_pysnmp_mib_wrapper import find_and_compile_mibs
+from conpot.snmp.build_pysnmp_mib_wrapper import find_mibs, compile_mib
 
 logger = logging.getLogger()
 
@@ -50,7 +50,7 @@ class SNMPServer(object):
             try:
                 tmp_mib_dir = tempfile.mkdtemp()
                 mibpaths.append(tmp_mib_dir)
-                find_and_compile_mibs(rawmibs_dir, tmp_mib_dir, True)
+                mib_file_map = find_mibs(rawmibs_dir)
                 self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
 
                 # parse global snmp configuration
@@ -74,6 +74,9 @@ class SNMPServer(object):
                 # parse mibs and oid tables
                 for mib in mibs:
                     mib_name = mib.attrib['name']
+                    #compile the mib file if it found and not already loaded.
+                    if mib_name in mib_file_map and not self.cmd_responder.has_mib(mib_name):
+                        compile_mib(mib_file_map[mib_name], tmp_mib_dir)
                     for symbol in mib:
                         symbol_name = symbol.attrib['name']
 

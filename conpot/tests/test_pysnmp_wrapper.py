@@ -20,7 +20,7 @@ import tempfile
 import shutil
 import os
 
-from conpot.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_and_compile_mibs
+from conpot.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
 from conpot.snmp import command_responder
 
 
@@ -52,39 +52,32 @@ class TestBase(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-    def test_find_and_compile(self):
+    def test_find(self):
         """
-        Tests that the wrapper can find and compile mib files.
+        Tests that the wrapper can find mib files.
+        """
+        try:
+            input_dir = tempfile.mkdtemp()
+            input_file = 'conpot/tests/data/VOGON-POEM-MIB.mib'
+            shutil.copy(input_file, input_dir)
+            file_map = find_mibs(input_dir)
+            self.assertTrue(file_map['VOGON-POEM-MIB'] == os.path.join(input_dir, 'VOGON-POEM-MIB.mib'))
+        finally:
+            shutil.rmtree(input_dir)
+
+
+    def test_compile(self):
+        """
+        Tests that the wrapper can output mib files.
         """
         try:
             input_dir = tempfile.mkdtemp()
             output_dir = tempfile.mkdtemp()
             shutil.copy('conpot/tests/data/VOGON-POEM-MIB.mib', input_dir)
-            find_and_compile_mibs(input_dir, output_dir)
+            file_map = find_mibs(input_dir)
+            compile_mib(file_map['VOGON-POEM-MIB'], output_dir)
             self.assertIn('VOGON-POEM-MIB.py', os.listdir(output_dir))
         finally:
             shutil.rmtree(input_dir)
             shutil.rmtree(output_dir)
 
-
-    def test_find_and_compile_recursive(self):
-        """
-        Tests that the wrapper can recursively find and compile mib files, with or without the
-        mib extension.
-        """
-        try:
-            input_dir = tempfile.mkdtemp()
-            nested_dir = os.path.join(input_dir, 'nested_directory')
-            os.mkdir(os.path.join(nested_dir))
-            output_dir = tempfile.mkdtemp()
-
-            shutil.copy('conpot/tests/data/VOGON-POEM-MIB.mib', input_dir)
-            #Create another file in the nested directory - this time without extension
-            shutil.copy('conpot/tests/data/VOGON-POEM-MIB.mib',
-                        os.path.join(nested_dir, 'ANOTHER-VOGON-POEM-MIB'))
-            find_and_compile_mibs(input_dir, output_dir, True)
-            self.assertIn('VOGON-POEM-MIB.py', os.listdir(output_dir))
-            self.assertIn('ANOTHER-VOGON-POEM-MIB.py', os.listdir(output_dir))
-        finally:
-            shutil.rmtree(input_dir)
-            shutil.rmtree(output_dir)

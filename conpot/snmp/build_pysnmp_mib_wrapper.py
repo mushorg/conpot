@@ -19,7 +19,7 @@ import subprocess
 import logging
 import os
 import sys
-
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +45,20 @@ def mib2pysnmp(mib_file):
         return stdout
 
 
-def find_and_compile_mibs(raw_mibs_dir, output_dir, recursive=True):
+def find_mibs(raw_mibs_dir, recursive=True):
+    file_map = {}
     for file in _get_files(raw_mibs_dir, recursive):
         #check if the file contains MIB definitions
-        if 'DEFINITIONS ::= BEGIN' in open(file, 'r').read():
-            pysnmp_str_obj = mib2pysnmp(file)
-            output_filename = os.path.basename(os.path.splitext(file)[0]) + '.py'
-            with open(os.path.join(output_dir, output_filename), 'w') as output:
-                output.write(pysnmp_str_obj)
+        mib_search = re.search(r'([\w-]+) DEFINITIONS ::= BEGIN', open(file).read(), re.IGNORECASE)
+        if mib_search:
+            file_map[mib_search.group(1)] = file
+    return file_map
+
+def compile_mib(mib_file, output_dir):
+    pysnmp_str_obj = mib2pysnmp(mib_file)
+    output_filename = os.path.basename(os.path.splitext(mib_file)[0]) + '.py'
+    with open(os.path.join(output_dir, output_filename), 'w') as output:
+        output.write(pysnmp_str_obj)
 
 
 def _get_files(dir, recursive):

@@ -142,6 +142,10 @@ class CommandResponder(object):
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
 
+    def has_mib(self, mibname):
+        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        return mibname in modules
+
     def serve_forever(self):
         self.snmpEngine.transportDispatcher.serve_forever()
 
