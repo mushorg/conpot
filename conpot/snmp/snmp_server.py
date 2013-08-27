@@ -28,7 +28,7 @@ logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs_dir):
+    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs_dirs):
         """
         :param host:        hostname or ip address on which to server the snmp service (string).
         :param port:        listen port (integer).
@@ -50,7 +50,7 @@ class SNMPServer(object):
             try:
                 tmp_mib_dir = tempfile.mkdtemp()
                 mibpaths.append(tmp_mib_dir)
-                mib_file_map = find_mibs(rawmibs_dir)
+                mib_file_map = find_mibs(rawmibs_dirs)
                 self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
 
                 # parse global snmp configuration

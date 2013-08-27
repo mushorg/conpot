@@ -89,9 +89,10 @@ def main():
                         metavar="config.cfg"
                         )
     parser.add_argument("-a", "--raw_mib",
-                        help="path to raw MIB files, the files must have .mib as extension."
+                        help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
-                        default=os.getcwd())
+                        action='append',
+                        default=[os.getcwd()])
     parser.add_argument("-m", "--mibpaths",
                         action='append',
                         help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",

@@ -46,13 +46,14 @@ def mib2pysnmp(mib_file):
         return stdout
 
 
-def find_mibs(raw_mibs_dir, recursive=True):
+def find_mibs(raw_mibs_dirs, recursive=True):
     file_map = {}
-    for file in _get_files(raw_mibs_dir, recursive):
-        #check if the file contains MIB definitions
-        mib_search = re.search(r'([\w-]+) DEFINITIONS ::= BEGIN', open(file).read(), re.IGNORECASE)
-        if mib_search:
-            file_map[mib_search.group(1)] = file
+    for raw_mibs_dir in raw_mibs_dirs:
+        for file in _get_files(raw_mibs_dir, recursive):
+            #check if the file contains MIB definitions
+            mib_search = re.search(r'([\w-]+) DEFINITIONS ::= BEGIN', open(file).read(), re.IGNORECASE)
+            if mib_search:
+                file_map[mib_search.group(1)] = file
     return file_map
 
 
