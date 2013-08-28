@@ -1,8 +1,8 @@
 gevent
 pysnmp
 lxml
-modbus_tk
 hpfeeds
+modbus_tk
 bottle
 jinja2
 beautifulsoup4

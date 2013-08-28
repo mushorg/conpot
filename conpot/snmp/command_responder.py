@@ -45,7 +45,7 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, log_queue, mibpath, dyn_rsp):
+    def __init__(self, host, port, log_queue, mibpaths, dyn_rsp):
 
         self.log_queue = log_queue
         self.dyn_rsp = dyn_rsp
@@ -55,7 +55,10 @@ class CommandResponder(object):
 
         #path to custom mibs
         mibBuilder = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
-        mibSources = mibBuilder.getMibSources() + (builder.DirMibSource(mibpath),)
+        mibSources = mibBuilder.getMibSources()
+
+        for mibpath in mibpaths:
+            mibSources += (builder.DirMibSource(mibpath),)
         mibBuilder.setMibSources(*mibSources)
 
         # Transport setup
@@ -138,6 +141,10 @@ class CommandResponder(object):
         if mibname in modules:
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
+
+    def has_mib(self, mibname):
+        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        return mibname in modules
 
     def serve_forever(self):
         self.snmpEngine.transportDispatcher.serve_forever()
