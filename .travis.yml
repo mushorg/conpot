@@ -2,14 +2,14 @@ language: python
 python:
   - "2.7"
 virtualenv:
-  system_site_packages: true
+  system_site_packages: false
 before_install:
  - REPO=`pwd`
  - echo $REPO
  - pwd
  - "sudo apt-get -qq update"
  - "sudo apt-get -qq install python2.7 python-pip git unzip"
- - "sudo apt-get -qq install python-dev libevent-dev"
+ - "sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader"
  - cd /tmp
  - git clone git://github.com/rep/hpfeeds.git hpfeeds
  - cd hpfeeds
@@ -23,6 +23,8 @@ install:
  - export PYTHONIOENCODING=UTF8 # just in case
  - pwd
  - cd $REPO
+ - pip install git+https://github.com/glastopf/modbus-tk.git#egg=modbus
+ - pip install git+https://github.com/rep/hpfeeds.git#egg=hpfeeds
  - pip install -r requirements.txt --use-mirrors
  - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 # command to run tests

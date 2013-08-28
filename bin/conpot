@@ -84,9 +84,15 @@ def main():
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
                         )
-    parser.add_argument("-m", "--mibpath",
-                        help="path to compiled MIB files. (compiled with build-pysnmp-mib)",
-                        default=os.getcwd())
+    parser.add_argument("-a", "--raw_mib",
+                        help="path to raw MIB files."
+                             "(will automatically get compiled by build-pysnmp-mib)",
+                        action='append',
+                        default=[os.getcwd()])
+    parser.add_argument("-m", "--mibpaths",
+                        action='append',
+                        help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
+                        default=[])
     args = parser.parse_args()
 
     config = ConfigParser()
@@ -117,7 +123,7 @@ def main():
 
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
-    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpath)
+    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
 
     http_host = config.get('http', 'host')
     http_port = config.getint('http', 'port')
@@ -138,7 +144,6 @@ def main():
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
-
 
 
 if __name__ == "__main__":
