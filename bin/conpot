@@ -18,11 +18,8 @@
 
 import logging
 import os
-import shutil
 import argparse
 import sys
-import glob
-import tempfile
 from ConfigParser import ConfigParser
 
 import gevent
@@ -33,7 +30,6 @@ from conpot.logging.log_worker import LogWorker
 from conpot.snmp.snmp_server import SNMPServer
 from conpot.modbus.modbus_server import ModbusServer
 from conpot.http.web_server import HTTPServer
-from conpot.snmp.build_pysnmp_mib_wrapper import mib2pysnmp
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -148,6 +144,7 @@ def main():
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
+
 
 if __name__ == "__main__":
     main()
