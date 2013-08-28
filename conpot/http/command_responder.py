@@ -163,7 +163,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 with open(docpath + '/statuscodes/' + str(status) + '.status', 'rb') as f:
                     payload = f.read()
 
-            except IOError:
+            except IOError, e:
+                logger.error('{0}'.format(e))
                 payload = ''
 
             # there might be template data that can be substituted within the
