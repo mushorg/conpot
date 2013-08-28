@@ -46,6 +46,14 @@ def mib2pysnmp(mib_file):
         return stdout
 
 
+def _get_files(dir, recursive):
+    for dir_path, dirs, files in os.walk(dir, followlinks=True):
+        for file in files:
+            yield os.path.join(dir_path, file)
+        if not recursive:
+            break
+
+
 def find_mibs(raw_mibs_dirs, recursive=True):
     file_map = {}
     for raw_mibs_dir in raw_mibs_dirs:
@@ -62,14 +70,6 @@ def compile_mib(mib_file, output_dir):
     output_filename = os.path.basename(os.path.splitext(mib_file)[0]) + '.py'
     with open(os.path.join(output_dir, output_filename), 'w') as output:
         output.write(pysnmp_str_obj)
-
-
-def _get_files(dir, recursive):
-    for dir_path, dirs, files in os.walk(dir, followlinks=True):
-        for file in files:
-            yield os.path.join(dir_path, file)
-        if not recursive:
-            break
 
 
 if __name__ == '__main__':
