@@ -60,8 +60,8 @@ class TestBase(unittest.TestCase):
             input_dir = tempfile.mkdtemp()
             input_file = 'conpot/tests/data/VOGON-POEM-MIB.mib'
             shutil.copy(input_file, input_dir)
-            file_map = find_mibs([input_dir])
-            self.assertTrue(file_map['VOGON-POEM-MIB'] == os.path.join(input_dir, 'VOGON-POEM-MIB.mib'))
+            available_mibs = find_mibs([input_dir])
+            self.assertIn('VOGON-POEM-MIB', available_mibs)
         finally:
             shutil.rmtree(input_dir)
 
@@ -74,8 +74,8 @@ class TestBase(unittest.TestCase):
             input_dir = tempfile.mkdtemp()
             output_dir = tempfile.mkdtemp()
             shutil.copy('conpot/tests/data/VOGON-POEM-MIB.mib', input_dir)
-            file_map = find_mibs([input_dir])
-            compile_mib(file_map['VOGON-POEM-MIB'], output_dir)
+            find_mibs([input_dir])
+            compile_mib('VOGON-POEM-MIB', output_dir)
             self.assertIn('VOGON-POEM-MIB.py', os.listdir(output_dir))
         finally:
             shutil.rmtree(input_dir)
