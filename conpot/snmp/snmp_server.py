@@ -50,7 +50,7 @@ class SNMPServer(object):
             try:
                 tmp_mib_dir = tempfile.mkdtemp()
                 mibpaths.append(tmp_mib_dir)
-                mib_file_map = find_mibs(rawmibs_dirs)
+                available_mibs = find_mibs(rawmibs_dirs)
                 self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
 
                 # parse global snmp configuration
@@ -75,8 +75,8 @@ class SNMPServer(object):
                 for mib in mibs:
                     mib_name = mib.attrib['name']
                     # compile the mib file if it is found and not already loaded.
-                    if mib_name in mib_file_map and not self.cmd_responder.has_mib(mib_name):
-                        compile_mib(mib_file_map[mib_name], tmp_mib_dir)
+                    if mib_name in available_mibs and not self.cmd_responder.has_mib(mib_name):
+                        compile_mib(mib_name, tmp_mib_dir)
                     for symbol in mib:
                         symbol_name = symbol.attrib['name']
 
