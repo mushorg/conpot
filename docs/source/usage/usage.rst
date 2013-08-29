@@ -59,10 +59,10 @@ First we have to download the IF-MIB and also the IANAifType-MIB since IF-MIB de
     wget http://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib
     wget ftp://ftp.cisco.com/pub/mibs/v2/IF-MIB.my
 
-Then compile the MIBs to python code::
+Conpot will compile the MIB files automatically, but unless the MIB files are places in the current work directory, you
+need to provide a path to the files using the '-a' parameter (The path will be searched recursively for MIB files).::
 
-    build-pysnmp-mib IF-MIB.my > IF-MIB.py
-    build-pysnmp-mib ianaiftype-mib > IANAifType-MIB.py
+    sudo conpot -t my_custom_template.xml -a /opt/mymibs
 
 Finally add your custom snmp configuration to the template:
 

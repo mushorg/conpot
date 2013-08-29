@@ -33,8 +33,13 @@ file_map = {}
 
 
 def mib2pysnmp(mib_file):
+    """
+    Wraps the 'build-pysnmp-mib' script.
+    :param mib_file: Path to the MIB file.
+    :return: A string representation of the compiled MIB file (string).
+    """
     logger.debug('Compiling mib file: {0}'.format(mib_file))
-    #force subprocess to use select
+    #force subprocess to use select (poll does not work with gevent)
     subprocess._has_poll = False
     proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -60,6 +65,11 @@ def _get_files(dir, recursive):
 
 
 def generate_dependencies(data, mib_name):
+    """
+    Parses a MIB for dependencies and populates an internal dependency map.
+    :param data: A string representing an entire MIB file (string).
+    :param mib_name: Name of the MIB (string).
+    """
     if mib_name not in mib_dependency_map:
         mib_dependency_map[mib_name] = []
     imports_section_search = re.search('IMPORTS(?P<imports_section>.*?);', data, re.DOTALL)
@@ -74,7 +84,7 @@ def generate_dependencies(data, mib_name):
 
 def find_mibs(raw_mibs_dirs, recursive=True):
     """
-    Scans for MIB files.
+    Scans for MIB files and populates an internal MIB->path mapping.
     :param raw_mibs_dirs: Directories to search for MIB files (list of strings).
     :param recursive:  If True raw_mibs_dirs will be scanned recursively.
     :return: A list of found MIB names (list of strings).
