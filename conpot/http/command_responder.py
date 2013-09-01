@@ -351,6 +351,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         configuration = self.server.configuration
         docpath = self.server.docpath
 
+        if not hasattr(self, 'headers'):
+            self.headers = self.MessageClass(self.rfile, 0)
+
         trace_data_length = self.headers.getheader('content-length')
         unsupported_request_data = None
 
@@ -363,6 +366,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             requeststring = self.path
         else:
             requeststring = ''
+            self.path = None
+            if message != None:
+                logger.info(message)
 
         # generate the appropriate status code, header and payload
         (status, headers, payload) = self.load_status(code,
