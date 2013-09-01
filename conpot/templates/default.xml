@@ -166,6 +166,11 @@
 
         <!-- how should the different status codes be handled -->
         <statuscodes>
+            <status name="400">
+                    <!-- 400 (BAD REQUEST) errors should be super fast and responsive -->
+                    <tarpit>0</tarpit>
+                    <entity name="Content-Type">text/html</entity>
+            </status>
             <status name="404">
                     <!-- 404 (NOT FOUND) errors should be super fast and responsive -->
                     <tarpit>0</tarpit>
