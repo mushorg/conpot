@@ -10,10 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 class LogWorker(object):
-    def __init__(self, config, log_queue):
+    def __init__(self, config, log_queue, public_ip):
         self.log_queue = log_queue
         self.sqlite_logger = None
         self.friends_feeder = None
+        self.public_ip = public_ip
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
@@ -36,6 +37,9 @@ class LogWorker(object):
             event = self.log_queue.get()
             assert 'data_type' in event
             assert 'timestamp' in event
+
+            if self.public_ip:
+                event['public_ip'] = self.public_ip
 
             if self.friends_feeder:
                 self.friends_feeder.log(json.dumps(event, default=self.json_default))

@@ -27,6 +27,8 @@ from ConfigParser import ConfigParser
 
 import gevent
 from gevent.queue import Queue
+import requests
+from requests.exceptions import Timeout, ConnectionError
 
 import conpot
 from conpot.logging.log_worker import LogWorker
@@ -129,12 +131,24 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
+    public_ip = None
+    if config.getboolean('fetch_public_ip', 'enabled'):
+        #we only want warning+ messages from the requests module
+        logging.getLogger("requests").setLevel(logging.WARNING)
+        try:
+            url = config.get('fetch_public_ip', 'url')
+            req = requests.get(url)
+            public_ip = req.text
+            logger.info('Fetched {0} as external ip.'.format(public_ip))
+        except (Timeout, ConnectionError) as e:
+            logger.warning('Could not fetch public ip: {0}'.format(e))
+
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
     log_queue = Queue()
-    log_worker = LogWorker(config, log_queue)
+    log_worker = LogWorker(config, log_queue, public_ip)
     gevent.spawn(log_worker.start)
 
     modbus_host = config.get('modbus', 'host')
