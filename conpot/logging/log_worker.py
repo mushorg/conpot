@@ -5,6 +5,7 @@ from datetime import datetime
 
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.hpfriends import HPFriendsLogger
+from conpot.logging.syslog import SysLogger
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +15,12 @@ class LogWorker(object):
         self.log_queue = log_queue
         self.sqlite_logger = None
         self.friends_feeder = None
+        self.syslog_client = None
         self.public_ip = public_ip
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
+
         if config.getboolean('hpfriends', 'enabled'):
             host = config.get('hpfriends', 'host')
             port = config.getint('hpfriends', 'port')
@@ -29,6 +32,10 @@ class LogWorker(object):
             except Exception as e:
                 logger.exception(e.message)
                 self.friends_feeder = None
+
+        if config.getboolean('syslog', 'enabled'):
+            self.syslog_client = SysLogger()
+
         self.enabled = True
 
     def start(self):
@@ -46,6 +53,9 @@ class LogWorker(object):
 
             if self.sqlite_logger:
                 self.sqlite_logger.log(event)
+
+            if self.syslog_client:
+                self.syslog_client.log(event)
 
     def stop(self):
         self.enabled = False
