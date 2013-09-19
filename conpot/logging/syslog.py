@@ -17,15 +17,20 @@
 
 from logging.handlers import SysLogHandler
 import logging
+import socket
+
 
 class SysLogger(object):
-    def __init__(self):
+    def __init__(self, host, port, facility, logdevice, logsocket):
         logger = logging.getLogger()
-        logger.addHandler(SysLogHandler('/dev/log'))
 
-    def log(self, event):
-        for entry in event['data'].values():
-            logging.warn("REMOTE[{0}] PROTOCOL[{1}] REQUEST[{2}] RESPONSE[{3}]".format(str(event["remote"]),
-                                                                                        event['data_type'],
-                                                                                        entry.get('request'),
-                                                                                        entry.get('response')))
+        if str(logsocket).lower() == 'udp':
+            logger.addHandler(SysLogHandler(address=(host, port),
+                                            facility=getattr(SysLogHandler, 'LOG_'+str(facility).upper()),
+                                            socktype=socket.SOCK_DGRAM))
+        elif str(logsocket).lower() == 'dev':
+            logger.addHandler(SysLogHandler(logdevice))
+
+    def log(self, data):
+        # stub function since the additional handler has been added to the root logging instance.
+        pass

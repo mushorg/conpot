@@ -34,7 +34,12 @@ class LogWorker(object):
                 self.friends_feeder = None
 
         if config.getboolean('syslog', 'enabled'):
-            self.syslog_client = SysLogger()
+            host = config.get('syslog', 'host')
+            port = config.getint('syslog', 'port')
+            facility = config.get('syslog', 'facility')
+            logdevice = config.get('syslog', 'device')
+            logsocket = config.get('syslog', 'socket')
+            self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
         self.enabled = True
 
