@@ -26,7 +26,7 @@ class SysLogger(object):
 
         if str(logsocket).lower() == 'udp':
             logger.addHandler(SysLogHandler(address=(host, port),
-                                            facility=getattr(SysLogHandler, 'LOG_'+str(facility).upper()),
+                                            facility=getattr(SysLogHandler, 'LOG_' + str(facility).upper()),
                                             socktype=socket.SOCK_DGRAM))
         elif str(logsocket).lower() == 'dev':
             logger.addHandler(SysLogHandler(logdevice))
