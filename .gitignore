@@ -1,5 +1,10 @@
 *.py[cod]
 
+# Apple garbage files
+.DS_Store
+._.DS_Store
+.apdisk
+
 # C extensions
 *.so
 
