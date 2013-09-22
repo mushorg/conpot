@@ -74,25 +74,14 @@ class SNMPServer(object):
                         # EVASION: response thresholds
                         if entity.attrib['name'].lower() == 'evasion':
 
-                            if entity.attrib['threshold'].lower() == 'individual':
-                                self.cmd_responder.resp_app_get.threshold_individual = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_set.threshold_individual = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_next.threshold_individual = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_bulk.threshold_individual = \
-                                    self.config_sanitize_threshold(entity.text)
-
-                            if entity.attrib['threshold'].lower() == 'overall':
-                                self.cmd_responder.resp_app_get.threshold_overall = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_set.threshold_overall = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_next.threshold_overall = \
-                                    self.config_sanitize_threshold(entity.text)
-                                self.cmd_responder.resp_app_bulk.threshold_overall = \
-                                    self.config_sanitize_threshold(entity.text)
+                            if entity.attrib['command'].lower() == 'get':
+                                self.cmd_responder.resp_app_get.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'set':
+                                self.cmd_responder.resp_app_set.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'next':
+                                self.cmd_responder.resp_app_next.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'bulk':
+                                self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
 
                 # parse mibs and oid tables
                 for mib in mibs:
@@ -125,7 +114,12 @@ class SNMPServer(object):
                             engine_aux = ''
 
                             # register this MIB instance to the command responder
-                        self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+                        self.cmd_responder.register(mib_name,
+                                                    symbol_name,
+                                                    symbol_instance,
+                                                    value,
+                                                    engine_type,
+                                                    engine_aux)
             finally:
                 #cleanup compiled mib files
                 shutil.rmtree(tmp_mib_dir)
@@ -135,7 +129,7 @@ class SNMPServer(object):
     def config_sanitize_tarpit(self, value):
 
         # checks tarpit value for being either a single int or float,
-        # or a series of two concatenated integers and/or floats seperated by semicolon and returns
+        # or a series of two concatenated integers and/or floats separated by semicolon and returns
         # either the (sanitized) value or zero.
 
         if value is not None:
@@ -162,20 +156,30 @@ class SNMPServer(object):
 
     def config_sanitize_threshold(self, value):
 
-        # checks threshold value for being a single int and returns either the value or zero.
+        # checks DoS thresholds for being either a single int or a series of two concatenated integers
+        # separated by semicolon and returns either the (sanitized) value or zero.
 
         if value is not None:
 
-            try:
-                threshold = int(value)
-            except ValueError:
-                logger.error("Invalid evasion threshold: '{0}'. Disabling DoS evasion.".format(value))
-                return 0
+            x, _, y = value.partition(';')
 
-            return threshold
+            try:
+                _ = int(x)
+            except ValueError:
+                logger.error("Invalid evasion threshold: '{0}'. Assuming no DoS evasion.".format(value))
+                # first value is invalid, ignore the whole setting.
+                return '0;0'
+
+            try:
+                _ = int(y)
+                # both values are fine.
+                return value
+            except ValueError:
+                # second value is invalid, use the first and ignore the second.
+                return str(x) + ';0'
 
         else:
-            return 0
+            return '0;0'
 
     def start(self):
         if self.cmd_responder:
