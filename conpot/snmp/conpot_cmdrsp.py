@@ -83,6 +83,8 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
+        self.dyn_rsp.updateEvasionTable(addr)
+
         rspVarBinds = None
         try:
             # generate response

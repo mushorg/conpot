@@ -24,12 +24,12 @@ import random
 from pysnmp.smi import builder 
 from datetime import datetime
 
-
 class DynamicResponder(object):
     def __init__(self):
         """ initiate variables """
 
-        self.response_table = {}
+        self.response_table = {}            # stores dynamic values for OIDs
+        self.evasion_table = {}             # stores the number of requests
         self.start_time = datetime.now()
 
     def updateDynamicValues(self, reference_class, OID, reset_value):
@@ -187,3 +187,14 @@ class DynamicResponder(object):
         else:
             # this OID is not registered.
             return False
+
+    def updateEvasionTable(self, client_ip):
+        """ updates dynamic evasion table """
+
+        now = datetime.now()
+        current_minute = (datetime(now.year, now.month, now.day, now.hour, now.minute) -
+                          datetime(1970,1,1)).total_seconds()
+
+        #current_numreq = self.evasion_table[current_minute][client_ip]
+
+        print "============ UPDATING: CIP: {0} CMN: {1}".format(client_ip[0], current_minute)
