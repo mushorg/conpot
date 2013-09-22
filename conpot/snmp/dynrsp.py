@@ -24,6 +24,7 @@ import random
 from pysnmp.smi import builder 
 from datetime import datetime
 
+
 class DynamicResponder(object):
     def __init__(self):
         """ initiate variables """
@@ -191,10 +192,27 @@ class DynamicResponder(object):
     def updateEvasionTable(self, client_ip):
         """ updates dynamic evasion table """
 
+        # get current minute as epoch..
         now = datetime.now()
-        current_minute = (datetime(now.year, now.month, now.day, now.hour, now.minute) -
-                          datetime(1970,1,1)).total_seconds()
+        epoch_minute = int((datetime(now.year, now.month, now.day, now.hour, now.minute) -
+                          datetime(1970, 1, 1)).total_seconds())
 
-        #current_numreq = self.evasion_table[current_minute][client_ip]
+        # if this is a new minute, re-initialize the evasion table
+        if epoch_minute not in self.evasion_table:
+            self.evasion_table.clear()                              # purge previous entries
+            self.evasion_table[epoch_minute] = {}                   # create current minute
+            self.evasion_table[epoch_minute]['overall'] = 0         # prepare overall request count
 
-        print "============ UPDATING: CIP: {0} CMN: {1}".format(client_ip[0], current_minute)
+        # if this is a new client, add him to the evasion table
+        if client_ip[0] not in self.evasion_table[epoch_minute]:
+            self.evasion_table[epoch_minute][client_ip[0]] = 0
+
+        # increment number of requests..
+        self.evasion_table[epoch_minute][client_ip[0]] += 1
+        self.evasion_table[epoch_minute]['overall'] += 1
+
+        current_numreq = self.evasion_table[epoch_minute][client_ip[0]]
+        overall_numreq = self.evasion_table[epoch_minute]['overall']
+
+        # return numreq(per_ip) and numreq(overall)
+        return current_numreq, overall_numreq
