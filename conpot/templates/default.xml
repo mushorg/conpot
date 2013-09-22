@@ -65,6 +65,10 @@
             <entity name="tarpit" command="set">0.1;0.2</entity>
             <entity name="tarpit" command="next">0.0;0.1</entity>
             <entity name="tarpit" command="bulk">0.2;0.4</entity>
+
+            <!-- Configure DoS evasion threshold (requests / minute) -->
+            <entity name="evasion" threshold="individual">20</entity>
+            <entity name="evasion" threshold="overall">120</entity>
         </config>
         <mibs>
             <mib name="SNMPv2-MIB">

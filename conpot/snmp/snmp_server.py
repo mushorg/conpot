@@ -71,6 +71,29 @@ class SNMPServer(object):
                             elif entity.attrib['command'].lower() == 'bulk':
                                 self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
 
+                        # EVASION: response thresholds
+                        if entity.attrib['name'].lower() == 'evasion':
+
+                            if entity.attrib['threshold'].lower() == 'individual':
+                                self.cmd_responder.resp_app_get.threshold_individual = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_set.threshold_individual = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_next.threshold_individual = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_bulk.threshold_individual = \
+                                    self.config_sanitize_threshold(entity.text)
+
+                            if entity.attrib['threshold'].lower() == 'overall':
+                                self.cmd_responder.resp_app_get.threshold_overall = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_set.threshold_overall = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_next.threshold_overall = \
+                                    self.config_sanitize_threshold(entity.text)
+                                self.cmd_responder.resp_app_bulk.threshold_overall = \
+                                    self.config_sanitize_threshold(entity.text)
+
                 # parse mibs and oid tables
                 for mib in mibs:
                     mib_name = mib.attrib['name']
@@ -136,6 +159,23 @@ class SNMPServer(object):
 
         else:
             return '0;0'
+
+    def config_sanitize_threshold(self, value):
+
+        # checks threshold value for being a single int and returns either the value or zero.
+
+        if value is not None:
+
+            try:
+                threshold = int(value)
+            except ValueError:
+                logger.error("Invalid evasion threshold: '{0}'. Disabling DoS evasion.".format(value))
+                return 0
+
+            return threshold
+
+        else:
+            return 0
 
     def start(self):
         if self.cmd_responder:
