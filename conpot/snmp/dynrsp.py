@@ -33,7 +33,7 @@ class DynamicResponder(object):
         self.evasion_table = {}             # stores the number of requests
         self.start_time = datetime.now()
 
-    def updateDynamicValues(self, reference_class, OID, reset_value):
+    def update_dynamic_values(self, reference_class, OID, reset_value):
         """ updates dynamic values in table """
 
         if OID in self.response_table:
@@ -189,7 +189,7 @@ class DynamicResponder(object):
             # this OID is not registered.
             return False
 
-    def updateEvasionTable(self, client_ip):
+    def update_evasion_table(self, client_ip):
         """ updates dynamic evasion table """
 
         # get current minute as epoch..

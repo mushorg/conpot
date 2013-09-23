@@ -112,7 +112,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.updateEvasionTable(addr)
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Get'):
             return None
 
@@ -124,7 +124,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
-            response_class = self.dyn_rsp.updateDynamicValues(reference_class,
+            response_class = self.dyn_rsp.update_dynamic_values(reference_class,
                                                               tuple(rspVarBinds[0][0]),
                                                               reference_value)
 
@@ -163,7 +163,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.updateEvasionTable(addr)
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' GetNext'):
             return None
 
@@ -174,7 +174,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
-                response_class = self.dyn_rsp.updateDynamicValues(reference_class,
+                response_class = self.dyn_rsp.update_dynamic_values(reference_class,
                                                                   tuple(rspVarBinds[0][0]),
                                                                   reference_value)
 
@@ -224,7 +224,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         reqVarBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.updateEvasionTable(addr)
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Bulk'):
             return None
 
@@ -283,7 +283,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.updateEvasionTable(addr)
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Set'):
             return None
 
