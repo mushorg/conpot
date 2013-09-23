@@ -67,7 +67,7 @@ class conpot_extension(object):
 
     def check_evasive(self, state, threshold, addr, cmd):
 
-        # checks if current states is > thresholds and returns True if the request
+        # checks if current states are > thresholds and returns True if the request
         # is considered to be a DoS request.
 
         state_individual, state_overall = state
@@ -76,17 +76,17 @@ class conpot_extension(object):
         if int(threshold_individual) > 0:
             if int(state_individual) > int(threshold_individual):
                 logger.warning('SNMPv{0}: DoS threshold for {1} exceeded ({2}/{3}).'.format(cmd,
-                                                                                             addr,
-                                                                                             state_individual,
-                                                                                             threshold_individual))
+                                                                                            addr,
+                                                                                            state_individual,
+                                                                                            threshold_individual))
                 # DoS threshold exceeded.
                 return True
 
         if int(threshold_overall) > 0:
             if int(state_overall) > int(threshold_overall):
                 logger.warning('SNMPv{0}: DDoS threshold exceeded ({1}/{2}).'.format(cmd,
-                                                                                      state_individual,
-                                                                                      threshold_overall))
+                                                                                     state_individual,
+                                                                                     threshold_overall))
                 # DDoS threshold exceeded
                 return True
 
