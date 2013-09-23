@@ -113,7 +113,6 @@ class CommandResponder(object):
         self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
         self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
 
-
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
         if not snmpEngine.transportDispatcher:
