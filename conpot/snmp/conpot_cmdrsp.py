@@ -65,11 +65,40 @@ class conpot_extension(object):
             # both boundaries found. Assume random latency between lbound and ubound
             gevent.sleep(random.uniform(float(lbound), float(ubound)))
 
+    def check_evasive(self, state, threshold, addr, cmd):
+
+        # checks if current states are > thresholds and returns True if the request
+        # is considered to be a DoS request.
+
+        state_individual, state_overall = state
+        threshold_individual, _, threshold_overall = threshold.partition(';')
+
+        if int(threshold_individual) > 0:
+            if int(state_individual) > int(threshold_individual):
+                logger.warning('SNMPv{0}: DoS threshold for {1} exceeded ({2}/{3}).'.format(cmd,
+                                                                                            addr,
+                                                                                            state_individual,
+                                                                                            threshold_individual))
+                # DoS threshold exceeded.
+                return True
+
+        if int(threshold_overall) > 0:
+            if int(state_overall) > int(threshold_overall):
+                logger.warning('SNMPv{0}: DDoS threshold exceeded ({1}/{2}).'.format(cmd,
+                                                                                     state_individual,
+                                                                                     threshold_overall))
+                # DDoS threshold exceeded
+                return True
+
+        # This request will be answered
+        return False
+
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
+        self.threshold = '0;0'
 
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -83,6 +112,10 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Get'):
+            return None
+
         rspVarBinds = None
         try:
             # generate response
@@ -91,7 +124,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
-            response_class = self.dyn_rsp.updateDynamicValues(reference_class,
+            response_class = self.dyn_rsp.update_dynamic_values(reference_class,
                                                               tuple(rspVarBinds[0][0]),
                                                               reference_value)
 
@@ -117,6 +150,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
+        self.threshold = '0;0'
 
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -129,6 +163,10 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' GetNext'):
+            return None
+
         rspVarBinds = None
         try:
             while 1:
@@ -136,7 +174,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
-                response_class = self.dyn_rsp.updateDynamicValues(reference_class,
+                response_class = self.dyn_rsp.update_dynamic_values(reference_class,
                                                                   tuple(rspVarBinds[0][0]),
                                                                   reference_value)
 
@@ -169,6 +207,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
+        self.threshold = '0;0'
 
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self, log_queue)
@@ -184,6 +223,10 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 
         reqVarBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
+
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Bulk'):
+            return None
 
         try:
             N = min(int(nonRepeaters), len(reqVarBinds))
@@ -227,6 +270,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
+        self.threshold = '0;0'
 
         conpot_extension.__init__(self, log_queue)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
@@ -238,6 +282,10 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
 
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
+
+        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Set'):
+            return None
 
         # rfc1905: 4.2.5.1-13
         rspVarBinds = None

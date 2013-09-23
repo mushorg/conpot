@@ -71,6 +71,18 @@ class SNMPServer(object):
                             elif entity.attrib['command'].lower() == 'bulk':
                                 self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
 
+                        # EVASION: response thresholds
+                        if entity.attrib['name'].lower() == 'evasion':
+
+                            if entity.attrib['command'].lower() == 'get':
+                                self.cmd_responder.resp_app_get.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'set':
+                                self.cmd_responder.resp_app_set.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'next':
+                                self.cmd_responder.resp_app_next.threshold = self.config_sanitize_threshold(entity.text)
+                            elif entity.attrib['command'].lower() == 'bulk':
+                                self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
+
                 # parse mibs and oid tables
                 for mib in mibs:
                     mib_name = mib.attrib['name']
@@ -102,7 +114,12 @@ class SNMPServer(object):
                             engine_aux = ''
 
                             # register this MIB instance to the command responder
-                        self.cmd_responder.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+                        self.cmd_responder.register(mib_name,
+                                                    symbol_name,
+                                                    symbol_instance,
+                                                    value,
+                                                    engine_type,
+                                                    engine_aux)
             finally:
                 #cleanup compiled mib files
                 shutil.rmtree(tmp_mib_dir)
@@ -112,7 +129,7 @@ class SNMPServer(object):
     def config_sanitize_tarpit(self, value):
 
         # checks tarpit value for being either a single int or float,
-        # or a series of two concatenated integers and/or floats seperated by semicolon and returns
+        # or a series of two concatenated integers and/or floats separated by semicolon and returns
         # either the (sanitized) value or zero.
 
         if value is not None:
@@ -133,6 +150,33 @@ class SNMPServer(object):
             except ValueError:
                 # second value is invalid, use the first one.
                 return x
+
+        else:
+            return '0;0'
+
+    def config_sanitize_threshold(self, value):
+
+        # checks DoS thresholds for being either a single int or a series of two concatenated integers
+        # separated by semicolon and returns either the (sanitized) value or zero.
+
+        if value is not None:
+
+            x, _, y = value.partition(';')
+
+            try:
+                _ = int(x)
+            except ValueError:
+                logger.error("Invalid evasion threshold: '{0}'. Assuming no DoS evasion.".format(value))
+                # first value is invalid, ignore the whole setting.
+                return '0;0'
+
+            try:
+                _ = int(y)
+                # both values are fine.
+                return value
+            except ValueError:
+                # second value is invalid, use the first and ignore the second.
+                return str(x) + ';0'
 
         else:
             return '0;0'
