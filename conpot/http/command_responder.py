@@ -175,16 +175,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + str(status) + '"]/chunks')
+            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
+                                                   str(status) + '"]/chunks')
 
             if chunked_transfer:
-                # Calculate and append a chunked transfer encoding header
+                # Append a chunked transfer encoding header
                 headers.append(('Transfer-Encoding', 'chunked'))
+                chunks = str(chunked_transfer[0].xpath('./text()')[0]).split(',')
             else:
                 # Calculate and append a content length header
                 headers.append(('Content-Length', payload.__len__()))
+                chunks = 0
 
-            return status, headers, payload
+            return status, headers, payload, chunks
 
         # the requested status code is configured to forward the
         # originally targeted resource to a remote system.
@@ -215,6 +218,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     if header[0].lower() == 'transfer-encoding' and header[1].lower() == 'chunked':
                         del headers[i]
+                        chunks = 0
                         break
 
             except:
@@ -226,11 +230,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, payload) = self.load_status(status,
-                                                                  requeststring,
-                                                                  headers,
-                                                                  configuration,
-                                                                  docpath)
+                    (status, headers, payload, chunks) = self.load_status(status,
+                                                                          requeststring,
+                                                                          headers,
+                                                                          configuration,
+                                                                          docpath)
 
                 else:
 
@@ -238,9 +242,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     # generate a minimal 503 response regardless of the configuration.
                     status = 503
                     payload = ''
+                    chunks = 0
                     headers.append(('Content-Length', 0))
 
-            return status, headers, payload
+            return status, headers, payload, chunks
 
     def load_entity(self, requeststring, headers, configuration, docpath):
         """
@@ -320,16 +325,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/chunks')
+            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
+                                                   rqfilename + '"]/chunks')
 
             if chunked_transfer:
                 # Calculate and append a chunked transfer encoding header
                 headers.append(('Transfer-Encoding', 'chunked'))
+                chunks = str(chunked_transfer[0].xpath('./text()')[0]).split(',')
             else:
                 # Calculate and append a content length header
                 headers.append(('Content-Length', payload.__len__()))
+                chunks = 0
 
-            return status, headers, payload
+            return status, headers, payload, chunks
 
         # the requested resource resides on another server,
         # so we act as a proxy between client and target system
@@ -347,12 +355,17 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 status = int(response.status)
                 headers = response.getheaders()    # We REPLACE the headers to avoid duplicates!
                 payload = response.read()
+                chunks = 0
 
             except:
                 status = 503
-                (status, headers, payload) = self.load_status(status, requeststring, headers, configuration, docpath)
+                (status, headers, payload, chunks) = self.load_status(status,
+                                                                      requeststring,
+                                                                      headers,
+                                                                      configuration,
+                                                                      docpath)
 
-            return status, headers, payload
+            return status, headers, payload, chunks
 
     def send_error(self, code, message=None):
         """Send and log an error reply.
@@ -381,15 +394,15 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             requeststring = ''
             self.path = None
-            if message != None:
+            if message is not None:
                 logger.info(message)
 
         # generate the appropriate status code, header and payload
-        (status, headers, payload) = self.load_status(code,
-                                                      requeststring.partition('?')[0],
-                                                      headers,
-                                                      configuration,
-                                                      docpath)
+        (status, headers, payload, chunks) = self.load_status(code,
+                                                              requeststring.partition('?')[0],
+                                                              headers,
+                                                              configuration,
+                                                              docpath)
 
         # send http status to client
         self.send_response(status)
@@ -433,7 +446,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
             
         else:
 
@@ -490,7 +503,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
 
         else:
 
@@ -500,12 +513,16 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
-                (status, headers, payload) = self.load_entity(self.path, headers, configuration, docpath)
+                (status, headers, payload, chunks) = self.load_entity(self.path, headers, configuration, docpath)
 
             else:
                 # No config item could be found. Fall back to a standard 404..
                 status = 404
-                (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+                (status, headers, payload, chunks) = self.load_status(status,
+                                                                      self.path,
+                                                                      headers,
+                                                                      configuration,
+                                                                      docpath)
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -548,7 +565,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
             
         else:
 
@@ -620,12 +637,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, payload) = self.load_entity(self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_entity(self.path, headers, configuration, docpath)
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -668,12 +685,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, payload) = self.load_entity(self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_entity(self.path, headers, configuration, docpath)
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, payload) = self.load_status(status, self.path, headers, configuration, docpath)
+            (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
 
         # send initial HTTP status line to client
         self.send_response(status)
