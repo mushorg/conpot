@@ -175,7 +175,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/chunks')
+            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + str(status) + '"]/chunks')
 
             if chunked_transfer:
                 # Calculate and append a chunked transfer encoding header
