@@ -181,11 +181,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             if chunked_transfer:
                 # Append a chunked transfer encoding header
                 headers.append(('Transfer-Encoding', 'chunked'))
-                chunks = str(chunked_transfer[0].xpath('./text()')[0]).split(',')
+                chunks = str(chunked_transfer[0].xpath('./text()')[0])
             else:
                 # Calculate and append a content length header
                 headers.append(('Content-Length', payload.__len__()))
-                chunks = 0
+                chunks = '0'
 
             return status, headers, payload, chunks
 
@@ -218,7 +218,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     if header[0].lower() == 'transfer-encoding' and header[1].lower() == 'chunked':
                         del headers[i]
-                        chunks = 0
+                        chunks = '0'
                         break
 
             except:
@@ -242,7 +242,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     # generate a minimal 503 response regardless of the configuration.
                     status = 503
                     payload = ''
-                    chunks = 0
+                    chunks = '0'
                     headers.append(('Content-Length', 0))
 
             return status, headers, payload, chunks
@@ -331,11 +331,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             if chunked_transfer:
                 # Calculate and append a chunked transfer encoding header
                 headers.append(('Transfer-Encoding', 'chunked'))
-                chunks = str(chunked_transfer[0].xpath('./text()')[0]).split(',')
+                chunks = str(chunked_transfer[0].xpath('./text()')[0])
             else:
                 # Calculate and append a content length header
                 headers.append(('Content-Length', payload.__len__()))
-                chunks = 0
+                chunks = '0'
 
             return status, headers, payload, chunks
 
@@ -355,7 +355,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 status = int(response.status)
                 headers = response.getheaders()    # We REPLACE the headers to avoid duplicates!
                 payload = response.read()
-                chunks = 0
+                chunks = '0'
 
             except:
                 status = 503
@@ -653,8 +653,19 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.end_headers()
 
-        # send payload (the actual content) to client
-        self.wfile.write(payload)
+        # decide upon sending content as a whole or chunked
+        if chunks == '0':
+            # send payload as a whole to the client
+            self.wfile.write(payload)
+        else:
+            # send payload in chunks to the client
+            chunk_list = chunks.split(';')
+            pointer = 0
+            for cwidth in chunk_list:
+                cwidth = int(cwidth)
+                self.wfile.write(hex(cwidth))
+                self.wfile.write(payload[pointer:cwidth - 1] + "\n")
+                pointer += cwidth
 
         # logging
         self.log(self.request_version,
