@@ -174,8 +174,15 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # perform template substitution on payload
             payload = self.substitute_template_fields(payload)
 
-            # Calculate and append a content length header
-            headers.append(('Content-Length', payload.__len__()))
+            # How do we transport the content?
+            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/chunks')
+
+            if chunked_transfer:
+                # Calculate and append a chunked transfer encoding header
+                headers.append(('Transfer-Encoding', 'chunked'))
+            else:
+                # Calculate and append a content length header
+                headers.append(('Content-Length', payload.__len__()))
 
             return status, headers, payload
 
@@ -312,8 +319,15 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 # perform template substitution on payload
                 payload = self.substitute_template_fields(payload)
 
-            # Calculate and append a content length header
-            headers.append(('Content-Length', payload.__len__()))
+            # How do we transport the content?
+            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/chunks')
+
+            if chunked_transfer:
+                # Calculate and append a chunked transfer encoding header
+                headers.append(('Transfer-Encoding', 'chunked'))
+            else:
+                # Calculate and append a content length header
+                headers.append(('Content-Length', payload.__len__()))
 
             return status, headers, payload
 
