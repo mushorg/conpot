@@ -55,7 +55,7 @@ class ModbusServer(modbus.Server):
                     slave.set_values(name, addr, value)
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
 
-        logger.info('Conpot initialized using the {0} template.'.format(template_name))
+        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
