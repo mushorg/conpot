@@ -1,3 +1,19 @@
+# Copyright (C) 2013  Johnny Vestergaard <jkv@unixcluster.dk>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from datetime import datetime
 from gevent.server import StreamServer
 import gevent.monkey
@@ -91,23 +107,23 @@ class S7Server(object):
                                                                                    session_id))
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
-                        s7_packet = S7().parse(cotp_base_packet.trailer)
+                        S7_packet = S7().parse(cotp_base_packet.trailer)
                         logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} req_id:{3} param_len:{4} '
                                      'data_len:{5} result_inf:{6}'.format(
-                                                                          s7_packet.magic, s7_packet.pdu_type,
-                                                                          s7_packet.reserved, s7_packet.request_id,
-                                                                          s7_packet.param_length, s7_packet.data_length,
-                                                                          s7_packet.result_info, session_id))
+                            S7_packet.magic, S7_packet.pdu_type,
+                            S7_packet.reserved, S7_packet.request_id,
+                            S7_packet.param_length, S7_packet.data_length,
+                            S7_packet.result_info, session_id))
 
                         # request pdu
-                        if s7_packet.pdu_type == 1:
+                        if S7_packet.pdu_type == 1:
 
                             # 0xf0 == Request for connect / pdu negotiate
-                            if s7_packet.param == 0xf0:
+                            if S7_packet.param == 0xf0:
 
                                 # create S7 response packet
-                                s7_resp_negotiate_packet = S7(3, 0, s7_packet.request_id, 0,
-                                                              s7_packet.parameters).pack()
+                                s7_resp_negotiate_packet = S7(3, 0, S7_packet.request_id, 0,
+                                                              S7_packet.parameters).pack()
                                 # wrap s7 the packet in cotp
                                 cotp_resp_negotiate_packet = COTP_BASE_packet(0xf0, 0x80,
                                                                               s7_resp_negotiate_packet).pack()
@@ -123,17 +139,16 @@ class S7Server(object):
                                     cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
 
                                     if cotp_base_packet.tpdu_type == 0xf0:
-
-                                        s7_packet = S7().parse(cotp_base_packet.trailer)
+                                        S7_packet = S7().parse(cotp_base_packet.trailer)
                                         logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} '
                                                      'req_id:{3} param_len:{4} data_len:{5} result_inf:{6}'.format(
-                                                      s7_packet.magic, s7_packet.pdu_type,
-                                                      s7_packet.reserved, s7_packet.request_id,
-                                                      s7_packet.param_length, s7_packet.data_length,
-                                                      s7_packet.result_info, session_id))
+                                            S7_packet.magic, S7_packet.pdu_type,
+                                            S7_packet.reserved, S7_packet.request_id,
+                                            S7_packet.param_length, S7_packet.data_length,
+                                            S7_packet.result_info, session_id))
 
-                                        response_param, response_data = s7_packet.handle()
-                                        s7_resp_ssl_packet = S7(7, 0, s7_packet.request_id, 0, response_param,
+                                        response_param, response_data = S7_packet.handle()
+                                        s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
                                                                 response_data).pack()
                                         cotp_resp_ssl_packet = COTP_BASE_packet(0xf0, 0x80, s7_resp_ssl_packet).pack()
                                         tpkt_resp_packet = TPKT(3, cotp_resp_ssl_packet).pack()

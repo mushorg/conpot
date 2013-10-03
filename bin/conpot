@@ -154,13 +154,13 @@ def main():
 
     modbus_host = config.get('modbus', 'host')
     modbus_port = config.getint('modbus', 'port')
-    m = ModbusServer(args.template, log_queue)
-    modbus_server = m.get_server(modbus_host, modbus_port)
+    modbus_instance = ModbusServer(args.template, log_queue)
+    modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
 
-    s7_host = config.get('s7', 'host')
-    s7_port = config.getint('s7', 'port')
-    s =S7Server(args.template, log_queue)
-    s7_server = s.get_server(s7_host, s7_port)
+    S7_host = config.get('s7', 'host')
+    S7_port = config.getint('s7', 'port')
+    S7_instance = S7Server(args.template, log_queue)
+    S7_server = S7_instance.get_server(S7_host, S7_port)
 
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
@@ -175,7 +175,7 @@ def main():
         servers.append(gevent.spawn(modbus_server.serve_forever))
         servers.append(gevent.spawn(snmp_server.start))
         servers.append(gevent.spawn(http_server.start))
-        servers.append(gevent.spawn(s7_server.start))
+        servers.append(gevent.spawn(S7_server.start))
         #time to allow servers to bind ports, open files, etc...
         gevent.sleep(5)
         drop_privileges()

@@ -104,6 +104,11 @@ class S7(object):
         self.data = packet[10 + header_offset + self.param_length:10 + header_offset + self.param_length +
                            self.data_length]
 
+        try:
+            self.param = unpack('!B', self.parameters[:1])[0]
+        except:
+            raise ParseException(self.protocol, 'invalid packet')
+
         return self
 
     #SSL/SZL System Status List/Systemzustandsliste
