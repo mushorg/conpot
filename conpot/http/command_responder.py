@@ -659,13 +659,24 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(payload)
         else:
             # send payload in chunks to the client
-            chunk_list = chunks.split(';')
+            chunk_list = chunks.split(',')
             pointer = 0
             for cwidth in chunk_list:
                 cwidth = int(cwidth)
-                self.wfile.write(hex(cwidth))
-                self.wfile.write(payload[pointer:cwidth - 1] + "\n")
-                pointer += cwidth
+                print "===> CHUNK [{0}:{1}]".format(pointer, pointer + cwidth - 1)
+                self.wfile.write(format(cwidth, 'x').upper() + "\n")
+                self.wfile.write(payload[pointer:pointer + cwidth - 1] + "\n")
+                pointer += cwidth - 1
+
+            # is there another chunk that has not been configured? Send it anyway for the sake of completeness..
+            if len(payload) > pointer:
+                print "===> UNEXPECTED CHUNK [{0}:{1}]".format(pointer, len(payload))
+                self.wfile.write(format(len(payload) - pointer + 4, 'x').upper() + "\n")
+                self.wfile.write(payload[pointer:] + "\n")
+
+            # we're done here. Send a zero chunk as EOF indicator
+                print "===> FINAL EOF CHUNK"
+                self.wfile.write('0')
 
         # logging
         self.log(self.request_version,
