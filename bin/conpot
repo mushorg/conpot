@@ -33,6 +33,7 @@ from conpot.logging.log_worker import LogWorker
 from conpot.snmp.snmp_server import SNMPServer
 from conpot.modbus.modbus_server import ModbusServer
 from conpot.http.web_server import HTTPServer
+from conpot.s7comm.s7_server import S7Server
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -142,6 +143,11 @@ def main():
     m = ModbusServer(args.template, log_queue)
     modbus_server = m.get_server(modbus_host, modbus_port)
 
+    s7_host = config.get('s7', 'host')
+    s7_port = config.getint('s7', 'port')
+    s =S7Server(args.template, log_queue)
+    s7_server = s.get_server(s7_host, s7_port)
+
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
     snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
@@ -155,6 +161,7 @@ def main():
         servers.append(gevent.spawn(modbus_server.serve_forever))
         servers.append(gevent.spawn(snmp_server.start))
         servers.append(gevent.spawn(http_server.start))
+        servers.append(gevent.spawn(s7_server.start))
         #time to allow servers to bind ports, open files, etc...
         gevent.sleep(5)
         drop_privileges()
