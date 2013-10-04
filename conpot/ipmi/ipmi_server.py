@@ -1,7 +1,10 @@
+import struct
+import random
+
 import gevent
 from gevent import socket
 
-from session import Session
+from session import Session, call_with_optional_args, initialtimeout
 
 from conpot.utils.udp_server import DatagramServer
 
@@ -23,17 +26,32 @@ class IPMIServer(DatagramServer):
 
     def handle(self, msg, address):
         print repr(msg), address
-        session = FakeSession(address[0], "Administrator", "Password", port=address[1])
         #session.sockaddr = None
-        session.waiting_sessions[self] = "foo"
+        if not address[0] in self.sessions.keys():
+            self.session = FakeSession(address[0], "Administrator", "Password", port=address[1])
+            self.sessions[address[0]] = self.session
+        else:
+            print 'known source'
+        self.sessions[address[0]].waiting_sessions[self.session] = None
         try:
-            session._handle_ipmi_packet(msg)
-        except:
-            raise
+            ret = self.sessions[address[0]]._handle_ipmi_packet(msg)
+            print repr(ret)
+        except KeyError:
+            print "Session del error"
+            del self.sessions[address[0]]
+            return
+        except struct.error:
+            print "Data unpack error"
+            del self.sessions[address[0]]
+            return
+        else:
+            self.expectednetfn = 511
+            self.expectedcmd = 511
 
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.sessions = dict()
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
         udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
         udp_sock.bind((self.host, self.port))
