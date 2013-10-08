@@ -24,7 +24,7 @@ class SNMPDispatcher(DatagramServer):
     def __init__(self, log_queue):
         self.__timerResolution = 0.5
 
-    def registerRecvCbFun(self, recvCbFun):
+    def registerRecvCbFun(self, recvCbFun, recvId=None):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
