@@ -1,5 +1,5 @@
 gevent
-pysnmp==4.2.4
+pysnmp
 lxml
 hpfeeds
 modbus_tk
