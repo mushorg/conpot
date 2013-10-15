@@ -36,6 +36,9 @@ class IPMIServer(DatagramServer):
         try:
             ret = self.sessions[address[0]]._handle_ipmi_packet(msg)
             print repr(ret)
+            if ret:
+                resp = self.sessions[address[0]]._send_ipmi_net_payload(ret["netfqn"], ret["command"], ret["data"][0])
+                self.send_message(resp, address)
         except KeyError:
             print "Session del error"
             del self.sessions[address[0]]
@@ -47,6 +50,9 @@ class IPMIServer(DatagramServer):
         else:
             self.expectednetfn = 511
             self.expectedcmd = 511
+
+    def send_message(self, message, remote_address):
+        self.socket.sendto(message, remote_address)
 
     def __init__(self, host, port):
         self.host = host
