@@ -447,7 +447,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # Method disabled by configuration. Fall back to 501.
             status = 501
             (status, headers, payload, chunks) = self.load_status(status, self.path, headers, configuration, docpath)
-            
+
         else:
 
             # Method is enabled
@@ -663,20 +663,25 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             pointer = 0
             for cwidth in chunk_list:
                 cwidth = int(cwidth)
-                print "===> CHUNK [{0}:{1}]".format(pointer, pointer + cwidth - 1)
-                self.wfile.write(format(cwidth, 'x').upper() + "\n")
-                self.wfile.write(payload[pointer:pointer + cwidth - 1] + "\n")
+                print "===> SENDING CHUNK [{0}:{1}]".format(pointer, pointer + cwidth - 1)
+                self.wfile.write(format(cwidth, 'x').upper() + "\r\n")
+                self.wfile.write(payload[pointer:pointer + cwidth - 1] + "\r\n")
+                print "   > "+format(cwidth, 'x').upper() + "\n"
+                print "   > "+payload[pointer:pointer + cwidth - 1] + "\n"
                 pointer += cwidth - 1
 
             # is there another chunk that has not been configured? Send it anyway for the sake of completeness..
             if len(payload) > pointer:
-                print "===> UNEXPECTED CHUNK [{0}:{1}]".format(pointer, len(payload))
-                self.wfile.write(format(len(payload) - pointer + 4, 'x').upper() + "\n")
-                self.wfile.write(payload[pointer:] + "\n")
+                print "===> SENDING UNEXPECTED CHUNK [{0}:{1}]".format(pointer, len(payload))
+                self.wfile.write(format(len(payload) - pointer + 4, 'x').upper() + "\r\n")
+                self.wfile.write(payload[pointer:] + "\r\n")
+                print "   > "+format(len(payload) - pointer + 4, 'x').upper() + "\n"
+                print "   > "+payload[pointer:] + "\n"
 
             # we're done here. Send a zero chunk as EOF indicator
-                print "===> FINAL EOF CHUNK"
-                self.wfile.write('0')
+            print "===> SENDING FINAL EOF CHUNK ========================================="
+            self.wfile.write('0'+"\r\n\r\n")
+            print "   > "+'0'
 
         # logging
         self.log(self.request_version,
