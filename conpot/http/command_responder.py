@@ -663,20 +663,28 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             pointer = 0
             for cwidth in chunk_list:
                 cwidth = int(cwidth)
-                print "===> SENDING CHUNK [{0}:{1}]".format(pointer, pointer + cwidth - 1)
+                print "===> SENDING CHUNK ========================================="
+                print "     Length: "+str(cwidth)
+                print "     Locate: {0}:{1}".format(pointer,pointer + cwidth)
+                print "     Payload:"
+                print payload[pointer:pointer + cwidth]
+                # send chunk length indicator
                 self.wfile.write(format(cwidth, 'x').upper() + "\r\n")
-                self.wfile.write(payload[pointer:pointer + cwidth - 1] + "\r\n")
-                print "   > "+format(cwidth, 'x').upper() + "\n"
-                print "   > "+payload[pointer:pointer + cwidth - 1] + "\n"
-                pointer += cwidth - 1
+                # send chunk payload
+                self.wfile.write(payload[pointer:pointer + cwidth] + "\r\n")
+                pointer += cwidth
 
             # is there another chunk that has not been configured? Send it anyway for the sake of completeness..
             if len(payload) > pointer:
-                print "===> SENDING UNEXPECTED CHUNK [{0}:{1}]".format(pointer, len(payload))
-                self.wfile.write(format(len(payload) - pointer + 4, 'x').upper() + "\r\n")
+                print "===> SENDING UNEXPECTED CHUNK ========================================="
+                print "     Length: "+str(len(payload) - pointer)
+                print "     Locate: {0}:{1}".format(pointer,len(payload))
+                print "     Payload:"
+                print payload[pointer:]
+                # send chunk length indicator
+                self.wfile.write(format(len(payload) - pointer, 'x').upper() + "\r\n")
+                # send chunk payload
                 self.wfile.write(payload[pointer:] + "\r\n")
-                print "   > "+format(len(payload) - pointer + 4, 'x').upper() + "\n"
-                print "   > "+payload[pointer:] + "\n"
 
             # we're done here. Send a zero chunk as EOF indicator
             print "===> SENDING FINAL EOF CHUNK ========================================="
