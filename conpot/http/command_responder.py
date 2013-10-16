@@ -408,14 +408,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         """Send payload via chunked transfer encoding to the
         client, followed by eventual trailers."""
 
-        print "==> INITIATED CHUNKED TRANSFER"
-
         chunk_list = chunks.split(',')
         pointer = 0
         for cwidth in chunk_list:
             cwidth = int(cwidth)
             # send chunk length indicator
-            print "  > (S) chunksize: "+str(cwidth)
             self.wfile.write(format(cwidth, 'x').upper() + "\r\n")
             # send chunk payload
             self.wfile.write(payload[pointer:pointer + cwidth] + "\r\n")
@@ -424,22 +421,18 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # is there another chunk that has not been configured? Send it anyway for the sake of completeness..
         if len(payload) > pointer:
             # send chunk length indicator
-            print "  > (X) chunksize: "+str(len(payload) - pointer)
             self.wfile.write(format(len(payload) - pointer, 'x').upper() + "\r\n")
             # send chunk payload
             self.wfile.write(payload[pointer:] + "\r\n")
 
         # we're done with the payload. Send a zero chunk as EOF indicator
-        print "  > (S) chunksize: 0"
         self.wfile.write('0'+"\r\n")
 
         # if there are trailing headers :-) we send them now..
         for trailer in trailers:
             self.wfile.write("%s: %s\r\n" % (trailer[0], trailer[1]))
-            print "  > sending trailer: {0}: {1}".format(trailer[0], trailer[1])
 
         # and finally, the closing ceremony...
-        print "  > (S) closing ceremony..."
         self.wfile.write("\r\n")
 
     def send_error(self, code, message=None):
@@ -488,8 +481,13 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.end_headers()
 
-        # send payload (the actual content) to client
-        self.wfile.write(payload)
+        # decide upon sending content as a whole or chunked
+        if chunks == '0':
+            # send payload as a whole to the client
+            self.wfile.write(payload)
+        else:
+            # send payload in chunks to the client
+            self.send_chunked(chunks, payload, trailers)
 
         # logging
         self.log(self.request_version, self.command, self.client_address, (self.path,
