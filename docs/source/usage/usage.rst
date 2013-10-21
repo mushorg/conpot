@@ -7,7 +7,12 @@ The default profile
 
 Conpot is shipped with a default profile(``default.xml``) which provides basic emulation of a
 `Siemens S7-200 CPU <https://www.automation.siemens.com/mcms/programmable-logic-controller/en/simatic-s7-controller/s7-200/pages/default.aspx?HTTPS=REDIR>`_
-with a few expansion modules installed. The attack surface of the default emulation includes the Modbus and SNMP protocols.
+with a few expansion modules installed. The attack surface of the default emulation includes the protocols MODBUS, HTTP,
+SNMP and s7comm.
+
+While most of the configuration takes place within the XML profile, some parts are kept in seperate folders within the
+templates directory to avoid clutter.
+
 
 Modbus
 ~~~~~~
