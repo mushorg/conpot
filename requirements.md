@@ -20,7 +20,7 @@ apt-get install python-lxml
 
 hpfeeds
 -------
-``shell
+```shell
 git clone https://github.com/rep/hpfeeds.git
 cd hpfeeds/
 python setup.py install
