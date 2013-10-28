@@ -152,30 +152,42 @@ def main():
     log_worker = LogWorker(config, log_queue, public_ip)
     gevent.spawn(log_worker.start)
 
-    modbus_host = config.get('modbus', 'host')
-    modbus_port = config.getint('modbus', 'port')
-    modbus_instance = ModbusServer(args.template, log_queue)
-    modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
+    modbus_enabled = config.getboolean('modbus', 'enabled')
+    if modbus_enabled:
+        modbus_host = config.get('modbus', 'host')
+        modbus_port = config.getint('modbus', 'port')
+        modbus_instance = ModbusServer(args.template, log_queue)
+        modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
 
-    S7_host = config.get('s7', 'host')
-    S7_port = config.getint('s7', 'port')
-    S7_instance = S7Server(args.template, log_queue)
-    S7_server = S7_instance.get_server(S7_host, S7_port)
+    S7_enabled = config.getboolean('s7', 'enabled')
+    if S7_enabled:
+        S7_host = config.get('s7', 'host')
+        S7_port = config.getint('s7', 'port')
+        S7_instance = S7Server(args.template, log_queue)
+        S7_server = S7_instance.get_server(S7_host, S7_port)
 
+    snmp_enabled = config.getboolean('snmp', 'enabled')
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
-    snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
+    if snmp_enabled:
+        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
 
-    http_host = config.get('http', 'host')
-    http_port = config.getint('http', 'port')
-    http_server = HTTPServer(http_host, http_port, args.template, log_queue, args.www, snmp_port)
+    http_enabled = config.getboolean('http', 'enabled')
+    if http_enabled:
+        http_host = config.get('http', 'host')
+        http_port = config.getint('http', 'port')
+        http_server = HTTPServer(http_host, http_port, args.template, log_queue, args.www, snmp_port)
 
     servers = list()
     try:
-        servers.append(gevent.spawn(modbus_server.serve_forever))
-        servers.append(gevent.spawn(snmp_server.start))
-        servers.append(gevent.spawn(http_server.start))
-        servers.append(gevent.spawn(S7_server.start))
+        if modbus_enabled:
+            servers.append(gevent.spawn(modbus_server.serve_forever))
+        if snmp_enabled:
+            servers.append(gevent.spawn(snmp_server.start))
+        if http_enabled:
+            servers.append(gevent.spawn(http_server.start))
+        if S7_enabled:
+            servers.append(gevent.spawn(S7_server.start))
         #time to allow servers to bind ports, open files, etc...
         gevent.sleep(5)
         drop_privileges()
@@ -183,9 +195,12 @@ def main():
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
         log_worker.stop()
-        snmp_server.stop()
-        modbus_server.stop()
-        http_server.stop()
+        if snmp_enabled:
+            snmp_server.stop()
+        if modbus_enabled:
+            modbus_server.stop()
+        if http_enabled:
+            http_server.stop()
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
