@@ -12,7 +12,7 @@ Install dependencies:
     apt-get install git libsmi2ldbl smistrip
 
 
-The package `snmp-mibs-downloader` is non-free so we have to install the package manually. All dependencies are covered by installing `smistrip`. Get the package from here:
+The package snmp-mibs-downloader is non-free so we have to install the package manually. All dependencies are covered by installing smistrip. Get the package from here:
 ::
 
     wget $package_url
