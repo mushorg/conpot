@@ -9,7 +9,7 @@ Installation
 Install dependencies:
 ::
 
-    apt-get install git libsmi2ldbl smistrip
+    apt-get install git libsmi2ldbl smistrip libxslt1-dev python-dev libevent-dev
 
 
 The package snmp-mibs-downloader is non-free so we have to install the package manually. All dependencies are covered by installing smistrip. Get the package from here:
