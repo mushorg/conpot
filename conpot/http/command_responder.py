@@ -590,7 +590,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # try to find a configuration item for this GET request
             entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                                             self.path.partition('?')[0] + '"]')
+                              self.path.partition('?')[0].decode('utf8') + '"]')
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
@@ -721,7 +721,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this GET request
         entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                                         self.path.partition('?')[0] + '"]')
+                              self.path.partition('?')[0].decode('utf8') + '"]')
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
@@ -781,7 +781,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this POST request
         entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                                         self.path.partition('?')[0] + '"]')
+                              self.path.partition('?')[0].decode('utf8') + '"]')
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
