@@ -1,5 +1,12 @@
-Debian 7.2.0 64bit
+Debian
 ======================================
+
+Tested Versions
+---------------
+
+* 7.2.0 64bit
+* 6.0.7 64bit
+
 
 This was tested on a minimal installation w/o desktop packages.
 
@@ -10,6 +17,11 @@ Install dependencies:
 ::
 
     apt-get install git libsmi2ldbl smistrip libxslt1-dev python-dev libevent-dev
+    
+Debian 6 specific
+::
+    apt-get install python-pip
+    pip install argparse
 
 
 The package snmp-mibs-downloader is non-free so we have to install the package manually. All dependencies are covered by installing smistrip. Get the package from here:
