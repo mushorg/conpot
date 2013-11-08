@@ -40,10 +40,10 @@ class S7(object):
                               0x28: ('insert_block', self.request_not_implemented)}
 
         # maps valid pdu codes to name
-        self.pdu_mapping = {0x01: {'request_pdu'},
-                            0x02: {'know_but_unindentified_pdu'},
-                            0x03: {'response_pdu'},
-                            0x07: {'system_status_list'}}
+        self.pdu_mapping = {0x01: set('request_pdu'),
+                            0x02: set('know_but_unindentified_pdu'),
+                            0x03: set('response_pdu'),
+                            0x07: set('system_status_list')}
 
     def __len__(self):
 
