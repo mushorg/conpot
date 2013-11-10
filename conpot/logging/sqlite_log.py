@@ -17,11 +17,30 @@
 
 
 import sqlite3
+import pwd
+import os
+import platform
+import grp
 
 
 class SQLiteLogger(object):
-    def __init__(self):
-        self.conn = sqlite3.connect("conpot.db")
+
+    def _chown_db(self, path, uid_name='nobody', gid_name='nogroup'):
+        path = path.rpartition("/")[0]
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        # TODO: Have this in a central place
+        wanted_uid = pwd.getpwnam(uid_name)[2]
+        #special handling for os x. (getgrname has trouble with gid below 0)
+        if platform.mac_ver()[0]:
+            wanted_gid = -2
+        else:
+            wanted_gid = grp.getgrnam(gid_name)[2]
+        os.chown(path, wanted_uid, wanted_gid)
+
+    def __init__(self, db_path="logs/conpot.db"):
+        self._chown_db(db_path)
+        self.conn = sqlite3.connect(db_path)
         self._create_db()
 
     def _create_db(self):
