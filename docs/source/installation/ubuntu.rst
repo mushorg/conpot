@@ -29,6 +29,7 @@ Basic configuration
 
 Basic configuration options are provided in the default configuration file:
 ::
+
     [modbus]
     host = 0.0.0.0
     port = 502
