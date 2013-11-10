@@ -1,4 +1,11 @@
 <conpot_template name="TEST_MODBUS" description="For test purposes">
+    <modbus>
+        <device_info>
+            <VendorName>Siemens</VendorName>
+            <ProductCode>SIMATIC</ProductCode>
+            <MajorMinorRevision>S7-200</MajorMinorRevision>
+        </device_info>
+    </modbus>
     <slaves>
         <slave id="1">
             <blocks>

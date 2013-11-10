@@ -1,7 +1,7 @@
 import struct
+from lxml import etree
 
 from modbus_tk.modbus import Databank, DuplicatedKeyError, MissingKeyError
-
 from modbus_tk import defines
 
 from conpot.modbus.slave import MBSlave
@@ -12,8 +12,9 @@ class SlaveBase(Databank):
     Database keeping track of the slaves.
     """
 
-    def __init__(self):
+    def __init__(self, template):
         Databank.__init__(self)
+        self.dom = etree.parse(template)
 
     def add_slave(self, slave_id):
         """
@@ -22,7 +23,7 @@ class SlaveBase(Databank):
         if (slave_id <= 0) or (slave_id > 255):
             raise Exception("Invalid slave id %d" % slave_id)
         if not slave_id in self._slaves:
-            self._slaves[slave_id] = MBSlave(slave_id)
+            self._slaves[slave_id] = MBSlave(slave_id, self.dom)
             return self._slaves[slave_id]
         else:
             raise DuplicatedKeyError("Slave %d already exists" % slave_id)
@@ -36,27 +37,41 @@ class SlaveBase(Databank):
         response_pdu = ""
         slave_id = None
         function_code = None
+        func_code = None
         slave = None
+        response = None
 
         try:
-            #extract the pdu and the slave id
+            # extract the pdu and the slave id
             slave_id, request_pdu = query.parse_request(request)
-            #get the slave and let him executes the action
-            if slave_id == 0:
+            if len(request_pdu) > 0:
+                (func_code, ) = struct.unpack(">B", request_pdu[0])
+            if func_code == 43:
+                # Add dummy slave for device info
+                try:
+                    slave = self.get_slave(slave_id)
+                except MissingKeyError:
+                    self.add_slave(255)
+                    slave = self.get_slave(slave_id)
+                response_pdu = slave.handle_request(request_pdu)
+                #make the full response
+                response = query.build_response(response_pdu)
+            # get the slave and let him execute the action
+            elif slave_id == 0:
                 #broadcast
                 for key in self._slaves:
-                    self._slaves[key].handle_request(request_pdu, broadcast=True)
-                    return
+                    response_pdu = self._slaves[key].handle_request(request_pdu, broadcast=True)
+                    response = query.build_response(response_pdu)
+            elif slave_id == 255:
+                r = struct.pack(">BB", func_code + 0x80, 0x0B)
+                response = query.build_response(r)
             else:
                 slave = self.get_slave(slave_id)
                 response_pdu = slave.handle_request(request_pdu)
                 #make the full response
                 response = query.build_response(response_pdu)
-        except (IOError, MissingKeyError) as excpt:
-            func_code = 1
-            if len(request_pdu) > 0:
-                (func_code, ) = struct.unpack(">B", request_pdu[0])
-                #If the request was not handled correctly, return a server error response
+        except (IOError, MissingKeyError) as e:
+            # If the request was not handled correctly, return a server error response
             r = struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
 
@@ -67,7 +82,3 @@ class SlaveBase(Databank):
                            'slave_id': slave_id,
                            'function_code': function_code,
                            'response': response_pdu.encode('hex')})
-
-
-
-
