@@ -17,6 +17,8 @@ templates directory to avoid clutter.
 Modbus
 ~~~~~~
 
+The ``<device_info />`` section allows to define the device info returned to a Modbus 43 function call.
+
 The ``<slave />`` section allows you to define the slaves. Every slave definition is separated into ``<blocks />``.
 
 An binary output block has the type ``COILS``, binary input blocks ``DISCRETE_INPUTS``. You define the starting address
