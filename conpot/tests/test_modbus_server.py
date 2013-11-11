@@ -36,7 +36,6 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.log_queue = Queue()
         modbus = modbus_server.ModbusServer('conpot/tests/data/basic_modbus_template.xml', self.log_queue, timeout=0.1)
-        print modbus._databank
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
 

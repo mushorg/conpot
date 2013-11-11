@@ -19,12 +19,14 @@ from conpot.modbus import slave_db
 
 logger = logging.getLogger(__name__)
 
+
 class ModbusServer(modbus.Server):
 
-    def __init__(self, template, log_queue, databank=slave_db.SlaveBase(), timeout=5):
+    def __init__(self, template, log_queue, timeout=5):
 
         self.log_queue = log_queue
         self.timeout = timeout
+        databank = slave_db.SlaveBase(template)
 
         """Constructor: initializes the server settings"""
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
