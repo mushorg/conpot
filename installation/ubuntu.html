@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="top" title="Conpot 0.2.2 documentation" href="../index.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="next" title="Usage" href="../usage/index.html" />
+    <link rel="next" title="Debian" href="debian.html" />
     <link rel="prev" title="Installation" href="index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../usage/index.html" title="Usage"
+          <a href="debian.html" title="Debian"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Installation"
@@ -55,6 +55,9 @@
 <h1>Ubuntu 12.04 LTS<a class="headerlink" href="#ubuntu-12-04-lts" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Install dependencies:</p>
+<div class="highlight-python"><pre>sudo apt-get install libsmi2ldbl snmp-mibs-downloader</pre>
+</div>
 <p>The stable version of ConPot can be downloaded from PyPI:</p>
 <div class="highlight-python"><pre>pip install conpot</pre>
 </div>
@@ -64,6 +67,39 @@ git clone git@github.com:glastopf/conpot.git
 cd conpot
 python setup.py install</pre>
 </div>
+</div>
+<div class="section" id="basic-configuration">
+<h2>Basic configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Basic configuration options are provided in the default configuration file:</p>
+<div class="highlight-python"><pre>[modbus]
+host = 0.0.0.0
+port = 502
+
+[snmp]
+host = 0.0.0.0
+port = 161
+
+[http]
+host = 0.0.0.0
+port = 80
+
+[sqlite]
+enabled = False
+
+[hpfriends]
+enabled = False
+host = hpfriends.honeycloud.net
+port = 20000
+ident = 3Ykf9Znv
+secret = 4nFRhpm44QkG9cvD
+channels = ["conpot.events", ]
+
+[fetch_public_ip]
+enabled = True
+url = http://api-sth01.exip.org/?call=ip</pre>
+</div>
+<p>Please note that by enabling hpfriends your conpot installation will automatically transmit attack data to The Honeynet
+Project. The fetch_public_ip option enables fetching the honeypot public ip address from a external resource.</p>
 </div>
 <div class="section" id="example-usage">
 <h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
@@ -93,6 +129,7 @@ python setup.py install</pre>
   <ul>
 <li><a class="reference internal" href="#">Ubuntu 12.04 LTS</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#basic-configuration">Basic configuration</a></li>
 <li><a class="reference internal" href="#example-usage">Example usage</a></li>
 </ul>
 </li>
@@ -102,8 +139,8 @@ python setup.py install</pre>
   <p class="topless"><a href="index.html"
                         title="previous chapter">Installation</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../usage/index.html"
-                        title="next chapter">Usage</a></p>
+  <p class="topless"><a href="debian.html"
+                        title="next chapter">Debian</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/installation/ubuntu.txt"
@@ -133,7 +170,7 @@ python setup.py install</pre>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../usage/index.html" title="Usage"
+          <a href="debian.html" title="Debian"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Installation"
@@ -144,7 +181,7 @@ python setup.py install</pre>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Glastopf Developers.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

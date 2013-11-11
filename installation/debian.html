@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -8,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Conpot Installation - Ubuntu 12.04 LTS &mdash; Conpot 0.1.0 documentation</title>
+    <title>Debian &mdash; Conpot 0.2.2 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -16,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1.0',
+        VERSION:     '0.2.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,9 +23,10 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.1.0 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.2.2 documentation" href="../index.html" />
     <link rel="up" title="Installation" href="index.html" />
-    <link rel="prev" title="Installation" href="index.html" /> 
+    <link rel="next" title="Usage" href="../usage/index.html" />
+    <link rel="prev" title="Ubuntu 12.04 LTS" href="ubuntu.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,9 +36,12 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="index.html" title="Installation"
+          <a href="../usage/index.html" title="Usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Installation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -49,42 +51,75 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="conpot-installation-ubuntu-12-04-lts">
-<h1>Conpot Installation - Ubuntu 12.04 LTS<a class="headerlink" href="#conpot-installation-ubuntu-12-04-lts" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="debian">
+<h1>Debian<a class="headerlink" href="#debian" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="tested-versions">
+<h2>Tested Versions<a class="headerlink" href="#tested-versions" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>7.2.0 64bit</li>
+<li>6.0.7 64bit</li>
+</ul>
+<p>This was tested on a minimal installation w/o desktop packages.</p>
+</div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>You need Python2.7 and pip:</p>
-<div class="highlight-python"><pre>apt-get install python2.7 python-pip git unzip
-apt-get install libxml2-dev libxslt-dev
-apt-get install python-dev libevent-dev</pre>
+<p>Install dependencies:</p>
+<div class="highlight-python"><pre>apt-get install git libsmi2ldbl smistrip libxslt1-dev python-dev libevent-dev</pre>
 </div>
-<p>For the requiremenst covered by PyPi, run:</p>
-<div class="highlight-python"><pre>pip install -r requirements.txt</pre>
+<p>Debian 6 specific</p>
+<div class="highlight-python"><pre>apt-get install python-pip
+pip install argparse</pre>
 </div>
-<p>For hpfeeds:</p>
+<p>The package snmp-mibs-downloader is non-free so we have to install the package manually. All dependencies are covered by installing smistrip. Get the package from here:</p>
+<div class="highlight-python"><pre>wget $package_url
+dpkg -i $package_name</pre>
+</div>
+<p>The stable version of Conpot can be downloaded from PyPI:</p>
+<div class="highlight-python"><pre>pip install conpot</pre>
+</div>
+<p>The development version can be cloned from github:</p>
 <div class="highlight-python"><pre>cd /opt
-git clone git://github.com/rep/hpfeeds.git
-cd hpfeeds/
+git clone https://github.com/glastopf/conpot.git
+cd conpot
 python setup.py install</pre>
 </div>
-<p>And modbus_tk</p>
-<div class="highlight-python"><pre>cd /opt
-wget https://modbus-tk.googlecode.com/files/modbus-tk-0.4.2.zip
-unzip modbus-tk-0.4.2.zip -d modbus_tk
-cd modbus_tk
-python setup.py install</pre>
 </div>
-<p>And finally ConPot:</p>
-<div class="highlight-python"><pre>cd /opt
-git clone git@github.com:glastopf/conpot.git
-cd /opt/conpot
-cp config.py.dist config.py</pre>
+<div class="section" id="basic-configuration">
+<h2>Basic configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Basic configuration options are provided in the default configuration file:</p>
+<div class="highlight-python"><pre>[modbus]
+host = 0.0.0.0
+port = 502
+
+[snmp]
+host = 0.0.0.0
+port = 161
+
+[http]
+host = 0.0.0.0
+port = 80
+
+[sqlite]
+enabled = False
+
+[hpfriends]
+enabled = False
+host = hpfriends.honeycloud.net
+port = 20000
+ident = 3Ykf9Znv
+secret = 4nFRhpm44QkG9cvD
+channels = ["conpot.events", ]
+
+[fetch_public_ip]
+enabled = True
+url = http://api-sth01.exip.org/?call=ip</pre>
 </div>
-<p>Edit the config.py appropriately.</p>
+<p>Please note that by enabling hpfriends your conpot installation will automatically transmit attack data to The Honeynet
+Project. The fetch_public_ip option enables fetching the honeypot public ip address from a external resource.</p>
 </div>
-<div class="section" id="example-output">
-<h2>Example output<a class="headerlink" href="#example-output" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>box$ python conpot_ics_server.py
+<div class="section" id="example-usage">
+<h2>Example usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>box$ conpot
 2013-04-12 16:09:25,620 Added slave with id 1.
 2013-04-12 16:09:25,621 Added block a to slave 1. (type=1, start=1, size=128)
 2013-04-12 16:09:25,622 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
@@ -108,19 +143,24 @@ cp config.py.dist config.py</pre>
         <div class="sphinxsidebarwrapper">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Conpot Installation - Ubuntu 12.04 LTS</a><ul>
+<li><a class="reference internal" href="#">Debian</a><ul>
+<li><a class="reference internal" href="#tested-versions">Tested Versions</a></li>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#example-output">Example output</a></li>
+<li><a class="reference internal" href="#basic-configuration">Basic configuration</a></li>
+<li><a class="reference internal" href="#example-usage">Example usage</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Installation</a></p>
+  <p class="topless"><a href="ubuntu.html"
+                        title="previous chapter">Ubuntu 12.04 LTS</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../usage/index.html"
+                        title="next chapter">Usage</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../_sources/installation/installation_ubuntu.txt"
+    <li><a href="../_sources/installation/debian.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -147,15 +187,18 @@ cp config.py.dist config.py</pre>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="index.html" title="Installation"
+          <a href="../usage/index.html" title="Usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.1.0 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
           <li><a href="index.html" >Installation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2013, Glastopf Developers.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

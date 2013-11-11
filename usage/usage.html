@@ -57,9 +57,13 @@
 <h2>The default profile<a class="headerlink" href="#the-default-profile" title="Permalink to this headline">¶</a></h2>
 <p>Conpot is shipped with a default profile(<tt class="docutils literal"><span class="pre">default.xml</span></tt>) which provides basic emulation of a
 <a class="reference external" href="https://www.automation.siemens.com/mcms/programmable-logic-controller/en/simatic-s7-controller/s7-200/pages/default.aspx?HTTPS=REDIR">Siemens S7-200 CPU</a>
-with a few expansion modules installed. The attack surface of the default emulation includes the Modbus and SNMP protocols.</p>
+with a few expansion modules installed. The attack surface of the default emulation includes the protocols MODBUS, HTTP,
+SNMP and s7comm.</p>
+<p>While most of the configuration takes place within the XML profile, some parts are kept in seperate folders within the
+templates directory to avoid clutter.</p>
 <div class="section" id="modbus">
 <h3>Modbus<a class="headerlink" href="#modbus" title="Permalink to this headline">¶</a></h3>
+<p>The <tt class="docutils literal"><span class="pre">&lt;device_info</span> <span class="pre">/&gt;</span></tt> section allows to define the device info returned to a Modbus 43 function call.</p>
 <p>The <tt class="docutils literal"><span class="pre">&lt;slave</span> <span class="pre">/&gt;</span></tt> section allows you to define the slaves. Every slave definition is separated into <tt class="docutils literal"><span class="pre">&lt;blocks</span> <span class="pre">/&gt;</span></tt>.</p>
 <p>An binary output block has the type <tt class="docutils literal"><span class="pre">COILS</span></tt>, binary input blocks <tt class="docutils literal"><span class="pre">DISCRETE_INPUTS</span></tt>. You define the starting address
 and size. <tt class="docutils literal"><span class="pre">ANALOG_INPUTS</span></tt> hold data in byte size.</p>
@@ -99,9 +103,9 @@ First we have to download the IF-MIB and also the IANAifType-MIB since IF-MIB de
 <div class="highlight-python"><pre>wget http://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib
 wget ftp://ftp.cisco.com/pub/mibs/v2/IF-MIB.my</pre>
 </div>
-<p>Then compile the MIBs to python code:</p>
-<div class="highlight-python"><pre>build-pysnmp-mib IF-MIB.my &gt; IF-MIB.py
-build-pysnmp-mib ianaiftype-mib &gt; IANAifType-MIB.py</pre>
+<p>Conpot will compile the MIB files automatically, but unless the MIB files are places in the current work directory, you
+need to provide a path to the files using the &#8216;-a&#8217; parameter (The path will be searched recursively for MIB files).:</p>
+<div class="highlight-python"><pre>sudo conpot -t my_custom_template.xml -a /opt/mymibs</pre>
 </div>
 <p>Finally add your custom snmp configuration to the template:</p>
 <div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;mib</span> <span class="na">name=</span><span class="s">&quot;IF-MIB&quot;</span><span class="nt">&gt;</span>
@@ -126,6 +130,268 @@ symbols that need identifiers to initialize several instances of a single symbol
 </pre></div>
 </div>
 <p>If not specified, the default instance (0) is being assumed.</p>
+<p>Several symbols feature dynamic values. Conpot can be instructed to deliver dynamic content by adding the engine
+definition to the template. Example:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;mib</span> <span class="na">name=</span><span class="s">&quot;SNMPv2-MIB&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;symbol</span> <span class="na">name=</span><span class="s">&quot;sysUpTime&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;value&gt;</span>0<span class="nt">&lt;/value&gt;</span>
+        <span class="nt">&lt;engine</span> <span class="na">type=</span><span class="s">&quot;sysuptime&quot;</span><span class="nt">&gt;&lt;/engine&gt;</span>
+    <span class="nt">&lt;/symbol&gt;</span>
+<span class="nt">&lt;/mib&gt;</span>
+</pre></div>
+</div>
+<p>The example above always responds with the time in milliseconds since conpot was initialized.</p>
+<p>Currently, the following engine types are implemented:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>increment</dt>
+<dd><p class="first last">Increments the value each time it is requested. Default incrementor: 1, resetting to initial value at 2147483647.
+Modified example:    &lt;engine type=&#8221;increment&#8221;&gt;1:100&lt;/engine&gt;    ( =&gt; increment by 1, reset at 100 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>decrement</dt>
+<dd><p class="first last">Decrements the value each time it is requested. Default decrementor: 1, resetting to initial value at -2147483648.
+Modified example:    &lt;engine type=&#8221;decrement&#8221;&gt;1:0&lt;/engine&gt;    ( =&gt; decrement by 1, reset at 0 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>randominc</dt>
+<dd><p class="first last">Randomly increments the value each time it is requested. Default incrementor range: 1-65535,
+resetting to initial value at 2147418112.
+Modified example:    &lt;engine type=&#8221;randominc&#8221;&gt;1:100:999&lt;/engine&gt;    ( =&gt; increment by rand(1,100), reset at 999 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>randomdec</dt>
+<dd><p class="first last">Randomly decrements the value each time it is requested. Default decrementor range: 1-65535,
+resetting to initial value at -2147418113.
+Modified example:    &lt;engine type=&#8221;randomdec&#8221;&gt;1:100:-999&lt;/engine&gt;    ( =&gt; increment by rand(1,100), reset at -999 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>randomint</dt>
+<dd><p class="first last">Randomly assigns an integer. Default range: 1-65535.
+Modified example:    &lt;engine type=&#8221;randomint&#8221;&gt;1:100&lt;/engine&gt;    ( =&gt; assign a random integer between 1 and 100 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>sysuptime</dt>
+<dd><p class="first last">Assigns the current uptime of the conpot process measured in milliseconds.
+Modified example:    &lt;engine type=&#8221;sysuptime&#8221;&gt;&lt;/engine&gt;    ( =&gt; additional value will be used as a head-start )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>evaluate</dt>
+<dd><p class="first last">Assigns the result of value evaluated as python code ( eval ).
+Modified example:    &lt;engine type=&#8221;evaluate&#8221;&gt;random.randrange(0,100,10)&lt;/engine&gt;    ( =&gt; assign a random int between 0 and 100 in steps of 10 )</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>static</dt>
+<dd><p class="first last">Do not assign any value. This is default of no &lt;engine&gt; field is supplied and will always deliver the initial value.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The SNMP interface can be configured to adjust its behaviour by adding the corresponding configuration directives to
+the <tt class="docutils literal"><span class="pre">config</span></tt> area inside the <tt class="docutils literal"><span class="pre">snmp</span></tt> block:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;config&gt;</span>
+    <span class="c">&lt;!-- Configure individual delays for SNMP commands --&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;tarpit&quot;</span> <span class="na">command=</span><span class="s">&quot;get&quot;</span><span class="nt">&gt;</span>0.1;0.2<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;tarpit&quot;</span> <span class="na">command=</span><span class="s">&quot;set&quot;</span><span class="nt">&gt;</span>0.1;0.2<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;tarpit&quot;</span> <span class="na">command=</span><span class="s">&quot;next&quot;</span><span class="nt">&gt;</span>0.0;0.1<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;tarpit&quot;</span> <span class="na">command=</span><span class="s">&quot;bulk&quot;</span><span class="nt">&gt;</span>0.2;0.4<span class="nt">&lt;/entity&gt;</span>
+
+    <span class="c">&lt;!-- Configure DoS evasion thresholds (req_per_ip/minute;req_overall/minute) --&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;evasion&quot;</span> <span class="na">command=</span><span class="s">&quot;get&quot;</span><span class="nt">&gt;</span>120;240<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;evasion&quot;</span> <span class="na">command=</span><span class="s">&quot;set&quot;</span><span class="nt">&gt;</span>120;240<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;evasion&quot;</span> <span class="na">command=</span><span class="s">&quot;next&quot;</span><span class="nt">&gt;</span>240;600<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;evasion&quot;</span> <span class="na">command=</span><span class="s">&quot;bulk&quot;</span><span class="nt">&gt;</span>120;240<span class="nt">&lt;/entity&gt;</span>
+<span class="nt">&lt;/config&gt;</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">tarpit</span></tt> section slows down the delivery of SNMP responses. This is used to simulate slower devices that would not
+respond to SNMP requests in a fraction of a second. The tarpit value should be specified in seconds and milliseconds,
+using one or two floats. A single float, e.g. &#8220;3.5&#8221;, would introduce 3.5 seconds of delay before the requested OID is
+delivered to the client. A pair of floats separated by a semikolon, e.g. &#8220;0.1;1.2&#8221;, would introduce a random delay
+between 0.1 and 1.2 seconds, that is randomized every time an OID is requested.</p>
+<p>Tarpits are configured individually for each type of request (get, set, next, bulk). If the corresponding request type
+is not configured, answers are generated instantly.</p>
+<p>The <tt class="docutils literal"><span class="pre">evasion</span></tt> feature is used for security reasons. Due to the fact that SNMP uses UDP for transport, it is prone to
+address spoofing. Since SNMP responds to rather small requests with responses that contain bigger payloads, conpot
+could be used as a relay for traffic amplification attacks.</p>
+<p>In order to avoid (or at least mitigate) such attacks, the evasion feature has been introduced. For each request type
+an individual threshold can be applied, consisting of two integers which are separated by a semikolon. As an example,
+the evasion value &#8220;100:200&#8221; for <tt class="docutils literal"><span class="pre">get</span></tt> requests results in the following restrictions to be applied:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>First Integer (100)</dt>
+<dd><p class="first last">Specifies the number of requests allowed per IP per minute. As soon as the number of requests / ip within 60 seconds
+exceeds the configured amount (e.g. 100), all subsequent requests will be discarded until the number of requests
+by this IP address drops under the limit.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Second Integer (200)</dt>
+<dd><p class="first last">Specifies the number of requests allowed overall / minute. &#8220;Overall&#8221; in this context means: Requests of the
+respective command. In this example, as soon as the total number of <tt class="docutils literal"><span class="pre">get</span></tt> requests within 60 seconds exceeds the
+configured amount (e.g. 200), all subsequent get requests, regardless of the senders IP address, will be discarded
+until the number of get requests drops under the limit.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Keep in mind that snmpwalks are in fact a large number of <tt class="docutils literal"><span class="pre">next</span></tt> requests, while <tt class="docutils literal"><span class="pre">bulk</span></tt> requests may contain several
+answers within one reply. Therefore, the evasion limits for <tt class="docutils literal"><span class="pre">next</span></tt> should be chosen more generous while the limits for
+<tt class="docutils literal"><span class="pre">bulk</span></tt> requests should be kept rather conservative due to its risk of being abused for traffic amp attacks.</p>
+</div>
+<div class="section" id="http">
+<h3>HTTP<a class="headerlink" href="#http" title="Permalink to this headline">¶</a></h3>
+<p>In the <tt class="docutils literal"><span class="pre">&lt;http&gt;</span></tt> section, you may configure the characteristics of the web server we designed for conpot, as well
+as each website and resource with its respective headers and behaviour. Last but not least, you can also control how
+and when error codes and their respective error pages are delivered.</p>
+<p>Let us talk about the global http configuration first:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;global&gt;</span>
+    <span class="nt">&lt;config&gt;</span>
+        <span class="c">&lt;!-- what protocol shall we use by default? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;protocol_version&quot;</span><span class="nt">&gt;</span>HTTP/1.1<span class="nt">&lt;/entity&gt;</span>
+        <span class="c">&lt;!-- if we find any date header to be delivered, should we update it to a real value? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;update_header_date&quot;</span><span class="nt">&gt;</span>true<span class="nt">&lt;/entity&gt;</span>
+        <span class="c">&lt;!-- should we disable the HTTP HEAD method? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;disable_method_head&quot;</span><span class="nt">&gt;</span>false<span class="nt">&lt;/entity&gt;</span>
+        <span class="c">&lt;!-- should we disable the HTTP TRACE method? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;disable_method_trace&quot;</span><span class="nt">&gt;</span>false<span class="nt">&lt;/entity&gt;</span>
+        <span class="c">&lt;!-- should we disable the HTTP OPTIONS method? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;disable_method_options&quot;</span><span class="nt">&gt;</span>false<span class="nt">&lt;/entity&gt;</span>
+        <span class="c">&lt;!-- TARPIT: how much latency should we introduce to any response by default? --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;tarpit&quot;</span><span class="nt">&gt;</span>0<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;/config&gt;</span>
+
+    <span class="c">&lt;!-- these headers will be sent with each response --&gt;</span>
+    <span class="nt">&lt;headers&gt;</span>
+        <span class="c">&lt;!-- this date header will be updated, if enabled above --&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Date&quot;</span><span class="nt">&gt;</span>Sat, 28 Apr 1984 07:30:00 GMT<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;/headers&gt;</span>
+<span class="nt">&lt;/global&gt;</span>
+</pre></div>
+</div>
+<p>The comments along with each configuration item should provide enough information to understand what its actually
+doing. Use the <tt class="docutils literal"><span class="pre">disable_method</span></tt> items to reflect the features actually provided by the real thing you&#8217;re trying
+to resemble. If you choose to disable the <tt class="docutils literal"><span class="pre">update_server_date</span></tt> feature, the <tt class="docutils literal"><span class="pre">Date</span></tt> header will remain untouched
+and deliver a static response each time a website is requested.</p>
+<p>The <tt class="docutils literal"><span class="pre">headers</span></tt> section found within the <tt class="docutils literal"><span class="pre">global</span></tt> configuration stanza is added to each and every page that is being
+delivered. Though, it will be overwritten by headers defined for individual resources if they are featuring the same
+header name.</p>
+<p>The <tt class="docutils literal"><span class="pre">tarpit</span></tt> section slows down the delivery of the web page. This is used to simulate slower devices that would not
+deliver websites in a fraction of a second. The tarpit value should be specified in seconds and milliseconds, using one
+or two floats. A single float, e.g. &#8220;3.5&#8221;, would introduce 3.5 seconds of delay before the requested page is delivered
+to the browser. A pair of floats separated by a semikolon, e.g. &#8220;0.1;1.2&#8221;, would introduce a random delay between 0.1
+and 1.2 seconds, that is randomized every time the resource is requested.</p>
+<p>Let us head over to the htdocs area:</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="c">&lt;!-- how should the different URI requests be handled --&gt;</span>
+<span class="nt">&lt;htdocs&gt;</span>
+    <span class="nt">&lt;node</span> <span class="na">name=</span><span class="s">&quot;/&quot;</span><span class="nt">&gt;</span>
+        <span class="c">&lt;!-- force response status code to 302 --&gt;</span>
+        <span class="nt">&lt;status&gt;</span>302<span class="nt">&lt;/status&gt;</span>
+        <span class="nt">&lt;headers&gt;</span>
+            <span class="c">&lt;!-- these headers will be sent along with this response --&gt;</span>
+            <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Content-Type&quot;</span><span class="nt">&gt;</span>text/html<span class="nt">&lt;/entity&gt;</span>
+            <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Location&quot;</span><span class="nt">&gt;</span>/index.html<span class="nt">&lt;/entity&gt;</span>
+        <span class="nt">&lt;/headers&gt;</span>
+    <span class="nt">&lt;/node&gt;</span>
+<span class="nt">&lt;/htdocs&gt;</span>
+</pre></div>
+</div>
+<p>Here we do all the configuration that allows conpot to deliver individual files. The HTTP engine will never try to
+deliver a file that is not defined by a &lt;node name=&#8221;$filename&#8221;&gt; stanza, resulting in additional security against
+directory traversal attempts etc.</p>
+<p>The example above shows the entry point, which is requested by web browsers if just the domain or ip address, but no
+web page has been specified by the user (Example: <a class="reference external" href="http://www.my-honeypot.com/">http://www.my-honeypot.com/</a> ).</p>
+<p>Node names must be specified using absolute paths, starting from the web root ( &#8220;/&#8221; ). By default, requests that can
+be served because they address paths specified here, will be answered with status code 200 (OK). If you want to return
+an individual status code, you can use the <tt class="docutils literal"><span class="pre">&lt;status&gt;$statuscode&lt;/status&gt;</span></tt> configuration item. The example above shows
+the usage of status 302, which redirects the browser to another resource. In our case, this is &#8220;/index.html&#8221;.</p>
+<p>All headers found within the <tt class="docutils literal"><span class="pre">&lt;headers&gt;</span></tt> section are appended to the headers found in the headers section we
+defined in the global configuration block before. As mentioned before, duplicated header will be replaced with the
+most specific one.</p>
+<p>Requests for resources that are not specified within the XML, as well as requests that are specified but can not be
+handled since the respective file can not be found within the template folder on the filesystem, will be answered with
+a 404 (Not found) status response.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;node</span> <span class="na">name=</span><span class="s">&quot;/index.html&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- this tarpit will override the globally set tarpit for this node --&gt;</span>
+    <span class="nt">&lt;tarpit&gt;</span>0.0;0.3<span class="nt">&lt;/tarpit&gt;</span>
+    <span class="nt">&lt;headers&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Last-Modified&quot;</span><span class="nt">&gt;</span>Tue, 19 May 1993 09:00:00 GMT<span class="nt">&lt;/entity&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Content-Type&quot;</span><span class="nt">&gt;</span>text/html<span class="nt">&lt;/entity&gt;</span>
+        <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Set-cookie&quot;</span><span class="nt">&gt;</span>path=/<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;/headers&gt;</span>
+<span class="nt">&lt;/node&gt;</span>
+</pre></div>
+</div>
+<p>The root node ( &#8220;/&#8221; ) instructed the browser to redirect the user to &#8220;/index.html&#8221;. This configuration stanza shows
+few entities we already know, along with an additional <tt class="docutils literal"><span class="pre">&lt;tarpit&gt;</span></tt> item, which works the same way as the tarpit entity
+from the global section and replaces the global tarpit for this resource.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;node</span> <span class="na">name=</span><span class="s">&quot;/index.htm&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- this node will inherit the payload from the referenced alias node without telling the browser --&gt;</span>
+    <span class="nt">&lt;alias&gt;</span>/index.html<span class="nt">&lt;/alias&gt;</span>
+<span class="nt">&lt;/node&gt;</span>
+</pre></div>
+</div>
+<p>For added flexibility, we also introduced a way to configure aliases. Using the comfort of aliases, you can instruct
+conpot to act on behalf of another (already configured) resource without needing to define all the configuration items
+again. The example above uses the alias feature to answer to requests for &#8220;/index.htm&#8221;, even though the real resource
+name is &#8220;/index.html&#8221;.</p>
+<p>Please note that the browser will not be aware of this internal translation, since the alias is resolved by conpot
+itself. Further, you can&#8217;t point to another alias, since (to prevent recursions) only one alias-level is being resolved.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;node</span> <span class="na">name=</span><span class="s">&quot;/some_chunked_file.html&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- this feature controls chunked transfer encoding --&gt;</span>
+    <span class="nt">&lt;chunks&gt;</span>130,15,30,110<span class="nt">&lt;/chunks&gt;</span>
+<span class="nt">&lt;/node&gt;</span>
+</pre></div>
+</div>
+<p>Dynamic pages are often delivered using chunked transfer encoding rather than content length encoding since the web
+server might not know how big the actual content he delivers might get while dynamic content is being created. The
+<tt class="docutils literal"><span class="pre">&lt;chunks&gt;</span></tt> directive enables chunked transfer encoding, delivering the website in several parts instead of a whole
+big stream of data.</p>
+<p>The configuration above shows a page that is delivered in 4 chunks which are 130, 15, 30 and 110 bytes in size. If you
+happen to specify too less bytes and the page to be delivered happens to be larger than what you configured, conpot will
+not truncate your file but append a final chunk that includes all the missing bytes that complete the request.</p>
+<p>Chunks are sent subsequently, at the moment there is no tarpit applied between them.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;statuscodes&gt;</span>
+    <span class="nt">&lt;status</span> <span class="na">name=</span><span class="s">&quot;400&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- 400 (BAD REQUEST) errors should be super fast and responsive --&gt;</span>
+            <span class="nt">&lt;tarpit&gt;</span>0<span class="nt">&lt;/tarpit&gt;</span>
+            <span class="nt">&lt;entity</span> <span class="na">name=</span><span class="s">&quot;Content-Type&quot;</span><span class="nt">&gt;</span>text/html<span class="nt">&lt;/entity&gt;</span>
+    <span class="nt">&lt;/status&gt;</span>
+<span class="nt">&lt;/statuscodes&gt;</span>
+</pre></div>
+</div>
+<p>Status codes are specified the same way like htdocs, but instead of their absolute path, the status code itself is
+used to identify the resource. Status codes support all the features we know from the htdocs described before, but they
+can not be aliased to htdocs and vice versa.</p>
+<div class="highlight-xml"><div class="highlight"><pre><span class="nt">&lt;node</span> <span class="na">name=</span><span class="s">&quot;/redirected-page&quot;</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!-- this page is redirected to another web server --&gt;</span>
+    <span class="nt">&lt;proxy&gt;</span>10.0.0.100<span class="nt">&lt;/proxy&gt;</span>
+<span class="nt">&lt;/node&gt;</span>
+</pre></div>
+</div>
+<p>Requests to this page / resource will be forwarded to another webserver. Since conpot spawns the request to this
+webserver, the feature is similar to a backproxy - the web browser will not notice any difference since conpot delivers
+the resulting web page to the requesting client on behalf of the server that generated the content in first place.</p>
+<p>This feature can also be applied to status codes. For example, if the proxy directive is applied to status code 404
+(Not Found), all requests that can not be handled by conpot itself are secretly forwarded to another system, which might
+be the real device for higher interaction setups. If no resources other than the 404 status, are configured, this
+results in each and every request to be forwarded to the other webserver on behalf of the client. This way, conpot can
+act similar to a terminating honeywall in higher interaction setups for the HTTP protocol.</p>
 </div>
 </div>
 </div>
@@ -142,6 +408,7 @@ symbols that need identifiers to initialize several instances of a single symbol
 <li><a class="reference internal" href="#the-default-profile">The default profile</a><ul>
 <li><a class="reference internal" href="#modbus">Modbus</a></li>
 <li><a class="reference internal" href="#snmp">SNMP</a></li>
+<li><a class="reference internal" href="#http">HTTP</a></li>
 </ul>
 </li>
 </ul>
@@ -194,7 +461,7 @@ symbols that need identifiers to initialize several instances of a single symbol
     </div>
     <div class="footer">
         &copy; Copyright 2013, Glastopf Developers.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b3.
     </div>
   </body>
 </html>

@@ -1,5 +1,14 @@
-Ubuntu 12.04 LTS
+Debian
 ======================================
+
+Tested Versions
+---------------
+
+* 7.2.0 64bit
+* 6.0.7 64bit
+
+
+This was tested on a minimal installation w/o desktop packages.
 
 Installation
 ------------
@@ -7,10 +16,23 @@ Installation
 Install dependencies:
 ::
 
-    sudo apt-get install libsmi2ldbl snmp-mibs-downloader
+    apt-get install git libsmi2ldbl smistrip libxslt1-dev python-dev libevent-dev
+    
+Debian 6 specific
+::
+
+    apt-get install python-pip
+    pip install argparse
 
 
-The stable version of ConPot can be downloaded from PyPI:
+The package snmp-mibs-downloader is non-free so we have to install the package manually. All dependencies are covered by installing smistrip. Get the package from here:
+::
+
+    wget $package_url
+    dpkg -i $package_name
+
+
+The stable version of Conpot can be downloaded from PyPI:
 ::
 
     pip install conpot
@@ -20,7 +42,7 @@ The development version can be cloned from github:
 ::
 
     cd /opt
-    git clone git@github.com:glastopf/conpot.git
+    git clone https://github.com/glastopf/conpot.git
     cd conpot
     python setup.py install
 
