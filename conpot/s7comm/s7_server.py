@@ -14,7 +14,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 from datetime import datetime
+import time
+
 from gevent.server import StreamServer
 import gevent.monkey
 
@@ -62,8 +65,8 @@ class S7Server(object):
         sock.settimeout(self.timeout)
         session_id = str(uuid.uuid4())
         session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
-                        'data_type': 'modbus', 'data': {}}
-
+                        'data_type': 's7comm', 'data': {}}
+        start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
         fileobj = sock.makefile()
 
@@ -76,7 +79,6 @@ class S7Server(object):
 
                 tpkt_packet = TPKT().parse(data)
                 cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
-
                 if cotp_base_packet.tpdu_type == 0xe0:
 
                     # connection request
@@ -95,6 +97,10 @@ class S7Server(object):
                     cotp_resp_base_packet = COTP_BASE_packet(0xd0, 0, cotp_cc_response).pack()
                     tpkt_resp_packet = TPKT(3, cotp_resp_base_packet).pack()
                     sock.send(tpkt_resp_packet)
+
+                    elapse_ms = int(time.time() - start_time) * 1000
+                    session_data['data'][elapse_ms] = {'request': data.encode('hex'),
+                                                       'response': tpkt_resp_packet.encode('hex')}
 
                     data = sock.recv(1024)
 
@@ -131,6 +137,10 @@ class S7Server(object):
                                 tpkt_resp_packet = TPKT(3, cotp_resp_negotiate_packet).pack()
                                 sock.send(tpkt_resp_packet)
 
+                                elapse_ms = int(time.time() - start_time) * 1000
+                                session_data['data'][elapse_ms] = {'request': data.encode('hex'),
+                                                                   'response': tpkt_resp_packet.encode('hex')}
+
                                 #handshake done, give some more data.
                                 data = sock.recv(1024)
 
@@ -153,6 +163,10 @@ class S7Server(object):
                                         cotp_resp_ssl_packet = COTP_BASE_packet(0xf0, 0x80, s7_resp_ssl_packet).pack()
                                         tpkt_resp_packet = TPKT(3, cotp_resp_ssl_packet).pack()
                                         sock.send(tpkt_resp_packet)
+
+                                        elapse_ms = int(time.time() - start_time) * 1000
+                                        session_data['data'][elapse_ms] = {'request': data.encode('hex'),
+                                                                           'response': tpkt_resp_packet.encode('hex')}
 
                                     data = sock.recv(1024)
                     else:

@@ -41,7 +41,7 @@ class COTP(object):
         try:
             header = unpack('!BBB', packet[:3])
         except struct.error:
-            raise ParseException(self.protocol, 'malformed packet header structure')
+            raise ParseException('s7comm', 'malformed packet header structure')
 
         self.packet_length = header[0]
         self.tpdu_type = int(header[1])
@@ -85,7 +85,7 @@ class COTPConnectionPacket(object):
         try:
             fixed_header = unpack('!HHB', packet[:5])
         except struct.error:
-            raise ParseException(self.protocol, 'malformed fixed header structure')
+            raise ParseException('s7comm', 'malformed fixed header structure')
 
         self.dst_ref = fixed_header[0]
         self.src_ref = fixed_header[1]
@@ -103,7 +103,7 @@ class COTPConnectionPacket(object):
             elif chunk_param_length == 2:
                 param_unpack_structure = '!H'
             else:
-                raise ParseException(self.protocol, 'malformed variable header structure')
+                raise ParseException('s7comm', 'malformed variable header structure')
 
             chunk_param_data = unpack(param_unpack_structure, chunk[2:2 + chunk_param_length])
 
@@ -114,7 +114,7 @@ class COTPConnectionPacket(object):
             elif chunk_param_code == 0xc0:
                 self.tpdu_size = chunk_param_data[0]
             else:
-                raise ParseException(self.protocol, 'unknown parameter code')
+                raise ParseException('s7comm', 'unknown parameter code')
 
             # remove this part of the chunk
             chunk = chunk[2 + chunk_param_length:]
@@ -133,11 +133,11 @@ class COTP_ConnectionConfirm(COTPConnectionPacket):
 
     def assemble(self):
         return pack('!HHBBBHBBH', self.dst_ref, self.src_ref, self.opt_field,
-                    0xc1, # param code:   src-tsap
-                    0x02, # param length: 2 bytes
+                    0xc1,  # param code:   src-tsap
+                    0x02,  # param length: 2 bytes
                     self.src_tsap,
-                    0xc2, # param code:   dst-tsap
-                    0x02, # param length: 2 bytes
+                    0xc2,  # param code:   dst-tsap
+                    0x02,  # param length: 2 bytes
                     self.dst_tsap)
 
 
@@ -152,12 +152,12 @@ class COTP_ConnectionRequest(COTPConnectionPacket):
 
     def assemble(self):
         return pack('!HHBBBHBBHBBB', self.dst_ref, self.src_ref, self.opt_field,
-                    0xc1, # param code:   src-tsap
-                    0x02, # param length: 2 bytes
+                    0xc1,  # param code:   src-tsap
+                    0x02,  # param length: 2 bytes
                     self.src_tsap,
-                    0xc2, # param code:   dst-tsap
-                    0x02, # param length: 2 bytes
+                    0xc2,  # param code:   dst-tsap
+                    0x02,  # param length: 2 bytes
                     self.dst_tsap,
-                    0xc0, # param code:   tpdu-size
-                    0x01, # param length: 1 byte
+                    0xc0,  # param code:   tpdu-size
+                    0x01,  # param length: 1 byte
                     self.tpdu_size)
