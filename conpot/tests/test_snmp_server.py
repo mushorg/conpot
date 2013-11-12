@@ -33,7 +33,6 @@ from conpot.snmp import command_responder
 from conpot.snmp.dynrsp import DynamicResponder
 
 
-
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.host = '127.0.0.1'
