@@ -14,21 +14,23 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from datetime import datetime
-from gevent.server import StreamServer
-import gevent.monkey
 
-gevent.monkey.patch_all()
 import uuid
 import socket
+import logging
+from lxml import etree
+from datetime import datetime
+
+from gevent.server import StreamServer
+import gevent.monkey
+gevent.monkey.patch_all()
+
 from tpkt import TPKT
 from cotp import COTP as COTP_BASE_packet
 from cotp import COTP_ConnectionRequest
 from cotp import COTP_ConnectionConfirm
 from s7 import S7
 
-import logging
-from lxml import etree
 
 logger = logging.getLogger(__name__)
 
