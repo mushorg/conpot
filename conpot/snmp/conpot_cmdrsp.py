@@ -33,18 +33,21 @@ class conpot_extension(object):
 
         return addr, snmp_version
 
-    def log(self, version, type, addr, req_varBinds, res_varBinds=None):
-
+    def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None):
+        req_oid = req_varBinds[0][0]
+        req_val = req_varBinds[0][1]
         log_dict = {'remote': addr,
                     'timestamp': datetime.utcnow(),
                     'data_type': 'snmp',
-                    'data': {0: {'request': 'SNMPv{0} {1}: {2}'.format(version, type, req_varBinds)}}}
+                    'data': {0: {'request': 'SNMPv{0} {1}: {2} {3}'.format(version, msg_type, req_oid, req_val)}}}
 
-        logger.info('SNMPv{0} {1} request from {2}: {3}'.format(version, type, addr, req_varBinds))
+        logger.info('SNMPv{0} {1} request from {2}: {3} {4}'.format(version, msg_type, addr, req_oid, req_val))
 
         if res_varBinds:
-            logger.info('SNMPv{0} response to {1}: {2}'.format(version, addr, res_varBinds))
-            log_dict['data'][0]['response'] = 'SNMPv{0} response: {1}'.format(version, res_varBinds)
+            res_oid = ".".join(map(str, res_varBinds[0][0]))
+            res_val = res_varBinds[0][1]
+            logger.info('SNMPv{0} response to {1}: {2} {3}'.format(version, addr, res_oid, res_val))
+            log_dict['data'][0]['response'] = 'SNMPv{0} response: {1} {2}'.format(version, res_oid, res_val)
 
         self.log_queue.put(log_dict)
 
