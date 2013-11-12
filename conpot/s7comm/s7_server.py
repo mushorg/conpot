@@ -98,7 +98,7 @@ class S7Server(object):
                     tpkt_resp_packet = TPKT(3, cotp_resp_base_packet).pack()
                     sock.send(tpkt_resp_packet)
 
-                    elapse_ms = int(time.time() - start_time) * 1000
+                    elapse_ms = int((time.time() - start_time) * 1000)
                     session_data['data'][elapse_ms] = {'request': data.encode('hex'),
                                                        'response': tpkt_resp_packet.encode('hex')}
 
@@ -137,7 +137,7 @@ class S7Server(object):
                                 tpkt_resp_packet = TPKT(3, cotp_resp_negotiate_packet).pack()
                                 sock.send(tpkt_resp_packet)
 
-                                elapse_ms = int(time.time() - start_time) * 1000
+                                elapse_ms = int((time.time() - start_time) * 1000)
                                 session_data['data'][elapse_ms] = {'request': data.encode('hex'),
                                                                    'response': tpkt_resp_packet.encode('hex')}
 
@@ -164,7 +164,7 @@ class S7Server(object):
                                         tpkt_resp_packet = TPKT(3, cotp_resp_ssl_packet).pack()
                                         sock.send(tpkt_resp_packet)
 
-                                        elapse_ms = int(time.time() - start_time) * 1000
+                                        elapse_ms = int((time.time() - start_time) * 1000)
                                         session_data['data'][elapse_ms] = {'request': data.encode('hex'),
                                                                            'response': tpkt_resp_packet.encode('hex')}
 
