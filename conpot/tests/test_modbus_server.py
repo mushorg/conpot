@@ -103,5 +103,5 @@ class TestBase(unittest.TestCase):
         self.assertEqual('127.0.0.1', log_item['remote'][0])
         self.assertEquals('modbus', log_item['data_type'])
         #testing the actual modbus data
-        self.assertEquals('0100010080', log_item['data'][0]['request'])
+        self.assertEquals('000100000006010100010080', log_item['data'][0]['request'])
         self.assertEquals('0110ffffffffffffffffffffffffffffffff', log_item['data'][0]['response'])
