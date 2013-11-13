@@ -85,8 +85,6 @@ class SNMPClient(object):
 
 
 if __name__ == "__main__":
-    snmp_client = SNMPClient()
-    OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
-    snmp_client.set_command(OID)
-    OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), None)
-    #snmp_client.get_command(OID)
+    snmp_client = SNMPClient('127.0.0.1', 161)
+    OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
+    snmp_client.get_command(OID)

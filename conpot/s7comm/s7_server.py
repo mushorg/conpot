@@ -61,12 +61,18 @@ class S7Server(object):
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
         logger.info('Conpot S7Comm initialized using the {0} template.'.format(template_name))
 
+    def _add_log_data(self, req, resp):
+        elapse_ms = int((time.time() - self.start_time) * 1000)
+        while elapse_ms in self.session_data["data"]:
+            elapse_ms += 1
+        self.session_data['data'][elapse_ms] = {'request': req.encode('hex'), 'response': resp.encode('hex')}
+
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
         session_id = str(uuid.uuid4())
-        session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
-                        'data_type': 's7comm', 'data': {}}
-        start_time = time.time()
+        self.session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
+                             'data_type': 's7comm', 'data': {}}
+        self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
         fileobj = sock.makefile()
 
@@ -98,9 +104,7 @@ class S7Server(object):
                     tpkt_resp_packet = TPKT(3, cotp_resp_base_packet).pack()
                     sock.send(tpkt_resp_packet)
 
-                    elapse_ms = int(time.time() - start_time) * 1000
-                    session_data['data'][elapse_ms] = {'request': data.encode('hex'),
-                                                       'response': tpkt_resp_packet.encode('hex')}
+                    self._add_log_data(data, tpkt_resp_packet)
 
                     data = sock.recv(1024)
 
@@ -137,9 +141,7 @@ class S7Server(object):
                                 tpkt_resp_packet = TPKT(3, cotp_resp_negotiate_packet).pack()
                                 sock.send(tpkt_resp_packet)
 
-                                elapse_ms = int(time.time() - start_time) * 1000
-                                session_data['data'][elapse_ms] = {'request': data.encode('hex'),
-                                                                   'response': tpkt_resp_packet.encode('hex')}
+                                self._add_log_data(data, tpkt_resp_packet)
 
                                 #handshake done, give some more data.
                                 data = sock.recv(1024)
@@ -164,9 +166,7 @@ class S7Server(object):
                                         tpkt_resp_packet = TPKT(3, cotp_resp_ssl_packet).pack()
                                         sock.send(tpkt_resp_packet)
 
-                                        elapse_ms = int(time.time() - start_time) * 1000
-                                        session_data['data'][elapse_ms] = {'request': data.encode('hex'),
-                                                                           'response': tpkt_resp_packet.encode('hex')}
+                                        self._add_log_data(data, tpkt_resp_packet)
 
                                     data = sock.recv(1024)
                     else:
@@ -178,7 +178,7 @@ class S7Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
 
-        self.log_queue.put(session_data)
+        self.log_queue.put(self.session_data)
 
     def get_server(self, host, port):
         connection = (host, port)

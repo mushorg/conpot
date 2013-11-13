@@ -28,29 +28,29 @@ class ModbusServer(modbus.Server):
         self.timeout = timeout
         databank = slave_db.SlaveBase(template)
 
-        """Constructor: initializes the server settings"""
+        # Constructor: initializes the server settings
         modbus.Server.__init__(self, databank if databank else modbus.Databank())
 
-        #not sure how this class remember slave configuration across instance creation, i guess there are some
-        #well hidden away class variables somewhere.
+        # not sure how this class remember slave configuration across instance creation, i guess there are some
+        # well hidden away class variables somewhere.
         self.remove_all_slaves()
 
-        #parse slave configuration
+        # parse slave configuration
         dom = etree.parse(template)
         slaves = dom.xpath('//conpot_template/slaves/*')
         template_name = dom.xpath('//conpot_template/@name')[0]
         for s in slaves:
-            id = int(s.attrib['id'])
-            slave = self.add_slave(id)
-            logger.debug('Added slave with id {0}.'.format(id))
+            slave_id = int(s.attrib['id'])
+            slave = self.add_slave(slave_id)
+            logger.debug('Added slave with id {0}.'.format(slave_id))
             for b in s.xpath('./blocks/*'):
                 name = b.attrib['name']
-                type = eval('mdef.' + b.xpath('./type/text()')[0])
+                request_type = eval('mdef.' + b.xpath('./type/text()')[0])
                 start_addr = int(b.xpath('./starting_address/text()')[0])
                 size = int(b.xpath('./size/text()')[0])
-                slave.add_block(name, type, start_addr, size)
+                slave.add_block(name, request_type, start_addr, size)
                 logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'
-                .format(name, id, type, start_addr, size))
+                .format(name, slave_id, request_type, start_addr, size))
                 for v in b.xpath('./values/*'):
                     addr = int(v.xpath('./address/text()')[0])
                     value = eval(v.xpath('./content/text()')[0])
@@ -59,12 +59,20 @@ class ModbusServer(modbus.Server):
 
         logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
 
+    def _add_log_data(self, logdata):
+        elapse_ms = int((time.time() - self.start_time) * 1000)
+        while elapse_ms in self.session_data["data"]:
+            elapse_ms += 1
+        elapse_ms = int(time.time() - self.start_time) * 1000
+        self.session_data['data'][elapse_ms] = logdata
+
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
         session_id = str(uuid.uuid4())
-        session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),'data_type': 'modbus', 'data': {}}
+        self.session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
+                             'data_type': 'modbus', 'data': {}}
 
-        start_time = time.time()
+        self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
 
         try:
@@ -82,10 +90,10 @@ class ModbusServer(modbus.Server):
                     request += new_byte
                 query = modbus_tcp.TcpQuery()
 
-                #logdata is a dictionary containing request, slave_id, function_code and response
+                # logdata is a dictionary containing request, slave_id, function_code and response
                 response, logdata = self._databank.handle_request(query, request)
-                elapse_ms = int(time.time() - start_time) * 1000
-                session_data['data'][elapse_ms] = logdata
+                logdata['request'] = request.encode('hex')
+                self._add_log_data(logdata)
 
                 logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session_id))
 
@@ -94,7 +102,7 @@ class ModbusServer(modbus.Server):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
 
-        self.log_queue.put(session_data)
+        self.log_queue.put(self.session_data)
 
     def get_server(self, host, port):
         connection = (host, port)
