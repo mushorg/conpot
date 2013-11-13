@@ -190,7 +190,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(docpath + '/statuscodes/' + str(status) + '.status', 'rb') as f:
+                with open(docpath + 'statuscodes/' + str(status) + '.status', 'rb') as f:
                     payload = f.read()
 
             except IOError, e:
@@ -340,10 +340,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(docpath + '/htdocs/' + rqfilename, 'rb') as f:
+                with open(docpath + 'htdocs' + rqfilename, 'rb') as f:
                     payload = f.read()
 
-            except IOError:
+            except IOError as e:
+                logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
             # there might be template data that can be substituted within the

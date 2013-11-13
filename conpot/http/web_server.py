@@ -17,12 +17,14 @@
 
 import logging
 
-from lxml import etree
 from conpot.http.command_responder import CommandResponder
+
 
 logger = logging.getLogger()
 
+
 class HTTPServer(object):
+
     def __init__(self, host, port, template, log_queue, docpath, snmp_port=161):
         self.host = host
         self.port = port
