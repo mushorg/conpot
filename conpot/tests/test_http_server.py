@@ -50,7 +50,7 @@ class TestBase(unittest.TestCase):
                                                  8080,
                                                  'conpot/templates/default.xml',
                                                  self.log_queue,
-                                                 'conpot/templates/www/default',
+                                                 'conpot/templates/www/default/',
                                                  self.snmp_port)
 
         self.http_worker = gevent.spawn(self.http_server.start)
