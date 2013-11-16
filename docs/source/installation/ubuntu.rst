@@ -7,7 +7,7 @@ Installation
 Install dependencies:
 ::
 
-    sudo apt-get install libsmi2ldbl snmp-mibs-downloader
+    sudo apt-get install libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev
 
 
 The stable version of ConPot can be downloaded from PyPI:
