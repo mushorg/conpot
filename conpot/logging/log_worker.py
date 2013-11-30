@@ -6,6 +6,7 @@ from datetime import datetime
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.hpfriends import HPFriendsLogger
 from conpot.logging.syslog import SysLogger
+from conpot.logging.stix_transform import StixTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,8 @@ class LogWorker(object):
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
+        # this will be wrapped in some sort of transport mechanism before the final merge
+        self.stix_transformer = None
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
@@ -41,6 +44,9 @@ class LogWorker(object):
             logsocket = config.get('syslog', 'socket')
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
+        if config.getboolean('stix', 'enabled'):
+            self.stix_transformer = StixTransformer();
+
         self.enabled = True
 
     def start(self):
@@ -61,6 +67,9 @@ class LogWorker(object):
 
             if self.syslog_client:
                 self.syslog_client.log(event)
+
+            if self.stix_transformer:
+                self.stix_transformer.transform(event)
 
     def stop(self):
         self.enabled = False
