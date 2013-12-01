@@ -6,7 +6,7 @@ from datetime import datetime
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.hpfriends import HPFriendsLogger
 from conpot.logging.syslog import SysLogger
-from conpot.logging.stix_transform import StixTransformer
+from conpot.logging.taxii_log import TaxiiLogger
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class LogWorker(object):
         self.syslog_client = None
         self.public_ip = public_ip
         # this will be wrapped in some sort of transport mechanism before the final merge
-        self.stix_transformer = None
+        self.taxii_logger = None
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
@@ -44,8 +44,13 @@ class LogWorker(object):
             logsocket = config.get('syslog', 'socket')
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
-        if config.getboolean('stix', 'enabled'):
-            self.stix_transformer = StixTransformer();
+        if config.getboolean('taxii', 'enabled'):
+            host = config.get('taxii', 'host')
+            port = config.getint('taxii', 'port')
+            inbox_path = config.get('taxii', 'inbox_path')
+            use_https = config.getboolean('taxii', 'use_https')
+            # TODO: support for certificates
+            self.taxii_logger = TaxiiLogger(host, port, inbox_path, use_https)
 
         self.enabled = True
 
@@ -68,8 +73,8 @@ class LogWorker(object):
             if self.syslog_client:
                 self.syslog_client.log(event)
 
-            if self.stix_transformer:
-                self.stix_transformer.transform(event)
+            if self.taxii_logger:
+                self.taxii_logger.log(event)
 
     def stop(self):
         self.enabled = False

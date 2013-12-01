@@ -10,3 +10,4 @@ requests
 sphinx
 stix
 cybox
+libtaxii
