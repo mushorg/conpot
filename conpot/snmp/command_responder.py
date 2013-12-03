@@ -14,7 +14,7 @@ import gevent
 from gevent import socket
 
 from conpot.snmp import conpot_cmdrsp
-from conpot.snmp.udp_server import DatagramServer
+from gevent.server import DatagramServer
 
 
 logger = logging.getLogger(__name__)
