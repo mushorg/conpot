@@ -103,8 +103,8 @@ def find_mibs(raw_mibs_dirs, recursive=True):
             if os.path.getsize(_file) > '1048576':
                 continue
             data = open(_file).read()
-            #expect the MIB definitions header to appear within the first 100 bytes
-            mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:100], re.IGNORECASE)
+            # 2048 - just like a rock star.
+            mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:2048], re.IGNORECASE)
             if mib_search:
                 mib_name = mib_search.group('mib_name')
                 file_map[mib_name] = _file
