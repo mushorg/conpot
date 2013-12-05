@@ -130,10 +130,10 @@ class CommandResponder(object):
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
             
             self.dyn_rsp.response_table[s.name+instance] = [engine_type,engine_aux,value]
-            logger.info('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp {5}[{6}]'.format(s.name, instance, s.label, mibname, value, engine_type, engine_aux))
+            logger.debug('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp {5}[{6}]'.format(s.name, instance, s.label, mibname, value, engine_type, engine_aux))
 
         else:
-            logger.info('Skipped:    OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))
+            logger.debug('Skipped: OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
