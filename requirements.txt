@@ -8,6 +8,4 @@ jinja2
 beautifulsoup4
 requests
 sphinx
-stix
-cybox
 libtaxii

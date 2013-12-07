@@ -18,8 +18,7 @@
 from datetime import datetime
 import logging
 
-import conpot.logging.stix_transform as stix_transform
-
+from conpot.logging.stix_transform import StixTransformer
 import libtaxii
 from libtaxii.messages import ContentBlock, InboxMessage, generate_message_id
 from libtaxii.clients import HttpClient
@@ -37,9 +36,11 @@ class TaxiiLogger(object):
         self.client.use_https = use_https
         self.client.setProxy('noproxy')
 
+        self.stix_transformer = StixTransformer()
+
     def log(self, event):
         # converts from conpot log format to STIX compatible xml
-        stix_package = stix_transform.conpot_to_stix_package(event)
+        stix_package = self.stix_transformer.transform(event)
 
         # wrapping the stix message in a TAXII envelope
         content_block = ContentBlock(libtaxii.CB_STIX_XML_10, stix_package)
@@ -55,9 +56,9 @@ class TaxiiLogger(object):
 
 if __name__ == '__main__':
 
-        test_event =      {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
-                           'timestamp': datetime.now(),
-                           'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
-                           }
+        test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
+                      'timestamp': datetime.now(),
+                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
+                     }
         taxii_logger = TaxiiLogger('taxiitest.mitre.org', 80, '/services/inbox/default/', False)
         taxii_logger.log(test_event)
