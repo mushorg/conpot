@@ -150,7 +150,7 @@ def main():
 
     log_queue = Queue()
     log_worker = LogWorker(config, log_queue, public_ip)
-    gevent.spawn(log_worker.start)
+    log_worker_greenlet = gevent.spawn(log_worker.start)
 
     modbus_enabled = config.getboolean('modbus', 'enabled')
     if modbus_enabled:
@@ -191,7 +191,8 @@ def main():
         #time to allow servers to bind ports, open files, etc...
         gevent.sleep(5)
         drop_privileges()
-        gevent.joinall(servers)
+        #fail hard if the log worker goes down.
+        gevent.Greenlet.join(log_worker_greenlet)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
         log_worker.stop()
@@ -205,6 +206,9 @@ def main():
     #just being nice and cosy!
     gevent.joinall(servers, 2)
 
+    #make sure that we display the error messages if we crashed due to an error in the log worker
+    if log_worker_greenlet.exception is not None:
+        logger.error('Fatal: {0}'.format(log_worker_greenlet.exception))
 
 if __name__ == "__main__":
     main()
