@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaxiiLogger(object):
-    def __init__(self, host, port, inbox_path, use_https):
+    def __init__(self, host, port, inbox_path, use_https, config):
         self.host = host
         self.port = port
         self.inbox_path = inbox_path
@@ -36,7 +36,7 @@ class TaxiiLogger(object):
         self.client.use_https = use_https
         self.client.setProxy('noproxy')
 
-        self.stix_transformer = StixTransformer()
+        self.stix_transformer = StixTransformer(config)
 
     def log(self, event):
         # converts from conpot log format to STIX compatible xml
@@ -54,11 +54,3 @@ class TaxiiLogger(object):
         if response_message.status_type != libtaxii.messages.ST_SUCCESS:
             logger.error('Error while transmitting message to TAXII server: {0}'.format(response_message.status_detail))
 
-if __name__ == '__main__':
-
-        test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
-                      'timestamp': datetime.now(),
-                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
-                     }
-        taxii_logger = TaxiiLogger('taxiitest.mitre.org', 80, '/services/inbox/default/', False)
-        taxii_logger.log(test_event)

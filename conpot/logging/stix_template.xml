@@ -53,6 +53,16 @@
 										<PortObj:Port_Value>{{ source_port }}</PortObj:Port_Value>
 									</SocketAddressObj:Port>
 								</NetworkConnectionObj:Source_Socket_Address>
+                                <NetworkConnectionObj:Destination_Socket_Address>
+                                    {% if destination_ip %}
+									<SocketAddressObj:IP_Address category="ipv4-addr">
+										<AddressObj:Address_Value datatype="string">{{ destination_ip }}</AddressObj:Address_Value>
+									</SocketAddressObj:IP_Address>
+                                    {% endif %}
+									<SocketAddressObj:Port>
+										<PortObj:Port_Value>{{ destination_port }}</PortObj:Port_Value>
+									</SocketAddressObj:Port>
+								</NetworkConnectionObj:Destination_Socket_Address>
 							</cybox:Properties>
 						</cybox:Object>
 					</stixCommon:Observable>

@@ -18,14 +18,18 @@
 from datetime import datetime
 import jinja2
 import uuid
-from jinja2 import Template
+import sys
 import os
 
 
 class StixTransformer(object):
-    def __init__(self):
+    def __init__(self, config):
         template_loader = jinja2.FileSystemLoader(searchpath=os.path.dirname(__file__))
-        template_env = jinja2.Environment(loader=template_loader, undefined=jinja2.StrictUndefined)
+        template_env = jinja2.Environment(loader=template_loader)
+        self.protocol_to_port_mapping = {'modbus': config.getint('modbus', 'port'),
+                                         'http': config.getint('http', 'port'),
+                                         's7comm': config.getint('modbus', 'port'),
+                                         'snmp': config.getint('modbus', 'port')}
         self.template = template_env.get_template('stix_template.xml')
 
     def transform(self, event):
@@ -39,14 +43,13 @@ class StixTransformer(object):
                 'source_ip': event['remote'][0],
                 'source_port': event['remote'][1],
                 'l7_protocol': event['data_type']}
+
+        if 'public_ip' in event:
+            vars['destination_ip'] = event['public_ip']
+
+        if event['data_type'] in self.protocol_to_port_mapping:
+            vars['destination_port'] = self.protocol_to_port_mapping[event['data_type']]
+        else:
+            raise Exception('No port mapping could be found for {0}'.format(event['data_type']))
+
         return self.template.render(vars)
-
-
-if __name__ == '__main__':
-        test_event =      {'remote': ('127.0.0.1', 54872), 'data_type': 'modbus',
-                           'timestamp': datetime.now(),
-                           'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
-                           'public_ip': '111.111.222.111'}
-        stixTransformer = StixTransformer()
-        xml_string = stixTransformer.transform(test_event)
-        print xml_string
