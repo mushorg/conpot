@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stix:STIX_Package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns:cybox="http://cybox.mitre.org/cybox-2"
+                   xmlns:cyboxCommon="http://cybox.mitre.org/common-2"
+                   xmlns:cyboxVocabs="http://cybox.mitre.org/default_vocabularies-2"
+                   xmlns:AddressObj="http://cybox.mitre.org/objects#AddressObject-2"
+                   xmlns:PortObj="http://cybox.mitre.org/objects#PortObject-2"
+                   xmlns:SocketAddressObj="http://cybox.mitre.org/objects#SocketAddressObject-1"
+                   xmlns:NetworkConnectionObj="http://cybox.mitre.org/objects#NetworkConnectionObject-2"
+                   xmlns:stix="http://stix.mitre.org/stix-1"
+                   xmlns:stixCommon="http://stix.mitre.org/common-1"
+                   xmlns:stixVocabs="http://stix.mitre.org/default_vocabularies-1"
+                   xmlns:incident="http://stix.mitre.org/Incident-1"
+                   xmlns:dc="http://purl.org/dc/elements/1.1/"
+                   xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+                   xmlns:{{ namespace }}="{{ namespace_uri }}" xsi:schemaLocation="
+ http://stix.mitre.org/stix-1 http://stix.mitre.org/XMLSchema/core/1.0.1/stix_core.xsd
+ http://stix.mitre.org/common-1 http://stix.mitre.org/XMLSchema/common/1.0.1/stix_common.xsd
+ http://stix.mitre.org/Incident-1 http://stix.mitre.org/XMLSchema/incident/1.0.1/incident.xsd
+ http://cybox.mitre.org/objects#AddressObject-2 http://cybox.mitre.org/XMLSchema/objects/Address/2.0.1/Address_Object.xsd
+ http://cybox.mitre.org/objects#PortObject-2 http://cybox.mitre.org/XMLSchema/objects/Port/2.0.1/Port_Object.xsd
+ http://cybox.mitre.org/objects#SocketAddressObject-1 http://cybox.mitre.org/XMLSchema/objects/Socket_Address/1.0.1/Socket_Address_Object.xsd
+ http://cybox.mitre.org/objects#NetworkConnectionObject-2 http://cybox.mitre.org/XMLSchema/objects/Network_Connection/2.0.1/Network_Connection_Object.xsd"
+ id="{{ namespace }}:STIXPackage-{{ package_id }}" version="1.0.1">
+	<stix:STIX_Header>
+		<stix:Description>Describes one or more honeypot incidents</stix:Description>
+		<stix:Information_Source>
+			<stixCommon:Time>
+				<cyboxCommon:Produced_Time>{{ package_timestamp }}</cyboxCommon:Produced_Time>
+			</stixCommon:Time>
+		</stix:Information_Source>
+	</stix:STIX_Header>
+	<stix:Incidents>
+		<stix:Incident id="{{ namespace }}:Incident-{{ incident_id }}" xsi:type='incident:IncidentType'>
+			<incident:Time>
+				<incident:First_Malicious_Action>{{ incident_timestamp }}</incident:First_Malicious_Action>
+			</incident:Time>
+			<incident:Description>Traffic to ConPot honeypot</incident:Description>
+			<incident:Categories>
+				<incident:Category>Scans/Probes/Attempted Access</incident:Category>
+			</incident:Categories>
+			<incident:Related_Observables>
+				<incident:Related_Observable>
+					<stixCommon:Observable id="{{ namespace }}:Observable-{{ observable_id }}">
+						<cybox:Object>
+							<cybox:Properties xsi:type="NetworkConnectionObj:NetworkConnectionObjectType">
+								<NetworkConnectionObj:Layer7_Protocol datatype="string">{{ l7_protocol }}</NetworkConnectionObj:Layer7_Protocol>
+								<NetworkConnectionObj:Source_Socket_Address>
+									<SocketAddressObj:IP_Address category="ipv4-addr" is_source="true">
+										<AddressObj:Address_Value datatype="string">{{ source_ip }}</AddressObj:Address_Value>
+									</SocketAddressObj:IP_Address>
+									<SocketAddressObj:Port>
+										<PortObj:Port_Value>{{ source_port }}</PortObj:Port_Value>
+									</SocketAddressObj:Port>
+								</NetworkConnectionObj:Source_Socket_Address>
+							</cybox:Properties>
+						</cybox:Object>
+					</stixCommon:Observable>
+				</incident:Related_Observable>
+			</incident:Related_Observables>
+		</stix:Incident>
+	</stix:Incidents>
+</stix:STIX_Package>

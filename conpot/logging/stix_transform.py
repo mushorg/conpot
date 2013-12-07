@@ -31,7 +31,7 @@ class StixTransformer(object):
     def transform(self, event):
         vars = {'package_id': str(uuid.uuid4()),
                 'namespace': 'ConPot',
-                'namespace_url': 'http://conpot.org/stix-1',
+                'namespace_uri': 'http://conpot.org/stix-1',
                 'package_timestamp': datetime.utcnow().isoformat(),
                 'incident_id': event['session_id'],
                 'incident_timestamp': event['timestamp'].isoformat(),
