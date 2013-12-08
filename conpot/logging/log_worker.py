@@ -18,7 +18,6 @@ class LogWorker(object):
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
-        # this will be wrapped in some sort of transport mechanism before the final merge
         self.taxii_logger = None
 
         if config.getboolean('sqlite', 'enabled'):
