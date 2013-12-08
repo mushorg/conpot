@@ -18,7 +18,6 @@
 from datetime import datetime
 import jinja2
 import uuid
-import sys
 import os
 
 

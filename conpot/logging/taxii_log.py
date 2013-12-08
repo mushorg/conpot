@@ -27,15 +27,14 @@ logger = logging.getLogger(__name__)
 
 
 class TaxiiLogger(object):
-    def __init__(self, host, port, inbox_path, use_https, config):
-        self.host = host
-        self.port = port
-        self.inbox_path = inbox_path
+    def __init__(self, config):
+        self.host = config.get('taxii', 'host')
+        self.port = config.getint('taxii', 'port')
+        self.inbox_path = config.get('taxii', 'inbox_path')
+        self.use_https = config.getboolean('taxii', 'use_https')
 
         self.client = HttpClient()
-        self.client.use_https = use_https
         self.client.setProxy('noproxy')
-
         self.stix_transformer = StixTransformer(config)
 
     def log(self, event):
@@ -53,4 +52,7 @@ class TaxiiLogger(object):
 
         if response_message.status_type != libtaxii.messages.ST_SUCCESS:
             logger.error('Error while transmitting message to TAXII server: {0}'.format(response_message.status_detail))
+            return False
+        else:
+            return True
 

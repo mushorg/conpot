@@ -45,12 +45,8 @@ class LogWorker(object):
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
         if config.getboolean('taxii', 'enabled'):
-            host = config.get('taxii', 'host')
-            port = config.getint('taxii', 'port')
-            inbox_path = config.get('taxii', 'inbox_path')
-            use_https = config.getboolean('taxii', 'use_https')
             # TODO: support for certificates
-            self.taxii_logger = TaxiiLogger(host, port, inbox_path, use_https, config)
+            self.taxii_logger = TaxiiLogger(config)
 
         self.enabled = True
 
