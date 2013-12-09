@@ -13,21 +13,37 @@
                    xmlns:incident="http://stix.mitre.org/Incident-1"
                    xmlns:dc="http://purl.org/dc/elements/1.1/"
                    xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-                   xmlns:{{ namespace }}="{{ namespace_uri }}" xsi:schemaLocation="
+                   xmlns:{{ namespace }}="{{ namespace_uri }}"
+                   xsi:schemaLocation="
  http://stix.mitre.org/stix-1 http://stix.mitre.org/XMLSchema/core/1.0.1/stix_core.xsd
  http://stix.mitre.org/common-1 http://stix.mitre.org/XMLSchema/common/1.0.1/stix_common.xsd
  http://stix.mitre.org/Incident-1 http://stix.mitre.org/XMLSchema/incident/1.0.1/incident.xsd
+ http://cybox.mitre.org/cybox-2 http://cybox.mitre.org/XMLSchema/core/2.0.1/cybox_core.xsd
+ http://cybox.mitre.org/common-2 http://cybox.mitre.org/XMLSchema/common/2.0.1/cybox_common.xsd
  http://cybox.mitre.org/objects#AddressObject-2 http://cybox.mitre.org/XMLSchema/objects/Address/2.0.1/Address_Object.xsd
  http://cybox.mitre.org/objects#PortObject-2 http://cybox.mitre.org/XMLSchema/objects/Port/2.0.1/Port_Object.xsd
  http://cybox.mitre.org/objects#SocketAddressObject-1 http://cybox.mitre.org/XMLSchema/objects/Socket_Address/1.0.1/Socket_Address_Object.xsd
  http://cybox.mitre.org/objects#NetworkConnectionObject-2 http://cybox.mitre.org/XMLSchema/objects/Network_Connection/2.0.1/Network_Connection_Object.xsd"
  id="{{ namespace }}:STIXPackage-{{ package_id }}" version="1.0.1">
 	<stix:STIX_Header>
+        <stix:Title>Unauthorized traffic to honeypot</stix:Title>
 		<stix:Description>Describes one or more honeypot incidents</stix:Description>
 		<stix:Information_Source>
 			<stixCommon:Time>
 				<cyboxCommon:Produced_Time>{{ package_timestamp }}</cyboxCommon:Produced_Time>
 			</stixCommon:Time>
+            <stixCommon:Tools>
+                <cyboxCommon:Tool>
+                    <cyboxCommon:Name>Conpot</cyboxCommon:Name>
+                    <cyboxCommon:Type>Honeypot</cyboxCommon:Type>
+                    <cyboxCommon:Description>Conpot is a low interactive server side Industrial Control Systems honeypot designed to be easy to deploy, modify and extend.</cyboxCommon:Description>
+                     <cyboxCommon:References>
+                        <cyboxCommon:Reference reference_type="Source">https://github.com/glastopf/conpot</cyboxCommon:Reference>
+                        <cyboxCommon:Reference reference_type="Other">http://www.conpot.org</cyboxCommon:Reference>
+                    </cyboxCommon:References>
+                    <cyboxCommon:Version>{{ conpot_version }}</cyboxCommon:Version>
+                </cyboxCommon:Tool>
+            </stixCommon:Tools>
 		</stix:Information_Source>
 	</stix:STIX_Header>
 	<stix:Incidents>

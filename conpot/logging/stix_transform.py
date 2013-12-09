@@ -16,9 +16,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from datetime import datetime
-import jinja2
 import uuid
 import os
+
+import jinja2
+import conpot
 
 
 class StixTransformer(object):
@@ -41,7 +43,8 @@ class StixTransformer(object):
                 'observable_id': str(uuid.uuid4()),
                 'source_ip': event['remote'][0],
                 'source_port': event['remote'][1],
-                'l7_protocol': event['data_type']}
+                'l7_protocol': event['data_type'],
+                'conpot_version': conpot.__version__}
 
         if 'public_ip' in event:
             vars['destination_ip'] = event['public_ip']
