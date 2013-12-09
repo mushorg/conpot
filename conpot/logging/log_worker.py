@@ -6,6 +6,7 @@ from datetime import datetime
 from conpot.logging.sqlite_log import SQLiteLogger
 from conpot.logging.hpfriends import HPFriendsLogger
 from conpot.logging.syslog import SysLogger
+from conpot.logging.taxii_log import TaxiiLogger
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class LogWorker(object):
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
+        self.taxii_logger = None
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
@@ -41,6 +43,10 @@ class LogWorker(object):
             logsocket = config.get('syslog', 'socket')
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
+        if config.getboolean('taxii', 'enabled'):
+            # TODO: support for certificates
+            self.taxii_logger = TaxiiLogger(config)
+
         self.enabled = True
 
     def start(self):
@@ -61,6 +67,9 @@ class LogWorker(object):
 
             if self.syslog_client:
                 self.syslog_client.log(event)
+
+            if self.taxii_logger:
+                self.taxii_logger.log(event)
 
     def stop(self):
         self.enabled = False
