@@ -32,4 +32,4 @@ script:
  - nosetests
 notifications:
  irc:
-  - "irc.freenode.org#conpot"
+  - "irc.freenode.org#conpot-dev"
