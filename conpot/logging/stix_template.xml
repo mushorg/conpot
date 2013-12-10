@@ -61,7 +61,7 @@
 			</incident:Categories>
 			<incident:Related_Observables>
 				<incident:Related_Observable>
-					<stixCommon:Observable id="{{ namespace }}:Observable-{{ observable_id }}">
+					<stixCommon:Observable id="{{ namespace }}:Observable-{{ network_observable_id }}">
 						<cybox:Object>
 							<cybox:Properties xsi:type="NetworkConnectionObj:NetworkConnectionObjectType">
 								<NetworkConnectionObj:Layer7_Protocol datatype="string">{{ l7_protocol }}</NetworkConnectionObj:Layer7_Protocol>
@@ -88,7 +88,7 @@
 					</stixCommon:Observable>
 				</incident:Related_Observable>
                  <incident:Related_Observable>
-                       <stixCommon:Observable id="{{ namespace }}:Observable-{{ observable_id }}">
+                       <stixCommon:Observable id="{{ namespace }}:Observable-{{ conpotlog_observable_id }}">
                             <cybox:Object>
                                  <cybox:Properties xsi:type="CustomObj:CustomObjectType" custom_name="ConpotLog">
                                     <cyboxCommon:Custom_Properties>
