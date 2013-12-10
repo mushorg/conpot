@@ -9,7 +9,9 @@
                    xmlns:NetworkConnectionObj="http://cybox.mitre.org/objects#NetworkConnectionObject-2"
                    xmlns:stix="http://stix.mitre.org/stix-1"
                    xmlns:stixCommon="http://stix.mitre.org/common-1"
+                   xmlns:CustomObj="http://cybox.mitre.org/objects#CustomObject-1"
                    xmlns:stixVocabs="http://stix.mitre.org/default_vocabularies-1"
+                   xmlns:ArtifactObj="http://cybox.mitre.org/objects#ArtifactObject-2"
                    xmlns:incident="http://stix.mitre.org/Incident-1"
                    xmlns:dc="http://purl.org/dc/elements/1.1/"
                    xmlns:sch="http://purl.oclc.org/dsdl/schematron"
@@ -23,6 +25,8 @@
  http://cybox.mitre.org/objects#AddressObject-2 http://cybox.mitre.org/XMLSchema/objects/Address/2.0.1/Address_Object.xsd
  http://cybox.mitre.org/objects#PortObject-2 http://cybox.mitre.org/XMLSchema/objects/Port/2.0.1/Port_Object.xsd
  http://cybox.mitre.org/objects#SocketAddressObject-1 http://cybox.mitre.org/XMLSchema/objects/Socket_Address/1.0.1/Socket_Address_Object.xsd
+ http://cybox.mitre.org/objects#ArtifactObject-2 http://cybox.mitre.org/XMLSchema/objects/Artifact/2.0.1/Artifact_Object.xsd
+ http://cybox.mitre.org/objects#CustomObject-1 http://cybox.mitre.org/XMLSchema/objects/Custom/1.0.1/Custom_Object.xsd
  http://cybox.mitre.org/objects#NetworkConnectionObject-2 http://cybox.mitre.org/XMLSchema/objects/Network_Connection/2.0.1/Network_Connection_Object.xsd"
  id="{{ namespace }}:STIXPackage-{{ package_id }}" version="1.0.1">
 	<stix:STIX_Header>
@@ -83,6 +87,18 @@
 						</cybox:Object>
 					</stixCommon:Observable>
 				</incident:Related_Observable>
+                 <incident:Related_Observable>
+                       <stixCommon:Observable id="{{ namespace }}:Observable-{{ observable_id }}">
+                            <cybox:Object>
+                                 <cybox:Properties xsi:type="CustomObj:CustomObjectType" custom_name="ConpotLog">
+                                    <cyboxCommon:Custom_Properties>
+                                        <cyboxCommon:Property name="rawlog">{{ session_log }}</cyboxCommon:Property>
+                                     </cyboxCommon:Custom_Properties>
+                                     <CustomObj:Description>Conpot log</CustomObj:Description>
+                                </cybox:Properties>
+                            </cybox:Object>
+                       </stixCommon:Observable>
+                 </incident:Related_Observable>
 			</incident:Related_Observables>
 		</stix:Incident>
 	</stix:Incidents>

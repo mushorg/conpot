@@ -54,7 +54,9 @@ class Test_Loggers(unittest.TestCase):
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'timestamp': datetime.now(),
-                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68'}
+                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
+                      'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
+                               1: {'request': 'give me apples', 'response': 'no way'}}}
         stixTransformer = StixTransformer(config)
         stix_package_xml = stixTransformer.transform(test_event)
         xmlValidator = STIXValidator(None, True, False)
@@ -74,8 +76,9 @@ class Test_Loggers(unittest.TestCase):
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'timestamp': datetime.now(),
-                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68'}
-
+                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
+                      'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
+                               1: {'request': 'give me apples', 'response': 'no way'}}}
         taxiiLogger = TaxiiLogger(config)
         taxii_result = taxiiLogger.log(test_event)
         # TaxiiLogger returns false if the message could not be delivered

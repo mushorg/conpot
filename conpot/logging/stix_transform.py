@@ -18,6 +18,7 @@
 from datetime import datetime
 import uuid
 import os
+import json
 
 import jinja2
 import conpot
@@ -44,7 +45,8 @@ class StixTransformer(object):
                 'source_ip': event['remote'][0],
                 'source_port': event['remote'][1],
                 'l7_protocol': event['data_type'],
-                'conpot_version': conpot.__version__}
+                'conpot_version': conpot.__version__,
+                'session_log': json.dumps(event['data'])}
 
         if 'public_ip' in event:
             vars['destination_ip'] = event['public_ip']
