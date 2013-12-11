@@ -37,7 +37,7 @@ from conpot.snmp.dynrsp import DynamicResponder
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.host = '127.0.0.1'
-        self.port = 1337
+
         self.log_queue = Queue()
         self.dyn_rsp = DynamicResponder()
         dom = etree.parse('conpot/templates/default.xml')
@@ -46,8 +46,9 @@ class TestBase(unittest.TestCase):
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = command_responder.CommandResponder(self.host, self.port, self.log_queue, os.getcwd(), self.dyn_rsp)
-
+            # get assigned ephemeral port
+            self.snmp_server = command_responder.CommandResponder(self.host, 0, self.log_queue, os.getcwd(), self.dyn_rsp)
+            self.port = self.snmp_server.server_port
         for mib in mibs:
             mib_name = mib.attrib['name']
             for symbol in mib:

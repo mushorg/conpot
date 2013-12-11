@@ -43,17 +43,9 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.snmp_host = '127.0.0.1'
-        self.snmp_port = 1337
         self.log_queue = Queue()
         self.dyn_rsp = DynamicResponder()
-        self.http_server = web_server.HTTPServer('127.0.0.1',
-                                                 8080,
-                                                 'conpot/templates/default.xml',
-                                                 self.log_queue,
-                                                 'conpot/templates/www/default/',
-                                                 self.snmp_port)
 
-        self.http_worker = gevent.spawn(self.http_server.start)
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items
@@ -61,10 +53,22 @@ class TestBase(unittest.TestCase):
             raise Exception("No configuration for SNMP server")
         else:
             self.snmp_server = command_responder.CommandResponder(self.snmp_host,
-                                                                  self.snmp_port,
+                                                                  0,
                                                                   self.log_queue,
                                                                   os.getcwd(),
                                                                   self.dyn_rsp)
+        # get the assigned ephemeral port for snmp
+        self.snmp_port = self.snmp_server.server_port
+
+        self.http_server = web_server.HTTPServer('127.0.0.1',
+                                                 0,
+                                                 'conpot/templates/default.xml',
+                                                 self.log_queue,
+                                                 'conpot/templates/www/default/',
+                                                 self.snmp_port)
+        # get the assigned ephemeral port for http
+        self.http_port = self.http_server.server_port
+        self.http_worker = gevent.spawn(self.http_server.start)
 
         for mib in mibs:
             mib_name = mib.attrib['name']
@@ -107,7 +111,7 @@ class TestBase(unittest.TestCase):
         Objective: Test if http service delivers data on request
         """
 
-        ret = requests.get("http://127.0.0.1:8080/tests/unittest_base.html")
+        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_port))
         self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
 
     def test_http_backend_snmp(self):
@@ -126,7 +130,7 @@ class TestBase(unittest.TestCase):
             assert_reference = None
 
         if assert_reference is not None:
-            ret = requests.get("http://127.0.0.1:8080/tests/unittest_snmp.html")
+            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_snmp.html".format(self.http_port))
             self.assertIn(assert_reference, ret.text, "Could not find SNMP value in test output.")
         else:
             raise Exception("Assertion failed. Reference OID 'sysName' not found in SNMP template.")
@@ -147,7 +151,7 @@ class TestBase(unittest.TestCase):
 
             # requesting file via HTTP along with measuring the timedelta
             dt_req_start = datetime.datetime.now()
-            requests.get("http://127.0.0.1:8080/tests/unittest_tarpit.html")
+            requests.get("http://127.0.0.1:{0}/tests/unittest_tarpit.html".format(self.http_port))
             dt_req_delta = datetime.datetime.now() - dt_req_start
 
             # check if the request took at least the expected delay to be processed

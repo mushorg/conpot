@@ -1053,6 +1053,7 @@ class CommandResponder(object):
 
         # Create HTTP server class
         self.httpd = SubHTTPServer((host, port), HTTPServer, template, docpath, snmp_host, snmp_port, log_queue)
+        self.server_port = self.httpd.server_port
 
     def serve_forever(self):
         self.httpd.serve_forever()

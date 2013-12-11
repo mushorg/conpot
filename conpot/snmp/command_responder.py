@@ -65,6 +65,7 @@ class CommandResponder(object):
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
         udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
         udp_sock.bind((host, port))
+        self.server_port = udp_sock.getsockname()[1]
         # UDP over IPv4
         self.addSocketTransport(
             self.snmpEngine,

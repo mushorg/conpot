@@ -34,6 +34,7 @@ class HTTPServer(object):
 
         self.cmd_responder = CommandResponder(host, port, template, log_queue, docpath, self.snmp_host, self.snmp_port)
         self.cmd_responder.httpd.allow_reuse_address = True
+        self.server_port = self.cmd_responder.server_port
 
     def start(self):
         if self.cmd_responder:
