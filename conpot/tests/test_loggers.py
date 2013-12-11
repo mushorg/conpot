@@ -53,6 +53,7 @@ class Test_Loggers(unittest.TestCase):
         config.set('taxii', 'enabled', True)
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
+                      'public_ip': '111.222.111.222',
                       'timestamp': datetime.now(),
                       'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},

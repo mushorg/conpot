@@ -2,7 +2,6 @@
 <stix:STIX_Package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xmlns:cybox="http://cybox.mitre.org/cybox-2"
                    xmlns:cyboxCommon="http://cybox.mitre.org/common-2"
-                   xmlns:cyboxVocabs="http://cybox.mitre.org/default_vocabularies-2"
                    xmlns:AddressObj="http://cybox.mitre.org/objects#AddressObject-2"
                    xmlns:PortObj="http://cybox.mitre.org/objects#PortObject-2"
                    xmlns:SocketAddressObj="http://cybox.mitre.org/objects#SocketAddressObject-1"
@@ -10,11 +9,7 @@
                    xmlns:stix="http://stix.mitre.org/stix-1"
                    xmlns:stixCommon="http://stix.mitre.org/common-1"
                    xmlns:CustomObj="http://cybox.mitre.org/objects#CustomObject-1"
-                   xmlns:stixVocabs="http://stix.mitre.org/default_vocabularies-1"
-                   xmlns:ArtifactObj="http://cybox.mitre.org/objects#ArtifactObject-2"
                    xmlns:incident="http://stix.mitre.org/Incident-1"
-                   xmlns:dc="http://purl.org/dc/elements/1.1/"
-                   xmlns:sch="http://purl.oclc.org/dsdl/schematron"
                    xmlns:{{ namespace }}="{{ namespace_uri }}"
                    xsi:schemaLocation="
  http://stix.mitre.org/stix-1 http://stix.mitre.org/XMLSchema/core/1.0.1/stix_core.xsd
@@ -67,7 +62,7 @@
 								<NetworkConnectionObj:Layer7_Protocol datatype="string">{{ l7_protocol }}</NetworkConnectionObj:Layer7_Protocol>
 								<NetworkConnectionObj:Source_Socket_Address>
 									<SocketAddressObj:IP_Address category="ipv4-addr" is_source="true">
-										<AddressObj:Address_Value datatype="string">{{ source_ip }}</AddressObj:Address_Value>
+										<AddressObj:Address_Value>{{ source_ip }}</AddressObj:Address_Value>
 									</SocketAddressObj:IP_Address>
 									<SocketAddressObj:Port>
 										<PortObj:Port_Value>{{ source_port }}</PortObj:Port_Value>
@@ -76,7 +71,7 @@
                                 <NetworkConnectionObj:Destination_Socket_Address>
                                     {% if destination_ip %}
 									<SocketAddressObj:IP_Address category="ipv4-addr">
-										<AddressObj:Address_Value datatype="string">{{ destination_ip }}</AddressObj:Address_Value>
+										<AddressObj:Address_Value>{{ destination_ip }}</AddressObj:Address_Value>
 									</SocketAddressObj:IP_Address>
                                     {% endif %}
 									<SocketAddressObj:Port>
