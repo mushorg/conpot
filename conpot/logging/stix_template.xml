@@ -31,18 +31,6 @@
 			<stixCommon:Time>
 				<cyboxCommon:Produced_Time>{{ package_timestamp }}</cyboxCommon:Produced_Time>
 			</stixCommon:Time>
-            <stixCommon:Tools>
-                <cyboxCommon:Tool>
-                    <cyboxCommon:Name>Conpot</cyboxCommon:Name>
-                    <cyboxCommon:Type>Honeypot</cyboxCommon:Type>
-                    <cyboxCommon:Description>Conpot is a low interactive server side Industrial Control Systems honeypot designed to be easy to deploy, modify and extend.</cyboxCommon:Description>
-                     <cyboxCommon:References>
-                        <cyboxCommon:Reference reference_type="Source">https://github.com/glastopf/conpot</cyboxCommon:Reference>
-                        <cyboxCommon:Reference reference_type="Other">http://www.conpot.org</cyboxCommon:Reference>
-                    </cyboxCommon:References>
-                    <cyboxCommon:Version>{{ conpot_version }}</cyboxCommon:Version>
-                </cyboxCommon:Tool>
-            </stixCommon:Tools>
 		</stix:Information_Source>
 	</stix:STIX_Header>
 	<stix:Incidents>
@@ -54,6 +42,20 @@
 			<incident:Categories>
 				<incident:Category>Scans/Probes/Attempted Access</incident:Category>
 			</incident:Categories>
+            <incident:Reporter>
+                <stixCommon:Tools>
+                    <cyboxCommon:Tool>
+                        <cyboxCommon:Name>Conpot</cyboxCommon:Name>
+                        <cyboxCommon:Type>Honeypot</cyboxCommon:Type>
+                        <cyboxCommon:Description>Conpot is a low interactive server side Industrial Control Systems honeypot designed to be easy to deploy, modify and extend.</cyboxCommon:Description>
+                         <cyboxCommon:References>
+                            <cyboxCommon:Reference reference_type="Source">https://github.com/glastopf/conpot</cyboxCommon:Reference>
+                            <cyboxCommon:Reference reference_type="Other">http://www.conpot.org</cyboxCommon:Reference>
+                        </cyboxCommon:References>
+                        <cyboxCommon:Version>{{ conpot_version }}</cyboxCommon:Version>
+                    </cyboxCommon:Tool>
+                </stixCommon:Tools>
+            </incident:Reporter>
 			<incident:Related_Observables>
 				<incident:Related_Observable>
 					<stixCommon:Observable id="{{ namespace }}:Observable-{{ network_observable_id }}">
