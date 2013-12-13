@@ -10,11 +10,16 @@
                    xmlns:stixCommon="http://stix.mitre.org/common-1"
                    xmlns:CustomObj="http://cybox.mitre.org/objects#CustomObject-1"
                    xmlns:incident="http://stix.mitre.org/Incident-1"
+                   xmlns:Identity="http://stix.mitre.org/extensions/Identity#CIQIdentity3.0-1"
+                   xmlns:ciq="urn:oasis:names:tc:ciq:xpil:3"
+                   xmlns:n="urn:oasis:names:tc:ciq:xnl:3"
                    xmlns:{{ namespace }}="{{ namespace_uri }}"
                    xsi:schemaLocation="
+ http://stix.mitre.org/extensions/Identity#CIQIdentity3.0-1 http://stix.mitre.org/XMLSchema/extensions/identity/ciq_identity_3.0/1.0.1/ciq_identity_3.0.xsd
  http://stix.mitre.org/stix-1 http://stix.mitre.org/XMLSchema/core/1.0.1/stix_core.xsd
  http://stix.mitre.org/common-1 http://stix.mitre.org/XMLSchema/common/1.0.1/stix_common.xsd
  http://stix.mitre.org/Incident-1 http://stix.mitre.org/XMLSchema/incident/1.0.1/incident.xsd
+ http://stix.mitre.org/extensions/Address#CIQAddress3.0-1 http://stix.mitre.org/XMLSchema/extensions/address/ciq_address_3.0/1.0.1/ciq_address_3.0.xsd
  http://cybox.mitre.org/cybox-2 http://cybox.mitre.org/XMLSchema/core/2.0.1/cybox_core.xsd
  http://cybox.mitre.org/common-2 http://cybox.mitre.org/XMLSchema/common/2.0.1/cybox_common.xsd
  http://cybox.mitre.org/objects#AddressObject-2 http://cybox.mitre.org/XMLSchema/objects/Address/2.0.1/Address_Object.xsd
@@ -97,6 +102,24 @@
                        </stixCommon:Observable>
                  </incident:Related_Observable>
 			</incident:Related_Observables>
+            {% if include_contact_info %}
+            <incident:Contact>
+                <stixCommon:Identity xsi:type='Identity:CIQIdentity3.0InstanceType'>
+                    <Identity:Specification>
+                        <ciq:PartyName>
+                            <n:NameLine>
+                                {{ contact_name }}
+                            </n:NameLine>
+                        </ciq:PartyName>
+                        <ciq:ElectronicAddressIdentifiers>
+                            <ciq:ElectronicAddressIdentifier ciq:Type='EMAIL'>
+                            {{ contact_mail }}
+                            </ciq:ElectronicAddressIdentifier>
+                        </ciq:ElectronicAddressIdentifiers>
+                    </Identity:Specification>
+                </stixCommon:Identity>
+            </incident:Contact>
+            {% endif %}
 		</stix:Incident>
 	</stix:Incidents>
 </stix:STIX_Package>

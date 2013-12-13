@@ -28,6 +28,7 @@ class StixTransformer(object):
     def __init__(self, config):
         template_loader = jinja2.FileSystemLoader(searchpath=os.path.dirname(__file__))
         template_env = jinja2.Environment(loader=template_loader)
+        self.config = config._sections['taxii']
         self.protocol_to_port_mapping = {'modbus': config.getint('modbus', 'port'),
                                          'http': config.getint('http', 'port'),
                                          's7comm': config.getint('modbus', 'port'),
@@ -47,7 +48,10 @@ class StixTransformer(object):
                 'source_port': event['remote'][1],
                 'l7_protocol': event['data_type'],
                 'conpot_version': conpot.__version__,
-                'session_log': json.dumps(event['data'])}
+                'session_log': json.dumps(event['data']),
+                'include_contact_info': self.config['include_contact_info'],
+                'contact_name': self.config['contact_name'],
+                'contact_mail': self.config['contact_email']}
 
         if 'public_ip' in event:
             vars['destination_ip'] = event['public_ip']
