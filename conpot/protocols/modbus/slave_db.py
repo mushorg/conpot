@@ -4,7 +4,7 @@ from lxml import etree
 from modbus_tk.modbus import Databank, DuplicatedKeyError, MissingKeyError
 from modbus_tk import defines
 
-from conpot.modbus.slave import MBSlave
+from conpot.protocols.modbus.slave import MBSlave
 
 
 class SlaveBase(Databank):

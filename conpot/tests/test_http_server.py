@@ -27,8 +27,8 @@ import gevent
 import requests
 
 from conpot.snmp import command_responder
-from conpot.snmp.dynrsp import DynamicResponder
-from conpot.http import web_server
+from conpot.protocols.snmp.dynrsp import DynamicResponder
+from conpot.protocols.http import web_server
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 monkey.patch_all()

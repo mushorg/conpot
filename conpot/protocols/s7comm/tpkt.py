@@ -1,7 +1,7 @@
 from struct import *
 import struct
 
-from conpot.s7comm.exceptions import ParseException
+from conpot.protocols.s7comm.exceptions import ParseException
 
 
 class TPKT:

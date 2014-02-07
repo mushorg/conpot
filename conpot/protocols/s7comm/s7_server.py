@@ -24,11 +24,11 @@ import gevent.monkey
 gevent.monkey.patch_all()
 import uuid
 import socket
-from tpkt import TPKT
-from cotp import COTP as COTP_BASE_packet
-from cotp import COTP_ConnectionRequest
-from cotp import COTP_ConnectionConfirm
-from s7 import S7
+from conpot.protocols.s7comm.tpkt import TPKT
+from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
+from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
+from conpot.protocols.s7comm.cotp import COTP_ConnectionConfirm
+from conpot.protocols.s7comm.s7 import S7
 
 import logging
 from lxml import etree

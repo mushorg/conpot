@@ -27,7 +27,7 @@ import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
 #we need to monkey patch for modbus_tcp.TcpMaster
-from conpot.modbus import modbus_server
+from conpot.protocols.modbus import modbus_server
 
 monkey.patch_all()
 
@@ -79,7 +79,7 @@ class TestBase(unittest.TestCase):
 
     def test_modbus_logging(self):
         """
-        Objective: Test if modbus generates logging messages as expected.
+        Objective: Test if modbus generates loggers messages as expected.
         Expected output is a dictionary with the following structure:
         {'timestamp': datetime.datetime(2013, 4, 23, 18, 47, 38, 532960),
          'remote': ('127.0.0.1', 60991),

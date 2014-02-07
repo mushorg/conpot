@@ -26,16 +26,13 @@ import platform
 from ConfigParser import ConfigParser
 
 import gevent
-from gevent.queue import Queue
 import requests
 from requests.exceptions import Timeout, ConnectionError
 
 import conpot
-from conpot.logging.log_worker import LogWorker
-from conpot.snmp.snmp_server import SNMPServer
-from conpot.modbus.modbus_server import ModbusServer
-from conpot.http.web_server import HTTPServer
-from conpot.s7comm.s7_server import S7Server
+
+from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.core.session_manager import SessionManager
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -148,67 +145,27 @@ def main():
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
-    log_queue = Queue()
-    log_worker = LogWorker(config, log_queue, public_ip)
-    log_worker_greenlet = gevent.spawn(log_worker.start)
-
-    modbus_enabled = config.getboolean('modbus', 'enabled')
-    if modbus_enabled:
-        modbus_host = config.get('modbus', 'host')
-        modbus_port = config.getint('modbus', 'port')
-        modbus_instance = ModbusServer(args.template, log_queue)
-        modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
-
-    S7_enabled = config.getboolean('s7', 'enabled')
-    if S7_enabled:
-        S7_host = config.get('s7', 'host')
-        S7_port = config.getint('s7', 'port')
-        S7_instance = S7Server(args.template, log_queue)
-        S7_server = S7_instance.get_server(S7_host, S7_port)
-
     snmp_enabled = config.getboolean('snmp', 'enabled')
     snmp_host = config.get('snmp', 'host')
     snmp_port = config.getint('snmp', 'port')
     if snmp_enabled:
-        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
-
-    http_enabled = config.getboolean('http', 'enabled')
-    if http_enabled:
-        http_host = config.get('http', 'host')
-        http_port = config.getint('http', 'port')
-        http_server = HTTPServer(http_host, http_port, args.template, log_queue, args.www, snmp_port)
+        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
 
     servers = list()
     try:
-        if modbus_enabled:
-            servers.append(gevent.spawn(modbus_server.serve_forever))
+        # TODO: All this from XML
         if snmp_enabled:
             servers.append(gevent.spawn(snmp_server.start))
-        if http_enabled:
-            servers.append(gevent.spawn(http_server.start))
-        if S7_enabled:
-            servers.append(gevent.spawn(S7_server.start))
-        #time to allow servers to bind ports, open files, etc...
         gevent.sleep(5)
         drop_privileges()
-        #fail hard if the log worker goes down.
-        gevent.Greenlet.join(log_worker_greenlet)
+        gevent.joinall(servers)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
-        log_worker.stop()
         if snmp_enabled:
             snmp_server.stop()
-        if modbus_enabled:
-            modbus_server.stop()
-        if http_enabled:
-            http_server.stop()
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
-
-    #make sure that we display the error messages if we crashed due to an error in the log worker
-    if log_worker_greenlet.exception is not None:
-        logger.error('Fatal: {0}'.format(log_worker_greenlet.exception))
 
 if __name__ == "__main__":
     main()

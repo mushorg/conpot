@@ -17,7 +17,7 @@
 
 import logging
 
-from conpot.http.command_responder import CommandResponder
+from conpot.protocols.http.command_responder import CommandResponder
 
 
 logger = logging.getLogger()

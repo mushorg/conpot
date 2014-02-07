@@ -10,14 +10,12 @@ from pysnmp.proto.api import v2c
 import pysnmp.smi.error
 from pysnmp import debug
 import gevent
+import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 
 
 class conpot_extension(object):
-    def __init__(self, log_queue):
-        self.log_queue = log_queue
-
     def _getStateInfo(self, snmpEngine, stateReference):
         for k, v in snmpEngine.messageProcessingSubsystems.items():
             if stateReference in v._cache.__dict__['_Cache__stateReferenceIndex']:
@@ -34,6 +32,7 @@ class conpot_extension(object):
         return addr, snmp_version
 
     def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None):
+        session = conpot_core.get_session('snmp', addr[0], addr[1])
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
         log_dict = {'remote': addr,
@@ -48,8 +47,7 @@ class conpot_extension(object):
             res_val = res_varBinds[0][1]
             logger.info('SNMPv{0} response to {1}: {2} {3}'.format(version, addr, res_oid, res_val))
             log_dict['data'][0]['response'] = 'SNMPv{0} response: {1} {2}'.format(version, res_oid, res_val)
-
-        self.log_queue.put(log_dict)
+        # log here...
 
     def do_tarpit(self, delay):
 
@@ -98,13 +96,13 @@ class conpot_extension(object):
 
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
-        conpot_extension.__init__(self, log_queue)
+        conpot_extension.__init__(self)
 
     def handleMgmtOperation(
             self, snmpEngine, stateReference, contextName, PDU, acInfo):
@@ -150,17 +148,18 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
 
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
-        conpot_extension.__init__(self, log_queue)
+        conpot_extension.__init__(self)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
         (acFun, acCtx) = acInfo
         # rfc1905: 4.2.2.1
+        print acCtx
         mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
         varBinds = v2c.apiPDU.getVarBinds(PDU)
 
@@ -207,13 +206,13 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
-        conpot_extension.__init__(self, log_queue)
+        conpot_extension.__init__(self)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
         (acFun, acCtx) = acInfo
@@ -270,12 +269,12 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 
 
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, log_queue, dyn_rsp):
+    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
         self.dyn_rsp = dyn_rsp
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
-        conpot_extension.__init__(self, log_queue)
+        conpot_extension.__init__(self)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):

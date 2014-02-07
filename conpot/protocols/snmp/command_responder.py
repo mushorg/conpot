@@ -13,15 +13,14 @@ from pysnmp.smi import builder
 import gevent
 from gevent import socket
 
-from conpot.snmp import conpot_cmdrsp
+from conpot.protocols.snmp import conpot_cmdrsp
 from gevent.server import DatagramServer
-
 
 logger = logging.getLogger(__name__)
 
 
 class SNMPDispatcher(DatagramServer):
-    def __init__(self, log_queue):
+    def __init__(self):
         self.__timerResolution = 0.5
 
     def registerRecvCbFun(self, recvCbFun, recvId=None):
@@ -45,9 +44,8 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, log_queue, mibpaths, dyn_rsp):
+    def __init__(self, host, port, mibpaths, dyn_rsp):
 
-        self.log_queue = log_queue
         self.dyn_rsp = dyn_rsp
 
         # Create SNMP engine
@@ -109,15 +107,15 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
-        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.log_queue, dyn_rsp)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
         if not snmpEngine.transportDispatcher:
-            snmpEngine.registerTransportDispatcher(SNMPDispatcher(self.log_queue))
+            snmpEngine.registerTransportDispatcher(SNMPDispatcher())
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
     def register(self, mibname, symbolname, instance, value, engine_type='static', engine_aux=None):

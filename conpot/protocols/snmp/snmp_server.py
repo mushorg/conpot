@@ -16,19 +16,21 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from lxml import etree
 import tempfile
 import shutil
 
-from conpot.snmp.dynrsp import DynamicResponder
-from conpot.snmp.command_responder import CommandResponder
-from conpot.snmp.build_pysnmp_mib_wrapper import find_mibs, compile_mib
+from lxml import etree
+
+from conpot.protocols.snmp.dynrsp import DynamicResponder
+from conpot.protocols.snmp.command_responder import CommandResponder
+from conpot.protocols.snmp.build_pysnmp_mib_wrapper import find_mibs, compile_mib
+
 
 logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, log_queue, mibpaths, rawmibs_dirs):
+    def __init__(self, host, port, template, mibpaths, rawmibs_dirs):
         """
         :param host:        hostname or ip address on which to server the snmp service (string).
         :param port:        listen port (integer).
@@ -51,7 +53,7 @@ class SNMPServer(object):
                 tmp_mib_dir = tempfile.mkdtemp()
                 mibpaths.append(tmp_mib_dir)
                 available_mibs = find_mibs(rawmibs_dirs)
-                self.cmd_responder = CommandResponder(self.host, self.port, log_queue, mibpaths, dyn_rsp)
+                self.cmd_responder = CommandResponder(self.host, self.port, mibpaths, dyn_rsp)
 
                 # parse global snmp configuration
                 snmp_config = dom.xpath('//conpot_template/snmp/config/*')

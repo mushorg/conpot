@@ -107,10 +107,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def send_response(self, code, message=None):
         """Send the response header and log the response code.
         This function is overloaded to change the behaviour when
-        logging and sending default headers.
+        loggers and sending default headers.
         """
 
-        # replace integrated logging with conpot logger..
+        # replace integrated loggers with conpot logger..
         # self.log_request(code)
 
         if message is None:
@@ -490,7 +490,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # send payload in chunks to the client
             self.send_chunked(chunks, payload, trailers)
 
-        # logging
+        # loggers
         self.log(self.request_version, self.command, self.client_address, (self.path,
                                                                            self.headers.headers,
                                                                            unsupported_request_data), status)
@@ -549,7 +549,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # send payload (the actual content) to client
         self.wfile.write(payload)
 
-        # logging
+        # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,
@@ -618,7 +618,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.end_headers()
 
-        # logging
+        # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,
@@ -693,7 +693,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.end_headers()
 
-        # logging
+        # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,
@@ -757,7 +757,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # send payload in chunks to the client
             self.send_chunked(chunks, payload, trailers)
 
-        # logging
+        # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,
@@ -817,7 +817,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # send payload in chunks to the client
             self.send_chunked(chunks, payload, trailers)
 
-        # logging
+        # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,

@@ -3,10 +3,10 @@ import logging
 import uuid
 from datetime import datetime
 
-from conpot.logging.sqlite_log import SQLiteLogger
-from conpot.logging.hpfriends import HPFriendsLogger
-from conpot.logging.syslog import SysLogger
-from conpot.logging.taxii_log import TaxiiLogger
+from conpot.core.loggers.sqlite_log import SQLiteLogger
+from conpot.core.loggers.hpfriends import HPFriendsLogger
+from conpot.core.loggers.syslog import SysLogger
+from conpot.core.loggers.taxii_log import TaxiiLogger
 
 logger = logging.getLogger(__name__)
 

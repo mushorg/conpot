@@ -32,5 +32,5 @@ class SysLogger(object):
             logger.addHandler(SysLogHandler(logdevice))
 
     def log(self, data):
-        # stub function since the additional handler has been added to the root logging instance.
+        # stub function since the additional handler has been added to the root loggers instance.
         pass

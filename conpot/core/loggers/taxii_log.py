@@ -15,13 +15,13 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from datetime import datetime
 import logging
 
-from conpot.logging.stix_transform import StixTransformer
 import libtaxii
 from libtaxii.messages import ContentBlock, InboxMessage, generate_message_id
 from libtaxii.clients import HttpClient
+
+from conpot.core.loggers.stix_transform import StixTransformer
 
 logger = logging.getLogger(__name__)
 

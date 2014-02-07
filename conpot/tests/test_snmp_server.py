@@ -27,10 +27,11 @@ from gevent import monkey
 from pysnmp.proto import rfc1902
 
 #we need to monkey patch for modbus_tcp.TcpMaster
+from conpot.protocols.snmp import command_responder
+
 monkey.patch_all()
 from conpot.snmp import snmp_client
-from conpot.snmp import command_responder
-from conpot.snmp.dynrsp import DynamicResponder
+from conpot.protocols.snmp.dynrsp import DynamicResponder
 
 
 
