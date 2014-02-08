@@ -32,7 +32,7 @@ from requests.exceptions import Timeout, ConnectionError
 import conpot
 
 from conpot.protocols.snmp.snmp_server import SNMPServer
-from conpot.core.session_manager import SessionManager
+import conpot.core as conpot_core
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -144,6 +144,9 @@ def main():
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
+
+    session_manager = conpot_core.get_sessionManager()
+    session_manager.initialize_datastore(args.template)
 
     snmp_enabled = config.getboolean('snmp', 'enabled')
     snmp_host = config.get('snmp', 'host')

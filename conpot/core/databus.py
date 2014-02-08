@@ -17,6 +17,10 @@
 
 import gevent
 import inspect
+import logging
+from lxml import etree
+
+logger = logging.getLogger(__name__)
 
 
 class Databus(object):
@@ -53,4 +57,36 @@ class Databus(object):
         if key not in self._observer_map:
             self._observer_map = []
         self._observer_map[key].append(callback)
+
+    def _initialize_value(self):
+        pass
+
+    def initialize(self, config_file):
+        self._data = {}
+        logger.debug('Initializing databus using {0}.'.format(config_file))
+        dom = etree.parse(config_file)
+        entries = dom.xpath('//conpot_template/core/datastore/key_value_mappings/*')
+        for entry in entries:
+            key = entry.attrib['name']
+            value = entry.xpath('./value/text()')[0]
+            value_type = str(entry.xpath('./value/@type')[0])
+            assert(key not in self._data)
+            logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
+            if value_type == 'value':
+                self.set_value(key, value)
+            elif value_type == 'function':
+                namespace, _classname = value.rsplit('.', 1)
+                # TODO: Convert each element to proper types
+                params = entry.xpath('./value/@param')
+                module = __import__(namespace, fromlist=[_classname])
+                _class = getattr(module, _classname)
+                if len(params) > 0:
+                    self.set_value(key, _class(*(tuple(params))))
+                else:
+                    self.set_value(key, _class())
+            else:
+                raise Exception('Unknown value type: {0}'.format(value_type))
+
+
+
 

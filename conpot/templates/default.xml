@@ -15,7 +15,7 @@
                 </key>
                 <key name="GpsPosition">
                 <!-- Returns coordinates that deviates from the given coordinates -->
-                    <value type="function" parameters="25.000068, -71.000012">conpot.emulators.sensors.deviatinggps</value>
+                    <value type="function" param="25.000068, -71.000012">conpot.emulators.sensors.deviatinggps</value>
                 </key>
             </key_value_mappings>
         </datastore>
