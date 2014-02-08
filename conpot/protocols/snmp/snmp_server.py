@@ -45,7 +45,7 @@ class SNMPServer(object):
         dyn_rsp = DynamicResponder()
 
         dom = etree.parse(template)
-        mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+        mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
 
         # only enable snmp server if we have configuration items
         if mibs:
@@ -56,9 +56,8 @@ class SNMPServer(object):
                 self.cmd_responder = CommandResponder(self.host, self.port, mibpaths, dyn_rsp)
 
                 # parse global snmp configuration
-                snmp_config = dom.xpath('//conpot_template/snmp/config/*')
+                snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')
                 if snmp_config:
-
                     for entity in snmp_config:
 
                         # TARPIT: individual response delays
