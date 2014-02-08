@@ -35,9 +35,9 @@ class Databus(object):
         assert(key in self._data)
         item = self._data[key]
         # if the item is a function return the result of the function
-        if hasattr(item, '__call__'):
+        if getattr(item, "get_value", None):
             # need MROW lock on this
-            return item()
+            return item.get_value()
         else:
             return item
 
