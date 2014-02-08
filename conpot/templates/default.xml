@@ -11,7 +11,7 @@
                     <value type="value">Siemens, SIMATIC, S7-200</value>
                 </key>
                 <key name="Uptime">
-                    <value type="function">conpot.emulators.misc.uptime</value>
+                    <value type="function">conpot.emulators.misc.uptime.Uptime</value>
                 </key>
                 <key name="GpsPosition">
                 <!-- Returns coordinates that deviates from the given coordinates -->
