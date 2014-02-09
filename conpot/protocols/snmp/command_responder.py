@@ -14,6 +14,7 @@ import gevent
 from gevent import socket
 
 from conpot.protocols.snmp import conpot_cmdrsp
+from conpot.protocols.snmp.dynrsp import DynamicResponder
 from gevent.server import DatagramServer
 
 logger = logging.getLogger(__name__)
@@ -44,9 +45,11 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, mibpaths, dyn_rsp):
+    def __init__(self, host, port, mibpaths):
 
-        self.dyn_rsp = dyn_rsp
+        self.oid_mapping = {}
+        self.dyn_rsp = DynamicResponder(self.oid_mapping)
+        # mapping between OID and databus keys
 
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -107,10 +110,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
-        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
-        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
-        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, dyn_rsp)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
@@ -118,18 +121,20 @@ class CommandResponder(object):
             snmpEngine.registerTransportDispatcher(SNMPDispatcher())
         snmpEngine.transportDispatcher.registerTransport(transportDomain, transport)
 
-    def register(self, mibname, symbolname, instance, value, engine_type='static', engine_aux=None):
+    def register(self, mibname, symbolname, instance, value, profile_map_name):
         """Register OID"""
         self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
         s = self._get_mibSymbol(mibname, symbolname)
 
         if s:
-            MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI','MibScalarInstance')
+            self.oid_mapping[s.name+instance] = profile_map_name
+
+            MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
+                                                                                                            'MibScalarInstance')
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
-            
-            self.dyn_rsp.response_table[s.name+instance] = [engine_type,engine_aux,value]
-            logger.debug('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp {5}[{6}]'.format(s.name, instance, s.label, mibname, value, engine_type, engine_aux))
+
+            logger.debug('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp.'.format(s.name, instance, s.label, mibname, value))
 
         else:
             logger.debug('Skipped: OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))

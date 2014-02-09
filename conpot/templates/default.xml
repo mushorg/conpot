@@ -2,20 +2,26 @@
     <core>
         <datastore>
             <key_value_mappings>
-                <key name="OutsideTemperatureSensor">
-                    <!-- Example where we use a external API to supply realistic values to the attacker -->
-                    <value type="function"
-                           parameters="NewYork">conpot.emulators.sensors.outsidetemperature</value>
-                </key>
                 <key name="SystemDescription">
                     <value type="value">Siemens, SIMATIC, S7-200</value>
                 </key>
                 <key name="Uptime">
                     <value type="function">conpot.emulators.misc.uptime.Uptime</value>
                 </key>
-                <key name="GpsPosition">
-                <!-- Returns coordinates that deviates from the given coordinates -->
-                    <value type="function" param="25.000068, -71.000012">conpot.emulators.sensors.deviatinggps</value>
+                <key name="sysObjectID">
+                    <value type="value">0.0</value>
+                </key>
+                <key name="sysContact">
+                    <value type="value">Siemens AG</value>
+                </key>
+                <key name="sysName">
+                    <value type="value">CP 443-1 EX40</value>
+                </key>
+                <key name="sysLocation">
+                    <value type="value">Venus</value>
+                </key>
+                <key name="sysServices">
+                    <value type="value">72</value>
                 </key>
             </key_value_mappings>
         </datastore>
@@ -44,8 +50,17 @@
                     <symbol name="sysUpTime">
                         <value>Uptime</value>
                     </symbol>
-                    <symbol name="sysPosition">
-                        <value>GpsPosition</value>
+                    <symbol name="sysContact">
+                        <value>sysContact</value>
+                    </symbol>
+                    <symbol name="sysName">
+                        <value>sysName</value>
+                    </symbol>
+                    <symbol name="sysLocation">
+                        <value>sysLocation</value>
+                    </symbol>
+                    <symbol name="sysServices">
+                        <value>sysServices</value>
                     </symbol>
                 </mib>
             </mibs>

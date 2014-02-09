@@ -125,6 +125,9 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
+
+            raise Exception('This class is not converted to new architecture')
+
             response_class = self.dyn_rsp.update_dynamic_values(reference_class,
                                                               tuple(rspVarBinds[0][0]),
                                                               reference_value)
@@ -159,7 +162,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
         (acFun, acCtx) = acInfo
         # rfc1905: 4.2.2.1
-        print acCtx
+
         mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
         varBinds = v2c.apiPDU.getVarBinds(PDU)
 
@@ -173,17 +176,14 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         try:
             while 1:
                 rspVarBinds = mgmtFun(varBinds, (acFun, acCtx))
+
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
-                response_class = self.dyn_rsp.update_dynamic_values(reference_class,
-                                                                  tuple(rspVarBinds[0][0]),
-                                                                  reference_value)
 
-                # if there were changes to the dynamic value table, craft a new response
-                if response_class:
-                    dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
-                    rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
+                response = self.dyn_rsp.get_response(reference_class, tuple(rspVarBinds[0][0]))
+                if response:
+                    rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                     rspVarBinds = rspModBinds
 
                 # apply tarpit delay
@@ -229,7 +229,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         evasion_state = self.dyn_rsp.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Bulk'):
             return None
-
+        raise Exception('This class is not converted to new architecture')
         try:
             N = min(int(nonRepeaters), len(reqVarBinds))
             M = int(maxRepetitions)
@@ -303,6 +303,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
             self.releaseStateInformation(stateReference)
 
+            raise Exception('This class is not converted to new architecture')
             # update dynamic table with new value
             self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2] = rspVarBinds[0][1]
 

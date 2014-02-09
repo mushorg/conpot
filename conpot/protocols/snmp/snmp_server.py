@@ -21,9 +21,9 @@ import shutil
 
 from lxml import etree
 
-from conpot.protocols.snmp.dynrsp import DynamicResponder
 from conpot.protocols.snmp.command_responder import CommandResponder
 from conpot.protocols.snmp.build_pysnmp_mib_wrapper import find_mibs, compile_mib
+import conpot.core as conpot_core
 
 
 logger = logging.getLogger()
@@ -42,8 +42,6 @@ class SNMPServer(object):
         self.host = host
         self.port = port
 
-        dyn_rsp = DynamicResponder()
-
         dom = etree.parse(template)
         mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
 
@@ -53,7 +51,7 @@ class SNMPServer(object):
                 tmp_mib_dir = tempfile.mkdtemp()
                 mibpaths.append(tmp_mib_dir)
                 available_mibs = find_mibs(rawmibs_dirs)
-                self.cmd_responder = CommandResponder(self.host, self.port, mibpaths, dyn_rsp)
+                self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
 
                 # parse global snmp configuration
                 snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')
@@ -84,6 +82,7 @@ class SNMPServer(object):
                             elif entity.attrib['command'].lower() == 'bulk':
                                 self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
 
+                databus = conpot_core.get_databus()
                 # parse mibs and oid tables
                 for mib in mibs:
                     mib_name = mib.attrib['name']
@@ -102,25 +101,17 @@ class SNMPServer(object):
                             # use default instance (0)
                             symbol_instance = (0,)
 
-                        # retrieve value from template
-                        value = symbol.xpath('./value/text()')[0]
 
-                        # retrieve engine from template
-                        if len(symbol.xpath('./engine')) > 0:
-                            engine_type = symbol.find('./engine').attrib['type']
-                            engine_aux = symbol.findtext('./engine')
-                        else:
-                            # disable dynamic responses (static)
-                            engine_type = 'static'
-                            engine_aux = ''
+                        # retrieve value from databus
+                        value = databus.get_value(symbol.xpath('./value/text()')[0])
+                        profile_map_name = symbol.xpath('./value/text()')[0]
 
-                            # register this MIB instance to the command responder
+                        # register this MIB instance to the command responder
                         self.cmd_responder.register(mib_name,
                                                     symbol_name,
                                                     symbol_instance,
                                                     value,
-                                                    engine_type,
-                                                    engine_aux)
+                                                    profile_map_name)
             finally:
                 #cleanup compiled mib files
                 shutil.rmtree(tmp_mib_dir)
