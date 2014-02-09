@@ -18,6 +18,7 @@
 import gevent
 import inspect
 import logging
+import json
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,9 @@ class Databus(object):
             else:
                 raise Exception('Unknown value type: {0}'.format(value_type))
 
-
-
-
+    def get_shapshot(self):
+        # takes a snapshot of the internal honeypot state and returns it as json.
+        snapsnot = {}
+        for key in self._data.keys():
+            snapsnot[key] = self.get_value(key)
+        return json.dumps(snapsnot)
