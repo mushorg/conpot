@@ -126,16 +126,9 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
 
-            raise Exception('This class is not converted to new architecture')
-
-            response_class = self.dyn_rsp.update_dynamic_values(reference_class,
-                                                              tuple(rspVarBinds[0][0]),
-                                                              reference_value)
-
-            # if there were changes to the dynamic value table, craft a new response
-            if response_class:
-                dynamic_value = self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2]
-                rspModBinds = [(tuple(rspVarBinds[0][0]), response_class(dynamic_value))]
+            response = self.dyn_rsp.get_response(reference_class, tuple(rspVarBinds[0][0]))
+            if response:
+                rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                 rspVarBinds = rspModBinds
         
         finally:
@@ -303,9 +296,8 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
             self.releaseStateInformation(stateReference)
 
-            raise Exception('This class is not converted to new architecture')
-            # update dynamic table with new value
-            self.dyn_rsp.response_table[tuple(rspVarBinds[0][0])][2] = rspVarBinds[0][1]
+            oid = tuple(rspVarBinds[0][0])
+            self.dyn_rsp.set_value(oid, rspVarBinds[0][1])
 
         except (pysnmp.smi.error.NoSuchObjectError,
                 pysnmp.smi.error.NoSuchInstanceError):

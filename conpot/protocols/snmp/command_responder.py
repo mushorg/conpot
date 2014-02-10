@@ -14,7 +14,7 @@ import gevent
 from gevent import socket
 
 from conpot.protocols.snmp import conpot_cmdrsp
-from conpot.protocols.snmp.dynrsp import DynamicResponder
+from conpot.protocols.snmp.databus_mediator import DatabusMediator
 from gevent.server import DatagramServer
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class CommandResponder(object):
     def __init__(self, host, port, mibpaths):
 
         self.oid_mapping = {}
-        self.dyn_rsp = DynamicResponder(self.oid_mapping)
+        self.dyn_rsp = DatabusMediator(self.oid_mapping)
         # mapping between OID and databus keys
 
         # Create SNMP engine

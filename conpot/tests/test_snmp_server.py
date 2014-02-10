@@ -31,7 +31,7 @@ from conpot.protocols.snmp import command_responder
 
 monkey.patch_all()
 from conpot.snmp import snmp_client
-from conpot.protocols.snmp.dynrsp import DynamicResponder
+from conpot.protocols.snmp.dynrsp import DatabusMediator
 
 
 
@@ -40,7 +40,7 @@ class TestBase(unittest.TestCase):
         self.host = '127.0.0.1'
 
         self.log_queue = Queue()
-        self.dyn_rsp = DynamicResponder()
+        self.dyn_rsp = DatabusMediator()
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')
         #only enable snmp server if we have configuration items

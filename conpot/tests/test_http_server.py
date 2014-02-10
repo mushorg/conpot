@@ -27,7 +27,7 @@ import gevent
 import requests
 
 from conpot.snmp import command_responder
-from conpot.protocols.snmp.dynrsp import DynamicResponder
+from conpot.protocols.snmp.dynrsp import DatabusMediator
 from conpot.protocols.http import web_server
 
 #we need to monkey patch for modbus_tcp.TcpMaster
@@ -44,7 +44,7 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.snmp_host = '127.0.0.1'
         self.log_queue = Queue()
-        self.dyn_rsp = DynamicResponder()
+        self.dyn_rsp = DatabusMediator()
 
         dom = etree.parse('conpot/templates/default.xml')
         mibs = dom.xpath('//conpot_template/snmp/mibs/*')

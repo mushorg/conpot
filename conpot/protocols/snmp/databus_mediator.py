@@ -15,9 +15,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-# dynrsp.py
-#     keeps track of values loaded into active MIBs and updates
-#     them for a more dynamic look and feel of conpots SNMP interface
+# this class mediates between the SNMP attack surface and conpots databus
+# furthermore it keeps request statistics iot evade being used as a DOS
+# reflection tool
   
 import random
 
@@ -26,7 +26,7 @@ from datetime import datetime
 import conpot.core as conpot_core
 
 
-class DynamicResponder(object):
+class DatabusMediator(object):
     def __init__(self, oid_mappings):
         """ initiate variables """
 
@@ -38,9 +38,6 @@ class DynamicResponder(object):
 
     def get_response(self, reference_class, OID):
         if OID in self.oid_map:
-            # determine the correct response class. response classes not
-            # handled here do not support dynamic responses (yet)
-
             if reference_class == 'DisplayString':
                 (response_class,) = builder.MibBuilder().importSymbols("SNMPv2-TC", "DisplayString")
 
@@ -58,7 +55,7 @@ class DynamicResponder(object):
 
             elif reference_class == 'TimeTicks':
                 (response_class,) = builder.MibBuilder().importSymbols("SNMPv2-SMI", "TimeTicks")
-
+            #TODO: All mode classes - or autodetect'ish?
             else:
                 # dynamic responses are not supported for this class (yet)
                 return False
@@ -66,6 +63,10 @@ class DynamicResponder(object):
             return response_class(response_value)
         else:
             return None
+
+    def set_value(self, OID, value):
+        # TODO: Access control. The profile shold indicate which OIDs are writable
+        self.databus.set_value(self.oid_map[OID], value)
 
     def update_evasion_table(self, client_ip):
         """ updates dynamic evasion table """
