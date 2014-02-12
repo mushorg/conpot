@@ -27,7 +27,7 @@
         </datastore>
     </core>
     <protocols>
-        <snmp>
+        <snmp enabled="True">
             <config>
                 <!-- Configure individual delays for SNMP commands -->
                 <entity name="tarpit" command="get">0.1;0.2</entity>

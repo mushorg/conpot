@@ -30,7 +30,6 @@ class DatabusMediator(object):
     def __init__(self, oid_mappings):
         """ initiate variables """
 
-        self.response_table = {}            # stores dynamic values for OIDs
         self.evasion_table = {}             # stores the number of requests
         self.start_time = datetime.now()
         self.oid_map = oid_mappings         # mapping between OIDs and databus keys

@@ -18,6 +18,7 @@
 import logging
 import tempfile
 import shutil
+import ast
 
 from lxml import etree
 
@@ -37,86 +38,89 @@ class SNMPServer(object):
         :param template:    path to conpot xml configuration file (string).
         :param log_queue:   shared log queue (list).
         :param mibpaths:    collection of paths to search for COMPILED mib files (iterable collection of strings).
-        :param rawmibs_dir: directory to search for raw mib files, these files will get compiled by conpot (string).
+        :param rawmibs_dir: collection of paths to search for raw mib files, these files will get compiled by conpot (string).
         """
         self.host = host
         self.port = port
 
         dom = etree.parse(template)
-        mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
-
-        # only enable snmp server if we have configuration items
-        if mibs:
-            try:
-                tmp_mib_dir = tempfile.mkdtemp()
-                mibpaths.append(tmp_mib_dir)
-                available_mibs = find_mibs(rawmibs_dirs)
-                self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
-
-                # parse global snmp configuration
-                snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')
-                if snmp_config:
-                    for entity in snmp_config:
-
-                        # TARPIT: individual response delays
-                        if entity.attrib['name'].lower() == 'tarpit':
-
-                            if entity.attrib['command'].lower() == 'get':
-                                self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
-                            elif entity.attrib['command'].lower() == 'set':
-                                self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
-                            elif entity.attrib['command'].lower() == 'next':
-                                self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
-                            elif entity.attrib['command'].lower() == 'bulk':
-                                self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
-
-                        # EVASION: response thresholds
-                        if entity.attrib['name'].lower() == 'evasion':
-
-                            if entity.attrib['command'].lower() == 'get':
-                                self.cmd_responder.resp_app_get.threshold = self.config_sanitize_threshold(entity.text)
-                            elif entity.attrib['command'].lower() == 'set':
-                                self.cmd_responder.resp_app_set.threshold = self.config_sanitize_threshold(entity.text)
-                            elif entity.attrib['command'].lower() == 'next':
-                                self.cmd_responder.resp_app_next.threshold = self.config_sanitize_threshold(entity.text)
-                            elif entity.attrib['command'].lower() == 'bulk':
-                                self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
-
-                databus = conpot_core.get_databus()
-                # parse mibs and oid tables
-                for mib in mibs:
-                    mib_name = mib.attrib['name']
-                    # compile the mib file if it is found and not already loaded.
-                    if mib_name in available_mibs and not self.cmd_responder.has_mib(mib_name):
-                        compile_mib(mib_name, tmp_mib_dir)
-                    for symbol in mib:
-                        symbol_name = symbol.attrib['name']
-
-                        # retrieve instance from template
-                        if 'instance' in symbol.attrib:
-                            # convert instance to (int-)tuple
-                            symbol_instance = symbol.attrib['instance'].split('.')
-                            symbol_instance = tuple(map(int, symbol_instance))
-                        else:
-                            # use default instance (0)
-                            symbol_instance = (0,)
-
-
-                        # retrieve value from databus
-                        value = databus.get_value(symbol.xpath('./value/text()')[0])
-                        profile_map_name = symbol.xpath('./value/text()')[0]
-
-                        # register this MIB instance to the command responder
-                        self.cmd_responder.register(mib_name,
-                                                    symbol_name,
-                                                    symbol_instance,
-                                                    value,
-                                                    profile_map_name)
-            finally:
-                #cleanup compiled mib files
-                shutil.rmtree(tmp_mib_dir)
+        snmp_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0])
+        if snmp_enabled:
+            self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
+            self.xml_general_config(dom)
+            self.xml_mib_config(dom, mibpaths, rawmibs_dirs)
         else:
             self.cmd_responder = None
+
+    def xml_general_config(self, dom):
+        snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')
+        if snmp_config:
+            for entity in snmp_config:
+
+                # TARPIT: individual response delays
+                if entity.attrib['name'].lower() == 'tarpit':
+
+                    if entity.attrib['command'].lower() == 'get':
+                        self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'set':
+                        self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'next':
+                        self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(entity.text)
+                    elif entity.attrib['command'].lower() == 'bulk':
+                        self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(entity.text)
+
+                # EVASION: response thresholds
+                if entity.attrib['name'].lower() == 'evasion':
+
+                    if entity.attrib['command'].lower() == 'get':
+                        self.cmd_responder.resp_app_get.threshold = self.config_sanitize_threshold(entity.text)
+                    elif entity.attrib['command'].lower() == 'set':
+                        self.cmd_responder.resp_app_set.threshold = self.config_sanitize_threshold(entity.text)
+                    elif entity.attrib['command'].lower() == 'next':
+                        self.cmd_responder.resp_app_next.threshold = self.config_sanitize_threshold(entity.text)
+                    elif entity.attrib['command'].lower() == 'bulk':
+                        self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
+
+    def xml_mib_config(self, dom, mibpaths, rawmibs_dirs):
+        try:
+            mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
+            tmp_mib_dir = tempfile.mkdtemp()
+            mibpaths.append(tmp_mib_dir)
+            available_mibs = find_mibs(rawmibs_dirs)
+
+            databus = conpot_core.get_databus()
+            # parse mibs and oid tables
+            for mib in mibs:
+                mib_name = mib.attrib['name']
+                # compile the mib file if it is found and not already loaded.
+                if mib_name in available_mibs and not self.cmd_responder.has_mib(mib_name):
+                    compile_mib(mib_name, tmp_mib_dir)
+                for symbol in mib:
+                    symbol_name = symbol.attrib['name']
+
+                    # retrieve instance from template
+                    if 'instance' in symbol.attrib:
+                        # convert instance to (int-)tuple
+                        symbol_instance = symbol.attrib['instance'].split('.')
+                        symbol_instance = tuple(map(int, symbol_instance))
+                    else:
+                        # use default instance (0)
+                        symbol_instance = (0,)
+
+
+                    # retrieve value from databus
+                    value = databus.get_value(symbol.xpath('./value/text()')[0])
+                    profile_map_name = symbol.xpath('./value/text()')[0]
+
+                    # register this MIB instance to the command responder
+                    self.cmd_responder.register(mib_name,
+                                                symbol_name,
+                                                symbol_instance,
+                                                value,
+                                                profile_map_name)
+        finally:
+            #cleanup compiled mib files
+            shutil.rmtree(tmp_mib_dir)
 
     def config_sanitize_tarpit(self, value):
 
@@ -181,3 +185,9 @@ class SNMPServer(object):
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+
+    def get_port(self):
+        if self.cmd_responder:
+            return self.cmd_responder.server_port
+        else:
+            return None
