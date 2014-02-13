@@ -179,7 +179,7 @@ class SNMPServer(object):
 
     def start(self):
         if self.cmd_responder:
-            logger.info('SNMP server started on: {0}'.format((self.host, self.port)))
+            logger.info('SNMP server started on: {0}'.format((self.host, self.get_port())))
             self.cmd_responder.serve_forever()
 
     def stop(self):

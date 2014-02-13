@@ -48,7 +48,7 @@ class CommandResponder(object):
     def __init__(self, host, port, mibpaths):
 
         self.oid_mapping = {}
-        self.dyn_rsp = DatabusMediator(self.oid_mapping)
+        self.databus_mediator = DatabusMediator(self.oid_mapping)
         # mapping between OID and databus keys
 
         # Create SNMP engine
@@ -110,10 +110,10 @@ class CommandResponder(object):
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
-        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
-        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
-        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.dyn_rsp)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator)
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator)
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator)
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator)
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""

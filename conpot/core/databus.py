@@ -43,6 +43,7 @@ class Databus(object):
             return item
 
     def set_value(self, key, value):
+        logger.debug('Settings [{0}] = {1}'.format(key, value))
         self._data[key] = value
         # notify observers
         if key in self._observer_map:
@@ -63,7 +64,7 @@ class Databus(object):
         pass
 
     def initialize(self, config_file):
-        self._data = {}
+        self._reset()
         logger.debug('Initializing databus using {0}.'.format(config_file))
         dom = etree.parse(config_file)
         entries = dom.xpath('//conpot_template/core/datastore/key_value_mappings/*')
@@ -94,3 +95,8 @@ class Databus(object):
         for key in self._data.keys():
             snapsnot[key] = self.get_value(key)
         return json.dumps(snapsnot)
+
+    def _reset(self):
+        logger.debug('Resetting databus.')
+        self._data.clear()
+        self._observer_map.clear()

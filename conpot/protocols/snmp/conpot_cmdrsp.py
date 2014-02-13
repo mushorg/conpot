@@ -96,8 +96,8 @@ class conpot_extension(object):
 
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
-        self.dyn_rsp = dyn_rsp
+    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+        self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
@@ -113,7 +113,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        evasion_state = self.databus_mediator.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Get'):
             return None
 
@@ -126,7 +126,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             reference_class = rspVarBinds[0][1].__class__.__name__
             reference_value = rspVarBinds[0][1]
 
-            response = self.dyn_rsp.get_response(reference_class, tuple(rspVarBinds[0][0]))
+            response = self.databus_mediator.get_response(reference_class, tuple(rspVarBinds[0][0]))
             if response:
                 rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                 rspVarBinds = rspModBinds
@@ -144,8 +144,8 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
 
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
-        self.dyn_rsp = dyn_rsp
+    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+        self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
@@ -161,7 +161,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        evasion_state = self.databus_mediator.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' GetNext'):
             return None
 
@@ -174,7 +174,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 reference_class = rspVarBinds[0][1].__class__.__name__
                 reference_value = rspVarBinds[0][1]
 
-                response = self.dyn_rsp.get_response(reference_class, tuple(rspVarBinds[0][0]))
+                response = self.databus_mediator.get_response(reference_class, tuple(rspVarBinds[0][0]))
                 if response:
                     rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                     rspVarBinds = rspModBinds
@@ -199,8 +199,8 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
-        self.dyn_rsp = dyn_rsp
+    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+        self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
@@ -219,7 +219,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         reqVarBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        evasion_state = self.databus_mediator.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Bulk'):
             return None
         raise Exception('This class is not converted to new architecture')
@@ -260,10 +260,9 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         else:
             raise pysnmp.smi.error.SmiError()
 
-
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, dyn_rsp):
-        self.dyn_rsp = dyn_rsp
+    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+        self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
 
@@ -271,6 +270,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
+        print 'ITS A SET!!!'
         (acFun, acCtx) = acInfo
 
         mgmtFun = self.snmpContext.getMibInstrum(contextName).writeVars
@@ -278,7 +278,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         varBinds = v2c.apiPDU.getVarBinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
-        evasion_state = self.dyn_rsp.update_evasion_table(addr)
+        evasion_state = self.databus_mediator.update_evasion_table(addr)
         if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Set'):
             return None
 
@@ -297,7 +297,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             self.releaseStateInformation(stateReference)
 
             oid = tuple(rspVarBinds[0][0])
-            self.dyn_rsp.set_value(oid, rspVarBinds[0][1])
+            self.databus_mediator.set_value(oid, rspVarBinds[0][1])
 
         except (pysnmp.smi.error.NoSuchObjectError,
                 pysnmp.smi.error.NoSuchInstanceError):
