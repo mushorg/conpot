@@ -16,73 +16,53 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import os
 import unittest
-from datetime import datetime
+import tempfile
+import shutil
 
-from lxml import etree
-from gevent.queue import Queue
+import gevent
 from gevent import monkey
+monkey.patch_all()
 
 from pysnmp.proto import rfc1902
 
-#we need to monkey patch for modbus_tcp.TcpMaster
-from conpot.protocols.snmp import command_responder
-
-monkey.patch_all()
-from conpot.snmp import snmp_client
-from conpot.protocols.snmp.dynrsp import DatabusMediator
-
-
+import conpot.core as conpot_core
+from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.protocols.snmp import snmp_client
 
 class TestBase(unittest.TestCase):
     def setUp(self):
+        self.tmp_dir = tempfile.mkdtemp()
         self.host = '127.0.0.1'
-
-        self.log_queue = Queue()
-        self.dyn_rsp = DatabusMediator()
-        dom = etree.parse('conpot/templates/default.xml')
-        mibs = dom.xpath('//conpot_template/snmp/mibs/*')
-        #only enable snmp server if we have configuration items
-        if not mibs:
-            raise Exception("No configuration for SNMP server")
-        else:
-            # get assigned ephemeral port
-            self.snmp_server = command_responder.CommandResponder(self.host, 0, self.log_queue, os.getcwd(), self.dyn_rsp)
-            self.port = self.snmp_server.server_port
-        for mib in mibs:
-            mib_name = mib.attrib['name']
-            for symbol in mib:
-                symbol_name = symbol.attrib['name']
-
-                # retrieve instance from template
-                if 'instance' in symbol.attrib:
-                    # convert instance to (int-)tuple
-                    symbol_instance = symbol.attrib['instance'].split('.')
-                    symbol_instance = tuple(map(int, symbol_instance))
-                else:
-                    # use default instance (0)
-                    symbol_instance = (0,)
-
-                # retrieve value from template
-                value = symbol.xpath('./value/text()')[0]
-
-                # retrieve engine from template
-                if len(symbol.xpath('./engine')) > 0:
-                    engine_type = symbol.find('./engine').attrib['type']
-                    engine_aux = symbol.findtext('./engine')
-                else:
-                    # disable dynamic responses (static)
-                    engine_type = 'static'
-                    engine_aux = ''
-
-                # register this MIB instance to the command responder
-                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
-
-        self.snmp_server.snmpEngine.transportDispatcher.start()
+        databus = conpot_core.get_databus()
+        databus.initialize('conpot/templates/default.xml')
+        self.snmp_server = SNMPServer(self.host, 0, 'conpot/templates/default.xml', [self.tmp_dir], [self.tmp_dir])
+        self.port = self.snmp_server.get_port()
+        self.server_greenlet = gevent.spawn(self.snmp_server.start)
 
     def tearDown(self):
-        self.snmp_server.snmpEngine.transportDispatcher.stop()
+        shutil.rmtree(self.tmp_dir)
+
+    def test_snmp_get(self):
+        """
+        Objective: Test if we can get data via snmp_get
+        """
+        client = snmp_client.SNMPClient(self.host, self.port)
+        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
+        client.get_command(OID, callback=self.mock_callback)
+        self.assertEqual("Siemens, SIMATIC, S7-200", self.result)
+
+    def test_snmp_set(self):
+        """
+        Objective: Test if we can set data via snmp_set
+        """
+        client = snmp_client.SNMPClient(self.host, self.port)
+        # syslocation
+        OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
+        client.set_command(OID, callback=self.mock_callback)
+        gevent.sleep(1)
+        databus = conpot_core.get_databus()
+        self.assertEqual('TESTVALUE', databus.get_value('sysLocation'))
 
     def mock_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
         self.result = None
@@ -93,39 +73,3 @@ class TestBase(unittest.TestCase):
         else:
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
-
-    def test_snmp_get(self):
-        """
-        Objective: Test if we can get data via snmp_get
-        """
-        client = snmp_client.SNMPClient(self.host, self.port)
-        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
-        client.get_command(OID, callback=self.mock_callback)
-        self.assertEqual("Siemens, SIMATIC, S7-200", self.result)
-        log_item = self.log_queue.get(True, 2)
-        self.assertIsInstance(log_item['timestamp'], datetime)
-        self.assertEqual('127.0.0.1', log_item['remote'][0])
-        self.assertEquals('snmp', log_item['data_type'])
-
-    def test_snmp_set(self):
-        """
-        Objective: Test if we can set data via snmp_set
-        """
-        client = snmp_client.SNMPClient(self.host, self.port)
-        OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('test comment'))
-        client.set_command(OID, callback=self.mock_callback)
-        client.get_command(OID, callback=self.mock_callback)
-
-        set_log_item = self.log_queue.get(True, 5)
-        self.assertEqual("test comment", self.result)
-        self.assertIsInstance(set_log_item['timestamp'], datetime)
-        self.assertEqual('127.0.0.1', set_log_item['remote'][0])
-        self.assertEquals('snmp', set_log_item['data_type'])
-        self.assertIn('SNMPv3 Set:', set_log_item['data'][0]['request'])
-
-        get_log_item = self.log_queue.get(True, 5)
-        self.assertEqual("test comment", self.result)
-        self.assertIsInstance(get_log_item['timestamp'], datetime)
-        self.assertEqual('127.0.0.1', get_log_item['remote'][0])
-        self.assertEquals('snmp', get_log_item['data_type'])
-        self.assertIn('SNMPv3 Get:', get_log_item['data'][0]['request'])
