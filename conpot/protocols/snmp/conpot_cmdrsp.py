@@ -270,7 +270,6 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        print 'ITS A SET!!!'
         (acFun, acCtx) = acInfo
 
         mgmtFun = self.snmpContext.getMibInstrum(contextName).writeVars

@@ -22,13 +22,15 @@ import shutil
 
 import gevent
 from gevent import monkey
+
 monkey.patch_all()
 
 from pysnmp.proto import rfc1902
 
 import conpot.core as conpot_core
+from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
-from conpot.protocols.snmp import snmp_client
+
 
 class TestBase(unittest.TestCase):
     def setUp(self):
@@ -60,7 +62,6 @@ class TestBase(unittest.TestCase):
         # syslocation
         OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
         client.set_command(OID, callback=self.mock_callback)
-        gevent.sleep(1)
         databus = conpot_core.get_databus()
         self.assertEqual('TESTVALUE', databus.get_value('sysLocation'))
 

@@ -59,7 +59,7 @@ class SNMPClient(object):
             (OID,),
             callback,
         )
-
+        self.snmpEngine.transportDispatcher.runDispatcher()
         # Run I/O dispatcher which would send pending queries and process responses
         self.snmpEngine.transportDispatcher.runDispatcher()
 
@@ -72,6 +72,7 @@ class SNMPClient(object):
             (OID,),
             callback,
         )
+        self.snmpEngine.transportDispatcher.runDispatcher()
 
     def walk_command(self, OID, callback=None):
         if not callback:
