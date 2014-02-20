@@ -23,16 +23,20 @@ import sys
 import pwd
 import grp
 import platform
+import ast
 from ConfigParser import ConfigParser
 
 import gevent
+from gevent.queue import Queue
 import requests
 from requests.exceptions import Timeout, ConnectionError
+from lxml import etree
 
 import conpot
-
 from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.protocols.modbus.modbus_server import ModbusServer
 import conpot.core as conpot_core
+
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -62,7 +66,6 @@ def setup_logging():
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
-
     wanted_uid = pwd.getpwnam(uid_name)[2]
     #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
@@ -89,22 +92,22 @@ def main():
                         help="public www path",
                         default=os.path.join(package_directory, 'www/'),
                         metavar="www/"
-                        )
+    )
     parser.add_argument("-r", "--www-root",
                         help="www root page",
                         default="index.htm",
                         metavar="page.htm"
-                        )
+    )
     parser.add_argument("-t", "--template",
                         help="the template to use",
                         default=os.path.join(package_directory, 'templates/default.xml'),
                         metavar="template.xml"
-                        )
+    )
     parser.add_argument("-c", "--config",
                         help="the configuration file to use",
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
-                        )
+    )
     parser.add_argument("-a", "--raw_mib",
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
@@ -148,15 +151,25 @@ def main():
     session_manager = conpot_core.get_sessionManager()
     session_manager.initialize_datastore(args.template)
 
-    snmp_enabled = config.getboolean('snmp', 'enabled')
-    snmp_host = config.get('snmp', 'host')
-    snmp_port = config.getint('snmp', 'port')
+    dom = etree.parse(args.template)
+    modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
+    snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
+
     if snmp_enabled:
+        snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
+        snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
         snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
+
+    if modbus_enabled:
+        modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
+        modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
+        modbus_instance = ModbusServer(args.template, Queue())
+        modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
 
     servers = list()
     try:
-        # TODO: All this from XML
+        if modbus_enabled:
+            servers.append(gevent.spawn(modbus_server.start))
         if snmp_enabled:
             servers.append(gevent.spawn(snmp_server.start))
         gevent.sleep(5)
@@ -169,6 +182,7 @@ def main():
 
     #just being nice and cosy!
     gevent.joinall(servers, 2)
+
 
 if __name__ == "__main__":
     main()
