@@ -19,9 +19,7 @@
 # furthermore it keeps request statistics iot evade being used as a DOS
 # reflection tool
   
-import random
-
-from pysnmp.smi import builder 
+from pysnmp.smi import builder
 from datetime import datetime
 import conpot.core as conpot_core
 

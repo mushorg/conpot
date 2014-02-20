@@ -3,6 +3,7 @@ import uuid
 import socket
 import time
 import logging
+import ast
 
 from datetime import datetime
 
@@ -15,7 +16,7 @@ import random
 from gevent.server import StreamServer
 
 from lxml import etree
-from conpot.modbus import slave_db
+from conpot.protocols.modbus import slave_db
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,16 @@ class ModbusServer(modbus.Server):
         # well hidden away class variables somewhere.
         self.remove_all_slaves()
 
-        # parse slave configuration
+        # move this check to outside this class?
         dom = etree.parse(template)
-        slaves = dom.xpath('//conpot_template/slaves/*')
+        modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
         template_name = dom.xpath('//conpot_template/@name')[0]
+        self._configure_slaves(dom)
+
+        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
+
+    def _configure_slaves(self, dom):
+        slaves = dom.xpath('//conpot_template/protocols/modbus/slaves/*')
         for s in slaves:
             slave_id = int(s.attrib['id'])
             slave = self.add_slave(slave_id)
@@ -56,8 +63,6 @@ class ModbusServer(modbus.Server):
                     value = eval(v.xpath('./content/text()')[0])
                     slave.set_values(name, addr, value)
                     logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
-
-        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
 
     def _add_log_data(self, logdata):
         elapse_ms = int((time.time() - self.start_time) * 1000)
