@@ -1,8 +1,11 @@
 import struct
 import logging
-from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError
+
+from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError, InvalidArgumentError, DuplicatedKeyError,\
+                             InvalidModbusBlockError, OverlapModbusBlockError
 from modbus_tk import defines, utils
 
+from modbus_block_databus_mediator import ModbusBlockDatabusMediator
 
 logger = logging.getLogger(__name__)
 
@@ -89,3 +92,33 @@ class MBSlave(Slave):
             except ModbusError as e:
                 logger.error('Exception caught: {0}. (A proper response will be sent to the peer)'.format(e))
                 return struct.pack(">BB", self.function_code + 128, e.get_exception_code())
+
+    def add_block(self, block_name, block_type, starting_address, size):
+        """Add a new block identified by its name"""
+        with self._data_lock: #thread-safe
+            if size <= 0:
+                raise InvalidArgumentError, "size must be a positive number"
+            if starting_address < 0:
+                raise InvalidArgumentError, "starting address must be zero or positive number"
+            if self._blocks.has_key(block_name):
+                raise DuplicatedKeyError, "Block %s already exists. " % (block_name)
+
+            if not self._memory.has_key(block_type):
+                raise InvalidModbusBlockError, "Invalid block type %d" % (block_type)
+
+            # check that the new block doesn't overlap an existing block
+            # it means that only 1 block per type must correspond to a given address
+            # for example: it must not have 2 holding registers at address 100
+            index = 0
+            for i in xrange(len(self._memory[block_type])):
+                block = self._memory[block_type][i]
+                if block.is_in(starting_address, size):
+                    raise OverlapModbusBlockError, "Overlap block at %d size %d" % (block.starting_address, block.size)
+                if block.starting_address > starting_address:
+                    index = i
+                    break
+
+            # if the block is ok: register it
+            self._blocks[block_name] = (block_type, starting_address)
+            # add it in the 'per type' shortcut
+            self._memory[block_type].insert(index, ModbusBlockDatabusMediator(block_name, starting_address, size))
