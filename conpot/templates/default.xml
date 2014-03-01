@@ -21,6 +21,19 @@
                     <value type="value">"Venus"</value>
                 </key>
                 <key name="sysServices">
+                    <value type="value">"72"</value>
+                </key>
+                <key name="memoryModbusSlave1BlockA">
+                    <value type="value">[random.randint(0,1) for b in range(0,128)]</value>
+                </key>
+                <key name="memoryModbusSlave1BlockB">
+                    <value type="value">[random.randint(0,1) for b in range(0,32)]</value>
+                </key>
+                <key name="memoryModbusSlave1BlockC">
+                    <value type="value">[random.randint(0,1) for b in range(0,8)]</value>
+                </key>
+                <key name="memoryModbusSlave1BlockD">
+                    <value type="value">[0 for b in range(0,32)]</value>
                 </key>
             </key_value_mappings>
         </datastore>
@@ -73,33 +86,21 @@
             <slaves>
                 <slave id="1">
                     <blocks>
-                        <block name="a">
+                        <block name="memoryModbusSlave1BlockA">
                             <!-- COILS/DISCRETE_OUTPUTS aka. binary output, power on/power off
                                  Here we map modbus addresses 1 to 127 to S7-200 PLC Addresses Q0.0 to Q15.7 -->
                             <type>COILS</type>
                             <starting_address>1</starting_address>
                             <size>128</size>
-                            <values>
-                                <value>
-                                    <address>1</address>
-                                    <!-- Will be parsed with eval() -->
-                                    <content>[random.randint(0,1) for b in range(0,128)]</content>
-                                </value>
-                            </values>
+                            <content>memoryModbusSlave1BlockA</content>
                         </block>
-                        <block name="b">
+                        <block name="memoryModbusSlave1BlockB">
                             <!-- CONTACTS/DISCRETE_INPUTS aka. binary input.
                                  Map modbus addresses 10001-10032 to S7-200 PLC inputs starting from I0.0  -->
                             <type>DISCRETE_INPUTS</type>
                             <starting_address>10001</starting_address>
                             <size>32</size>
-                            <values>
-                                <value>
-                                    <address>10001</address>
-                                    <!-- Will be parsed with eval() -->
-                                    <content>[random.randint(0,1) for b in range(0,32)]</content>
-                                </value>
-                            </values>
+                            <content>memoryModbusSlave1BlockB</content>
                         </block>
                     </blocks>
                 </slave>
@@ -107,24 +108,19 @@
                     <!-- This slave does some measuring. (analog inputs).
                          Map modbus addresses 30001-30009 to S7 PLC analog input bits AIW0-AIW8 -->
                     <blocks>
-                        <block name="c">
+                        <block name="memoryModbusSlave1BlockC">
                             <!-- Will be parsed with eval() -->
                             <type>ANALOG_INPUTS</type>
                             <starting_address>30001</starting_address>
                             <size>8</size>
-                            <values>
-                                <value>
-                                    <address>30001</address>
-                                    <!-- Will be parsed with eval() -->
-                                    <content>[random.randint(0,1) for b in range(0,8)]</content>
-                                </value>
-                            </values>
+                            <content>memoryModbusSlave1BlockC</content>
                         </block>
-                        <block name="d">
+                        <block name="memoryModbusSlave1BlockD">
                             <!-- Maps to S7-200 PLC addresses HoldStart+8 -->
                             <type>HOLDING_REGISTERS</type>
                             <starting_address>40001</starting_address>
                             <size>8</size>
+                            <content>memoryModbusSlave1BlockD</content>
                         </block>
                     </blocks>
                 </slave>

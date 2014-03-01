@@ -58,11 +58,6 @@ class ModbusServer(modbus.Server):
                 slave.add_block(name, request_type, start_addr, size)
                 logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'
                 .format(name, slave_id, request_type, start_addr, size))
-                for v in b.xpath('./values/*'):
-                    addr = int(v.xpath('./address/text()')[0])
-                    value = eval(v.xpath('./content/text()')[0])
-                    slave.set_values(name, addr, value)
-                    logger.debug('Setting value at addr {0} to {1}.'.format(addr, v.xpath('./content/text()')[0]))
 
     def _add_log_data(self, logdata):
         elapse_ms = int((time.time() - self.start_time) * 1000)

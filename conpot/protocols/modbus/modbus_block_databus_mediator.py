@@ -6,15 +6,13 @@ import conpot.core as conpot_core
 class ModbusBlockDatabusMediator:
     """This class represents the values for a range of addresses"""
 
-    def __init__(self, block_name, starting_address, size):
+    def __init__(self, databus_key, starting_address, size):
         """
         Contructor: defines the address range and creates the array of values
         """
-
         self.starting_address = starting_address
         #self._data = [0]*size
-        conpot_core.get_databus().set_value(block_name, [0]*size)
-        self.databus_key = block_name
+        self.databus_key = databus_key
         self.size = len(conpot_core.get_databus().get_value(self.databus_key))
 
     def is_in(self, starting_address, size):
@@ -35,6 +33,4 @@ class ModbusBlockDatabusMediator:
     def __setitem__(self, r, v):
         """"""
         call_hooks("modbus.ModbusBlock.setitem", (self, r, v))
-        # uhm, actually using get_value for setting here... Might consider implementing
-        # indexed acces on set_values on databus
         return conpot_core.get_databus().get_value(self.databus_key).__getitem__(r)
