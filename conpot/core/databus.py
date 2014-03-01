@@ -16,9 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import gevent
-import inspect
 import logging
 import json
+import inspect
+import random
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -75,10 +76,9 @@ class Databus(object):
             assert(key not in self._data)
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
             if value_type == 'value':
-                self.set_value(key, value)
+                self.set_value(key, eval(value))
             elif value_type == 'function':
                 namespace, _classname = value.rsplit('.', 1)
-                # TODO: Convert each element to proper types
                 params = entry.xpath('./value/@param')
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
