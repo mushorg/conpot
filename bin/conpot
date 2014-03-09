@@ -28,14 +28,13 @@ from ConfigParser import ConfigParser
 
 import gevent
 from gevent.queue import Queue
-import requests
-from requests.exceptions import Timeout, ConnectionError
 from lxml import etree
 
 import conpot
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
 import conpot.core as conpot_core
+from conpot.utils import ext_ip
 
 
 logger = logging.getLogger()
@@ -134,15 +133,7 @@ def main():
 
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
-        #we only want warning+ messages from the requests module
-        logging.getLogger("requests").setLevel(logging.WARNING)
-        try:
-            url = config.get('fetch_public_ip', 'url')
-            req = requests.get(url)
-            public_ip = req.text
-            logger.info('Fetched {0} as external ip.'.format(public_ip))
-        except (Timeout, ConnectionError) as e:
-            logger.warning('Could not fetch public ip: {0}'.format(e))
+        public_ip = ext_ip.get_ext_ip(config)
 
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
