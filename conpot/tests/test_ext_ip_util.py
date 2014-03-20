@@ -23,14 +23,7 @@ import conpot.utils.ext_ip
 class TestExtIPUtil(unittest.TestCase):
 
     def setUp(self):
-        self.data = """
-            <html>
-                <head>
-                    <title>Current IP Check</title>
-                </head>
-                <body>Current IP Address: 127.0.0.1</body>
-            </html>
-        """
+        self.data = "127.0.0.1"
 
     def tearDown(self):
         pass
@@ -38,20 +31,9 @@ class TestExtIPUtil(unittest.TestCase):
     def test_ip_verify(self):
         self.assertTrue(conpot.utils.ext_ip._verify_address("127.0.0.1") is True)
 
-    def test_html_parser(self):
-        parser = conpot.utils.ext_ip.AddressHTMLParser()
-        parser.feed(self.data)
-        self.assertTrue(parser.address == "127.0.0.1")
-
-    def test_parse_method(self):
-        ext_ip = conpot.utils.ext_ip._parse_html(self.data)
-        self.assertTrue(ext_ip == "127.0.0.1")
-
     def test_ext_util(self):
-        raw = conpot.utils.ext_ip._fetch_data(url="http://checkip.dyndns.org/")
-        parser = conpot.utils.ext_ip.AddressHTMLParser()
-        parser.feed(raw)
-        self.assertTrue(conpot.utils.ext_ip._verify_address(parser.address) is True)
+        ip_address = conpot.utils.ext_ip._fetch_data(urls=["http://www.telize.com/ip", ])
+        self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
 
 
 if __name__ == '__main__':
