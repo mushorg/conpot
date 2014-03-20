@@ -15,7 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+import json
 import logging
 import socket
 
@@ -55,7 +55,7 @@ def _fetch_data(urls):
 
 def get_ext_ip(config=None, urls=None):
     if config:
-        urls = config.get('fetch_public_ip', 'urls')
+        urls = json.loads(config.get('fetch_public_ip', 'urls'))
     public_ip = _fetch_data(urls)
     if public_ip:
         logger.info('Fetched {0} as external ip.'.format(public_ip))
