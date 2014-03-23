@@ -15,12 +15,14 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from datetime import datetime
 import uuid
 import os
 import json
 
+from datetime import datetime
+
 import jinja2
+
 import conpot
 
 
@@ -36,7 +38,7 @@ class StixTransformer(object):
         self.template = template_env.get_template('stix_template.xml')
 
     def transform(self, event):
-        vars = {'package_id': str(uuid.uuid4()),
+        data = {'package_id': str(uuid.uuid4()),
                 'namespace': 'ConPot',
                 'namespace_uri': 'http://conpot.org/stix-1',
                 'package_timestamp': datetime.utcnow().isoformat(),
@@ -54,11 +56,11 @@ class StixTransformer(object):
                 'contact_mail': self.config['contact_email']}
 
         if 'public_ip' in event:
-            vars['destination_ip'] = event['public_ip']
+            data['destination_ip'] = event['public_ip']
 
         if event['data_type'] in self.protocol_to_port_mapping:
-            vars['destination_port'] = self.protocol_to_port_mapping[event['data_type']]
+            data['destination_port'] = self.protocol_to_port_mapping[event['data_type']]
         else:
             raise Exception('No port mapping could be found for {0}'.format(event['data_type']))
 
-        return self.template.render(vars)
+        return self.template.render(data)

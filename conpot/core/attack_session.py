@@ -17,6 +17,8 @@
 
 import logging
 import uuid
+import time
+
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -33,7 +35,24 @@ class AttackSession(object):
         self.source_port = source_port
         self.timestamp = datetime.utcnow()
         self.databus = databus
+        self.public_ip = None
+        self.data = dict()
 
+    def add_event(self, event_data):
+        start_time = time.mktime(self.timestamp.timetuple())
+        elapse_ms = int((time.time() - start_time) * 1000)
+        while elapse_ms in self.data:
+            elapse_ms += 1
+        elapse_ms = int(time.time() - start_time) * 1000
+        self.data[elapse_ms] = event_data
 
-
-
+    def dump(self):
+        data = {
+            "id": self.id,
+            "remote": (self.source_ip, self.source_port),
+            "data_type": self.protocol,
+            "timestamp": self.timestamp,
+            "public_ip": self.public_ip,
+            "data": self.data
+        }
+        return data
