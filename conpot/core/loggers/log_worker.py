@@ -53,11 +53,11 @@ class LogWorker(object):
         self.enabled = True
         while self.enabled:
             event = self.log_queue.get()
-            assert 'data_type' in event
-            assert 'timestamp' in event
 
             if self.public_ip:
-                event['public_ip'] = self.public_ip
+                event.public_ip = self.public_ip
+
+            event = event.dump()
 
             if self.friends_feeder:
                 self.friends_feeder.log(json.dumps(event, default=self.json_default))

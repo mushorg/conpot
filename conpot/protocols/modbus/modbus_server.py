@@ -1,11 +1,11 @@
 import struct
-import uuid
 import socket
 import time
 import logging
 import ast
 
-from datetime import datetime
+from lxml import etree
+from gevent.server import StreamServer
 
 import modbus_tk.modbus_tcp as modbus_tcp
 from modbus_tk import modbus
@@ -13,10 +13,8 @@ from modbus_tk import modbus
 import modbus_tk.defines as mdef
 import random
 
-from gevent.server import StreamServer
-
-from lxml import etree
 from conpot.protocols.modbus import slave_db
+import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 
@@ -56,33 +54,26 @@ class ModbusServer(modbus.Server):
                 start_addr = int(b.xpath('./starting_address/text()')[0])
                 size = int(b.xpath('./size/text()')[0])
                 slave.add_block(name, request_type, start_addr, size)
-                logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'
-                .format(name, slave_id, request_type, start_addr, size))
-
-    def _add_log_data(self, logdata):
-        elapse_ms = int((time.time() - self.start_time) * 1000)
-        while elapse_ms in self.session_data["data"]:
-            elapse_ms += 1
-        elapse_ms = int(time.time() - self.start_time) * 1000
-        self.session_data['data'][elapse_ms] = logdata
+                logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'.format(
+                    name, slave_id, request_type, start_addr, size
+                ))
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
-        session_id = str(uuid.uuid4())
-        self.session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
-                             'data_type': 'modbus', 'data': {}}
+
+        session = conpot_core.get_session('modbus', address[0], address[1])
 
         self.start_time = time.time()
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
+        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
 
         try:
             while True:
                 request = sock.recv(7)
                 if not request:
-                    logger.info('Client disconnected. ({0})'.format(session_id))
+                    logger.info('Client disconnected. ({0})'.format(session.id))
                     break
                 if request.strip().lower() == 'quit.':
-                    logger.info('Client quit. ({0})'.format(session_id))
+                    logger.info('Client quit. ({0})'.format(session.id))
                     break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
@@ -93,16 +84,14 @@ class ModbusServer(modbus.Server):
                 # logdata is a dictionary containing request, slave_id, function_code and response
                 response, logdata = self._databank.handle_request(query, request)
                 logdata['request'] = request.encode('hex')
-                self._add_log_data(logdata)
+                session.add_event(logdata)
 
-                logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session_id))
+                logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
 
                 if response:
                     sock.sendall(response)
         except socket.timeout:
-            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
-
-        self.log_queue.put(self.session_data)
+            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
     def get_server(self, host, port):
         connection = (host, port)

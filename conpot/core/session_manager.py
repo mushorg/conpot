@@ -15,6 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from gevent.queue import Queue
+
 from conpot.core.attack_session import AttackSession
 from conpot.core.databus import Databus
 
@@ -24,11 +26,23 @@ class SessionManager(object):
     def __init__(self):
         self._sessions = []
         self._databus = Databus()
+        self.log_queue = Queue()
+
+    def _find_sessions(self, protocol, source_ip):
+        for session in self._sessions:
+            if session.protocol == protocol:
+                if session.source_ip == source_ip:
+                    return session
+        return None
 
     def get_session(self, protocol, source_ip, source_port):
         # around here we would inject dependencies into the attack session
-        attack_session = AttackSession(protocol, source_ip, source_port, self._databus)
+        attack_session = self._find_sessions(protocol, source_ip)
+        if not attack_session:
+            attack_session = AttackSession(protocol, source_ip, source_port, self._databus)
         self._sessions.append(attack_session)
+        # We should only log the session when we finish it
+        self.log_queue.put(attack_session)
         return attack_session
 
     def get_session_count(self, protocol):
@@ -43,4 +57,3 @@ class SessionManager(object):
 
     def initialize_datastore(self, config_file):
         self._databus.initialize(config_file)
-

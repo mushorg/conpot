@@ -31,9 +31,11 @@ from gevent.queue import Queue
 from lxml import etree
 
 import conpot
+import conpot.core as conpot_core
+
+from conpot.core.loggers.log_worker import LogWorker
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
-import conpot.core as conpot_core
 from conpot.utils import ext_ip
 
 
@@ -56,7 +58,6 @@ def logo():
 
 def setup_logging():
     root_logger = logging.getLogger()
-
     console_log = logging.StreamHandler()
     console_log.setLevel(logging.DEBUG)
     console_log.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
@@ -131,48 +132,54 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
-    public_ip = None
-    if config.getboolean('fetch_public_ip', 'enabled'):
-        public_ip = ext_ip.get_ext_ip(config)
-
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
+    greenlets = list()
+
     session_manager = conpot_core.get_sessionManager()
     session_manager.initialize_datastore(args.template)
+
+    public_ip = None
+    if config.getboolean('fetch_public_ip', 'enabled'):
+        public_ip = ext_ip.get_ext_ip(config)
+
+    log_worker = LogWorker(config, session_manager.log_queue, public_ip)
+    greenlets.append(gevent.spawn(log_worker.start))
 
     dom = etree.parse(args.template)
     modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
     snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
 
+    servers = list()
     if snmp_enabled:
         snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
         snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
         snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
+        servers.append(snmp_server)
+        greenlets.append(gevent.spawn(snmp_server.start))
 
     if modbus_enabled:
         modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
         modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
         modbus_instance = ModbusServer(args.template, Queue())
         modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
+        servers.append(modbus_server)
+        greenlets.append(gevent.spawn(modbus_server.start))
 
-    servers = list()
+    # Wait for the services to bind ports before dropping privileges
+    gevent.sleep(5)
+    drop_privileges()
     try:
-        if modbus_enabled:
-            servers.append(gevent.spawn(modbus_server.start))
-        if snmp_enabled:
-            servers.append(gevent.spawn(snmp_server.start))
-        gevent.sleep(5)
-        drop_privileges()
-        gevent.joinall(servers)
+        gevent.joinall(greenlets)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
-        if snmp_enabled:
-            snmp_server.stop()
-
-    #just being nice and cosy!
-    gevent.joinall(servers, 2)
+        for server in servers:
+            server.stop()
+    finally:
+        # Just being nice and cosy!
+        gevent.joinall(greenlets, 2)
 
 
 if __name__ == "__main__":
