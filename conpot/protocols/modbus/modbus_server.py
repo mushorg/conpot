@@ -34,15 +34,8 @@ class ModbusServer(modbus.Server):
         # well hidden away class variables somewhere.
         self.remove_all_slaves()
 
-        # move this check to outside this class?
+    def _configure_slaves(self, template):
         dom = etree.parse(template)
-        modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
-        template_name = dom.xpath('//conpot_template/@name')[0]
-        self._configure_slaves(dom)
-
-        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
-
-    def _configure_slaves(self, dom):
         slaves = dom.xpath('//conpot_template/protocols/modbus/slaves/*')
         for s in slaves:
             slave_id = int(s.attrib['id'])
@@ -57,6 +50,8 @@ class ModbusServer(modbus.Server):
                 logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'.format(
                     name, slave_id, request_type, start_addr, size
                 ))
+        template_name = dom.xpath('//conpot_template/@name')[0]
+        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)

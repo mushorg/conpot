@@ -44,13 +44,10 @@ class SNMPServer(object):
         self.port = port
 
         dom = etree.parse(template)
-        snmp_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0])
-        if snmp_enabled:
-            self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
-            self.xml_general_config(dom)
-            self.xml_mib_config(dom, mibpaths, rawmibs_dirs)
-        else:
-            self.cmd_responder = None
+
+        self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
+        self.xml_general_config(dom)
+        self.xml_mib_config(dom, mibpaths, rawmibs_dirs)
 
     def xml_general_config(self, dom):
         snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')

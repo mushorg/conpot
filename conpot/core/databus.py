@@ -15,12 +15,14 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
 import logging
 import json
 import inspect
 import random
+
+import gevent
 from lxml import etree
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,8 @@ class Databus(object):
     # functions could be used if a profile wants to simulate a sensor, or the function
     # could interface with a real sensor
     def get_value(self, key):
-        assert(key in self._data)
+        logger.debug('Get value from key: {0}'.format(key))
+        assert (key in self._data)
         item = self._data[key]
         # if the item is a function return the result of the function
         if getattr(item, "get_value", None):
@@ -55,12 +58,13 @@ class Databus(object):
             cb(key)
 
     def observe_value(self, key, callback):
-        assert(hasattr(callback, '__call__'))
-        assert(len(inspect.getargspec(callback)[0]))
+        assert (hasattr(callback, '__call__'))
+        assert (len(inspect.getargspec(callback)[0]))
         if key not in self._observer_map:
             self._observer_map = []
         self._observer_map[key].append(callback)
 
+    # What was this for?
     def _initialize_value(self):
         pass
 
@@ -73,7 +77,7 @@ class Databus(object):
             key = entry.attrib['name']
             value = entry.xpath('./value/text()')[0]
             value_type = str(entry.xpath('./value/@type')[0])
-            assert(key not in self._data)
+            assert (key not in self._data)
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
             if value_type == 'value':
                 self.set_value(key, eval(value))
