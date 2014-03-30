@@ -33,6 +33,7 @@ class ModbusServer(modbus.Server):
         # not sure how this class remember slave configuration across instance creation, i guess there are some
         # well hidden away class variables somewhere.
         self.remove_all_slaves()
+        self._configure_slaves(template)
 
     def _configure_slaves(self, template):
         dom = etree.parse(template)
