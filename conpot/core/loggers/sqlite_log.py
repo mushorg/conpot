@@ -57,11 +57,14 @@ class SQLiteLogger(object):
 
     def log(self, event):
         cursor = self.conn.cursor()
-        #if event['data_type'] == 'modbus':
         for entry in event['data'].values():
             cursor.execute("INSERT INTO events(remote, protocol, request, response) VALUES (?, ?, ?, ?)",
-                (str(event["remote"]), event['data_type'], entry.get('request'), entry.get('response')))
+                           (str(event["remote"]), event['data_type'], entry.get('request'), entry.get('response'))
+            )
         self.conn.commit()
+
+    def log_session(self, session):
+        pass
 
     def select_data(self):
         cursor = self.conn.cursor()

@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 # one instance per connection
 class AttackSession(object):
-    def __init__(self, protocol, source_ip, source_port, databus):
+    def __init__(self, protocol, source_ip, source_port, databus, log_queue):
+        self.log_queue = log_queue
         self.id = uuid.uuid4()
         logger.info('New {0} session from {1} ({2})'.format(protocol, source_ip, self.id))
         self.protocol = protocol
@@ -37,6 +38,17 @@ class AttackSession(object):
         self.public_ip = None
         self.data = dict()
 
+    def _dump_event(self, event_data):
+        data = {
+            "id": self.id,
+            "remote": (self.source_ip, self.source_port),
+            "data_type": self.protocol,
+            "timestamp": self.timestamp,
+            "public_ip": self.public_ip,
+            "data": event_data
+        }
+        return data
+
     def add_event(self, event_data):
         start_time = time.mktime(self.timestamp.timetuple())
         elapse_ms = int((time.time() - start_time) * 1000)
@@ -44,6 +56,8 @@ class AttackSession(object):
             elapse_ms += 1
         elapse_ms = int(time.time() - start_time) * 1000
         self.data[elapse_ms] = event_data
+        # We should only log the session when we finish it
+        self.log_queue.put(self._dump_event(event_data))
 
     def dump(self):
         data = {
