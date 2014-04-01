@@ -48,6 +48,7 @@ class SQLiteLogger(object):
         cursor.execute("""CREATE TABLE IF NOT EXISTS events
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session TEXT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 remote TEXT,
                 protocol TEXT,
@@ -57,11 +58,12 @@ class SQLiteLogger(object):
 
     def log(self, event):
         cursor = self.conn.cursor()
-        for entry in event['data'].values():
-            cursor.execute("INSERT INTO events(remote, protocol, request, response) VALUES (?, ?, ?, ?)",
-                           (str(event["remote"]), event['data_type'], entry.get('request'), entry.get('response'))
-            )
+        cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
+                       (str(event["id"]), str(event["remote"]), event['data_type'],
+                        event["data"].get('request'), event["data"].get('response'))
+        )
         self.conn.commit()
+        return cursor.lastrowid
 
     def log_session(self, session):
         pass

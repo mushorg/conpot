@@ -93,7 +93,7 @@ class LogWorker(object):
             sec_session_start = time.mktime(session.timestamp.timetuple())
             sec_now = time.mktime(datetime.utcnow().timetuple())
             if (sec_now - (sec_session_start + sec_last_event)) >= session_timeout:
-                print "Session timed out: {0}".format(session.id)
+                logger.info("Session timed out: {0}".format(session.id))
                 sessions.remove(session)
 
     def start(self):
