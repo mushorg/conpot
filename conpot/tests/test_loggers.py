@@ -26,6 +26,7 @@ from conpot.core.loggers.stix_transform import StixTransformer
 from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 
+
 class Test_Loggers(unittest.TestCase):
 
     def test_hpfriends(self):

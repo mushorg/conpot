@@ -26,8 +26,8 @@ from gevent import monkey
 import gevent
 import requests
 
-from conpot.snmp import command_responder
-from conpot.protocols.snmp.dynrsp import DatabusMediator
+from conpot.protocols.snmp import command_responder
+from conpot.protocols.snmp.databus_mediator import DatabusMediator
 from conpot.protocols.http import web_server
 
 #we need to monkey patch for modbus_tcp.TcpMaster
@@ -44,19 +44,15 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.snmp_host = '127.0.0.1'
         self.log_queue = Queue()
-        self.dyn_rsp = DatabusMediator()
+        self.dyn_rsp = DatabusMediator({})
 
         dom = etree.parse('conpot/templates/default.xml')
-        mibs = dom.xpath('//conpot_template/snmp/mibs/*')
+        mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
         #only enable snmp server if we have configuration items
         if not mibs:
             raise Exception("No configuration for SNMP server")
         else:
-            self.snmp_server = command_responder.CommandResponder(self.snmp_host,
-                                                                  0,
-                                                                  self.log_queue,
-                                                                  os.getcwd(),
-                                                                  self.dyn_rsp)
+            self.snmp_server = command_responder.CommandResponder(self.snmp_host, 0, os.getcwd())
         # get the assigned ephemeral port for snmp
         self.snmp_port = self.snmp_server.server_port
 
@@ -97,7 +93,7 @@ class TestBase(unittest.TestCase):
                     engine_aux = ''
 
                 # register this MIB instance to the command responder
-                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
+                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type)
 
         self.snmp_server.snmpEngine.transportDispatcher.start()
 

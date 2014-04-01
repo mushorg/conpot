@@ -30,7 +30,7 @@ import BaseHTTPServer
 import httplib
 from lxml import etree
 
-from conpot.snmp import snmp_client
+from conpot.tests.helpers import snmp_client
 
 logger = logging.getLogger()
 
