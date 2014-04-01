@@ -39,10 +39,8 @@ class SessionManager(object):
         # around here we would inject dependencies into the attack session
         attack_session = self._find_sessions(protocol, source_ip)
         if not attack_session:
-            attack_session = AttackSession(protocol, source_ip, source_port, self._databus)
-        self._sessions.append(attack_session)
-        # We should only log the session when we finish it
-        self.log_queue.put(attack_session)
+            attack_session = AttackSession(protocol, source_ip, source_port, self._databus, self.log_queue)
+            self._sessions.append(attack_session)
         return attack_session
 
     def get_session_count(self, protocol):

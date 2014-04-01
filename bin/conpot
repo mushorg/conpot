@@ -145,7 +145,7 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
-    log_worker = LogWorker(config, session_manager.log_queue, public_ip)
+    log_worker = LogWorker(config, session_manager, public_ip)
     greenlets.append(gevent.spawn(log_worker.start))
 
     dom = etree.parse(args.template)
