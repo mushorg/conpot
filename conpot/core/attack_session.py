@@ -50,11 +50,10 @@ class AttackSession(object):
         return data
 
     def add_event(self, event_data):
-        start_time = time.mktime(self.timestamp.timetuple())
-        elapse_ms = int((time.time() - start_time) * 1000)
+        sec_elapsed = (datetime.utcnow() - self.timestamp).total_seconds()
+        elapse_ms = int(sec_elapsed * 1000)
         while elapse_ms in self.data:
             elapse_ms += 1
-        elapse_ms = int(time.time() - start_time) * 1000
         self.data[elapse_ms] = event_data
         # We should only log the session when we finish it
         self.log_queue.put(self._dump_event(event_data))

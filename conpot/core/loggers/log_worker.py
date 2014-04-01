@@ -19,6 +19,8 @@
 import json
 import logging
 import uuid
+import time
+
 from datetime import datetime
 
 import ConfigParser
@@ -87,8 +89,10 @@ class LogWorker(object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             session_timeout = 5
         for session in sessions:
-            sec_elapsed = int((datetime.utcnow() - session.timestamp).total_seconds())
-            if sec_elapsed >= session_timeout:
+            sec_last_event = max(session.data) / 1000
+            sec_session_start = time.mktime(session.timestamp.timetuple())
+            sec_now = time.mktime(datetime.utcnow().timetuple())
+            if (sec_now - (sec_session_start + sec_last_event)) >= session_timeout:
                 print "Session timed out: {0}".format(session.id)
                 sessions.remove(session)
 
