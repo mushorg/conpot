@@ -82,6 +82,7 @@ class TestBase(unittest.TestCase):
 
                 # retrieve value from template
                 value = symbol.xpath('./value/text()')[0]
+                profile_map_name = symbol.xpath('./value/text()')[0]
 
                 # retrieve engine from template
                 if len(symbol.xpath('./engine')) > 0:
@@ -93,7 +94,7 @@ class TestBase(unittest.TestCase):
                     engine_aux = ''
 
                 # register this MIB instance to the command responder
-                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type)
+                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, profile_map_name)
 
         self.snmp_server.snmpEngine.transportDispatcher.start()
 
