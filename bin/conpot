@@ -145,10 +145,11 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
-    log_worker = LogWorker(config, session_manager, public_ip)
+    dom = etree.parse(args.template)
+
+    log_worker = LogWorker(config, dom, session_manager, public_ip)
     greenlets.append(gevent.spawn(log_worker.start))
 
-    dom = etree.parse(args.template)
     modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
     snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
 

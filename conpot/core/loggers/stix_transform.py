@@ -18,6 +18,7 @@
 import uuid
 import os
 import json
+import ast
 
 from datetime import datetime
 
@@ -27,14 +28,16 @@ import conpot
 
 
 class StixTransformer(object):
-    def __init__(self, config):
+    def __init__(self, config, dom):
         template_loader = jinja2.FileSystemLoader(searchpath=os.path.dirname(__file__))
         template_env = jinja2.Environment(loader=template_loader)
         self.config = config._sections['taxii']
-        self.protocol_to_port_mapping = {'modbus': config.getint('modbus', 'port'),
+        modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
+        snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
+        self.protocol_to_port_mapping = {'modbus': modbus_port,
                                          'http': config.getint('http', 'port'),
-                                         's7comm': config.getint('modbus', 'port'),
-                                         'snmp': config.getint('modbus', 'port')}
+                                         's7comm': config.getint('s7', 'port'),
+                                         'snmp': snmp_port}
         self.template = template_env.get_template('stix_template.xml')
 
     def transform(self, event):

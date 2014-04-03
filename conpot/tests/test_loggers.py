@@ -21,6 +21,8 @@ from StringIO import StringIO
 
 import unittest
 from ConfigParser import ConfigParser
+from lxml import etree
+
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
 from conpot.tests.helpers.mitre_stix_validator import STIXValidator
@@ -62,7 +64,8 @@ class Test_Loggers(unittest.TestCase):
                       'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
-        stixTransformer = StixTransformer(config)
+        dom = etree.parse('conpot/templates/default.xml')
+        stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
         xmlValidator = STIXValidator(None, True, False)
         (isvalid, validation_error, best_practice_warnings) = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
@@ -84,7 +87,8 @@ class Test_Loggers(unittest.TestCase):
                       'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
-        taxiiLogger = TaxiiLogger(config)
+        dom = etree.parse('conpot/templates/default.xml')
+        taxiiLogger = TaxiiLogger(config, dom)
         taxii_result = taxiiLogger.log(test_event)
         # TaxiiLogger returns false if the message could not be delivered
         self.assertTrue(taxii_result)
