@@ -46,13 +46,10 @@ class SlaveBase(Databank):
             slave_id, request_pdu = query.parse_request(request)
             if len(request_pdu) > 0:
                 (func_code, ) = struct.unpack(">B", request_pdu[0])
+            # 43 is Device Information
             if func_code == 43:
-                # Add dummy slave for device info
-                try:
-                    slave = self.get_slave(slave_id)
-                except MissingKeyError:
-                    self.add_slave(255)
-                    slave = self.get_slave(slave_id)
+                # except will throw MissingKeyError
+                slave = self.get_slave(slave_id)
                 response_pdu = slave.handle_request(request_pdu)
                 #make the full response
                 response = query.build_response(response_pdu)
