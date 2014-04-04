@@ -22,13 +22,13 @@ from gevent.server import StreamServer
 import gevent.monkey
 
 gevent.monkey.patch_all()
-import uuid
 import socket
 from conpot.protocols.s7comm.tpkt import TPKT
 from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
 from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
 from conpot.protocols.s7comm.cotp import COTP_ConnectionConfirm
 from conpot.protocols.s7comm.s7 import S7
+import conpot.core as conpot_core
 
 import logging
 from lxml import etree
@@ -37,9 +37,8 @@ logger = logging.getLogger(__name__)
 
 
 class S7Server(object):
-    def __init__(self, template, log_queue):
+    def __init__(self, template):
 
-        self.log_queue = log_queue
         self.timeout = 5
         self.ssl_lists = {}
         S7.ssl_lists = self.ssl_lists
@@ -61,19 +60,13 @@ class S7Server(object):
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
         logger.info('Conpot S7Comm initialized using the {0} template.'.format(template_name))
 
-    def _add_log_data(self, req, resp):
-        elapse_ms = int((time.time() - self.start_time) * 1000)
-        while elapse_ms in self.session_data["data"]:
-            elapse_ms += 1
-        self.session_data['data'][elapse_ms] = {'request': req.encode('hex'), 'response': resp.encode('hex')}
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
-        session_id = str(uuid.uuid4())
-        self.session_data = {'session_id': session_id, 'remote': address, 'timestamp': datetime.utcnow(),
-                             'data_type': 's7comm', 'data': {}}
+        session = conpot_core.get_session('modbus', address[0], address[1])
+
         self.start_time = time.time()
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session_id))
+        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
         fileobj = sock.makefile()
 
         try:
@@ -92,7 +85,7 @@ class S7Server(object):
                     logger.debug('Received COTP Connection Request: dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} '
                                  'tpdu-size:{4}. ({5})'.format(cotp_cr_request.dst_ref, cotp_cr_request.src_ref,
                                                                cotp_cr_request.dst_tsap, cotp_cr_request.src_tsap,
-                                                               cotp_cr_request.tpdu_size, session_id))
+                                                               cotp_cr_request.tpdu_size, session.id))
 
                     # confirm connection response
                     cotp_cc_response = COTP_ConnectionConfirm(cotp_cr_request.src_ref, cotp_cr_request.dst_ref, 0,
@@ -104,7 +97,7 @@ class S7Server(object):
                     tpkt_resp_packet = TPKT(3, cotp_resp_base_packet).pack()
                     sock.send(tpkt_resp_packet)
 
-                    self._add_log_data(data, tpkt_resp_packet)
+                    session.add_event({'request': data.encode('hex'), 'response': tpkt_resp_packet.encode('hex')})
 
                     data = sock.recv(1024)
 
@@ -114,7 +107,7 @@ class S7Server(object):
 
                     if cotp_base_packet.tpdu_type == 0xf0:
                         logger.debug('Received known COTP TPDU: {0}. ({1})'.format(cotp_base_packet.tpdu_type,
-                                                                                   session_id))
+                                                                                   session.id))
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
                         S7_packet = S7().parse(cotp_base_packet.trailer)
@@ -123,7 +116,7 @@ class S7Server(object):
                             S7_packet.magic, S7_packet.pdu_type,
                             S7_packet.reserved, S7_packet.request_id,
                             S7_packet.param_length, S7_packet.data_length,
-                            S7_packet.result_info, session_id))
+                            S7_packet.result_info, session.id))
 
                         # request pdu
                         if S7_packet.pdu_type == 1:
@@ -141,7 +134,7 @@ class S7Server(object):
                                 tpkt_resp_packet = TPKT(3, cotp_resp_negotiate_packet).pack()
                                 sock.send(tpkt_resp_packet)
 
-                                self._add_log_data(data, tpkt_resp_packet)
+                                session.add_event({'request': data.encode('hex'), 'response': tpkt_resp_packet.encode('hex')})
 
                                 #handshake done, give some more data.
                                 data = sock.recv(1024)
@@ -157,7 +150,7 @@ class S7Server(object):
                                             S7_packet.magic, S7_packet.pdu_type,
                                             S7_packet.reserved, S7_packet.request_id,
                                             S7_packet.param_length, S7_packet.data_length,
-                                            S7_packet.result_info, session_id))
+                                            S7_packet.result_info, session.id))
 
                                         response_param, response_data = S7_packet.handle()
                                         s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
@@ -166,7 +159,7 @@ class S7Server(object):
                                         tpkt_resp_packet = TPKT(3, cotp_resp_ssl_packet).pack()
                                         sock.send(tpkt_resp_packet)
 
-                                        self._add_log_data(data, tpkt_resp_packet)
+                                        session.add_event({'request': data.encode('hex'), 'response': tpkt_resp_packet.encode('hex')})
 
                                     data = sock.recv(1024)
                     else:
@@ -176,9 +169,7 @@ class S7Server(object):
                     logger.debug('Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type))
 
         except socket.timeout:
-            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session_id))
-
-        self.log_queue.put(self.session_data)
+            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
     def get_server(self, host, port):
         connection = (host, port)
