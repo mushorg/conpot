@@ -35,10 +35,9 @@ monkey.patch_all()
 
 class TestBase(unittest.TestCase):
     def setUp(self):
-        self.log_queue = Queue()
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default.xml')
-        modbus = modbus_server.ModbusServer('conpot/templates/default.xml', self.log_queue, timeout=2)
+        modbus = modbus_server.ModbusServer('conpot/templates/default.xml', timeout=2)
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
 

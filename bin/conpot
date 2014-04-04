@@ -164,7 +164,7 @@ def main():
     if modbus_enabled:
         modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
         modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
-        modbus_server = ModbusServer(args.template, Queue())
+        modbus_server = ModbusServer(args.template)
         modbus_server = modbus_server.get_server(modbus_host, modbus_port)
         servers.append(modbus_server)
         greenlets.append(gevent.spawn(modbus_server.start))
