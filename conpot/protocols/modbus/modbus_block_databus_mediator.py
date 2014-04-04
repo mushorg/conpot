@@ -33,4 +33,5 @@ class ModbusBlockDatabusMediator:
     def __setitem__(self, r, v):
         """"""
         call_hooks("modbus.ModbusBlock.setitem", (self, r, v))
-        return conpot_core.get_databus().get_value(self.databus_key).__setitem__(r)
+        obj = conpot_core.get_databus().get_value(self.databus_key)
+        return obj.__setitem__(r, v)

@@ -28,6 +28,7 @@ import modbus_tk.modbus_tcp as modbus_tcp
 
 #we need to monkey patch for modbus_tcp.TcpMaster
 from conpot.protocols.modbus import modbus_server
+import conpot.core as conpot_core
 
 monkey.patch_all()
 
@@ -35,7 +36,9 @@ monkey.patch_all()
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.log_queue = Queue()
-        modbus = modbus_server.ModbusServer('conpot/tests/data/basic_modbus_template.xml', self.log_queue, timeout=0.1)
+        self.databus = conpot_core.get_databus()
+        self.databus.initialize('conpot/templates/default.xml')
+        modbus = modbus_server.ModbusServer('conpot/templates/default.xml', self.log_queue, timeout=2)
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
 
@@ -46,6 +49,8 @@ class TestBase(unittest.TestCase):
         """
         Objective: Test if we can extract the expected bits from a slave using the modbus protocol.
         """
+        self.databus.set_value('memoryModbusSlave1BlockA', [1 for b in range(0,128)])
+
         master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
         master.set_timeout(1.0)
         actual_bits = master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
