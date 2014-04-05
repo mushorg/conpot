@@ -6,6 +6,7 @@
 from struct import *
 
 import struct
+import conpot.core as conpot_core
 
 from conpot.protocols.s7comm.exceptions import AssembleException, ParseException
 
@@ -44,6 +45,8 @@ class S7(object):
                             0x02: set('know_but_unindentified_pdu'),
                             0x03: set('response_pdu'),
                             0x07: set('system_status_list')}
+
+        self.data_bus = conpot_core.get_databus()
 
     def __len__(self):
 
@@ -174,7 +177,7 @@ class S7(object):
                                  28,  # 1  WORD   ( Length of payload after element count )
                                  0x01,  # 1  WORD   ( 1 element follows )
                                  data_ssl_index,  # 1  WORD   ( Data Index )
-                                 current_ssl['W#16#0001'],
+                                 self.data_bus.get_value(current_ssl['W#16#0001']),
                                  # 10 WORDS  ( MLFB of component: 20 bytes => 19 chars + 1 blank (0x20) )
                                  0x0,  # 1  WORD   ( RESERVED )
                                  0x0,  # 1  WORD   ( Output state of component )
@@ -195,7 +198,7 @@ class S7(object):
                                  28,  # 1  WORD   ( Length of payload after element count )
                                  0x01,  # 1  WORD   ( 1 element follows )
                                  data_ssl_index,  # 1  WORD   ( Data Index )
-                                 current_ssl['W#16#0006'],
+                                 self.data_bus.get_value(current_ssl['W#16#0006']),
                                  # 10 WORDS  ( MLFB of component: 20 bytes => 19 chars + 1 blank (0x20) )
                                  0x0,  # 1  WORD   ( RESERVED )
                                  'V3',  # 1  WORD   ( 'V' and first digit of version number )
@@ -257,42 +260,42 @@ class S7(object):
         # craft module data 0x0001 - automation system name
         ssl_resp_data += pack('!H24s8s',
                               0x01,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0001'],  # TODO: PADDING
+                              self.data_bus.get_value(current_ssl['W#16#0001']),  # TODO: PADDING
                               #'System Name             ', # 12 WORDS  ( Name of automation system, padded with (0x00) )
                               '')  # 4  WORDS  ( RESERVED )
 
         # craft module data 0x0002 - component name
         ssl_resp_data += pack('!H24s8s',
                               0x02,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0002'],  # 12 WORDS  ( Name of component, padded with (0x00) )
+                              self.data_bus.get_value(current_ssl['W#16#0002']),  # 12 WORDS  ( Name of component, padded with (0x00) )
                               '')  # 4  WORDS  ( RESERVED )
 
         # craft module data 0x0003 - plant identification
         ssl_resp_data += pack('!H32s',
                               0x03,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0003'],)  # 16 WORDS  ( Name of plant, padded with (0x00) )
+                              self.data_bus.get_value(current_ssl['W#16#0003']),)  # 16 WORDS  ( Name of plant, padded with (0x00) )
 
         # craft module data 0x0004 - copyright
         ssl_resp_data += pack('!H26s6s',
                               0x04,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0004'],  # 13 WORDS  ( CONSTANT )
+                              self.data_bus.get_value(current_ssl['W#16#0004']),  # 13 WORDS  ( CONSTANT )
                               '')  # 3  WORDS  ( RESERVED )
 
         # craft module data 0x0005 - module serial number
         ssl_resp_data += pack('!H24s8s',
                               0x05,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0005'],  # 12 WORDS  ( Unique Serial Number )
+                              self.data_bus.get_value(current_ssl['W#16#0005']),  # 12 WORDS  ( Unique Serial Number )
                               '')  # 4  WORDS  ( RESERVED )
 
         # craft module data 0x0007 - module type name
         ssl_resp_data += pack('!H32s',
                               0x07,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#0007'],)   # 16 WORDS  ( CPU type name, padded wit (0x00) )
+                              self.data_bus.get_value(current_ssl['W#16#0007']),)   # 16 WORDS  ( CPU type name, padded wit (0x00) )
 
         # craft module data 0x000a - OEM ID of module
         ssl_resp_data += pack('!H20s6s2s4s',
                               0x0a,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#000A'],  # 10 WORDS  ( OEM-Copyright Text, padded with (0x00) )
+                              self.data_bus.get_value(current_ssl['W#16#000A']),  # 10 WORDS  ( OEM-Copyright Text, padded with (0x00) )
                               '',  # 3  WORDS  ( OEM Copyright Text padding to 26 characters )
                               '',  # 1  WORD   ( OEM ID provided by Siemens )
                               '')  # 2  WORDS  ( OEM user defined ID )
@@ -300,7 +303,7 @@ class S7(object):
         # craft module data 0x000b - location
         ssl_resp_data += pack('!H32s',
                               0x0b,  # 1  WORD   ( Data Index )
-                              current_ssl['W#16#000B'],)  # 16 WORDS  ( Location String, padded with (0x00) )
+                              self.data_bus.get_value(current_ssl['W#16#000B']),)  # 16 WORDS  ( Location String, padded with (0x00) )
 
         # craft leading response header
         ssl_resp_head = pack('!BBH',

@@ -2,6 +2,12 @@
     <core>
         <datastore>
             <key_value_mappings>
+                <key name="FacilityName">
+                    <value type="value">"Mouser Factory"</value>
+                </key>
+                <key name="SystemName">
+                    <value type="value">"Technodrome"</value>
+                </key>
                 <key name="SystemDescription">
                     <value type="value">"Siemens, SIMATIC, S7-200"</value>
                 </key>
@@ -34,6 +40,18 @@
                 </key>
                 <key name="memoryModbusSlave1BlockD">
                     <value type="value">[0 for b in range(0,32)]</value>
+                </key>
+                <key name="Copyright">
+                    <value type="value">"Original Siemens Equipment"</value>
+                </key>
+                <key name="s7_id">
+                    <value type="value">"88111222"</value>
+                </key>
+                <key name="s7_module_type">
+                    <value type="value">"IM151-8 PN/DP CPU"</value>
+                </key>
+                <key name="empty">
+                    <value type="value">""</value>
                 </key>
             </key_value_mappings>
         </datastore>
@@ -127,7 +145,27 @@
             </slaves>
         </modbus>
          <!-- TODO: Initialize the new way -->
-        <s7comm enabled="True" host="0.0.0.0" port="102">
+               <s7comm enabled="True" host="0.0.0.0" port="102">
+            <system_status_lists>
+                <ssl id="W#16#xy1C" name="Component Identification">
+                    <system_name id="W#16#0001">SystemName</system_name>
+                    <module_name id="W#16#0002">SystemDescription</module_name>
+                    <plant_ident id="W#16#0003">FacilityName</plant_ident>
+                    <copyright id="W#16#0004">Copyright</copyright>
+                    <serial id="W#16#0005">s7_id</serial>
+                    <module_type_name id="W#16#0007">s7_module_type</module_type_name>
+                    <oem_id id="W#16#000A">empty</oem_id>
+                    <location id="W#16#000B">empty</location>
+                </ssl>
+                <ssl id="W#16#xy11" name="Module Identification">
+                    <!-- Not really sure what these are supposed to contain -->
+                    <module_identification id="W#16#0001">empty</module_identification>
+                    <hardware_identificaiton id="W#16#0006">empty</hardware_identificaiton>
+                    <firmware_identification id="W#16#0006">empty</firmware_identification>
+                </ssl>
+            </system_status_lists>
+        </s7comm>
+    <!--    <s7comm enabled="True" host="0.0.0.0" port="102">
             <system_status_lists>
                 <ssl id="W#16#xy1C" name="Component Identification">
                     <system_name id="W#16#0001">Technodrome</system_name>
@@ -140,12 +178,12 @@
                     <location id="W#16#000B"></location>
                 </ssl>
                 <ssl id="W#16#xy11" name="Module Identification">
-                    <!-- Not really sure what these are supposed to contain -->
+                    &lt;!&ndash; Not really sure what these are supposed to contain &ndash;&gt;
                     <module_identification id="W#16#0001"></module_identification>
                     <hardware_identificaiton id="W#16#0006"></hardware_identificaiton>
                     <firmware_identification id="W#16#0006"></firmware_identification>
                 </ssl>
             </system_status_lists>
-        </s7comm>
+        </s7comm>-->
     </protocols>
 </conpot_template>

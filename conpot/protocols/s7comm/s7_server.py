@@ -47,7 +47,6 @@ class S7Server(object):
         template_name = dom.xpath('//conpot_template/@name')[0]
 
         system_status_lists = dom.xpath('//conpot_template/protocols/s7comm/system_status_lists/*')
-        # TODO: Read values through databus
         for ssl in system_status_lists:
             ssl_id = ssl.attrib['id']
             ssl_dict = {}
@@ -55,8 +54,8 @@ class S7Server(object):
             items = ssl.xpath('./*')
             for item in items:
                 item_id = item.attrib['id']
-                value = item.xpath('./text()')[0] if len(item.xpath('./text()')) else ''
-                ssl_dict[item_id] = value
+                databus_key = item.xpath('./text()')[0] if len(item.xpath('./text()')) else ''
+                ssl_dict[item_id] = databus_key
 
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
         logger.info('Conpot S7Comm initialized using the {0} template.'.format(template_name))
