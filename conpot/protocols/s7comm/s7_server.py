@@ -46,7 +46,8 @@ class S7Server(object):
         dom = etree.parse(template)
         template_name = dom.xpath('//conpot_template/@name')[0]
 
-        system_status_lists = dom.xpath('//conpot_template/s7comm/system_status_lists/*')
+        system_status_lists = dom.xpath('//conpot_template/protocols/s7comm/system_status_lists/*')
+        # TODO: Read values through databus
         for ssl in system_status_lists:
             ssl_id = ssl.attrib['id']
             ssl_dict = {}

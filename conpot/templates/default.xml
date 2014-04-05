@@ -126,5 +126,26 @@
                 </slave>
             </slaves>
         </modbus>
+         <!-- TODO: Initialize the new way -->
+        <s7comm enabled="True" host="0.0.0.0" port="102">
+            <system_status_lists>
+                <ssl id="W#16#xy1C" name="Component Identification">
+                    <system_name id="W#16#0001">Technodrome</system_name>
+                    <module_name id="W#16#0002">SIMATIC S7-200</module_name>
+                    <plant_ident id="W#16#0003">Mouser factory</plant_ident>
+                    <copyright id="W#16#0004">Original Siemens Equipment</copyright>
+                    <serial id="W#16#0005">88111222</serial>
+                    <module_type_name id="W#16#0007">IM151-8 PN/DP CPU</module_type_name>
+                    <oem_id id="W#16#000A"></oem_id>
+                    <location id="W#16#000B"></location>
+                </ssl>
+                <ssl id="W#16#xy11" name="Module Identification">
+                    <!-- Not really sure what these are supposed to contain -->
+                    <module_identification id="W#16#0001"></module_identification>
+                    <hardware_identificaiton id="W#16#0006"></hardware_identificaiton>
+                    <firmware_identification id="W#16#0006"></firmware_identification>
+                </ssl>
+            </system_status_lists>
+        </s7comm>
     </protocols>
 </conpot_template>

@@ -36,6 +36,7 @@ import conpot.core as conpot_core
 from conpot.core.loggers.log_worker import LogWorker
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
+from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.utils import ext_ip
 
 
@@ -152,6 +153,7 @@ def main():
 
     modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
     snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
+    s7comm_enabled = dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]
 
     servers = list()
     if snmp_enabled:
@@ -168,6 +170,14 @@ def main():
         modbus_server = modbus_server.get_server(modbus_host, modbus_port)
         servers.append(modbus_server)
         greenlets.append(gevent.spawn(modbus_server.start))
+
+	if s7comm_enabled:
+		s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+     	s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+        s7_instance = S7Server(args.template)
+        s7_server = s7_instance.get_server(s7_host, s7_port)
+        servers.append(s7_server)
+        greenlets.append(gevent.spawn(s7_server.start))
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
