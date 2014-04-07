@@ -39,11 +39,12 @@ class Databus(object):
         logger.debug('Get value from key: {0}'.format(key))
         assert (key in self._data)
         item = self._data[key]
-        # if the item is a function return the result of the function
         if getattr(item, "get_value", None):
-            # need MROW lock on this
+            # this could potentially generate a context switch, but as long the called method
+            # does not "callback" the databus we should be fine
             return item.get_value()
         else:
+            # guaranteed to not generate context switch
             return item
 
     def set_value(self, key, value):
@@ -63,10 +64,6 @@ class Databus(object):
         if key not in self._observer_map:
             self._observer_map = []
         self._observer_map[key].append(callback)
-
-    # What was this for?
-    def _initialize_value(self):
-        pass
 
     def initialize(self, config_file):
         self._reset()
