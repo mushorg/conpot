@@ -53,5 +53,5 @@ class SessionManager(object):
     def get_session_count(self):
         return len(self._sessions)
 
-    def initialize_datastore(self, config_file):
+    def initialize_databus(self, config_file):
         self._databus.initialize(config_file)

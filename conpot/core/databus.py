@@ -72,7 +72,7 @@ class Databus(object):
         self._reset()
         logger.debug('Initializing databus using {0}.'.format(config_file))
         dom = etree.parse(config_file)
-        entries = dom.xpath('//conpot_template/core/datastore/key_value_mappings/*')
+        entries = dom.xpath('//conpot_template/core/databus/key_value_mappings/*')
         for entry in entries:
             key = entry.attrib['name']
             value = entry.xpath('./value/text()')[0]

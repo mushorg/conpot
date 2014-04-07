@@ -140,7 +140,7 @@ def main():
     greenlets = list()
 
     session_manager = conpot_core.get_sessionManager()
-    session_manager.initialize_datastore(args.template)
+    session_manager.initialize_databus(args.template)
 
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):

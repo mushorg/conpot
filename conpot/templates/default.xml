@@ -1,6 +1,7 @@
 <conpot_template name="S7-200" description="Rough simulation of a basic Siemens S7-200 CPU with 2 slaves">
     <core>
-        <datastore>
+        <databus>
+            <!-- Core value that can be retrieved from the databus by key -->
             <key_value_mappings>
                 <key name="FacilityName">
                     <value type="value">"Mouser Factory"</value>
@@ -54,7 +55,7 @@
                     <value type="value">""</value>
                 </key>
             </key_value_mappings>
-        </datastore>
+        </databus>
     </core>
     <protocols>
         <snmp enabled="True" host="0.0.0.0" port="161">
@@ -74,7 +75,7 @@
             <mibs>
                 <mib name="SNMPv2-MIB">
                     <symbol name="sysDescr">
-                        <!-- Values maps to keys in the datastore -->
+                        <!-- Value is key in databus -->
                         <value>SystemDescription</value>
                     </symbol>
                     <symbol name="sysUpTime">
@@ -144,7 +145,6 @@
                 </slave>
             </slaves>
         </modbus>
-         <!-- TODO: Initialize the new way -->
                <s7comm enabled="True" host="0.0.0.0" port="102">
             <system_status_lists>
                 <ssl id="W#16#xy1C" name="Component Identification">
