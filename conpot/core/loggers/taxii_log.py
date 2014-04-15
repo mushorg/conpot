@@ -42,12 +42,12 @@ class TaxiiLogger(object):
         stix_package = self.stix_transformer.transform(event)
 
         # wrapping the stix message in a TAXII envelope
-        content_block = ContentBlock(libtaxii.CB_STIX_XML_10, stix_package)
+        content_block = ContentBlock(libtaxii.CB_STIX_XML_11, stix_package)
         inbox_message = InboxMessage(message_id=generate_message_id(), content_blocks=[content_block])
         inbox_xml = inbox_message.to_xml()
 
         # the actual call to the TAXII web service
-        response = self.client.callTaxiiService2(self.host, self.inbox_path, libtaxii.VID_TAXII_XML_10, inbox_xml, self.port)
+        response = self.client.callTaxiiService2(self.host, self.inbox_path, libtaxii.VID_TAXII_XML_11, inbox_xml, self.port)
         response_message = libtaxii.get_message_from_http_response(response, '0')
 
         if response_message.status_type != libtaxii.messages.ST_SUCCESS:
