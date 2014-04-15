@@ -1,32 +1,13 @@
-# Copyright (c) 2013, The MITRE Corporation
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#     * Redistributions of source code must retain the above copyright
-#       notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above copyright
-#       notice, this list of conditions and the following disclaimer in the
-#       documentation and/or other materials provided with the distribution.
-#     * Neither the name of The MITRE Corporation nor the
-#       names of its contributors may be used to endorse or promote products
-#       derived from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# Copyright (c) 2014, The MITRE Corporation. All rights reserved.
+# See LICENSE.txt for complete terms.
 
 import os
 import re
 from collections import defaultdict
-from lxml import etree as et
+from StringIO import StringIO
+from lxml import etree
+from lxml import isoschematron
+import xlrd
 
 class XmlValidator(object):
     NS_XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance"
@@ -42,7 +23,7 @@ class XmlValidator(object):
         Keyword Arguments
         fp - the path to the schema file
         '''
-        tree = et.parse(fp)
+        tree = etree.parse(fp)
         root = tree.getroot()
         return root.attrib['targetNamespace'] # throw an error if it doesn't exist...we can't validate
 
@@ -65,7 +46,7 @@ class XmlValidator(object):
         tag_include = "{%s}include" % (self.NS_XML_SCHEMA)
 
         for fn in list_schemas:
-            tree = et.parse(fn)
+            tree = etree.parse(fn)
             root = tree.getroot()
             includes = root.findall(tag_include)
 
@@ -110,14 +91,14 @@ class XmlValidator(object):
         import_dict - a dictionary of the form {namespace : path to schema} that will be used to build the list of xs:import statements
         '''
         schema_txt = '''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://stix.mitre.org/tools/validator" elementFormDefault="qualified" attributeFormDefault="qualified"/>'''
-        root = et.fromstring(schema_txt)
+        root = etree.fromstring(schema_txt)
 
         tag_import = "{%s}import" % (self.NS_XML_SCHEMA)
         for ns, list_schemaloc in import_dict.iteritems():
             schemaloc = list_schemaloc
             schemaloc = schemaloc.replace("\\", "/")
             attrib = {'namespace' : ns, 'schemaLocation' : schemaloc}
-            el_import = et.Element(tag_import, attrib=attrib)
+            el_import = etree.Element(tag_import, attrib=attrib)
             root.append(el_import)
 
         return root
@@ -134,6 +115,15 @@ class XmlValidator(object):
 
         return schemaloc_dict
 
+    def _build_result_dict(self, result, errors=None):
+        d = {}
+        d['result'] = result
+        if errors:
+            if not hasattr(errors, "__iter__"):
+                errors = [errors]
+            d['errors'] = errors
+        return d
+
     def validate(self, instance_doc):
         '''Validates an instance documents.
 
@@ -141,17 +131,22 @@ class XmlValidator(object):
         result and the second is the validation error if there was one.
 
         Keyword Arguments
-        instance_doc - a file-like object to be validated
+        instance_doc - a filename, file-like object, etree._Element, or etree._ElementTree to be validated
         '''
         if not(self.__use_schemaloc or self.__imports):
             return (False, "No schemas to validate against! Try instantiating XmlValidator with use_schemaloc=True or setting the schema_dir")
 
-        try:
-            instance_doc = et.parse(instance_doc)
-        except et.XMLSyntaxError as e:
-            return (False, str(e))
+        if isinstance(instance_doc, etree._Element):
+            instance_root = instance_doc
+        elif isinstance(instance_doc, etree._ElementTree):
+            instance_root = instance_doc.getroot()
+        else:
+            try:
+                et = etree.parse(instance_doc)
+                instance_root = et.getroot()
+            except etree.XMLSyntaxError as e:
+                return self._build_result_dict(False, str(e))
 
-        instance_root = instance_doc.getroot()
         if self.__use_schemaloc:
             try:
                 required_imports = self._extract_schema_locations(instance_root)
@@ -168,18 +163,18 @@ class XmlValidator(object):
             return (False, "Unable to determine schemas to validate against")
 
         wrapper_schema_doc = self._build_wrapper_schema(import_dict=required_imports)
-        xmlschema = et.XMLSchema(wrapper_schema_doc)
+        xmlschema = etree.XMLSchema(wrapper_schema_doc)
 
-        try:
-            xmlschema.assertValid(instance_doc)
-            return (True, None)
-        except Exception as e:
-            return (False, str(e))
+        isvalid = xmlschema.validate(instance_root)
+        if isvalid:
+            return self._build_result_dict(True)
+        else:
+            return self._build_result_dict(False, [str(x) for x in xmlschema.error_log])
 
 
 class STIXValidator(XmlValidator):
-    '''Schema validates STIX v1.0 documents and checks best practice guidance'''
-    __stix_version__ = "1.0"
+    '''Schema validates STIX v1.1 documents and checks best practice guidance'''
+    __stix_version__ = "1.1"
 
     PREFIX_STIX_CORE = 'stix'
     PREFIX_CYBOX_CORE = 'cybox'
@@ -231,9 +226,9 @@ class STIXValidator(XmlValidator):
             for e in elements:
                 try:
                     if not re.match(r'\w+:\w+-', e.attrib['id']): # not the best regex
-                        return_dict['format'].append(e)
+                        return_dict['format'].append({'tag':e.tag, 'id':e.attrib['id'], 'line_number':e.sourceline})
                 except KeyError as ex:
-                    return_dict['no_id'].append(e)
+                    return_dict['no_id'].append({'tag':e.tag, 'line_number':e.sourceline})
 
         return return_dict
 
@@ -255,9 +250,9 @@ class STIXValidator(XmlValidator):
         for node in all_nodes_with_ids:
             dict_id_nodes[node.attrib['id']].append(node)
 
-        for k,v in dict_id_nodes.iteritems():
-            if len(v) > 1:
-                dup_dict[k] = v
+        for id,node_list in dict_id_nodes.iteritems():
+            if len(node_list) > 1:
+                dup_dict[id] = [{'tag':node.tag, 'line_number':node.sourceline} for node in node_list]
 
         return dup_dict
 
@@ -277,7 +272,10 @@ class STIXValidator(XmlValidator):
 
         for node in all_idrefs:
             if node.attrib['idref'] not in all_ids:
-                list_unresolved_ids.append(node)
+                d = {'tag': node.tag,
+                     'idref': node.attrib['idref'],
+                     'line_number' : node.sourceline}
+                list_unresolved_ids.append(d)
 
         return list_unresolved_ids
 
@@ -294,6 +292,9 @@ class STIXValidator(XmlValidator):
 
         for node in nodes:
             if node.text or len(node) > 0:
+                d = {'tag' : node.tag,
+                     'idref' : node.attrib['idref'],
+                     'line_number' : node.sourceline}
                 list_nodes.append(node)
 
         return list_nodes
@@ -308,7 +309,7 @@ class STIXValidator(XmlValidator):
         missing - a list of constructs missing from the indicator
 
         Keyword Arguments
-        instance_doc - etree Element for a STIX instance document
+        instance_doc - etree Element for a STIX sinstance document
         '''
         list_indicators = []
         xpath = "//%s:Indicator | %s:Indicator" % (self.PREFIX_STIX_CORE, self.PREFIX_STIX_INDICATOR)
@@ -332,16 +333,17 @@ class STIXValidator(XmlValidator):
 
                 if dict_indicator:
                     dict_indicator['id'] = node.attrib.get('id')
-                    dict_indicator['node'] = node
+                    dict_indicator['line_number'] = node.sourceline
                     list_indicators.append(dict_indicator)
 
         return list_indicators
 
     def _check_root_element(self, instance_doc):
+        d = {}
         if instance_doc.tag != "{%s}STIX_Package" % (self.NS_STIX_CORE):
-            return instance_doc
-        else:
-            return None
+            d['tag'] = instance_doc.tag
+            d['line_number'] = instance_doc.sourceline
+        return d
 
 
     def check_best_practices(self, instance_doc):
@@ -357,11 +359,20 @@ class STIXValidator(XmlValidator):
         Returns a dictionary of lists and other dictionaries. This is maybe not ideal but workable.
 
         Keyword Arguments
-        instance_doc - a file-like object for a STIX instance document
+        instance_doc - a filename, file-like object, etree._Element or etree.ElementTree for a STIX instance document
         '''
-        instance_doc.seek(0)
-        tree = et.parse(instance_doc)
-        root = tree.getroot()
+
+        if isinstance(instance_doc, etree._Element):
+            root = instance_doc
+        elif isinstance(instance_doc, etree._ElementTree):
+            root = instance_doc.getroot()
+        elif isinstance(instance_doc, basestring):
+            tree = etree.parse(instance_doc)
+            root = tree.getroot()
+        else:
+            instance_doc.seek(0)
+            tree = etree.parse(instance_doc)
+            root = tree.getroot()
 
         root_element = self._check_root_element(root)
         list_unresolved_idrefs = self._check_idref_resolution(root)
@@ -370,13 +381,24 @@ class STIXValidator(XmlValidator):
         list_idref_with_content = self._check_idref_with_content(root)
         list_indicators = self._check_indicator_practices(root)
 
-        return {'root_element' : root_element,
-                'unresolved_idrefs' : list_unresolved_idrefs,
-                'duplicate_ids' : dict_duplicate_ids,
-                'missing_ids' : dict_presence_and_format['no_id'],
-                'id_format' : dict_presence_and_format['format'],
-                'idref_with_content' : list_idref_with_content,
-                'indicator_suggestions' : list_indicators }
+        d = {}
+        if root_element:
+            d['root_element'] = root_element
+        if list_unresolved_idrefs:
+            d['unresolved_idrefs'] = list_unresolved_idrefs
+        if dict_duplicate_ids:
+            d['duplicate_ids'] = dict_duplicate_ids
+        if dict_presence_and_format:
+            if dict_presence_and_format.get('no_id'):
+                d['missing_ids'] = dict_presence_and_format['no_id']
+            if dict_presence_and_format.get('format'):
+                d['id_format'] = dict_presence_and_format['format']
+        if list_idref_with_content:
+            d['idref_with_content'] = list_idref_with_content
+        if list_indicators:
+            d['indicator_suggestions'] = list_indicators
+
+        return d
 
     def validate(self, instance_doc):
         '''Validates a STIX document and checks best practice guidance if STIXValidator
@@ -384,17 +406,501 @@ class STIXValidator(XmlValidator):
 
         Best practices will not be checked if the document is schema-invalid.
 
-        Returns a tuple of (bool, str, dict) for (is valid, validation error, best practice suggestions).
-
         Keyword Arguments
-        instance_doc - a file-like object for a STIX instance document
+        instance_doc - a filename, file-like object, etree._Element or etree.ElementTree for a STIX instance document
         '''
-        (isvalid, validation_error) = super(STIXValidator, self).validate(instance_doc)
+        result_dict = super(STIXValidator, self).validate(instance_doc)
 
+        isvalid = result_dict['result']
         if self.best_practices and isvalid:
             best_practice_warnings = self.check_best_practices(instance_doc)
         else:
             best_practice_warnings = None
 
-        return (isvalid, validation_error, best_practice_warnings)
+        if best_practice_warnings:
+            result_dict['best_practice_warnings'] = best_practice_warnings
 
+        return result_dict
+
+class SchematronValidator(object):
+    NS_SVRL = "http://purl.oclc.org/dsdl/svrl"
+    NS_SCHEMATRON = "http://purl.oclc.org/dsdl/schematron"
+    NS_SAXON = "http://icl.com/saxon" # libxml2 requires this namespace instead of http://saxon.sf.net/
+    NS_SAXON_SF_NET = "http://saxon.sf.net/"
+
+    def __init__(self, schematron=None):
+        self.schematron = None # isoschematron.Schematron instance
+        self._init_schematron(schematron)
+
+    def _init_schematron(self, schematron):
+        '''Returns an instance of lxml.isoschematron.Schematron'''
+        if schematron is None:
+            self.schematron = None
+            return
+        elif not (isinstance(schematron, etree._Element) or isinstance(schematron, etree._ElementTree)):
+            tree = etree.parse(schematron)
+        else:
+            tree = schematron
+
+        self.schematron = isoschematron.Schematron(tree, store_report=True, store_xslt=True, store_schematron=True)
+
+    def get_xslt(self):
+        if not self.schematron:
+            return None
+        return self.schematron.validator_xslt
+
+    def get_schematron(self):
+        if not self.schematron:
+            return None
+        return self.schematron.schematron
+
+    def _build_result_dict(self, result, report=None):
+        '''Creates a dictionary to be returned by the validate() method.'''
+        d = {}
+        d['result'] = result
+        if report:
+                d['report'] = report
+        return d
+
+    def _get_schematron_errors(self, validation_report):
+        '''Returns a list of SVRL failed-assert and successful-report elements.'''
+        xpath = "//svrl:failed-assert | //svrl:successful-report"
+        errors = validation_report.xpath(xpath, namespaces={'svrl':self.NS_SVRL})
+        return errors
+
+    def _get_error_line_numbers(self, d_error, tree):
+        '''Returns a sorted list of line numbers for a given Schematron error.'''
+        locations = d_error['locations']
+        nsmap = d_error['nsmap']
+
+        line_numbers = []
+        for location in locations:
+            ctx_node = tree.xpath(location, namespaces=nsmap)[0]
+            if ctx_node.sourceline not in line_numbers:
+                line_numbers.append(ctx_node.sourceline)
+
+        line_numbers.sort()
+        return line_numbers
+
+    def _build_error_dict(self, errors, instance_tree, report_line_numbers=True):
+        '''Returns a dictionary representation of the SVRL validation report:
+        d0 = { <Schemtron error message> : d1 }
+
+        d1 = { "locations" : A list of XPaths to context nodes,
+               "line_numbers" : A list of line numbers where the error occurred,
+               "test" : The Schematron evaluation expression used,
+               "text" : The Schematron error message }
+
+        '''
+        d_errors = {}
+
+        for error in errors:
+            text = error.find("{%s}text" % self.NS_SVRL).text
+            location = error.attrib.get('location')
+            test = error.attrib.get('test')
+            if text in d_errors:
+                d_errors[text]['locations'].append(location)
+            else:
+                d_errors[text] = {'locations':[location], 'test':test, 'nsmap':error.nsmap, 'text':text}
+
+        if report_line_numbers:
+            for d_error in d_errors.itervalues():
+                line_numbers = self._get_error_line_numbers(d_error, instance_tree)
+                d_error['line_numbers'] = line_numbers
+
+        return d_errors
+
+    def _build_error_report_dict(self, validation_report, instance_tree, report_line_numbers=True):
+        errors = self._get_schematron_errors(validation_report)
+        d_errors = self._build_error_dict(errors, instance_tree, report_line_numbers)
+        report_dict = defaultdict(list)
+        for msg, d in d_errors.iteritems():
+            d_error = {'error' : msg}
+            if 'line_numbers' in d:
+                d_error['line_numbers'] = d['line_numbers']
+            report_dict['errors'].append(d_error)
+
+        return report_dict
+
+    def validate(self, instance, report_line_numbers=True):
+        '''Validates an XML instance document.
+
+        Arguments:
+        report_line_numbers : Includes error line numbers in the returned dictionary.
+                              This may slow performance.
+
+        '''
+        if not self.schematron:
+            raise Exception('Schematron document not set. Cannot validate. Call init_schematron(...) and retry.')
+        try:
+            if isinstance(instance, etree._Element):
+                tree = etree.ElementTree(instance)
+            elif isinstance(instance, etree._ElementTree):
+                tree = instance
+            else:
+                tree = etree.parse(instance)
+
+            result = self.schematron.validate(tree)
+
+            if not result:
+                report = self._build_error_report_dict(self.schematron.validation_report, tree, report_line_numbers)
+                return self._build_result_dict(result, report)
+            else:
+                return self._build_result_dict(result)
+
+        except etree.ParseError as e:
+            return self._build_result_dict(False, [str(e)])
+
+class ProfileValidator(SchematronValidator):
+    NS_STIX = "http://stix.mitre.org/stix-1"
+
+    def __init__(self, profile_fn):
+        '''Initializes an instance of ProfileValidator.'''
+        profile = self._open_profile(profile_fn)
+        schema = self._parse_profile(profile)
+        super(ProfileValidator, self).__init__(schematron=schema)
+
+    def _build_rule_dict(self, worksheet):
+        '''Builds a dictionary representation of the rules defined by a STIX profile document.'''
+        d = defaultdict(list)
+        for i in xrange(1, worksheet.nrows):
+            if not any(self._get_cell_value(worksheet, i, x) for x in xrange(0, worksheet.ncols)): # empty row
+                continue
+            if not self._get_cell_value(worksheet, i, 1): # assume this is a label row
+                context = self._get_cell_value(worksheet, i, 0)
+                continue
+
+            field = self._get_cell_value(worksheet, i, 0)
+            occurrence = self._get_cell_value(worksheet, i, 1)
+            xsi_types = self._get_cell_value(worksheet, i, 3)
+            allowed_values = self._get_cell_value(worksheet, i, 4)
+
+            list_xsi_types = [x.strip() for x in xsi_types.split(',')] if xsi_types else []
+            list_allowed_values = [x.strip() for x in allowed_values.split(',')] if allowed_values else []
+
+
+            if occurrence in ('required', 'prohibited'): # ignore 'optional' and 'suggested'
+                d[context].append({'field' : field,
+                                   'occurrence' : occurrence,
+                                   'xsi_types' : list_xsi_types,
+                                   'allowed_values' : list_allowed_values})
+        return d
+
+    def _add_root_test(self, pattern, nsmap):
+        '''Adds a root-level test that requires the root element of a STIX
+        document be a STIX_Package'''
+        ns_stix = "http://stix.mitre.org/stix-1"
+        rule_element = self._add_element(pattern, "rule", context="/")
+        text = "The root element must be a STIX_Package instance"
+        test = "%s:STIX_Package" % nsmap.get(ns_stix, 'stix')
+        element = etree.XML('''<assert xmlns="%s" test="%s" role="error">%s [<value-of select="saxon:line-number()"/>]</assert> ''' % (self.NS_SCHEMATRON, test, text))
+        rule_element.append(element)
+
+    def _add_required_test(self, rule_element, entity_name, context):
+        '''Adds a test to the rule element checking for the presence of a required STIX field.'''
+        entity_path = "%s/%s" % (context, entity_name)
+        text = "%s is required by this profile" % (entity_path)
+        test = entity_name
+        element = etree.XML('''<assert xmlns="%s" test="%s" role="error">%s [<value-of select="saxon:line-number()"/>]</assert> ''' % (self.NS_SCHEMATRON, test, text))
+        rule_element.append(element)
+
+    def _add_prohibited_test(self, rule_element, entity_name, context):
+        '''Adds a test to the rule element checking for the presence of a prohibited STIX field.'''
+        entity_path = "%s/%s" % (context, entity_name) if entity_name.startswith("@") else context
+        text = "%s is prohibited by this profile" % (entity_path)
+        test_field = entity_name if entity_name.startswith("@") else "true()"
+        element = etree.XML('''<report xmlns="%s" test="%s" role="error">%s [<value-of select="saxon:line-number()"/>]</report> ''' % (self.NS_SCHEMATRON, test_field, text))
+        rule_element.append(element)
+
+    def _add_allowed_xsi_types_test(self, rule_element, context, entity_name, allowed_xsi_types):
+        '''Adds a test to the rule element which corresponds to values found in the Allowed Implementations
+        column of a STIX profile document.'''
+        entity_path = "%s/%s" % (context, entity_name)
+
+        if allowed_xsi_types:
+            test = " or ".join("@xsi:type='%s'" % (x) for x in allowed_xsi_types)
+            text = 'The allowed xsi:types for %s are %s' % (entity_path, allowed_xsi_types)
+            element = etree.XML('''<assert xmlns="%s" test="%s" role="error">%s [<value-of select="saxon:line-number()"/>]</assert> ''' % (self.NS_SCHEMATRON, test, text))
+            rule_element.append(element)
+
+    def _add_allowed_values_test(self, rule_element, context, entity_name, allowed_values):
+        '''Adds a test to the rule element corresponding to values found in the Allowed Values
+        column of a STIX profile document.
+
+        '''
+        entity_path = "%s/%s" % (context, entity_name)
+        text = "The allowed values for %s are %s" % (entity_path, allowed_values)
+
+        if entity_name.startswith('@'):
+            test = " or ".join("%s='%s'" % (entity_name, x) for x in allowed_values)
+        else:
+            test = " or ".join(".='%s'" % (x) for x in allowed_values)
+
+        element = etree.XML('''<assert xmlns="%s" test="%s" role="error">%s [<value-of select="saxon:line-number()"/>]</assert> ''' % (self.NS_SCHEMATRON, test, text))
+        rule_element.append(element)
+
+    def _create_rule_element(self, context):
+        '''Returns an etree._Element representation of a Schematron rule element.'''
+        rule = etree.Element("{%s}rule" % self.NS_SCHEMATRON)
+        rule.set('context', context)
+        return rule
+
+    def _add_rules(self, pattern_element, selectors, field_ns, tests):
+        '''Adds all Schematron rules and tests to the overarching Schematron
+        <pattern> element. Each rule and test corresponds to entries found
+        in the STIX profile document.
+
+        '''
+        d_rules = {} # context : rule_element
+        for selector in selectors:
+            for d_test in tests:
+                field = d_test['field']
+                occurrence = d_test['occurrence']
+                allowed_values = d_test['allowed_values']
+                allowed_xsi_types = d_test['xsi_types']
+
+                if field.startswith("@"):
+                    entity_name = field
+                else:
+                    entity_name = "%s:%s" % (field_ns, field)
+
+                if occurrence == "required":
+                    ctx = selector
+                    rule = d_rules.setdefault(ctx, self._create_rule_element(ctx))
+                    self._add_required_test(rule, entity_name, ctx)
+                else:
+                    if entity_name.startswith("@"):
+                        ctx = selector
+                    else:
+                        ctx = "%s/%s" % (selector, entity_name)
+
+                    rule = d_rules.setdefault(ctx, self._create_rule_element(ctx))
+                    self._add_prohibited_test(rule, entity_name, ctx)
+
+                if allowed_values or allowed_xsi_types:
+                    if entity_name.startswith('@'):
+                        ctx = selector
+                    else:
+                        ctx = "%s/%s" % (selector, entity_name)
+
+                    rule = d_rules.setdefault(ctx, self._create_rule_element(ctx))
+                    if allowed_values:
+                        self._add_allowed_values_test(rule, selector, entity_name, allowed_values)
+                    if allowed_xsi_types:
+                        self._add_allowed_xsi_types_test(rule, selector, entity_name, allowed_xsi_types)
+
+        for rule in d_rules.itervalues():
+            pattern_element.append(rule)
+
+    def _build_schematron_xml(self, rules, nsmap, instance_map):
+        '''Returns an etree._Element instance representation of the STIX profile'''
+        root = etree.Element("{%s}schema" % self.NS_SCHEMATRON, nsmap={None:self.NS_SCHEMATRON})
+        pattern = self._add_element(root, "pattern", id="STIX_Schematron_Profile")
+        self._add_root_test(pattern, nsmap) # check the root element of the document
+
+        for label, tests in rules.iteritems():
+            d_instances = instance_map[label]
+            selectors = d_instances['selectors']
+            field_ns_alias = d_instances['ns_alias']
+            self._add_rules(pattern, selectors, field_ns_alias, tests)
+
+        self._map_ns(root, nsmap) # add namespaces to the schematron document
+        return root
+
+    def _parse_namespace_worksheet(self, worksheet):
+        '''Parses the Namespaces worksheet of the profile. Returns a dictionary representation:
+
+        d = { <namespace> : <namespace alias> }
+
+        By default, entries for http://stix.mitre.org/stix-1 and http://icl.com/saxon are added.
+
+        '''
+        nsmap = {self.NS_STIX : 'stix',
+                 self.NS_SAXON : 'saxon'}
+        for i in xrange(1, worksheet.nrows): # skip the first row
+            if not any(self._get_cell_value(worksheet, i, x) for x in xrange(0, worksheet.ncols)): # empty row
+                continue
+
+            ns = self._get_cell_value(worksheet, i, 0)
+            alias = self._get_cell_value(worksheet, i, 1)
+
+            if not (ns or alias):
+                raise Exception("Missing namespace or alias: unable to parse Namespaces worksheet")
+
+            nsmap[ns] = alias
+        return nsmap
+
+    def _parse_instance_mapping_worksheet(self, worksheet, nsmap):
+        '''Parses the supplied Instance Mapping worksheet and returns a dictionary representation.
+
+        d0  = { <STIX type label> : d1 }
+        d1  = { 'selectors' : XPath selectors to instances of the XML datatype',
+                'ns' : The namespace where the STIX type is defined,
+                'ns_alias' : The namespace alias associated with the namespace }
+
+        '''
+        instance_map = {}
+        for i in xrange(1, worksheet.nrows):
+            if not any(self._get_cell_value(worksheet, i, x) for x in xrange(0, worksheet.ncols)): # empty row
+                continue
+
+            label = self._get_cell_value(worksheet, i, 0)
+            selectors = [x.strip() for x in self._get_cell_value(worksheet, i, 1).split(",")]
+            ns = self._get_cell_value(worksheet, i, 2)
+            ns_alias = nsmap[ns]
+
+            if not (label or selectors or ns):
+                raise Exception("Missing label, instance selector and/or namespace for %s in Instance Mapping worksheet" % label)
+
+            instance_map[label] = {'selectors':selectors, 'ns':ns, 'ns_alias':ns_alias}
+        return instance_map
+
+    def _parse_profile(self, profile):
+        '''Converts the supplied STIX profile into a Schematron representation. The
+        Schematron schema is returned as a etree._Element instance.
+
+        '''
+        overview_ws = profile.sheet_by_name("Overview")
+        namespace_ws = profile.sheet_by_name("Namespaces")
+        instance_mapping_ws = profile.sheet_by_name("Instance Mapping")
+
+        all_rules = defaultdict(list)
+        for worksheet in profile.sheets():
+            if worksheet.name not in ("Overview", "Namespaces", "Instance Mapping"):
+                rules = self._build_rule_dict(worksheet)
+                for context,d in rules.iteritems():
+                    all_rules[context].extend(d)
+
+        namespaces = self._parse_namespace_worksheet(namespace_ws)
+        instance_mapping = self._parse_instance_mapping_worksheet(instance_mapping_ws, namespaces)
+        schema = self._build_schematron_xml(all_rules, namespaces, instance_mapping)
+
+        self._unload_workbook(profile)
+        return schema
+
+    def _map_ns(self, schematron, nsmap):
+        '''Adds <ns> nodes to the supplied schematron document for each entry
+        supplied by the nsmap.
+
+        '''
+        for ns, prefix in nsmap.iteritems():
+            ns_element = etree.Element("{%s}ns" % self.NS_SCHEMATRON)
+            ns_element.set("prefix", prefix)
+            ns_element.set("uri", ns)
+            schematron.insert(0, ns_element)
+
+    def _add_element(self, node, name, text=None, **kwargs):
+        '''Adds an etree._Element child to the supplied node. The child node is returned'''
+        child = etree.SubElement(node, "{%s}%s" % (self.NS_SCHEMATRON, name))
+        if text:
+            child.text = text
+        for k,v in kwargs.iteritems():
+            child.set(k, v)
+        return child
+
+    def _unload_workbook(self, workbook):
+        '''Unloads the xlrd workbook.'''
+        for worksheet in workbook.sheets():
+            workbook.unload_sheet(worksheet.name)
+
+    def _get_cell_value(self, worksheet, row, col):
+        '''Returns the worksheet cell value found at (row,col).'''
+        if not worksheet:
+            raise Exception("worksheet value was NoneType")
+        value = str(worksheet.cell_value(row, col))
+        return value
+
+    def _convert_to_string(self, value):
+        '''Returns the str(value) or an 8-bit string version of value encoded as UTF-8.'''
+        if isinstance(value, unicode):
+            return value.encode("UTF-8")
+        else:
+            return str(value)
+
+    def _open_profile(self, filename):
+        '''Returns xlrd.open_workbook(filename) or raises an Exception if the
+        filename extension is not .xlsx or the open_workbook() call fails.
+
+        '''
+        if not filename.lower().endswith(".xlsx"):
+            raise Exception("File must have .XLSX extension. Filename provided: %s" % filename)
+        try:
+            return xlrd.open_workbook(filename)
+        except:
+            raise Exception("File does not seem to be valid XLSX.")
+
+    def validate(self, instance_doc):
+        '''Validates an XML instance document against a STIX profile.'''
+        return super(ProfileValidator, self).validate(instance_doc, report_line_numbers=False)
+
+    def _build_error_dict(self, errors, instance_doc, report_line_numbers=False):
+        '''Overrides SchematronValidator._build_error_dict(...).
+
+        Returns a dictionary representation of the SVRL validation report:
+        d0 = { <Schemtron error message> : d1 }
+
+        d1 = { "locations" : A list of XPaths to context nodes,
+               "line_numbers" : A list of line numbers where the error occurred,
+               "test" : The Schematron evaluation expression used,
+               "text" : The Schematron error message }
+
+        '''
+        d_errors = {}
+        for error in errors:
+            text = error.find("{%s}text" % self.NS_SVRL).text
+            location = error.attrib.get('location')
+            test = error.attrib.get('test')
+
+            line_number = text.split(" ")[-1][1:-1]
+            text = text[:text.rfind(' [')]
+
+            if text in d_errors:
+                d_errors[text]['locations'].append(location)
+                d_errors[text]['line_numbers'].append(line_number)
+            else:
+                d_errors[text] = {'locations':[location], 'test':test, 'nsmap':error.nsmap, 'text':text, 'line_numbers':[line_number]}
+        return d_errors
+
+    def get_xslt(self):
+        '''Overrides SchematronValidator.get_xslt()
+
+        Returns an lxml.etree._ElementTree representation of the ISO Schematron skeleton generated
+        XSLT translation of a STIX profile.
+
+        The ProfileValidator uses the extension function saxon:line-number() for reporting line numbers.
+        This function is stripped along with any references to the Saxon namespace from the exported
+        XSLT. This is due to compatibility issues between Schematron/XSLT processing libraries. For
+        example, SaxonPE/EE expects the Saxon namespace to be "http://saxon.sf.net/" while libxslt
+        expects it to be "http://icl.com/saxon". The freely distributed SaxonHE library does not support
+        Saxon extension functions at all.
+
+        '''
+        if not self.schematron:
+            return None
+
+        s = etree.tostring(self.schematron.validator_xslt)
+        s = s.replace(' [<axsl:text/><axsl:value-of select="saxon:line-number()"/><axsl:text/>]', '')
+        s = s.replace('xmlns:saxon="http://icl.com/saxon"', '')
+        s = s.replace('<svrl:ns-prefix-in-attribute-values uri="http://icl.com/saxon" prefix="saxon"/>', '')
+        return etree.ElementTree(etree.fromstring(s))
+
+    def get_schematron(self):
+        '''Overrides SchematronValidator.get_schematron()
+
+        Returns an lxml.etree._ElementTree representation of the ISO Schematron translation of a STIX profile.
+
+        The ProfileValidator uses the extension function saxon:line-number() for reporting line numbers.
+        This function is stripped along with any references to the Saxon namespace from the exported
+        XSLT. This is due to compatibility issues between Schematron/XSLT processing libraries. For
+        example, SaxonPE/EE expects the Saxon namespace to be "http://saxon.sf.net/" while libxslt
+        expects it to be "http://icl.com/saxon". The freely distributed SaxonHE library does not support
+        Saxon extension functions at all.
+
+        '''
+        if not self.schematron:
+            return None
+
+        s = etree.tostring(self.schematron.schematron)
+        s = s.replace(' [<value-of select="saxon:line-number()"/>]', '')
+        s = s.replace('<ns prefix="saxon" uri="http://icl.com/saxon"/>', '')
+        return etree.ElementTree(etree.fromstring(s))

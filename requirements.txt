@@ -8,4 +8,5 @@ jinja2
 beautifulsoup4
 requests
 sphinx
-libtaxii
+libtaxii>=1.1.0
+xlrd
