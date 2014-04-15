@@ -64,8 +64,12 @@ class Test_Loggers(unittest.TestCase):
         stixTransformer = StixTransformer(config)
         stix_package_xml = stixTransformer.transform(test_event)
         xmlValidator = STIXValidator(None, True, False)
-        (isvalid, validation_error, best_practice_warnings) = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
-        self.assertTrue(isvalid, 'Error while parsing STIX xml: {0}'.format(validation_error))
+
+        result_dict = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
+        errors = ''
+        if 'errors' in result_dict:
+            errors = ', '.join(result_dict['errors'])
+        self.assertTrue(result_dict['result'], 'Error while validations STIX xml: {0}'. format(errors))
 
     def test_taxii(self):
         """
