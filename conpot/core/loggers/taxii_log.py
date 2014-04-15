@@ -18,7 +18,7 @@
 import logging
 
 import libtaxii
-from libtaxii.messages import ContentBlock, InboxMessage, generate_message_id
+from libtaxii.messages_11 import ContentBlock, InboxMessage, generate_message_id
 from libtaxii.clients import HttpClient
 
 from conpot.core.loggers.stix_transform import StixTransformer
@@ -42,7 +42,7 @@ class TaxiiLogger(object):
         stix_package = self.stix_transformer.transform(event)
 
         # wrapping the stix message in a TAXII envelope
-        content_block = ContentBlock(libtaxii.CB_STIX_XML_11, stix_package)
+        content_block = ContentBlock(libtaxii.CB_STIX_XML_11, stix_package.encode('utf-8'))
         inbox_message = InboxMessage(message_id=generate_message_id(), content_blocks=[content_block])
         inbox_xml = inbox_message.to_xml()
 
@@ -51,7 +51,7 @@ class TaxiiLogger(object):
         response_message = libtaxii.get_message_from_http_response(response, '0')
 
         if response_message.status_type != libtaxii.messages.ST_SUCCESS:
-            logger.error('Error while transmitting message to TAXII server: {0}'.format(response_message.status_detail))
+            logger.error('Error while transmitting message to TAXII server: {0}'.format(response_message.message))
             return False
         else:
             return True
