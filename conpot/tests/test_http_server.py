@@ -26,18 +26,22 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 from conpot.protocols.http import web_server
+import conpot.core as conpot_core
 
 
 class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.http_server = web_server.HTTPServer('127.0.0.1',
-                                                 0,
+                                                 80,
                                                  'conpot/templates/default.xml',
                                                  'conpot/templates/www/default/',)
         # get the assigned ephemeral port for http
         self.http_port = self.http_server.server_port
         self.http_worker = gevent.spawn(self.http_server.start)
+
+        self.databus = conpot_core.get_databus()
+        self.databus.initialize('conpot/templates/default.xml')
 
     def tearDown(self):
         self.http_server.cmd_responder.httpd.shutdown()
@@ -65,7 +69,11 @@ class TestBase(unittest.TestCase):
         else:
             assert_reference = None
         if assert_reference is not None:
+            print "DEBUG: Assert reference {0}".format(assert_reference)
             ret = requests.get("http://127.0.0.1:{0}/tests/unittest_snmp.html".format(self.http_port))
+            print "************************"
+            print "DEBUG: Assert retrieved {0}".format(ret.text)
+            print "************************"
             self.assertIn(assert_reference, ret.text,
                           "Could not find SNMP '{0}' value in test output.".format(assert_reference))
         else:

@@ -37,7 +37,12 @@ class Databus(object):
     # could interface with a real sensor
     def get_value(self, key):
         logger.debug('DataBus: Get value from key: [{0}]'.format(key))
-        assert (key in self._data)
+        try:
+            assert (key in self._data)
+        except:
+            logger.debug('DataBus: Requested key [{0}] does not exist'.format(key))
+            return None
+
         item = self._data[key]
         if getattr(item, "get_value", None):
             # this could potentially generate a context switch, but as long the called method
