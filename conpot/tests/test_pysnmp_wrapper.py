@@ -20,8 +20,8 @@ import tempfile
 import shutil
 import os
 
-from conpot.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
-from conpot.snmp import command_responder
+from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
+from conpot.protocols.snmp import command_responder
 
 
 class TestBase(unittest.TestCase):
@@ -37,6 +37,7 @@ class TestBase(unittest.TestCase):
         """
         Tests that the wrapper generates output that can be consumed by the command responder.
         """
+        tmpdir = None
         try:
             tmpdir = tempfile.mkdtemp()
             result = mib2pysnmp('conpot/tests/data/VOGON-POEM-MIB.mib')
@@ -44,7 +45,7 @@ class TestBase(unittest.TestCase):
             with open(os.path.join(tmpdir, 'VOGON-POEM-MIB' + '.py'), 'w') as output_file:
                 output_file.write(result)
 
-            cmd_responder = command_responder.CommandResponder('', 0, [], [tmpdir], None)
+            cmd_responder = command_responder.CommandResponder('', 0, [tmpdir])
             cmd_responder.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules('VOGON-POEM-MIB')
             result = cmd_responder._get_mibSymbol('VOGON-POEM-MIB', 'poemNumber')
 
@@ -56,6 +57,7 @@ class TestBase(unittest.TestCase):
         """
         Tests that the wrapper can find mib files.
         """
+        input_dir = None
         try:
             input_dir = tempfile.mkdtemp()
             input_file = 'conpot/tests/data/VOGON-POEM-MIB.mib'
@@ -65,11 +67,12 @@ class TestBase(unittest.TestCase):
         finally:
             shutil.rmtree(input_dir)
 
-
     def test_compile(self):
         """
         Tests that the wrapper can output mib files.
         """
+        input_dir = None
+        output_dir = None
         try:
             input_dir = tempfile.mkdtemp()
             output_dir = tempfile.mkdtemp()
@@ -80,4 +83,3 @@ class TestBase(unittest.TestCase):
         finally:
             shutil.rmtree(input_dir)
             shutil.rmtree(output_dir)
-

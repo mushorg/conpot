@@ -16,93 +16,35 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
-import os
 import unittest
 import datetime
 
 from lxml import etree
-from gevent.queue import Queue
-from gevent import monkey
 import gevent
 import requests
+import gevent.monkey
+gevent.monkey.patch_all()
 
-from conpot.snmp import command_responder
-from conpot.snmp.dynrsp import DynamicResponder
-from conpot.http import web_server
-
-#we need to monkey patch for modbus_tcp.TcpMaster
-monkey.patch_all()
-
-
-#class MockArgs(object):
-#    def __init__(self):
-#        self.www = "conpot/www/"
+from conpot.protocols.http import web_server
+import conpot.core as conpot_core
 
 
 class TestBase(unittest.TestCase):
 
     def setUp(self):
-        self.snmp_host = '127.0.0.1'
-        self.log_queue = Queue()
-        self.dyn_rsp = DynamicResponder()
-
-        dom = etree.parse('conpot/templates/default.xml')
-        mibs = dom.xpath('//conpot_template/snmp/mibs/*')
-        #only enable snmp server if we have configuration items
-        if not mibs:
-            raise Exception("No configuration for SNMP server")
-        else:
-            self.snmp_server = command_responder.CommandResponder(self.snmp_host,
-                                                                  0,
-                                                                  self.log_queue,
-                                                                  os.getcwd(),
-                                                                  self.dyn_rsp)
-        # get the assigned ephemeral port for snmp
-        self.snmp_port = self.snmp_server.server_port
-
         self.http_server = web_server.HTTPServer('127.0.0.1',
                                                  0,
                                                  'conpot/templates/default.xml',
-                                                 self.log_queue,
-                                                 'conpot/templates/www/default/',
-                                                 self.snmp_port)
+                                                 'conpot/templates/www/default/',)
         # get the assigned ephemeral port for http
         self.http_port = self.http_server.server_port
         self.http_worker = gevent.spawn(self.http_server.start)
 
-        for mib in mibs:
-            mib_name = mib.attrib['name']
-            for symbol in mib:
-                symbol_name = symbol.attrib['name']
-
-                # retrieve instance from template
-                if 'instance' in symbol.attrib:
-                    # convert instance to (int-)tuple
-                    symbol_instance = symbol.attrib['instance'].split('.')
-                    symbol_instance = tuple(map(int, symbol_instance))
-                else:
-                    # use default instance (0)
-                    symbol_instance = (0,)
-
-                # retrieve value from template
-                value = symbol.xpath('./value/text()')[0]
-
-                # retrieve engine from template
-                if len(symbol.xpath('./engine')) > 0:
-                    engine_type = symbol.find('./engine').attrib['type']
-                    engine_aux = symbol.findtext('./engine')
-                else:
-                    # disable dynamic responses (static)
-                    engine_type = 'static'
-                    engine_aux = ''
-
-                # register this MIB instance to the command responder
-                self.snmp_server.register(mib_name, symbol_name, symbol_instance, value, engine_type, engine_aux)
-
-        self.snmp_server.snmpEngine.transportDispatcher.start()
+        # initialize the databus
+        self.databus = conpot_core.get_databus()
+        self.databus.initialize('conpot/templates/default.xml')
 
     def tearDown(self):
-        self.snmp_server.snmpEngine.transportDispatcher.stop()
         self.http_server.cmd_responder.httpd.shutdown()
         self.http_server.cmd_responder.httpd.server_close()
 
@@ -110,28 +52,27 @@ class TestBase(unittest.TestCase):
         """
         Objective: Test if http service delivers data on request
         """
-
         ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_port))
         self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
 
     def test_http_backend_snmp(self):
         """
-        Objective: Test if http backend is able to retrieve data from SNMP
+        Objective: Test if http backend is able to retrieve data from databus
         """
-
         # retrieve configuration from xml
         dom = etree.parse('conpot/templates/default.xml')
 
-        # check for proper snmp support
-        sysName = dom.xpath('//conpot_template/snmp/mibs/mib[@name="SNMPv2-MIB"]/symbol[@name="sysName"]/value')
+        # retrieve reference value from configuration
+        sysName = dom.xpath('//conpot_template/core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
-            assert_reference = sysName[0].xpath('./text()')[0]
+            print sysName
+            assert_reference = sysName[0].xpath('./text()')[0][1:-1]
         else:
             assert_reference = None
-
         if assert_reference is not None:
             ret = requests.get("http://127.0.0.1:{0}/tests/unittest_snmp.html".format(self.http_port))
-            self.assertIn(assert_reference, ret.text, "Could not find SNMP value in test output.")
+            self.assertIn(assert_reference, ret.text,
+                          "Could not find databus entity 'sysName' (value '{0}') in output.".format(assert_reference))
         else:
             raise Exception("Assertion failed. Reference OID 'sysName' not found in SNMP template.")
 
@@ -139,12 +80,11 @@ class TestBase(unittest.TestCase):
         """
         Objective: Test if http tarpit delays responses properly
         """
-
         # retrieve configuration from xml
         dom = etree.parse('conpot/templates/default.xml')
 
         # check for proper tarpit support
-        tarpit = dom.xpath('//conpot_template/http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
+        tarpit = dom.xpath('//conpot_template/protocols/http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
 
         if tarpit:
             tarpit_delay = tarpit[0].xpath('./text()')[0]
@@ -155,9 +95,10 @@ class TestBase(unittest.TestCase):
             dt_req_delta = datetime.datetime.now() - dt_req_start
 
             # check if the request took at least the expected delay to be processed
-            self.assertLessEqual(int(tarpit_delay),
-                                 dt_req_delta.seconds,
-                                 "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(tarpit_delay,
-                                                                                            dt_req_delta.seconds))
+            self.assertLessEqual(
+                int(tarpit_delay),
+                dt_req_delta.seconds,
+                "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(tarpit_delay, dt_req_delta.seconds)
+            )
         else:
             raise Exception("Assertion failed. Tarpit delay not found in HTTP template.")
