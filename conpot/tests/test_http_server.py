@@ -33,13 +33,14 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.http_server = web_server.HTTPServer('127.0.0.1',
-                                                 80,
+                                                 0,
                                                  'conpot/templates/default.xml',
                                                  'conpot/templates/www/default/',)
         # get the assigned ephemeral port for http
         self.http_port = self.http_server.server_port
         self.http_worker = gevent.spawn(self.http_server.start)
 
+        # initialize the databus
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default.xml')
 
@@ -56,12 +57,12 @@ class TestBase(unittest.TestCase):
 
     def test_http_backend_snmp(self):
         """
-        Objective: Test if http backend is able to retrieve data from SNMP
+        Objective: Test if http backend is able to retrieve data from databus
         """
         # retrieve configuration from xml
         dom = etree.parse('conpot/templates/default.xml')
 
-        # check for proper snmp support
+        # retrieve reference value from configuration
         sysName = dom.xpath('//conpot_template/core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
             print sysName
@@ -69,13 +70,9 @@ class TestBase(unittest.TestCase):
         else:
             assert_reference = None
         if assert_reference is not None:
-            print "DEBUG: Assert reference {0}".format(assert_reference)
             ret = requests.get("http://127.0.0.1:{0}/tests/unittest_snmp.html".format(self.http_port))
-            print "************************"
-            print "DEBUG: Assert retrieved {0}".format(ret.text)
-            print "************************"
             self.assertIn(assert_reference, ret.text,
-                          "Could not find SNMP '{0}' value in test output.".format(assert_reference))
+                          "Could not find databus entity 'sysName' (value '{0}') in output.".format(assert_reference))
         else:
             raise Exception("Assertion failed. Reference OID 'sysName' not found in SNMP template.")
 
