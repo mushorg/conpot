@@ -28,6 +28,7 @@ gevent.monkey.patch_all()
 
 import BaseHTTPServer
 import httplib
+import os
 from lxml import etree
 
 import conpot.core as conpot_core
@@ -358,7 +359,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     payload = f.read()
 
             except IOError as e:
-                logger.error('Failed to get template content: {0}'.format(e))
+                if not (os.path.isdir(docpath + 'htdocs' + rqfilename)):
+                    logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
             # there might be template data that can be substituted within the
