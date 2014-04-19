@@ -36,7 +36,7 @@ class Databus(object):
     # functions could be used if a profile wants to simulate a sensor, or the function
     # could interface with a real sensor
     def get_value(self, key):
-        logger.debug('Get value from key: {0}'.format(key))
+        logger.debug('DataBus: Get value from key: [{0}]'.format(key))
         assert (key in self._data)
         item = self._data[key]
         if getattr(item, "get_value", None):
@@ -48,7 +48,7 @@ class Databus(object):
             return item
 
     def set_value(self, key, value):
-        logger.debug('Settings [{0}] = {1}'.format(key, value))
+        logger.debug('DataBus: Storing key: [{0}] value: [{1}]'.format(key, value))
         self._data[key] = value
         # notify observers
         if key in self._observer_map:

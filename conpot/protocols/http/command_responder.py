@@ -892,6 +892,7 @@ class TemplateParser(HTMLParser):
                 # deal with snmp powered tags:
                 if source == 'snmp':
                     self.result = self.databus.get_value(key)
+                    print "DEBUG +++ type of databus result is ".format(self.result)
                     self.payload = self.payload.replace(origin, self.result)
 
                 # deal with eval powered tags:
