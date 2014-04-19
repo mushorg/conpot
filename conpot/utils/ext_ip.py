@@ -30,7 +30,7 @@ def _verify_address(addr):
     try:
         socket.inet_aton(addr)
         return True
-    except (socket.error, UnicodeEncodeError):
+    except (socket.error, UnicodeEncodeError, TypeError):
         return False
 
 
