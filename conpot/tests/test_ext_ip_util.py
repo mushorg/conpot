@@ -19,20 +19,31 @@
 import unittest
 import conpot.utils.ext_ip
 
+from gevent.wsgi import WSGIServer
+import gevent
+import gevent.monkey
+gevent.monkey.patch_all()
+
 
 class TestExtIPUtil(unittest.TestCase):
 
     def setUp(self):
-        self.data = "127.0.0.1"
+        def application(environ, start_response):
+            headers = [('Content-Type', 'text/html')]
+            start_response('200 OK', headers)
+            return ['127.0.0.1']
+
+        self.server = WSGIServer(('localhost', 8000), application)
+        gevent.spawn(self.server.serve_forever)
 
     def tearDown(self):
-        pass
+        self.server.stop()
 
     def test_ip_verify(self):
         self.assertTrue(conpot.utils.ext_ip._verify_address("127.0.0.1") is True)
 
     def test_ext_util(self):
-        ip_address = conpot.utils.ext_ip._fetch_data(urls=["http://www.telize.com/ip", ])
+        ip_address = conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000", ])
         self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
 
 
