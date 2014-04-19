@@ -42,7 +42,7 @@ def _fetch_data(urls):
             req = requests.get(url)
             if req.status_code == 200:
                 data = req.text.strip()
-                if not _verify_address(data):
+                if not data or not _verify_address(data):
                     continue
                 else:
                     return data
