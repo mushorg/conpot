@@ -847,7 +847,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 class TemplateParser(HTMLParser):
     def __init__(self, data):
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default.xml')
         HTMLParser.__init__(self)
         self.payload = data
         self.feed(data)
@@ -856,7 +855,7 @@ class TemplateParser(HTMLParser):
         """ handles template tags provided in XHTML notation.
 
             Expected format:    <condata source="(engine)" key="(descriptor)" />
-            Example:            <condata source="snmp" key="1.3.6.1.2.1.1.1" />
+            Example:            <condata source="snmp" key="SystemDescription" />
 
             at the moment, the parser is space- and case-sensitive(!),
             this could be improved by using REGEX for replacing the template tags
@@ -892,8 +891,7 @@ class TemplateParser(HTMLParser):
                 # deal with snmp powered tags:
                 if source == 'snmp':
                     self.result = self.databus.get_value(key)
-                    print "DEBUG +++ type of databus result is ".format(self.result)
-                    self.payload = self.payload.replace(origin, self.result)
+                    self.payload = self.payload.replace(origin, str(self.result))
 
                 # deal with eval powered tags:
                 elif source == 'eval':
