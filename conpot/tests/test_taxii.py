@@ -26,25 +26,9 @@ from lxml import etree
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
 from conpot.tests.helpers.mitre_stix_validator import STIXValidator
-from conpot.core.loggers.hpfriends import HPFriendsLogger
 
 
 class Test_Loggers(unittest.TestCase):
-
-    def test_hpfriends(self):
-        """
-        Objective: Test if data can be published to hpfriends without errors.
-        """
-
-        host = 'hpfriends.honeycloud.net'
-        port = 20000
-        ident = 'HBmU08rR'
-        secret = 'XDNNuMGYUuWFaWyi'
-        channels = ["test.test", ]
-        hpf = HPFriendsLogger(host, port, ident, secret, channels)
-
-        error_message = hpf.log('some some test data')
-        self.assertIsNone(error_message, 'Unexpected error message: {0}'.format(error_message))
 
     def test_stix_transform(self):
         """
