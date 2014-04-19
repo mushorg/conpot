@@ -855,7 +855,7 @@ class TemplateParser(HTMLParser):
         """ handles template tags provided in XHTML notation.
 
             Expected format:    <condata source="(engine)" key="(descriptor)" />
-            Example:            <condata source="snmp" key="SystemDescription" />
+            Example:            <condata source="databus" key="SystemDescription" />
 
             at the moment, the parser is space- and case-sensitive(!),
             this could be improved by using REGEX for replacing the template tags
@@ -877,7 +877,7 @@ class TemplateParser(HTMLParser):
                 origin = origin + ' ' + attribute[0] + '="' + attribute[1] + '"'
 
                 # fill variables with all meta information needed to
-                # gather actual data from the other engines (snmp, modbus, ..)
+                # gather actual data from the other engines (databus, modbus, ..)
                 if attribute[0] == 'source':
                     source = attribute[1]
                 elif attribute[0] == 'key':
@@ -888,8 +888,8 @@ class TemplateParser(HTMLParser):
 
             # we really need a key in order to do our work..
             if key:
-                # deal with snmp powered tags:
-                if source == 'snmp':
+                # deal with databus powered tags:
+                if source == 'databus':
                     self.result = self.databus.get_value(key)
                     self.payload = self.payload.replace(origin, str(self.result))
 

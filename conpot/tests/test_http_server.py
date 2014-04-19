@@ -55,7 +55,7 @@ class TestBase(unittest.TestCase):
         ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_port))
         self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
 
-    def test_http_backend_snmp(self):
+    def test_http_backend_databus(self):
         """
         Objective: Test if http backend is able to retrieve data from databus
         """
@@ -70,11 +70,11 @@ class TestBase(unittest.TestCase):
         else:
             assert_reference = None
         if assert_reference is not None:
-            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_snmp.html".format(self.http_port))
+            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_databus.html".format(self.http_port))
             self.assertIn(assert_reference, ret.text,
                           "Could not find databus entity 'sysName' (value '{0}') in output.".format(assert_reference))
         else:
-            raise Exception("Assertion failed. Reference OID 'sysName' not found in SNMP template.")
+            raise Exception("Assertion failed. Key 'sysName' not found in databus definition table.")
 
     def test_http_backend_tarpit(self):
         """
