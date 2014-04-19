@@ -30,7 +30,8 @@ import BaseHTTPServer
 import httplib
 from lxml import etree
 
-from conpot.tests.helpers import snmp_client
+import conpot.core as conpot_core
+
 
 logger = logging.getLogger()
 
@@ -50,11 +51,13 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             logger.info('{0} response to {1}: {2}'.format(version, addr, response))
             log_dict['data'][0]['response'] = '{0} response: {1}'.format(version, response)
 
-        self.server.log_queue.put(log_dict)
+        # FIXME: Proper logging
 
     def get_entity_headers(self, rqfilename, headers, configuration):
 
-        xml_headers = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/headers/*')
+        xml_headers = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/headers/*'
+        )
 
         if xml_headers:
 
@@ -67,7 +70,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def get_entity_trailers(self, rqfilename, configuration):
 
         trailers = []
-        xml_trailers = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/trailers/*')
+        xml_trailers = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/trailers/*'
+        )
 
         if xml_trailers:
 
@@ -79,7 +84,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def get_status_headers(self, status, headers, configuration):
 
-        xml_headers = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
+        xml_headers = configuration.xpath('//conpot_template/protocols/http/statuscodes/status[@name="' +
                                           str(status) + '"]/headers/*')
 
         if xml_headers:
@@ -93,8 +98,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def get_status_trailers(self, status, configuration):
 
         trailers = []
-        xml_trailers = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
-                                           str(status) + '"]/trailers/*')
+        xml_trailers = configuration.xpath(
+            '//conpot_template/protocols/http/statuscodes/status[@name="' + str(status) + '"]/trailers/*'
+        )
 
         if xml_trailers:
 
@@ -132,7 +138,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def substitute_template_fields(self, payload):
 
         # initialize parser with our payload
-        parser = TemplateParser(payload, self.server.snmp_host, self.server.snmp_port)
+        parser = TemplateParser(payload)
 
         # triggers the parser, just in case of open / incomplete tags..
         parser.close()
@@ -147,7 +153,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
            a minimal response"""
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//conpot_template/http/statuscodes/status[@name="' +
+        entity_proxy = configuration.xpath('//conpot_template/protocols/http/statuscodes/status[@name="' +
                                            str(status) +
                                            '"]/proxy')
 
@@ -158,9 +164,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             source = 'filesystem'
 
         # handle TARPIT tag
-        entity_tarpit = configuration.xpath('//conpot_template/http/statuscodes/status[@name="'
-                                            + str(status) +
-                                            '"]/tarpit')
+        entity_tarpit = configuration.xpath(
+            '//conpot_template/protocols/http/statuscodes/status[@name="' + str(status) + '"]/tarpit'
+        )
 
         if entity_tarpit:
             tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
@@ -205,7 +211,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
+            chunked_transfer = configuration.xpath('//conpot_template/protocols/http/htdocs/node[@name="' +
                                                    str(status) + '"]/chunks')
 
             if chunked_transfer:
@@ -290,12 +296,16 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         rqparams = requeststring.partition('?')[2]
 
         # handle ALIAS tag
-        entity_alias = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/alias')
+        entity_alias = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/alias'
+        )
         if entity_alias:
             rqfilename = entity_alias[0].xpath('./text()')[0]
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/proxy')
+        entity_proxy = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/proxy'
+        )
         if entity_proxy:
             source = 'proxy'
             target = entity_proxy[0].xpath('./text()')[0]
@@ -303,7 +313,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             source = 'filesystem'
 
         # handle TARPIT tag
-        entity_tarpit = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/tarpit')
+        entity_tarpit = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/tarpit'
+        )
         if entity_tarpit:
             tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
         else:
@@ -325,7 +337,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # handle STATUS tag
             # ( filesystem only, since proxied requests come with their own status )
-            entity_status = configuration.xpath('//conpot_template/http/htdocs/node[@name="' + rqfilename + '"]/status')
+            entity_status = configuration.xpath(
+                '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/status'
+            )
             if entity_status:
                 status = int(entity_status[0].xpath('./text()')[0])
             else:
@@ -361,8 +375,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                                                   rqfilename + '"]/chunks')
+            chunked_transfer = configuration.xpath(
+                '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/chunks'
+            )
 
             if chunked_transfer:
                 # Calculate and append a chunked transfer encoding header
@@ -590,8 +605,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
 
             # try to find a configuration item for this GET request
-            entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                              self.path.partition('?')[0].decode('utf8') + '"]')
+            entity_xml = configuration.xpath(
+                '//conpot_template/protocols/http/htdocs/node[@name="' 
+                + self.path.partition('?')[0].decode('utf8') + '"]'
+            )
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
@@ -721,8 +738,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             get_data = self.rfile.read(int(get_data_length))
 
         # try to find a configuration item for this GET request
-        entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                              self.path.partition('?')[0].decode('utf8') + '"]')
+        entity_xml = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+        )
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
@@ -781,8 +799,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             post_data = self.rfile.read(int(post_data_length))
 
         # try to find a configuration item for this POST request
-        entity_xml = configuration.xpath('//conpot_template/http/htdocs/node[@name="' +
-                              self.path.partition('?')[0].decode('utf8') + '"]')
+        entity_xml = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+        )
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
@@ -826,26 +845,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
 
 class TemplateParser(HTMLParser):
-
-    def __init__(self, data, snmp_host, snmp_port):
-        
+    def __init__(self, data):
+        self.databus = conpot_core.get_databus()
+        self.databus.initialize('conpot/templates/default.xml')
         HTMLParser.__init__(self)
-
         self.payload = data
-        self.snmp_host = snmp_host
-        self.snmp_port = snmp_port
-
         self.feed(data)
-
-    def mock_snmp_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
-        self.result = None
-        if errorIndication:
-            self.result = errorIndication
-        elif errorStatus:
-            self.result = errorStatus.prettyPrint()
-        else:
-            for oid, val in varBindTable:
-                self.result = val.prettyPrint()
 
     def handle_startendtag(self, tag, attrs):
         """ handles template tags provided in XHTML notation.
@@ -884,31 +889,19 @@ class TemplateParser(HTMLParser):
 
             # we really need a key in order to do our work..
             if key:
-
                 # deal with snmp powered tags:
                 if source == 'snmp':
-
-                    # initialize snmp client
-                    client = snmp_client.SNMPClient(self.snmp_host, self.snmp_port)
-
-                    # convert key to (int-)tuple filled OID descriptor
-                    key = key.split('.')
-                    key = (tuple(map(int, key)), None)
-                    client.get_command(key, callback=self.mock_snmp_callback)
-
+                    self.result = self.databus.get_value(key)
                     self.payload = self.payload.replace(origin, self.result)
 
                 # deal with eval powered tags:
                 elif source == 'eval':
-
                     result = ''
-
                     # evaluate key
                     try:
                         result = eval(key)
-                    except:
-                        pass
-
+                    except Exception as e:
+                        logger.exception(e)
                     self.payload = self.payload.replace(origin, result)
 
 
@@ -920,13 +913,10 @@ class SubHTTPServer(ThreadedHTTPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
 
-    def __init__(self, server_address, RequestHandlerClass, template, docpath, snmp_host, snmp_port, log_queue):
+    def __init__(self, server_address, RequestHandlerClass, template, docpath):
         BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass)
 
         self.docpath = docpath
-        self.snmp_host = snmp_host
-        self.snmp_port = snmp_port
-        self.log_queue = log_queue
 
         # default configuration
         self.update_header_date = True             # this preserves authenticity
@@ -939,7 +929,7 @@ class SubHTTPServer(ThreadedHTTPServer):
         # for the first time in order to reduce further handling..
         self.configuration = etree.parse(template)
 
-        xml_config = self.configuration.xpath('//conpot_template/http/global/config/*')
+        xml_config = self.configuration.xpath('//conpot_template/protocols/http/global/config/*')
         if xml_config:
 
             # retrieve all global configuration entities
@@ -986,7 +976,7 @@ class SubHTTPServer(ThreadedHTTPServer):
 
         # load global headers from XML
         self.global_headers = []
-        xml_headers = self.configuration.xpath('//conpot_template/http/global/headers/*')
+        xml_headers = self.configuration.xpath('//conpot_template/protocols/http/global/headers/*')
         if xml_headers:
 
             # retrieve all headers assigned to this status code
@@ -1047,12 +1037,10 @@ class SubHTTPServer(ThreadedHTTPServer):
 
 class CommandResponder(object):
 
-    def __init__(self, host, port, template, log_queue, docpath, snmp_host, snmp_port):
-
-        self.log_queue = log_queue
+    def __init__(self, host, port, template, docpath):
 
         # Create HTTP server class
-        self.httpd = SubHTTPServer((host, port), HTTPServer, template, docpath, snmp_host, snmp_port, log_queue)
+        self.httpd = SubHTTPServer((host, port), HTTPServer, template, docpath)
         self.server_port = self.httpd.server_port
 
     def serve_forever(self):
@@ -1061,8 +1049,3 @@ class CommandResponder(object):
     def stop(self):
         logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
         self.httpd.shutdown()
-
-
-if __name__ == '__main__':
-    http_server = HTTPServer()
-    http_server.run()
