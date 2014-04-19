@@ -30,7 +30,7 @@ def _verify_address(addr):
     try:
         socket.inet_aton(addr)
         return True
-    except (socket.error, UnicodeEncodeError):
+    except (socket.error, UnicodeEncodeError, TypeError):
         return False
 
 
@@ -42,7 +42,7 @@ def _fetch_data(urls):
             req = requests.get(url)
             if req.status_code == 200:
                 data = req.text.strip()
-                if not _verify_address(data):
+                if data is None or not _verify_address(data):
                     continue
                 else:
                     return data
