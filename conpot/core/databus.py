@@ -18,6 +18,7 @@
 import logging
 import json
 import inspect
+# this is needed because we use it in the xml.
 import random
 
 import gevent
@@ -37,7 +38,7 @@ class Databus(object):
     # could interface with a real sensor
     def get_value(self, key):
         logger.debug('DataBus: Get value from key: [{0}]'.format(key))
-        assert (key in self._data)
+        assert key in self._data
         item = self._data[key]
         if getattr(item, "get_value", None):
             # this could potentially generate a context switch, but as long the called method
@@ -59,8 +60,8 @@ class Databus(object):
             cb(key)
 
     def observe_value(self, key, callback):
-        assert (hasattr(callback, '__call__'))
-        assert (len(inspect.getargspec(callback)[0]))
+        assert hasattr(callback, '__call__')
+        assert len(inspect.getargspec(callback)[0])
         if key not in self._observer_map:
             self._observer_map = []
         self._observer_map[key].append(callback)
@@ -74,7 +75,7 @@ class Databus(object):
             key = entry.attrib['name']
             value = entry.xpath('./value/text()')[0]
             value_type = str(entry.xpath('./value/@type')[0])
-            assert (key not in self._data)
+            assert key not in self._data
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
             if value_type == 'value':
                 self.set_value(key, eval(value))
