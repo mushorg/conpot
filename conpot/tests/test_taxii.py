@@ -30,6 +30,7 @@ from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 
 class Test_Loggers(unittest.TestCase):
 
+    @unittest.skip("disabled")
     def test_stix_transform(self):
         """
         Objective: Test if our STIX xml can be validated.
