@@ -30,7 +30,7 @@ install:
  - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 # command to run tests
 script:
- - nosetests
+ - nosetests -v
 notifications:
  irc:
   - "irc.freenode.org#conpot-dev"
