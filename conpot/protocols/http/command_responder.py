@@ -41,16 +41,21 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def log(self, version, request_type, addr, request, response=None):
 
+        session = conpot_core.get_session('http', addr[0], addr[1])
+
         log_dict = {'remote': addr,
                     'timestamp': datetime.utcnow(),
                     'data_type': 'http',
                     'data': {0: {'request': '{0} {1}: {2}'.format(version, request_type, request)}}}
 
-        logger.info('{0} {1} request from {2}: {3}'.format(version, request_type, addr, request))
+        logger.info('{0} {1} request from {2}: {3}. {4}'.format(version, request_type, addr, request, session.id))
 
         if response:
-            logger.info('{0} response to {1}: {2}'.format(version, addr, response))
+            logger.info('{0} response to {1}: {2}. {3}'.format(version, addr, response, session.id))
             log_dict['data'][0]['response'] = '{0} response: {1}'.format(version, response)
+            session.add_event({'request': str(request), 'response': str(response)})
+        else:
+            session.add_event({'request': str(request)})
 
         # FIXME: Proper logging
 
@@ -608,7 +613,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # try to find a configuration item for this GET request
             entity_xml = configuration.xpath(
-                '//conpot_template/protocols/http/htdocs/node[@name="' 
+                '//conpot_template/protocols/http/htdocs/node[@name="'
                 + self.path.partition('?')[0].decode('utf8') + '"]'
             )
 
@@ -674,7 +679,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                                                                             headers,
                                                                             configuration,
                                                                             docpath)
-            
+
         else:
 
             status = 200
