@@ -31,7 +31,7 @@ class HPFriendsLogger(object):
             raise Exception("Connection to HPFriends timed out")
 
     def log(self, data):
-        #hpfeed lib supports passing list of channels
+        # hpfeed lib supports passing list of channels
         self.hpc.publish(self.channels, data)
         error_msg = self.hpc.wait()
         return error_msg

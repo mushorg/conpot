@@ -138,8 +138,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # the following two headers are omitted, which is why we override
         # send_response() at all. We do this one on our own...
 
-        #self.send_header('Server', self.version_string())
-        #self.send_header('Date', self.date_time_string())
+        # - self.send_header('Server', self.version_string())
+        # - self.send_header('Date', self.date_time_string())
 
     def substitute_template_fields(self, payload):
 
@@ -364,7 +364,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     payload = f.read()
 
             except IOError as e:
-                if not (os.path.isdir(docpath + 'htdocs' + rqfilename)):
+                if not os.path.isdir(docpath + 'htdocs' + rqfilename):
                     logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 

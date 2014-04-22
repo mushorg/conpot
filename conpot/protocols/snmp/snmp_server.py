@@ -18,7 +18,6 @@
 import logging
 import tempfile
 import shutil
-import ast
 
 from lxml import etree
 
@@ -116,7 +115,7 @@ class SNMPServer(object):
                                                 value,
                                                 profile_map_name)
         finally:
-            #cleanup compiled mib files
+            # cleanup compiled mib files
             shutil.rmtree(tmp_mib_dir)
 
     def config_sanitize_tarpit(self, value):

@@ -1,6 +1,5 @@
 import sys
 import logging
-import time
 import random
 from datetime import datetime
 
@@ -23,7 +22,7 @@ class conpot_extension(object):
 
         addr = state_dict['transportAddress']
 
-        #msgVersion 0/1 to SNMPv1/2, msgversion 3 corresponds to SNMPv3
+        # msgVersion 0/1 to SNMPv1/2, msgversion 3 corresponds to SNMPv3
         if state_dict['msgVersion'] < 3:
             snmp_version = state_dict['msgVersion'] + 1
         else:

@@ -2,7 +2,6 @@ import struct
 import socket
 import time
 import logging
-import ast
 
 from lxml import etree
 from gevent.server import StreamServer

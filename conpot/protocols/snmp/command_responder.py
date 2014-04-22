@@ -3,8 +3,6 @@
 
 import logging
 
-from datetime import datetime
-
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
 from pysnmp.carrier.asynsock.dgram import udp
@@ -54,7 +52,7 @@ class CommandResponder(object):
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
 
-        #path to custom mibs
+        # path to custom mibs
         mibBuilder = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
         mibSources = mibBuilder.getMibSources()
 
@@ -74,7 +72,7 @@ class CommandResponder(object):
             udp_sock
         )
 
-        #SNMPv1
+        # SNMPv1
         config.addV1System(self.snmpEngine, 'public-read', 'public')
 
         # SNMPv3/USM setup

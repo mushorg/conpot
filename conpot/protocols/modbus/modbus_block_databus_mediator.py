@@ -8,10 +8,10 @@ class ModbusBlockDatabusMediator:
 
     def __init__(self, databus_key, starting_address, size):
         """
-        Contructor: defines the address range and creates the array of values
+        Constructor: defines the address range and creates the array of values
         """
         self.starting_address = starting_address
-        #self._data = [0]*size
+        # self._data = [0]*size
         self.databus_key = databus_key
         self.size = len(conpot_core.get_databus().get_value(self.databus_key))
 

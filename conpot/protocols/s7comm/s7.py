@@ -57,7 +57,7 @@ class S7(object):
 
     def handle(self):
         if self.param in self.param_mapping:
-            #direct execution to the correct method based on the param
+            # direct execution to the correct method based on the param
             return self.param_mapping[self.param][1]()
 
     def request_not_implemented(self):
@@ -114,7 +114,7 @@ class S7(object):
 
         return self
 
-    #SSL/SZL System Status List/Systemzustandsliste
+    # SSL/SZL System Status List/Systemzustandsliste
     def request_diagnostics(self):
 
         # semi-check
@@ -261,7 +261,7 @@ class S7(object):
         ssl_resp_data += pack('!H24s8s',
                               0x01,  # 1  WORD   ( Data Index )
                               self.data_bus.get_value(current_ssl['W#16#0001']),  # TODO: PADDING
-                              #'System Name             ', # 12 WORDS  ( Name of automation system, padded with (0x00) )
+                              # 'System Name             ', # 12 WORDS  ( Name of automation system, padded with (0x00) )
                               '')  # 4  WORDS  ( RESERVED )
 
         # craft module data 0x0002 - component name

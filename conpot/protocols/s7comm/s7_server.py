@@ -15,7 +15,6 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from datetime import datetime
 import time
 
 from gevent.server import StreamServer
@@ -136,7 +135,7 @@ class S7Server(object):
 
                                 session.add_event({'request': data.encode('hex'), 'response': tpkt_resp_packet.encode('hex')})
 
-                                #handshake done, give some more data.
+                                # handshake done, give some more data.
                                 data = sock.recv(1024)
 
                                 while data:

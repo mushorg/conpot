@@ -51,11 +51,11 @@ class SlaveBase(Databank):
                 # except will throw MissingKeyError
                 slave = self.get_slave(slave_id)
                 response_pdu = slave.handle_request(request_pdu)
-                #make the full response
+                # make the full response
                 response = query.build_response(response_pdu)
             # get the slave and let him execute the action
             elif slave_id == 0:
-                #broadcast
+                # broadcast
                 for key in self._slaves:
                     response_pdu = self._slaves[key].handle_request(request_pdu, broadcast=True)
                     response = query.build_response(response_pdu)
@@ -65,7 +65,7 @@ class SlaveBase(Databank):
             else:
                 slave = self.get_slave(slave_id)
                 response_pdu = slave.handle_request(request_pdu)
-                #make the full response
+                # make the full response
                 response = query.build_response(response_pdu)
         except (IOError, MissingKeyError) as e:
             # If the request was not handled correctly, return a server error response

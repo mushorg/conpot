@@ -35,7 +35,7 @@ def _verify_address(addr):
 
 
 def _fetch_data(urls):
-    #we only want warning+ messages from the requests module
+    # we only want warning+ messages from the requests module
     logging.getLogger("requests").setLevel(logging.WARNING)
     for url in urls:
         try:

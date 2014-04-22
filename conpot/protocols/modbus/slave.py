@@ -82,7 +82,7 @@ class MBSlave(Slave):
                 response_pdu = self._fn_code_map[self.function_code](request_pdu)
                 if response_pdu:
                     if broadcast:
-                        #not really sure whats going on here - better log it!
+                        # not really sure whats going on here - better log it!
                         logger.info("broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
                         return ""
                     else:
@@ -95,7 +95,7 @@ class MBSlave(Slave):
 
     def add_block(self, block_name, block_type, starting_address, size):
         """Add a new block identified by its name"""
-        with self._data_lock: #thread-safe
+        with self._data_lock: # thread-safe
             if size <= 0:
                 raise InvalidArgumentError, "size must be a positive number"
             if starting_address < 0:
