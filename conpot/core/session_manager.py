@@ -53,5 +53,9 @@ class SessionManager(object):
     def get_session_count(self):
         return len(self._sessions)
 
+    def purge_sessions(self):
+        # there is no native purge/clear mechanism for gevent queues, so...
+        self.log_queue = Queue()
+
     def initialize_databus(self, config_file):
         self._databus.initialize(config_file)

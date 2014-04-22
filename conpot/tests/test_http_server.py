@@ -32,6 +32,10 @@ import conpot.core as conpot_core
 class TestBase(unittest.TestCase):
 
     def setUp(self):
+
+        # clean up before we start...
+        conpot_core.get_sessionManager().purge_sessions()
+
         self.http_server = web_server.HTTPServer('127.0.0.1',
                                                  0,
                                                  'conpot/templates/default.xml',
@@ -47,6 +51,9 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
         self.http_server.cmd_responder.httpd.shutdown()
         self.http_server.cmd_responder.httpd.server_close()
+
+        # tidy up (again)...
+        conpot_core.get_sessionManager().purge_sessions()
 
     def test_http_request_base(self):
         """

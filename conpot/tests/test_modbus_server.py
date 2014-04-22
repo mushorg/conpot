@@ -35,6 +35,10 @@ monkey.patch_all()
 
 class TestBase(unittest.TestCase):
     def setUp(self):
+
+        # clean up before we start...
+        conpot_core.get_sessionManager().purge_sessions()
+
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default.xml')
         modbus = modbus_server.ModbusServer('conpot/templates/default.xml', timeout=2)
@@ -43,6 +47,9 @@ class TestBase(unittest.TestCase):
 
     def tearDown(self):
         self.modbus_server.stop()
+
+        # tidy up (again)...
+        conpot_core.get_sessionManager().purge_sessions()
 
     def test_read_coils(self):
         """
