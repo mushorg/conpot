@@ -234,6 +234,13 @@
                         <entity name="Content-Type">text/html</entity>
                     </headers>
                 </node>
+                <node name="/tests/unittest_subselects.html">
+                    <subselect gpc="action=unit&subaction=test">5459fa05e5c1db37f2679b65a5175bcf</subselect>
+                    <headers>
+                        <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                        <entity name="Content-Type">text/html</entity>
+                    </headers>
+                </node>
             </htdocs>
 
             <!-- how should the different status codes be handled -->
