@@ -73,6 +73,21 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         return headers
 
+    def get_trigger_appendix(self, rqfilename, rqparams, configuration):
+
+        xml_triggers = configuration.xpath(
+            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/triggers/*'
+        )
+
+        if xml_triggers:
+
+            # retrieve all subselect triggers assigned to this entity
+            for entity in xml_triggers:
+                # ====== FIXME
+                # headers.append((entity.attrib['name'], entity.text))
+
+        return #APPENDIX GOES HERE (IF FOUND), otherwise NONE
+
     def get_entity_trailers(self, rqfilename, configuration):
 
         trailers = []
@@ -307,6 +322,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         )
         if entity_alias:
             rqfilename = entity_alias[0].xpath('./text()')[0]
+
+        # handle SUBSELECT tag
+
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(

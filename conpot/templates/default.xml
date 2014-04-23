@@ -160,7 +160,7 @@
                 <ssl id="W#16#xy11" name="Module Identification">
                     <!-- Not really sure what these are supposed to contain -->
                     <module_identification id="W#16#0001">empty</module_identification>
-                    <hardware_identificaiton id="W#16#0006">empty</hardware_identificaiton>
+                    <hardware_identification id="W#16#0006">empty</hardware_identification>
                     <firmware_identification id="W#16#0006">empty</firmware_identification>
                 </ssl>
             </system_status_lists>
@@ -235,7 +235,9 @@
                     </headers>
                 </node>
                 <node name="/tests/unittest_subselects.html">
-                    <subselect gpc="action=unit&subaction=test">5459fa05e5c1db37f2679b65a5175bcf</subselect>
+                    <triggers>
+                        <entity name="action=unit&subaction=test">5459fa05e5c1db37f2679b65a5175bcf</entity>
+                    </triggers>
                     <headers>
                         <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
                         <entity name="Content-Type">text/html</entity>
