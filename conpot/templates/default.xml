@@ -160,7 +160,7 @@
                 <ssl id="W#16#xy11" name="Module Identification">
                     <!-- Not really sure what these are supposed to contain -->
                     <module_identification id="W#16#0001">empty</module_identification>
-                    <hardware_identificaiton id="W#16#0006">empty</hardware_identificaiton>
+                    <hardware_identification id="W#16#0006">empty</hardware_identification>
                     <firmware_identification id="W#16#0006">empty</firmware_identification>
                 </ssl>
             </system_status_lists>
