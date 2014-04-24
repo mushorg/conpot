@@ -109,3 +109,10 @@ class TestBase(unittest.TestCase):
             )
         else:
             raise Exception("Assertion failed. Tarpit delay not found in HTTP template.")
+
+    def test_http_subselect_trigger(self):
+        """
+        Objective: Test if http subselect triggers work correctly
+        """
+        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(self.http_port))
+        self.assertIn('SUCCESSFUL', ret.text, "Trigger missed. An unexpected page was delivered.")
