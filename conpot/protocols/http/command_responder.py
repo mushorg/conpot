@@ -89,16 +89,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 trigger_missed = False
 
                 for trigger in triggerlist:
-                    if trigger in paramlist:
-                        print "HTTP-TRIGGER-DEBUG: trigger tuple {0} found in parameters!".format(trigger)
-                    else:
-                        print "HTTP-TRIGGER-DEBUG: trigger tuple {0} not found in parameters!".format(trigger)
+                    if not trigger in paramlist:
                         trigger_missed = True
 
-                if trigger_missed:
-                    print "Trigger missed!"
-                else:
-                    print "Trigger hit!"
+                if not trigger_missed:
                     return triggers.attrib['name']
 
         return None
@@ -341,8 +335,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # handle SUBSELECT tag
         rqfilename_appendix = self.get_trigger_appendix(rqfilename, rqparams, configuration)
         if rqfilename_appendix:
-            rqfilename+='_'+rqfilename_appendix
-            print "HTTP-TRIGGER-DEBUG: NEW FILENAME BY TRIGGER: {0}".format(rqfilename)
+            rqfilename += '_' + rqfilename_appendix
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(
