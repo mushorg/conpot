@@ -1,11 +1,11 @@
 <HTML>
 
     <HEAD>
-        <TITLE>Bad request - <condata source="snmp" key="SystemDescription" /></TITLE>
+        <TITLE>Bad request - <condata source="databus" key="SystemDescription" /></TITLE>
     </HEAD>
 
     <BODY>
-        <h2><condata source="snmp" key="sysName" /></h2>
+        <h2><condata source="databus" key="sysName" /></h2>
         <hr>
         &nbsp;<br>
         Bad request.<br>
