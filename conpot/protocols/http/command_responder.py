@@ -80,12 +80,12 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         )
 
         if xml_triggers:
+            paramlist = rqparams.split('&')
 
             # retrieve all subselect triggers assigned to this entity
             for triggers in xml_triggers:
 
                 triggerlist = triggers.text.split(';')
-                paramlist = rqparams.split('&')
                 trigger_missed = False
 
                 for trigger in triggerlist:
