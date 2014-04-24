@@ -84,7 +84,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve all subselect triggers assigned to this entity
             for triggers in xml_triggers:
 
-                triggerlist = triggers.attrib['name'].split('&')
+                triggerlist = triggers.text.split(';')
                 paramlist = rqparams.split('&')
                 trigger_missed = False
 
@@ -99,10 +99,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     print "Trigger missed!"
                 else:
                     print "Trigger hit!"
-                    return triggers.text
-
-                # ====== FIXME
-                # headers.append((entity.attrib['name'], entity.text))
+                    return triggers.attrib['name']
 
         return None
 
@@ -344,7 +341,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # handle SUBSELECT tag
         rqfilename_appendix = self.get_trigger_appendix(rqfilename, rqparams, configuration)
         if rqfilename_appendix:
-            rqfilename+=rqfilename_appendix
+            rqfilename+='_'+rqfilename_appendix
             print "HTTP-TRIGGER-DEBUG: NEW FILENAME BY TRIGGER: {0}".format(rqfilename)
 
         # handle PROXY tag
