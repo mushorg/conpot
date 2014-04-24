@@ -82,11 +82,29 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         if xml_triggers:
 
             # retrieve all subselect triggers assigned to this entity
-            for entity in xml_triggers:
+            for triggers in xml_triggers:
+
+                triggerlist = triggers.attrib['name'].split('&')
+                paramlist = rqparams.split('&')
+                trigger_missed = False
+
+                for trigger in triggerlist:
+                    if trigger in paramlist:
+                        print "HTTP-TRIGGER-DEBUG: trigger tuple {0} found in parameters!".format(trigger)
+                    else:
+                        print "HTTP-TRIGGER-DEBUG: trigger tuple {0} not found in parameters!".format(trigger)
+                        trigger_missed = True
+
+                if trigger_missed:
+                    print "Trigger missed!"
+                else:
+                    print "Trigger hit!"
+                    return triggers.text
+
                 # ====== FIXME
                 # headers.append((entity.attrib['name'], entity.text))
 
-        return #APPENDIX GOES HERE (IF FOUND), otherwise NONE
+        return None
 
     def get_entity_trailers(self, rqfilename, configuration):
 
@@ -324,7 +342,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             rqfilename = entity_alias[0].xpath('./text()')[0]
 
         # handle SUBSELECT tag
-
+        rqfilename_appendix = self.get_trigger_appendix(rqfilename, rqparams, configuration)
+        if rqfilename_appendix:
+            rqfilename+=rqfilename_appendix
+            print "HTTP-TRIGGER-DEBUG: NEW FILENAME BY TRIGGER: {0}".format(rqfilename)
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(

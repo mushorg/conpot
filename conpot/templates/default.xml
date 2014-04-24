@@ -236,7 +236,7 @@
                 </node>
                 <node name="/tests/unittest_subselects.html">
                     <triggers>
-                        <entity name="action=unit&subaction=test">5459fa05e5c1db37f2679b65a5175bcf</entity>
+                        <entity name="5459fa05e5c1db37f2679b65a5175bcf">action=unit&subaction=test</entity>
                     </triggers>
                     <headers>
                         <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
