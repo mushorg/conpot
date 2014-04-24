@@ -89,7 +89,10 @@ class LogWorker(object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             session_timeout = 5
         for session in sessions:
-            sec_last_event = max(session.data) / 1000
+            if (len(session.data) > 0):
+                sec_last_event = max(session.data) / 1000
+            else:
+                sec_last_event = 0
             sec_session_start = time.mktime(session.timestamp.timetuple())
             sec_now = time.mktime(datetime.utcnow().timetuple())
             if (sec_now - (sec_session_start + sec_last_event)) >= session_timeout:
