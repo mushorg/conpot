@@ -89,7 +89,7 @@ class LogWorker(object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             session_timeout = 5
         for session in sessions:
-            if (len(session.data) > 0):
+            if len(session.data) > 0:
                 sec_last_event = max(session.data) / 1000
             else:
                 sec_last_event = 0
