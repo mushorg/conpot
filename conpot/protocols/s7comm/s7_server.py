@@ -22,8 +22,7 @@ import gevent.monkey
 
 gevent.monkey.patch_all()
 import socket
-from struct import *
-import struct
+from struct import unpack
 from conpot.protocols.s7comm.tpkt import TPKT
 from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
 from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
@@ -72,7 +71,7 @@ class S7Server(object):
         try:
             while True:
 
-                data = sock.recv(4)
+                data = sock.recv(4, socket.MSG_WAITALL)
                 if len(data) == 0:
                     break
 
