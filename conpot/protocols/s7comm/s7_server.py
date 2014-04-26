@@ -22,6 +22,8 @@ import gevent.monkey
 
 gevent.monkey.patch_all()
 import socket
+from struct import *
+import struct
 from conpot.protocols.s7comm.tpkt import TPKT
 from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
 from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
@@ -66,14 +68,16 @@ class S7Server(object):
 
         self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
-        fileobj = sock.makefile()
 
         try:
             while True:
 
-                data = fileobj.readline()
-                if not data:
+                data = sock.recv(4)
+                if len(data) == 0:
                     break
+
+                _, _, length = unpack('!BBH', data[:4])
+                data += sock.recv(length - 4)
 
                 tpkt_packet = TPKT().parse(data)
                 cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
