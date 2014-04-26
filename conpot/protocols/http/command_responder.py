@@ -93,7 +93,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                         trigger_missed = True
 
                 if not trigger_missed:
-                    return triggers.attrib['name']
+                    return triggers.attrib['appendix']
 
         return None
 
