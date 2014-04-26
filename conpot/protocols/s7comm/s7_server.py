@@ -64,7 +64,7 @@ class S7Server(object):
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
-        session = conpot_core.get_session('modbus', address[0], address[1])
+        session = conpot_core.get_session('s7comm', address[0], address[1])
 
         self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
