@@ -20,6 +20,7 @@ Install dependencies:
     
 Debian 6 specific
 ::
+
     apt-get install python-pip
     pip install argparse
 
@@ -30,6 +31,21 @@ The package snmp-mibs-downloader is non-free so we have to install the package m
     wget $package_url
     dpkg -i $package_name
 
+Alternatively, add "non-free" to the /etc/apt/sources.list
+::
+
+    deb http://ftp.nl.debian.org/debian squeeze main non-free 
+
+And do an 
+::
+
+    apt-get update
+
+followed by 
+::
+
+    apt-get install snmp-mibs-downloader
+
 
 The stable version of Conpot can be downloaded from PyPI:
 ::
@@ -37,10 +53,14 @@ The stable version of Conpot can be downloaded from PyPI:
     pip install conpot
 
 
-The development version can be cloned from github:
+The development version can be cloned from github - but we need a modified modbus-tk first.
 ::
 
     cd /opt
+    git clone https://github.com/glastopf/modbus-tk.git
+    cd modbus-tk
+    python setup.py install
+    cd ..
     git clone https://github.com/glastopf/conpot.git
     cd conpot
     python setup.py install
@@ -50,6 +70,7 @@ Basic configuration
 
 Basic configuration options are provided in the default configuration file:
 ::
+
     [modbus]
     host = 0.0.0.0
     port = 502

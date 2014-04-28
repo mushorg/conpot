@@ -1,0 +1,2 @@
+include distribute_setup.py
+include requirements.txt

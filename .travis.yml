@@ -10,6 +10,7 @@ before_install:
  - "sudo apt-get -qq update"
  - "sudo apt-get -qq install python2.7 python-pip git unzip"
  - "sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader"
+ - "sudo apt-get install libxml2 libxml2-dev"
  - cd /tmp
  - git clone git://github.com/rep/hpfeeds.git hpfeeds
  - cd hpfeeds
@@ -29,7 +30,7 @@ install:
  - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 # command to run tests
 script:
- - nosetests
+ - nosetests -v
 notifications:
  irc:
-  - "irc.freenode.org#conpot"
+  - "irc.freenode.org#conpot-dev"

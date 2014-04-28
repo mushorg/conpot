@@ -23,19 +23,23 @@ import sys
 import pwd
 import grp
 import platform
+import ast
 from ConfigParser import ConfigParser
 
 import gevent
 from gevent.queue import Queue
-import requests
-from requests.exceptions import Timeout, ConnectionError
+from lxml import etree
 
 import conpot
-from conpot.logging.log_worker import LogWorker
-from conpot.snmp.snmp_server import SNMPServer
-from conpot.modbus.modbus_server import ModbusServer
-from conpot.http.web_server import HTTPServer
-from conpot.s7comm.s7_server import S7Server
+import conpot.core as conpot_core
+
+from conpot.core.loggers.log_worker import LogWorker
+from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.protocols.modbus.modbus_server import ModbusServer
+from conpot.protocols.s7comm.s7_server import S7Server
+from conpot.protocols.http.web_server import HTTPServer
+from conpot.utils import ext_ip
+
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -56,7 +60,6 @@ def logo():
 
 def setup_logging():
     root_logger = logging.getLogger()
-
     console_log = logging.StreamHandler()
     console_log.setLevel(logging.DEBUG)
     console_log.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
@@ -65,10 +68,9 @@ def setup_logging():
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
-
     wanted_uid = pwd.getpwnam(uid_name)[2]
     #special handling for os x. (getgrname has trouble with gid below 0)
-    if platform.mac_ver()[0]:
+    if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
         wanted_gid = -2
     else:
         wanted_gid = grp.getgrnam(gid_name)[2]
@@ -92,22 +94,22 @@ def main():
                         help="public www path",
                         default=os.path.join(package_directory, 'www/'),
                         metavar="www/"
-                        )
+    )
     parser.add_argument("-r", "--www-root",
                         help="www root page",
                         default="index.htm",
                         metavar="page.htm"
-                        )
+    )
     parser.add_argument("-t", "--template",
                         help="the template to use",
                         default=os.path.join(package_directory, 'templates/default.xml'),
                         metavar="template.xml"
-                        )
+    )
     parser.add_argument("-c", "--config",
                         help="the configuration file to use",
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
-                        )
+    )
     parser.add_argument("-a", "--raw_mib",
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
@@ -132,78 +134,72 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
-    public_ip = None
-    if config.getboolean('fetch_public_ip', 'enabled'):
-        #we only want warning+ messages from the requests module
-        logging.getLogger("requests").setLevel(logging.WARNING)
-        try:
-            url = config.get('fetch_public_ip', 'url')
-            req = requests.get(url)
-            public_ip = req.text
-            logger.info('Fetched {0} as external ip.'.format(public_ip))
-        except (Timeout, ConnectionError) as e:
-            logger.warning('Could not fetch public ip: {0}'.format(e))
-
     logger.info('Starting Conpot using template found in: {0}'.format(args.template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
-    log_queue = Queue()
-    log_worker = LogWorker(config, log_queue, public_ip)
-    gevent.spawn(log_worker.start)
+    greenlets = list()
 
-    modbus_enabled = config.getboolean('modbus', 'enabled')
-    if modbus_enabled:
-        modbus_host = config.get('modbus', 'host')
-        modbus_port = config.getint('modbus', 'port')
-        modbus_instance = ModbusServer(args.template, log_queue)
-        modbus_server = modbus_instance.get_server(modbus_host, modbus_port)
+    session_manager = conpot_core.get_sessionManager()
+    session_manager.initialize_databus(args.template)
 
-    S7_enabled = config.getboolean('s7', 'enabled')
-    if S7_enabled:
-        S7_host = config.get('s7', 'host')
-        S7_port = config.getint('s7', 'port')
-        S7_instance = S7Server(args.template, log_queue)
-        S7_server = S7_instance.get_server(S7_host, S7_port)
+    public_ip = None
+    if config.getboolean('fetch_public_ip', 'enabled'):
+        public_ip = ext_ip.get_ext_ip(config)
 
-    snmp_enabled = config.getboolean('snmp', 'enabled')
-    snmp_host = config.get('snmp', 'host')
-    snmp_port = config.getint('snmp', 'port')
-    if snmp_enabled:
-        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, log_queue, args.mibpaths, args.raw_mib)
+    dom = etree.parse(args.template)
 
-    http_enabled = config.getboolean('http', 'enabled')
-    if http_enabled:
-        http_host = config.get('http', 'host')
-        http_port = config.getint('http', 'port')
-        http_server = HTTPServer(http_host, http_port, args.template, log_queue, args.www, snmp_port)
+    log_worker = LogWorker(config, dom, session_manager, public_ip)
+    greenlets.append(gevent.spawn(log_worker.start))
+
+    modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
+    snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
+    s7comm_enabled = dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]
+    http_enabled = dom.xpath('//conpot_template/protocols/http/@enabled')[0]
 
     servers = list()
+    if snmp_enabled:
+        snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
+        snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
+        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
+        servers.append(snmp_server)
+        greenlets.append(gevent.spawn(snmp_server.start))
+
+    if modbus_enabled:
+        modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
+        modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
+        modbus_server = ModbusServer(args.template)
+        modbus_server = modbus_server.get_server(modbus_host, modbus_port)
+        servers.append(modbus_server)
+        greenlets.append(gevent.spawn(modbus_server.start))
+
+	if s7comm_enabled:
+		s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+     	s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+        s7_instance = S7Server(args.template)
+        s7_server = s7_instance.get_server(s7_host, s7_port)
+        servers.append(s7_server)
+        greenlets.append(gevent.spawn(s7_server.start))
+
+    if http_enabled:
+        http_host = dom.xpath('//conpot_template/protocols/http/@host')[0]
+        http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
+        http_server = HTTPServer(http_host, http_port, args.template, args.www)
+        servers.append(http_server)
+        greenlets.append(gevent.spawn(http_server.start))
+
+    # Wait for the services to bind ports before dropping privileges
+    gevent.sleep(5)
+    drop_privileges()
     try:
-        if modbus_enabled:
-            servers.append(gevent.spawn(modbus_server.serve_forever))
-        if snmp_enabled:
-            servers.append(gevent.spawn(snmp_server.start))
-        if http_enabled:
-            servers.append(gevent.spawn(http_server.start))
-        if S7_enabled:
-            servers.append(gevent.spawn(S7_server.start))
-        #time to allow servers to bind ports, open files, etc...
-        gevent.sleep(5)
-        drop_privileges()
-        gevent.joinall(servers)
+        gevent.joinall(greenlets)
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
-        log_worker.stop()
-        if snmp_enabled:
-            snmp_server.stop()
-        if modbus_enabled:
-            modbus_server.stop()
-        if http_enabled:
-            http_server.stop()
-
-    #just being nice and cosy!
-    gevent.joinall(servers, 2)
+        for server in servers:
+            server.stop()
+    finally:
+        # Just being nice and cosy!
+        gevent.joinall(greenlets, 2)
 
 
 if __name__ == "__main__":
