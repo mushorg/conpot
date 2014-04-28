@@ -15,12 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
 import unittest
 import socket
 
 from gevent.queue import Queue
-from conpot.s7comm.s7_server import S7Server
+from conpot.protocols.s7comm.s7_server import S7Server
 
 from gevent import monkey
 
@@ -31,31 +30,18 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.log_queue = Queue()
-        S7_instance = S7Server('conpot/tests/data/basic_s7_template.xml', self.log_queue)
-        self.S7_server = S7_instance.get_server('localhost', 1025)
-        print self.S7_server
+        S7_instance = S7Server('conpot/tests/data/basic_s7_template.xml')
+        self.S7_server = S7_instance.get_server('localhost', 0)
         self.S7_server.start()
-        print 'started'
+        self.server_port = self.S7_server.server_port
 
     def tearDown(self):
         self.S7_server.stop()
 
     def test_s7(self):
         data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
-        print data
-        HOST = 'localhost'
-        PORT = 1025
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
+        s.connect(('localhost', self.server_port))
         s.sendall(data)
-        print "done sending"
         data = s.recv(1024)
         s.close()
-        print 'Received', repr(data)
-
-
-if __name__ == '__main__':
-    log_queue = Queue()
-    S7_instance = S7Server('conpot/tests/data/basic_s7_template.xml', log_queue)
-    S7_server = S7_instance.get_server('0.0.0.0', 102)
-    S7_server.start()
