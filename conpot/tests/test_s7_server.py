@@ -30,7 +30,7 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.log_queue = Queue()
-        S7_instance = S7Server('conpot/tests/data/basic_s7_template.xml')
+        S7_instance = S7Server('conpot/templates/default.xml')
         self.S7_server = S7_instance.get_server('localhost', 0)
         self.S7_server.start()
         self.server_port = self.S7_server.server_port
