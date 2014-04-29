@@ -39,9 +39,14 @@ class TestBase(unittest.TestCase):
         self.S7_server.stop()
 
     def test_s7(self):
-        data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
+        data = '0300001611e00000000d00c1020100c2020102c0010a'.decode('hex')
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('localhost', self.server_port))
         s.sendall(data)
-        data = s.recv(1024)
+        ret = s.recv(1024)
+        self.assertTrue(ret.encode('hex')[-10:] == "030000130ed0000f000000c1020100c2020102"[-10:])
+        data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
+        s.sendall(data)
+        ret = s.recv(1024)
         s.close()
+        self.assertTrue(ret.encode('hex')[-10:] == "0300001902f08032010000000000080000f0000001000101e0"[-10:])
