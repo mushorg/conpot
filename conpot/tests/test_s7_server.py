@@ -20,6 +20,9 @@ import socket
 
 from gevent.queue import Queue
 from conpot.protocols.s7comm.s7_server import S7Server
+from conpot.tests.helpers import s7comm_client
+
+import conpot.core as conpot_core
 
 from gevent import monkey
 
@@ -30,6 +33,8 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.log_queue = Queue()
+        self.databus = conpot_core.get_databus()
+        self.databus.initialize('conpot/templates/default.xml')
         S7_instance = S7Server('conpot/templates/default.xml')
         self.S7_server = S7_instance.get_server('localhost', 0)
         self.S7_server.start()
@@ -39,9 +44,16 @@ class TestBase(unittest.TestCase):
         self.S7_server.stop()
 
     def test_s7(self):
-        data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('localhost', self.server_port))
-        s.sendall(data)
-        data = s.recv(1024)
-        s.close()
+        #data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
+        #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #s.connect(('localhost', self.server_port))
+        #s.sendall(data)
+        #data = s.recv(1024)
+        #s.close()
+
+        identities = s7comm_client.Scan('127.0.0.1', self.server_port)
+
+        for line in identities:
+            print "%s" % line
+
+        self.assertIn('ONLINE', data, "Could not retrieve expected data from test output.")
