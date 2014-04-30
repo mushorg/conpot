@@ -76,7 +76,7 @@ class S7Server(object):
                     break
 
                 _, _, length = unpack('!BBH', data[:4])
-                data += sock.recv(length - 4)
+                data += sock.recv(length - 4, socket.MSG_WAITALL)
 
                 tpkt_packet = TPKT().parse(data)
                 cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
