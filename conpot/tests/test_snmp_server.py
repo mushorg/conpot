@@ -31,7 +31,6 @@ import conpot.core as conpot_core
 from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
 
-
 class TestBase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
