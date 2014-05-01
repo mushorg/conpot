@@ -16,23 +16,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-import socket
 
-from gevent.queue import Queue
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
 
 import conpot.core as conpot_core
 
 from gevent import monkey
-
 monkey.patch_all()
 
 
 class TestBase(unittest.TestCase):
 
     def setUp(self):
-        self.log_queue = Queue()
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default.xml')
         S7_instance = S7Server('conpot/templates/default.xml')
@@ -44,16 +40,45 @@ class TestBase(unittest.TestCase):
         self.S7_server.stop()
 
     def test_s7(self):
-        #data = '0300001902f08032010000000000080000f0000001000101e0'.decode('hex')
-        #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #s.connect(('localhost', self.server_port))
-        #s.sendall(data)
-        #data = s.recv(1024)
-        #s.close()
+        src_tsaps = (0x100, 0x200)
+        dst_tsaps = (0x102, 0x200, 0x201)
+        s7_con = s7comm_client.s7('127.0.0.1', self.server_port)
+        res = None
+        for src_tsap in src_tsaps:
+            for dst_tsap in dst_tsaps:
+                try:
+                    s7_con.src_tsap = src_tsap
+                    s7_con.dst_tsap = dst_tsap
+                    res = src_tsap, dst_tsap
+                    break
+                except s7comm_client.S7ProtocolError:
+                    continue
+            if res:
+                break
+        s7_con.src_ref = 10
+        s7_con.s.settimeout(s7_con.timeout)
+        s7_con.s.connect((s7_con.ip, s7_con.port))
+        s7_con.Connect()
+        identities = s7comm_client.GetIdentity('127.0.0.1', self.server_port, res[0], res[1])
 
-        identities = s7comm_client.Scan('127.0.0.1', self.server_port)
+        dic = {
+            17: {1: "v.0.0"},
+            28: {
+                1: "Technodrome",
+                2: "Siemens, SIMATIC, S7-200",
+                3: "Mouser Factory",
+                4: "Original Siemens Equipment",
+                5: "88111222",
+                7: "IM151-8 PN/DP CPU",
+                10: "",
+                11: ""
+            }
+        }
 
         for line in identities:
-            print "%s" % line
-
-        self.assertIn('ONLINE', data, "Could not retrieve expected data from test output.")
+            sec, item, val = line.split(";")
+            try:
+                self.assertTrue(dic[int(sec)][int(item)] == val.strip())
+            except AssertionError:
+                print sec, item, val
+                raise
