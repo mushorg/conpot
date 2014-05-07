@@ -40,6 +40,9 @@ class TestBase(unittest.TestCase):
         self.S7_server.stop()
 
     def test_s7(self):
+        """
+        Objective: Test if the S7 server returns the values expected.
+        """
         src_tsaps = (0x100, 0x200)
         dst_tsaps = (0x102, 0x200, 0x201)
         s7_con = s7comm_client.s7('127.0.0.1', self.server_port)

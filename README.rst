@@ -1,9 +1,9 @@
-Conpot |Build Status|
+Conpot |travis badge| |landscape badge|
 =======================
 
-.. |Build Status| image:: https://travis-ci.org/glastopf/conpot.png?branch=master
+.. |travis badge| image:: https://travis-ci.org/glastopf/conpot.png?branch=master
                        :target: https://travis-ci.org/glastopf/conpot
-.. |landscape| image:: https://landscape.io/github/glastopf/conpot/master/landscape.png
+.. |landscape badge| image:: https://landscape.io/github/glastopf/conpot/master/landscape.png
    :target: https://landscape.io/github/glastopf/conpot/master
    :alt: Code Health
 
