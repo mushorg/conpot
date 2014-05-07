@@ -1,0 +1,14 @@
+<HTML>
+
+    <HEAD>
+        <TITLE>Not implemented - <condata source="databus" key="SystemDescription" /></TITLE>
+    </HEAD>
+
+    <BODY>
+        <h2><condata source="databus" key="sysName" /></h2>
+        <hr>
+        &nbsp;<br>
+        This method is not implemented.<br>
+    </BODY>
+
+</HTML>

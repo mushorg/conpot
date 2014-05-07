@@ -1,0 +1,175 @@
+# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+import os
+import sys
+import hashlib
+import argparse
+import socket
+
+from urlparse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+
+
+class Crawler(object):
+
+    def _get_md5(self, data, path):
+        md5 = hashlib.md5(data).hexdigest()
+        if md5 in self.known_files.values():
+            return None
+        self.known_files[path] = md5
+        return md5
+
+    def _populate_known_files(self):
+        for dir_name, dir_names, file_names in os.walk(self.base_dir):
+            for name in file_names:
+                if name[-2:] == "py":
+                    continue
+                path = dir_name + os.path.sep + name
+                with open(path, "rb") as fh:
+                    data = fh.read()
+                md5 = self._get_md5(data, path)
+                if md5:
+                    self.known_files[path] = md5
+
+    def __init__(self, args):
+        self.start = args.target
+        self.base_dir = args.www
+        self.known_files = dict()
+        self.known_pages = list()
+        self._populate_known_files()
+
+    def _store_file(self, path, target="www/static/"):
+        disc_path = target + path
+        if not os.path.exists(target):
+            os.makedirs(target)
+        retries = 0
+        data = None
+        while retries < 5:
+            try:
+                data = requests.get(self.start + "/" + path).content
+            except socket.error:
+                retries += 1
+            else:
+                break
+        if data and self._get_md5(data, disc_path):
+            with open(disc_path, "wb") as fh:
+                fh.write(data)
+
+    def _fix_style_paths(self, soup):
+        for tag in soup.find_all(attrs={"type": "text/css"}):
+            old_path = tag["href"]
+            if old_path.startswith("/"):
+                old_path = old_path[1:]
+            self._store_file(old_path, self.base_dir + "/static/")
+            path = "static/" + old_path
+            tag["href"] = path
+        return soup
+
+    def _fix_img_paths(self, soup):
+        for tag in soup.find_all("img"):
+            old_path = tag["src"]
+            if old_path.startswith("/"):
+                old_path = old_path[1:]
+            self._store_file(old_path, self.base_dir + "/static/img/")
+            path = "static/img/" + old_path
+            tag["src"] = path
+        return soup
+
+    def _fetch_page(self, url):
+        result = requests.get(url)
+        path = urlparse(result.url).path
+        soup = BeautifulSoup(result.text.encode('ascii', 'ignore'))
+        return soup, path
+
+    def _store_page(self, soup, name="/index.html"):
+        soup = self._fix_style_paths(soup)
+        soup = self._fix_img_paths(soup)
+        with open(self.base_dir + name, "wb") as html_fh:
+            html_fh.write(soup.prettify().encode("utf-8"))
+
+    def _process_page(self, url, page):
+        soup, path = self._fetch_page(url)
+        self.known_pages.append(url)
+        self._dig(soup)
+        self._store_page(soup, page)
+        return soup
+
+    def _dig(self, soup):
+        for tag in soup.find_all("a"):
+            if not tag["href"].startswith("/"):
+                tag["href"] = "/" + tag["href"]
+            if self.start + tag["href"] in self.known_pages:
+                continue
+            url = self.start + tag["href"]
+            soup = self._process_page(url, tag["href"])
+            for tag in soup.find_all("iframe"):
+                if not tag["src"].startswith("/"):
+                    tag["src"] = "/" + tag["src"]
+                if self.start + tag["src"] in self.known_pages:
+                    continue
+                url = self.start + tag["src"]
+                self._process_page(url, tag["src"])
+
+    def work(self):
+        soup, path = self._fetch_page(self.start)
+        self._store_page(soup, path)
+        self._dig(soup)
+
+
+if __name__ == "__main__":
+    print """
+
+    HTTP HMI Crawler
+
+    Please be aware that a crawler might break your web application.
+    This tool is supposed to be only used against web application owned by you.
+
+    Usage on your own risk!
+
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-w", "--www",
+        help="HMI public www path",
+        default='www',
+        metavar="www"
+    )
+    parser.add_argument(
+        "-t", "--target",
+        help="Target domain or IP address",
+        default='localhost:80',
+        metavar="http://target:port"
+    )
+    args = parser.parse_args()
+    try:
+        agreement = raw_input("Are you sure you want to crawl {0}? (y/N): ".format(args.target))
+        if not agreement == "y":
+            print "You have to reply with 'y' to continue... Bye"
+            sys.exit(0)
+        if args.www.endswith("/"):
+            args.www = args.www[:-1]
+        if not os.path.exists(args.www):
+            confirmation = raw_input("Create directory {0}? (Y/n): ".format(args.www))
+            if not confirmation == "N":
+                os.makedirs(args.www)
+        Crawler(args).work()
+    except KeyboardInterrupt:
+        print "Bye..."

@@ -1,0 +1,14 @@
+<HTML>
+
+    <HEAD>
+        <TITLE>Forbidden - <condata source="databus" key="SystemDescription" /></TITLE>
+    </HEAD>
+
+    <BODY>
+        <h2><condata source="databus" key="sysName" /></h2>
+        <hr>
+        &nbsp;<br>
+        Forbidden.<br>
+    </BODY>
+
+</HTML>

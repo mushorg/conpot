@@ -1,0 +1,31 @@
+VOGON-POEM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32, mib-2          FROM SNMPv2-SMI
+    MODULE-COMPLIANCE, OBJECT-GROUP,
+    NOTIFICATION-GROUP                       FROM SNMPv2-CONF
+    snmpTraps                                FROM SNMPv2-MIB;
+
+vogonpoem MIB MODULE-IDENTITY
+    LAST-UPDATED "200006140000Z"
+    ORGANIZATION "Vogon inc."
+    CONTACT-INFO
+                 "Prostetnic Vogon Jeltze
+                  Galactic Hyperspace Planning Council"
+    DESCRIPTION  ""
+::= { mib-2 42 }
+
+
+vogon         OBJECT IDENTIFIER ::= {mib-2 424242}
+
+
+poemNumber OBJECT-TYPE
+  SYNTAX  Integer32
+  MAX-ACCESS  read-write
+  STATUS  current
+  DESCRIPTION
+          "The number of vogon poems in this e-book."
+  ::= {vogon 1}
+
+END

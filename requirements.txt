@@ -1,5 +1,12 @@
-gevent
-pysnmp
+gevent>=1.0
+pysnmp>=4.2.4
 lxml
-modbus_tk
 hpfeeds
+modbus_tk
+bottle
+jinja2
+beautifulsoup4
+requests
+sphinx
+libtaxii>=1.1.0
+xlrd
