@@ -153,9 +153,9 @@ def main():
     greenlets.append(gevent.spawn(log_worker.start))
 
     modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
-    snmp_enabled = dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]
-    s7comm_enabled = dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]
-    http_enabled = dom.xpath('//conpot_template/protocols/http/@enabled')[0]
+    snmp_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0])
+    s7comm_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0])
+    http_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0])
 
     servers = list()
     if snmp_enabled:
