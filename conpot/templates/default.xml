@@ -51,6 +51,9 @@
                 <key name="s7_module_type">
                     <value type="value">"IM151-8 PN/DP CPU"</value>
                 </key>
+                <key name="BacnetIdentifier">
+                    <value type="value">"36113"</value>
+                </key>
                 <key name="empty">
                     <value type="value">""</value>
                 </key>
@@ -264,5 +267,9 @@
                 </status>
             </statuscodes>
         </http>
+        <bacnet enabled="True" host="0.0.0.0" port="47808">
+            <device_name>SystemName</device_name>
+            <device_identifier>BacnetIdentifier</device_identifier>
+        </bacnet>
     </protocols>
 </conpot_template>

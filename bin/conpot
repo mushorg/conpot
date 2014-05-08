@@ -38,6 +38,7 @@ from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.protocols.http.web_server import HTTPServer
+from conpot.protocols.bacnet.bacnet_server import BacnetServer
 from conpot.utils import ext_ip
 
 
@@ -156,6 +157,7 @@ def main():
     snmp_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0])
     s7comm_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0])
     http_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0])
+    bacnet_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/bacnet/@enabled')[0])
 
     servers = list()
     if snmp_enabled:
@@ -173,9 +175,9 @@ def main():
         servers.append(modbus_server)
         greenlets.append(gevent.spawn(modbus_server.start))
 
-	if s7comm_enabled:
-		s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
-     	s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+    if s7comm_enabled:
+        s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+        s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
         s7_instance = S7Server(args.template)
         s7_server = s7_instance.get_server(s7_host, s7_port)
         servers.append(s7_server)
@@ -187,6 +189,9 @@ def main():
         http_server = HTTPServer(http_host, http_port, args.template, args.www)
         servers.append(http_server)
         greenlets.append(gevent.spawn(http_server.start))
+
+    if bacnet_enabled:
+        bacnet_server = BacnetServer(args.template)
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
