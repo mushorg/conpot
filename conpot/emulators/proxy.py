@@ -49,17 +49,18 @@ class Proxy(object):
 
         proxy_socket = socket()
         proxy_socket.connect((self.proxy_host, self.proxy_port))
+
         while True:
             sockets_read, _, sockets_err = select.select([proxy_socket, sock], [], [proxy_socket, sock], 10)
 
-            if len(sockets_err):
+            if len(sockets_err) > 0:
                 self._close(proxy_socket, sock)
                 break
 
             for s in sockets_read:
                 data = s.recv(1024)
                 if len(data) is 0:
-                    self._close(proxy_socket, sock)
+                    self._close([proxy_socket, sock])
                     break
                 if s is proxy_socket:
                     self.handle_out_data(data, sock)
@@ -69,18 +70,21 @@ class Proxy(object):
                     assert False
 
     def handle_in_data(self, data, sock):
-        logger.debug('Received {0} bytes from outside to proxied service.'.format(len(data)))
+        logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data),
+                                                                                      ' '.join(hex(ord(x)) for x in data)))
         if self.decoder:
             self.decoder.add_adversary_data(data)
         sock.send(data)
 
     def handle_out_data(self, data, sock):
-        logger.debug('Received {0} bytes from proxied service.'.format(len(data)))
+        logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data),
+                                                                           ' '.join(hex(ord(x)) for x in data)))
         if self.decoder:
             self.decoder.add_proxy_data(data)
         sock.send(data)
 
-    def close(self, sockets):
+
+    def _close(self, sockets):
         for s in sockets:
             s.close()
 

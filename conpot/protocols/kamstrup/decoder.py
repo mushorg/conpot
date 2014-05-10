@@ -35,6 +35,7 @@ class Decoder(object):
         self.trydecode(data, 'from_server')
 
     def trydecode(data):
+        pass
         # 1. Tried to decode the data
         # 2. If successfull pop the data and log.
         # 3. If not successfull just return
