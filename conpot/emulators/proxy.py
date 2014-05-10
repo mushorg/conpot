@@ -16,29 +16,71 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import select
+from gevent.socket import socket
+from gevent.server import StreamServer
+
+import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 
 
 class Proxy(object):
-    def __init__(self, host, port, proxy_host, proxy_port, decoder=None):
-        self.host = host
-        self.port = port
+    def __init__(self, name, proxy_host, proxy_port, decoder=None):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
-        self.decoder = None
-        self.own_socket = None
-        self.proxy_socket = None
+        self.decoder = decoder
+        self.name = name
+        self.host = None
+        self.port = None
 
-    def start(self):
-        # 1. Open and listen on IN/OUT socket
-        # 2. On data from host add to decoder and relay
-        # 3. On data from proxy_host add to decoder and relay
+    def get_server(self, host, port):
+        self.host = host
+        self.port = port
+        connection = (host, port)
+        server = StreamServer(connection, self.handle)
+        logger.info('{0} proxy server started on: {1}, using {2} decoder.'.format(self.name, connection, self.decoder))
+        return server
 
-    def data_from_own(self, data):
-        self.decoder.add_adversary_data(data)
-        self.proxy_socket.send(data)
+    def handle(self, sock, address):
+        session = conpot_core.get_session('s7comm', address[0], address[1])
+        logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
+                                                                             self.name, session.id))
 
-    def data_from_proxy(self, data):
-        self.decoder.add_proxy_data(data)
-        self.own_socket.send(data)
+        proxy_socket = socket()
+        proxy_socket.connect((self.proxy_host, self.proxy_port))
+        while True:
+            sockets_read, _, sockets_err = select.select([proxy_socket, sock], [], [proxy_socket, sock], 10)
+
+            if len(sockets_err):
+                self._close(proxy_socket, sock)
+                break
+
+            for s in sockets_read:
+                data = s.recv(1024)
+                if len(data) is 0:
+                    self._close(proxy_socket, sock)
+                    break
+                if s is proxy_socket:
+                    self.handle_out_data(data, sock)
+                elif s is sock:
+                    self.handle_in_data(data, proxy_socket)
+                else:
+                    assert False
+
+    def handle_in_data(self, data, sock):
+        logger.debug('Received {0} bytes from outside to proxied service.'.format(len(data)))
+        if self.decoder:
+            self.decoder.add_adversary_data(data)
+        sock.send(data)
+
+    def handle_out_data(self, data, sock):
+        logger.debug('Received {0} bytes from proxied service.'.format(len(data)))
+        if self.decoder:
+            self.decoder.add_proxy_data(data)
+        sock.send(data)
+
+    def close(self, sockets):
+        for s in sockets:
+            s.close()
+

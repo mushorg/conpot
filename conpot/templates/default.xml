@@ -267,8 +267,8 @@
     </protocols>
     <proxies>
         <proxy name="kamstrup" host="0.0.0.0" port="1025">
-            <meter_ip>192.168.1.44</meter_ip>
-            <meter_port>1025</meter_port>
+            <proxy_host>192.168.0.10</proxy_host>
+            <proxy_port>1025</proxy_port>
             <decoder>conpot.protocols.kamstrup.decoder.Decoder</decoder>
         </proxy>
     </proxies>
