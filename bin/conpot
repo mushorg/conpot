@@ -173,9 +173,9 @@ def main():
         servers.append(modbus_server)
         greenlets.append(gevent.spawn(modbus_server.start))
 
-	if s7comm_enabled:
-		s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
-     	s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+    if s7comm_enabled:
+        s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+        s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
         s7_instance = S7Server(args.template)
         s7_server = s7_instance.get_server(s7_host, s7_port)
         servers.append(s7_server)
@@ -187,6 +187,13 @@ def main():
         http_server = HTTPServer(http_host, http_port, args.template, args.www)
         servers.append(http_server)
         greenlets.append(gevent.spawn(http_server.start))
+
+    # FOR configProxy IN dom.xpath('//conpot_template/proxies/*')
+    #   IF configProxy.decoder:
+    #       decoder = instance_from_string(configProxy.decoder)
+    #   proxy = ConpotProxy(host, port, proxy_port, proxy_host, decoder)
+    #   servers.append(proxy)
+    #   greenlets.append(gevent.spawn(proxy.start))
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
