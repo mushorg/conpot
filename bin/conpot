@@ -59,13 +59,18 @@ def logo():
 """.format(conpot.__version__)
 
 
-def setup_logging():
+def setup_logging(log_file='conpot.log'):
+    log_format = logging.Formatter('%(asctime)-15s %(message)s')
     root_logger = logging.getLogger()
     console_log = logging.StreamHandler()
     console_log.setLevel(logging.DEBUG)
-    console_log.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
+    console_log.setFormatter(log_format)
     root_logger.addHandler(console_log)
     logger.setLevel(logging.DEBUG)
+    file_log = logging.FileHandler(log_file)
+    file_log.setFormatter(log_format)
+    file_log.setLevel(logging.DEBUG)
+    root_logger.addHandler(file_log)
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
