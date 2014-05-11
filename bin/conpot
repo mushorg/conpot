@@ -196,7 +196,7 @@ def main():
         port = ast.literal_eval(p.attrib['port'])
         proxy_host = p.xpath('./proxy_host/text()')[0]
         proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
-       	decoder = p.xpath('./decoder/text()')[0]
+       	#decoder = p.xpath('./decoder/text()')[0]
        	proxy_instance = Proxy(name, proxy_host, proxy_port)
        	proxy_server = proxy_instance.get_server(host, port)
        	servers.append(proxy_instance)
