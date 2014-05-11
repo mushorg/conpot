@@ -17,6 +17,8 @@
 
 import logging
 import select
+import os
+from datetime import datetime
 from gevent.socket import socket
 from gevent.server import StreamServer
 
@@ -47,6 +49,11 @@ class Proxy(object):
         logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
                                                                              self.name, session.id))
 
+        data_file = None
+        # to enable logging of raw socket data uncomment the following line
+        # and execute the commands: 'mkdir data; chown nobody:nobody data'
+        # data_file = open(os.path.join('data', 'Session-{0}'.format(session.id)), 'w')
+
         proxy_socket = socket()
         proxy_socket.connect((self.proxy_host, self.proxy_port))
 
@@ -63,26 +70,34 @@ class Proxy(object):
                     self._close([proxy_socket, sock])
                     break
                 if s is proxy_socket:
-                    self.handle_out_data(data, sock)
+                    self.handle_out_data(data, sock, data_file)
                 elif s is sock:
-                    self.handle_in_data(data, proxy_socket)
+                    self.handle_in_data(data, proxy_socket, data_file)
                 else:
                     assert False
 
-    def handle_in_data(self, data, sock):
-        logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data),
-                                                                                      ' '.join(hex(ord(x)) for x in data)))
+        data_file.close()
+
+    def handle_in_data(self, data, sock, data_file):
+        hex_data = data.encode('hex_codec')
+        logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
             self.decoder.add_adversary_data(data)
+        if data_file:
+            self._dump_data(data_file, 'in', hex_data)
         sock.send(data)
 
-    def handle_out_data(self, data, sock):
-        logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data),
-                                                                           ' '.join(hex(ord(x)) for x in data)))
+    def handle_out_data(self, data, sock, data_file):
+        hex_data = data.encode('hex_codec')
+        logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
             self.decoder.add_proxy_data(data)
+        if data_file:
+            self._dump_data(data_file, 'out', hex_data)
         sock.send(data)
 
+    def _dump_data(self, file, direction, hex_data):
+        file.write('{0};{1};{2}\n'.format(datetime.utcnow().isoformat(), direction, hex_data))
 
     def _close(self, sockets):
         for s in sockets:
