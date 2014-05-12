@@ -17,8 +17,9 @@
 
 import logging
 import select
-import os
+
 from datetime import datetime
+
 from gevent.socket import socket
 from gevent.server import StreamServer
 
@@ -45,14 +46,14 @@ class Proxy(object):
         return server
 
     def handle(self, sock, address):
-        session = conpot_core.get_session('s7comm', address[0], address[1])
+        self.session = conpot_core.get_session('s7comm', address[0], address[1])
         logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
-                                                                             self.name, session.id))
+                                                                             self.name, self.session.id))
 
         data_file = None
         # to enable logging of raw socket data uncomment the following line
         # and execute the commands: 'mkdir data; chown nobody:nobody data'
-        # data_file = open(os.path.join('data', 'Session-{0}'.format(session.id)), 'w')
+        # data_file = open(os.path.join('data', 'Session-{0}'.format(self.session.id)), 'w')
 
         proxy_socket = socket()
         proxy_socket.connect((self.proxy_host, self.proxy_port))
@@ -80,6 +81,7 @@ class Proxy(object):
 
     def handle_in_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
+        self.session.add_event({'request': hex_data, 'response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
             self.decoder.add_adversary_data(data)
@@ -89,6 +91,7 @@ class Proxy(object):
 
     def handle_out_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
+        self.session.add_event({'request': '', 'response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
             self.decoder.add_proxy_data(data)
@@ -96,10 +99,9 @@ class Proxy(object):
             self._dump_data(data_file, 'out', hex_data)
         sock.send(data)
 
-    def _dump_data(self, file, direction, hex_data):
-        file.write('{0};{1};{2}\n'.format(datetime.utcnow().isoformat(), direction, hex_data))
+    def _dump_data(self, file_handle, direction, hex_data):
+        file_handle.write('{0};{1};{2}\n'.format(datetime.utcnow().isoformat(), direction, hex_data))
 
     def _close(self, sockets):
         for s in sockets:
             s.close()
-
