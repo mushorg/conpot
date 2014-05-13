@@ -86,7 +86,7 @@ class Proxy(object):
         self.session.add_event({'request': hex_data, 'response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
-            self.decoder.add_adversary_data(data)
+            self.decoder.decode_in(data)
         if data_file:
             self._dump_data(data_file, 'in', hex_data)
         sock.send(data)
@@ -96,7 +96,7 @@ class Proxy(object):
         self.session.add_event({'request': '', 'response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
-            self.decoder.add_proxy_data(data)
+            self.decoder.decode_out(data)
         if data_file:
             self._dump_data(data_file, 'out', hex_data)
         sock.send(data)
