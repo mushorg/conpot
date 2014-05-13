@@ -1,0 +1,31 @@
+<conpot_template name="Kamstrup smartmeter proxy" description="Proxy to kamstrup smartmeter">
+    <core>
+        <databus>
+            <key_value_mappings>
+            </key_value_mappings>
+        </databus>
+    </core>
+    <protocols>
+        <snmp enabled="False" />
+        <modbus enabled="False" />
+        <s7comm enabled="False"  />
+        <http enabled="False" />
+    </protocols>
+    <proxies>
+        <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
+            <proxy_host>192.168.0.10</proxy_host>
+            <proxy_port>1025</proxy_port>
+            <decoder>None</decoder>
+        </proxy>
+        <proxy name="Kamstrup Channel B" host="0.0.0.0" port="1026">
+            <proxy_host>192.168.0.10</proxy_host>
+            <proxy_port>1026</proxy_port>
+            <decoder>None</decoder>
+        </proxy>
+        <proxy name="Kamstrup telnet" host="0.0.0.0" port="50100">
+            <proxy_host>192.168.0.10</proxy_host>
+            <proxy_port>50100</proxy_port>
+            <decoder>None</decoder>
+        </proxy>
+    </proxies>
+</conpot_template>

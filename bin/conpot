@@ -27,7 +27,6 @@ import ast
 from ConfigParser import ConfigParser
 
 import gevent
-from gevent.queue import Queue
 from lxml import etree
 
 import conpot
@@ -38,6 +37,7 @@ from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.protocols.http.web_server import HTTPServer
+from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
 
 
@@ -58,13 +58,18 @@ def logo():
 """.format(conpot.__version__)
 
 
-def setup_logging():
+def setup_logging(log_file='conpot.log'):
+    log_format = logging.Formatter('%(asctime)-15s %(message)s')
     root_logger = logging.getLogger()
     console_log = logging.StreamHandler()
     console_log.setLevel(logging.DEBUG)
-    console_log.setFormatter(logging.Formatter('%(asctime)-15s %(message)s'))
+    console_log.setFormatter(log_format)
     root_logger.addHandler(console_log)
     logger.setLevel(logging.DEBUG)
+    file_log = logging.FileHandler(log_file)
+    file_log.setFormatter(log_format)
+    file_log.setLevel(logging.DEBUG)
+    root_logger.addHandler(file_log)
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
@@ -173,9 +178,9 @@ def main():
         servers.append(modbus_server)
         greenlets.append(gevent.spawn(modbus_server.start))
 
-	if s7comm_enabled:
-		s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
-     	s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+    if s7comm_enabled:
+        s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+        s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
         s7_instance = S7Server(args.template)
         s7_server = s7_instance.get_server(s7_host, s7_port)
         servers.append(s7_server)
@@ -187,6 +192,19 @@ def main():
         http_server = HTTPServer(http_host, http_port, args.template, args.www)
         servers.append(http_server)
         greenlets.append(gevent.spawn(http_server.start))
+
+    proxies = dom.xpath('//conpot_template/proxies/*')
+    for p in proxies:
+        name = p.attrib['name']
+        host = p.attrib['host']
+        port = ast.literal_eval(p.attrib['port'])
+        proxy_host = p.xpath('./proxy_host/text()')[0]
+        proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
+        #decoder = p.xpath('./decoder/text()')[0]
+        proxy_instance = Proxy(name, proxy_host, proxy_port)
+        proxy_server = proxy_instance.get_server(host, port)
+        servers.append(proxy_instance)
+        greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
