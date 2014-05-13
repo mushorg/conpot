@@ -35,6 +35,7 @@ class Proxy(object):
         self.proxy_port = proxy_port
         self.decoder = decoder
         self.name = name
+        self.proxy_id = self.name.lower().replace(' ', '_')
         self.host = None
         self.port = None
 
@@ -47,9 +48,9 @@ class Proxy(object):
         return server
 
     def handle(self, sock, address):
-        self.session = conpot_core.get_session('s7comm', address[0], address[1])
+        self.session = conpot_core.get_session(self.proxy_id, address[0], address[1])
         logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
-                                                                             self.name, self.session.id))
+                                                                             self.proxy_id, self.session.id))
 
         data_file = None
         # to enable logging of raw socket data uncomment the following line
@@ -63,7 +64,7 @@ class Proxy(object):
             sockets_read, _, sockets_err = select.select([proxy_socket, sock], [], [proxy_socket, sock], 10)
 
             if len(sockets_err) > 0:
-                self._close(proxy_socket, sock)
+                self._close([proxy_socket, sock])
                 break
 
             for s in sockets_read:
