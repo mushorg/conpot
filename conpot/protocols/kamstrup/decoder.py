@@ -78,7 +78,8 @@ class Decoder(object):
         self.in_parsing = False
         self.out_data = []
         self.out_parsing = False
-        self.command_map = {0x10: self._decode_cmd_get_register}
+        self.command_map = {0x01: self._decode_cmd_get_type,
+                            0x10: self._decode_cmd_get_register}
 
     def decode_in(self, data):
         for d in data:
@@ -111,6 +112,10 @@ class Decoder(object):
             if count + 1 < register_count:
                 message += ', '
         return message
+
+    # meter type
+    def _decode_cmd_get_type(self):
+        return 'Get meter type request'
 
     def decode_out(self, data):
         for d in data:
