@@ -26,7 +26,7 @@ class Decoder(object):
     RESPONSE_MAGIC = 0x40
     EOT_MAGIC = 0x0d
 
-    # Following constants has been taken from pykamstrup, thanks PHK/Erik Jensen!
+    # Following constants has been taken from pykamstrup, thanks to PHK/Erik Jensen!
     # I owe beer...
     # ----------------------------------------------------------------------------
     # "THE BEER-WARE LICENSE" (Revision 42):
@@ -51,24 +51,80 @@ class Decoder(object):
 
     ESCAPES = [0x06, 0x0d, 0x1b, 0x40, 0x80]
 
+    KAMSTRUP_382_REGISTERS = {
+
+        0x0001: "Energy in",
+        0x0002: "Energy out",
+
+        0x000d: "Energy in hi-res",
+        0x000e: "Energy out hi-res",
+
+        0x041e: "Voltage p1",
+        0x041f: "Voltage p2",
+        0x0420: "Voltage p3",
+
+        0x0434: "Current p1",
+        0x0435: "Current p2",
+        0x0436: "Current p3",
+
+        0x0438: "Power p1",
+        0x0439: "Power p2",
+        0x043a: "Power p3",
+    }
+
+
     def __init__(self):
         self.in_data = []
         self.in_parsing = False
         self.out_data = []
         self.out_parsing = False
+        self.command_map = {0x10: self._decode_cmd_get_register}
 
     def decode_in(self, data):
         for d in data:
             if not self.in_parsing and d != Decoder.REQUEST_MAGIC:
-                logger.debug('No kamstrup request magic received, got: {0)'.format(data[0].encode('hex-codec')))
+                logger.debug('No kamstrup request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.in_parsing = True
-                # TODO: alot of stuff here
+                if d is 0x0d:
+                    # now we expect (0x80, 0x3f, 0x10) =>
+                    # (request magic, unknown byte, command byte)
+                    if self.in_data[2] in self.command_map:
+                        return self.command_map[self.in_data[2]]()
+                    else:
+                        return 'Unknown kamstrup command: {0}, ignoring request.'\
+                                .format(self.in_data[2].encode('hex-codec'))
+                else:
+                    self.in_data.append(d)
+
+    def _decode_cmd_get_register(self):
+        unknown_byte = self.in_data[1]
+        cmd = self.in_data[2]
+        register_count = self.in_data[3]
+        message = 'Get request for {0} register(s): '.format(register_count)
+        for count in range(register_count):
+            register = self.in_data[4 + count] * 256 + self.in_data[5 + count]
+            if register in Decoder.KAMSTRUP_382_REGISTERS:
+                message += '{0} ({1})'.format(register, Decoder.KAMSTRUP_382_REGISTERS[register])
+            else:
+                message += 'Unknown ({1})'.format(register)
+            if count + 1 < register_count:
+                message += ', '
+        return message
 
     def decode_out(self, data):
         for d in data:
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                    logger.debug('No kamstrup request magic received, got: {0)'.format(data[0].encode('hex-codec')))
+                    logger.debug('No kamstrup response magic received, got: {0)'.format(data[0].encode('hex-codec')))
             else:
                 self.out_parsing = True
-                # TODO: alot of stuff here
+                if d is 0x0d:
+                    return self._decode_req()
+                else:
+                    self.out_data.append(d)
+
+    def _decode_response(self):
+        pass
+
+
+

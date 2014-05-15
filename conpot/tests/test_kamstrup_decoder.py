@@ -21,22 +21,23 @@ from conpot.protocols.kamstrup.decoder import Decoder
 class TestKamstrupDecoder(unittest.TestCase):
 
     # TODO: Rename functions when i figure out the actual meaning of the requests / responses
-    def test_request_one
-        request = "803f1001000155a10d".encode('hex-codec')
+    def test_request_one(self):
+        request = "803f1001041e55a10d"
         decoder = Decoder()
-        result = decoder.decode_in(request)
+        result = decoder.decode_in(bytearray.fromhex(request))
+        self.assertEqual(result, 'Get request for 1 register(s): 1054 (Voltage p1)')
 
-    def test_request_two
-        request = "803f1001000265c20d".encode('hex-codec')
-        decoder = Decoder()
-        result = decoder.decode_in(request)
-
-    def test_response_one
-        response = "403f1000010204000000008be1900d".encode('hex-codec')
-        decoder = Decoder()
-        result = decoder.decode_in(response)
-
-    def test_response_two
-        response = "403f10000202040000000000091bf90d".encode('hex-codec')
-        decoder = Decoder()
-        result = decoder.decode_in(response)
+    # def test_request_two(self):
+    #     request = "803f1001000265c20d".encode('hex-codec')
+    #     decoder = Decoder()
+    #     result = decoder.decode_in(request)
+    #
+    # def test_response_one(self):
+    #     response = "403f1000010204000000008be1900d".encode('hex-codec')
+    #     decoder = Decoder()
+    #     result = decoder.decode_in(response)
+    #
+    # def test_response_two(self):
+    #     response = "403f10000202040000000000091bf90d".encode('hex-codec')
+    #     decoder = Decoder()
+    #     result = decoder.decode_in(response)
