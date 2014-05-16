@@ -98,7 +98,7 @@ class Decoder(object):
                         return 'Expected request magic but got: {0}, ignoring request.'\
                                 .format(self.in_data[2].encode('hex-codec'))
                 else:
-                    self.in_data.extend(d)
+                    self.in_data.append(d)
 
     def _decode_cmd_get_register(self):
         assert(self.in_data[2] == 0x10)
