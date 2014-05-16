@@ -98,7 +98,7 @@ class Decoder(object):
                         return 'Expected request magic but got: {0}, ignoring request.'\
                                 .format(self.in_data[2].encode('hex-codec'))
                 else:
-                    self.in_data.append(d)
+                    self.in_data.extend(d)
 
     def _decode_cmd_get_register(self):
         assert(self.in_data[2] == 0x10)
@@ -114,6 +114,7 @@ class Decoder(object):
                 message += 'Unknown ({1})'.format(register)
             if count + 1 < register_count:
                 message += ', '
+        self.in_data = []
         return message
 
     # meter type
@@ -131,7 +132,7 @@ class Decoder(object):
     def decode_out(self, data):
         for d in data:
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                    logger.debug('Expected response magic but got got: {0)'.format(data[0].encode('hex-codec')))
+                    logger.debug('Expected response magic but got got: {0}'.format(data[0].encode('hex-codec')))
             else:
                 self.out_parsing = True
                 if d is 0x0d:

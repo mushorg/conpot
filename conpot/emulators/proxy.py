@@ -33,11 +33,17 @@ class Proxy(object):
     def __init__(self, name, proxy_host, proxy_port, decoder=None):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
-        self.decoder = decoder
         self.name = name
         self.proxy_id = self.name.lower().replace(' ', '_')
         self.host = None
         self.port = None
+        if decoder:
+            namespace, _classname = decoder.rsplit('.', 1)
+            module = __import__(namespace, fromlist=[_classname])
+            _class = getattr(module, _classname)
+            self.decoder = _class()
+        else:
+            self.decoder = None
 
     def get_server(self, host, port):
         self.host = host
@@ -83,20 +89,22 @@ class Proxy(object):
 
     def handle_in_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
-        self.session.add_event({'request': hex_data, 'response': ''})
+        self.session.add_event({'raw_request': hex_data, 'raw_response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
-            self.decoder.decode_in(data)
+            decoded = self.decoder.decode_in(data)
+            self.session.add_event({'request': decoded, 'raw_response': ''})
         if data_file:
             self._dump_data(data_file, 'in', hex_data)
         sock.send(data)
 
     def handle_out_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
-        self.session.add_event({'request': '', 'response': hex_data})
+        self.session.add_event({'raw_request': '', 'raw_response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
-            self.decoder.decode_out(data)
+            decoded = self.decoder.decode_out(data)
+            self.session.add_event({'request': '', 'raw_response': decoded})
         if data_file:
             self._dump_data(data_file, 'out', hex_data)
         sock.send(data)

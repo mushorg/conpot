@@ -1,4 +1,4 @@
-<conpot_template name="Kamstrup smartmeter proxy" description="Proxy to kamstrup smartmeter">
+<conpot_template name="Kamstrup 382 smart meter proxy" description="Proxy to kamstrup 382 series smart meter">
     <core>
         <databus>
             <key_value_mappings>
@@ -15,17 +15,17 @@
         <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
             <proxy_host>192.168.0.10</proxy_host>
             <proxy_port>1025</proxy_port>
-            <decoder>None</decoder>
+            <decoder>conpot.protocols.kamstrup.decoder.Decoder</decoder>
         </proxy>
         <proxy name="Kamstrup Channel B" host="0.0.0.0" port="1026">
             <proxy_host>192.168.0.10</proxy_host>
             <proxy_port>1026</proxy_port>
-            <decoder>None</decoder>
+            <decoder>conpot.protocols.kamstrup.decoder.Decoder</decoder>
         </proxy>
         <proxy name="Kamstrup telnet" host="0.0.0.0" port="50100">
             <proxy_host>192.168.0.10</proxy_host>
             <proxy_port>50100</proxy_port>
-            <decoder>None</decoder>
+            <decoder></decoder>
         </proxy>
     </proxies>
 </conpot_template>
