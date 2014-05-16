@@ -18,6 +18,7 @@
 import unittest
 from conpot.protocols.kamstrup.decoder import Decoder
 
+
 class TestKamstrupDecoder(unittest.TestCase):
 
     # TODO: Rename functions when i figure out the actual meaning of the requests / responses
@@ -25,7 +26,7 @@ class TestKamstrupDecoder(unittest.TestCase):
         request = "803f1001041e55a10d"
         decoder = Decoder()
         result = decoder.decode_in(bytearray.fromhex(request))
-        self.assertEqual(result, 'Get request for 1 register(s): 1054 (Voltage p1)')
+        self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1)')
 
     # def test_request_two(self):
     #     request = "803f1001000265c20d".encode('hex-codec')

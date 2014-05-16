@@ -91,9 +91,10 @@ class Decoder(object):
                     # now we expect (0x80, 0x3f, 0x10) =>
                     # (request magic, unknown byte, command byte)
                     if self.in_data[2] in self.command_map:
+                        # TODO: Check crc
                         return self.command_map[self.in_data[2]]()
                     else:
-                        return 'Unknown kamstrup command: {0}, ignoring request.'\
+                        return 'Expected request magic but got: {0}, ignoring request.'\
                                 .format(self.in_data[2].encode('hex-codec'))
                 else:
                     self.in_data.append(d)
@@ -102,7 +103,7 @@ class Decoder(object):
         unknown_byte = self.in_data[1]
         cmd = self.in_data[2]
         register_count = self.in_data[3]
-        message = 'Get request for {0} register(s): '.format(register_count)
+        message = 'Request for {0} register(s): '.format(register_count)
         for count in range(register_count):
             register = self.in_data[4 + count] * 256 + self.in_data[5 + count]
             if register in Decoder.KAMSTRUP_382_REGISTERS:
@@ -115,12 +116,12 @@ class Decoder(object):
 
     # meter type
     def _decode_cmd_get_type(self):
-        return 'Get meter type request'
+        return 'Request for GetType'
 
     def decode_out(self, data):
         for d in data:
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                    logger.debug('No kamstrup response magic received, got: {0)'.format(data[0].encode('hex-codec')))
+                    logger.debug('Expected response magic but got got: {0)'.format(data[0].encode('hex-codec')))
             else:
                 self.out_parsing = True
                 if d is 0x0d:
