@@ -79,7 +79,8 @@ class Decoder(object):
         self.out_data = []
         self.out_parsing = False
         self.command_map = {0x01: self._decode_cmd_get_type,
-                            0x10: self._decode_cmd_get_register}
+                            0x10: self._decode_cmd_get_register,
+                            0x92: self._decode_cmd_login}
 
     def decode_in(self, data):
         for d in data:
@@ -100,6 +101,7 @@ class Decoder(object):
                     self.in_data.append(d)
 
     def _decode_cmd_get_register(self):
+        assert(self.in_data[2] == 0x10)
         unknown_byte = self.in_data[1]
         cmd = self.in_data[2]
         register_count = self.in_data[3]
@@ -116,7 +118,15 @@ class Decoder(object):
 
     # meter type
     def _decode_cmd_get_type(self):
+        assert(self.in_data[2] == 0x01)
         return 'Request for GetType'
+
+    def _decode_cmd_login(self):
+        assert(self.in_data[2] == 0x92)
+        unknown_byte = self.in_data[1]
+        pin_code = self.in_data[3] * 256 + self.in_data[4]
+        return 'Login command with pin_code: {0}'.format(pin_code)
+
 
     def decode_out(self, data):
         for d in data:
