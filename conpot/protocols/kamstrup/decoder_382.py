@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import crc16
 
 logger = logging.getLogger(__name__)
 
@@ -84,15 +85,19 @@ class Decoder(object):
 
     def decode_in(self, data):
         for d in data:
+            print d
             if not self.in_parsing and d != Decoder.REQUEST_MAGIC:
                 logger.debug('No kamstrup request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.in_parsing = True
                 if d is 0x0d:
+                    if not self.valid_crc(self.in_data[1:]):
+                        self.in_parsing = False
+                        # TODO: Log discarded bytes?
+                        return 'Request discarded due to invalid CRC.'
                     # now we expect (0x80, 0x3f, 0x10) =>
                     # (request magic, unknown byte, command byte)
                     if self.in_data[2] in self.command_map:
-                        # TODO: Check crc
                         return self.command_map[self.in_data[2]]()
                     else:
                         return 'Expected request magic but got: {0}, ignoring request.'\
@@ -135,11 +140,20 @@ class Decoder(object):
             else:
                 self.out_parsing = True
                 if d is 0x0d:
-                    #TODO: CRC check
+                    if not self.valid_crc(self.out_data[1:]):
+                        self.out_parsing = False
+                        # TODO: Log discarded bytes?
+                        return 'Response discarded due to invalid CRC.'
                     return self._decode_req()
                 else:
                     self.out_data.append(d)
-                    
+
+    # supplied message should be stripped of leading and trailing magic
+    def valid_crc(self, message):
+        supplied_crc = message[-2] * 256 + message[-1]
+        calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
+        return supplied_crc == calculated_crc
+
     def _decode_response(self):
         return 'Decoding of this response has not been implemented yet.'
 

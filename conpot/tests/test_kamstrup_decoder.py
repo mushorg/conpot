@@ -23,10 +23,19 @@ class TestKamstrupDecoder(unittest.TestCase):
 
     # TODO: Rename functions when i figure out the actual meaning of the requests / responses
     def test_request_one(self):
-        request = "803f1001041e55a10d"
+        request = "803f1001041e7abb0d"
         decoder = Decoder()
         result = decoder.decode_in(bytearray.fromhex(request))
         self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1)')
+
+    def test_invalid_crc(self):
+        invalid_sequences = ['803f1002000155a10d', '803f1001000265cf0d']
+
+        for seq in invalid_sequences:
+            decoder = Decoder()
+            result = decoder.decode_in(bytearray.fromhex(seq))
+            self.assertEqual(result, 'Request discarded due to invalid CRC.',
+                             'Invalid CRC {0} tested valid'.format(seq))
 
     # def test_request_two(self):
     #     request = "803f1001000265c20d".encode('hex-codec')
