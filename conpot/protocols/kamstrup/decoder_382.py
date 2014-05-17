@@ -128,20 +128,20 @@ class Decoder(object):
         pin_code = self.in_data[3] * 256 + self.in_data[4]
         return 'Login command with pin_code: {0}'.format(pin_code)
 
-
     def decode_out(self, data):
         for d in data:
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                    logger.debug('Expected response magic but got got: {0}'.format(data[0].encode('hex-codec')))
+                    logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.out_parsing = True
                 if d is 0x0d:
+                    #TODO: CRC check
                     return self._decode_req()
                 else:
                     self.out_data.append(d)
-
+                    
     def _decode_response(self):
-        pass
+        return 'Decoding of this response has not been implemented yet.'
 
 
 

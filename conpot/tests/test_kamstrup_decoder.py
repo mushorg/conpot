@@ -16,7 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-from conpot.protocols.kamstrup.decoder import Decoder
+from conpot.protocols.kamstrup.decoder_382 import Decoder
 
 
 class TestKamstrupDecoder(unittest.TestCase):
