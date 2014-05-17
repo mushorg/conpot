@@ -61,7 +61,7 @@ class Proxy(object):
         data_file = None
         # to enable logging of raw socket data uncomment the following line
         # and execute the commands: 'mkdir data; chown nobody:nobody data'
-        # data_file = open(os.path.join('data', 'Session-{0}'.format(self.session.id)), 'w')
+        # data_file = open(os.path.join('data', 'Session-{0}'.format(self.session.id)), 'w', 0)
 
         proxy_socket = socket()
         proxy_socket.connect((self.proxy_host, self.proxy_port))
@@ -91,22 +91,22 @@ class Proxy(object):
         hex_data = data.encode('hex_codec')
         self.session.add_event({'raw_request': hex_data, 'raw_response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
+        if data_file:
+            self._dump_data(data_file, 'in', hex_data)
         if self.decoder:
             decoded = self.decoder.decode_in(data)
             self.session.add_event({'request': decoded, 'raw_response': ''})
-        if data_file:
-            self._dump_data(data_file, 'in', hex_data)
         sock.send(data)
 
     def handle_out_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
         self.session.add_event({'raw_request': '', 'raw_response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
+        if data_file:
+            self._dump_data(data_file, 'out', hex_data)
         if self.decoder:
             decoded = self.decoder.decode_out(data)
             self.session.add_event({'request': '', 'raw_response': decoded})
-        if data_file:
-            self._dump_data(data_file, 'out', hex_data)
         sock.send(data)
 
     def _dump_data(self, file_handle, direction, hex_data):
