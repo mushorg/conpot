@@ -77,7 +77,14 @@ class Proxy(object):
                 data = s.recv(1024)
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
-                    break
+                    if s is proxy_socket:
+                        logging.info('Proxied socket closed.')
+                        break
+                    elif s is sock:
+                        logging.info('Remote socket closed')
+                        break
+                    else:
+                        assert(False)
                 if s is proxy_socket:
                     self.handle_out_data(data, sock, data_file)
                 elif s is sock:
@@ -86,6 +93,8 @@ class Proxy(object):
                     assert False
 
         data_file.close()
+        proxy_socket.close()
+        sock.close()
 
     def handle_in_data(self, data, sock, data_file):
         hex_data = data.encode('hex_codec')
