@@ -33,11 +33,17 @@ class Proxy(object):
     def __init__(self, name, proxy_host, proxy_port, decoder=None):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
-        self.decoder = decoder
         self.name = name
         self.proxy_id = self.name.lower().replace(' ', '_')
         self.host = None
         self.port = None
+        if decoder:
+            namespace, _classname = decoder.rsplit('.', 1)
+            module = __import__(namespace, fromlist=[_classname])
+            _class = getattr(module, _classname)
+            self.decoder = _class()
+        else:
+            self.decoder = None
 
     def get_server(self, host, port):
         self.host = host
@@ -48,14 +54,14 @@ class Proxy(object):
         return server
 
     def handle(self, sock, address):
-        self.session = conpot_core.get_session(self.proxy_id, address[0], address[1])
+        session = conpot_core.get_session(self.proxy_id, address[0], address[1])
         logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
-                                                                             self.proxy_id, self.session.id))
+                                                                             self.proxy_id, session.id))
 
         data_file = None
         # to enable logging of raw socket data uncomment the following line
         # and execute the commands: 'mkdir data; chown nobody:nobody data'
-        # data_file = open(os.path.join('data', 'Session-{0}'.format(self.session.id)), 'w')
+        # data_file = open(os.path.join('data', 'Session-{0}'.format(session.id)), 'w', 0)
 
         proxy_socket = socket()
         proxy_socket.connect((self.proxy_host, self.proxy_port))
@@ -71,34 +77,45 @@ class Proxy(object):
                 data = s.recv(1024)
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
-                    break
+                    if s is proxy_socket:
+                        logging.info('Proxied socket closed.')
+                        break
+                    elif s is sock:
+                        logging.info('Remote socket closed')
+                        break
+                    else:
+                        assert(False)
                 if s is proxy_socket:
-                    self.handle_out_data(data, sock, data_file)
+                    self.handle_out_data(data, sock, data_file, session)
                 elif s is sock:
-                    self.handle_in_data(data, proxy_socket, data_file)
+                    self.handle_in_data(data, proxy_socket, data_file, session)
                 else:
                     assert False
 
         data_file.close()
+        proxy_socket.close()
+        sock.close()
 
-    def handle_in_data(self, data, sock, data_file):
+    def handle_in_data(self, data, sock, data_file, session):
         hex_data = data.encode('hex_codec')
-        self.session.add_event({'request': hex_data, 'response': ''})
+        session.add_event({'raw_request': hex_data, 'raw_response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
-        if self.decoder:
-            self.decoder.add_adversary_data(data)
         if data_file:
             self._dump_data(data_file, 'in', hex_data)
+        if self.decoder:
+            decoded = self.decoder.decode_in(data)
+            session.add_event({'request': decoded, 'raw_response': ''})
         sock.send(data)
 
-    def handle_out_data(self, data, sock, data_file):
+    def handle_out_data(self, data, sock, data_file, session):
         hex_data = data.encode('hex_codec')
-        self.session.add_event({'request': '', 'response': hex_data})
+        session.add_event({'raw_request': '', 'raw_response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
-        if self.decoder:
-            self.decoder.add_proxy_data(data)
         if data_file:
             self._dump_data(data_file, 'out', hex_data)
+        if self.decoder:
+            decoded = self.decoder.decode_out(data)
+            session.add_event({'request': '', 'raw_response': decoded})
         sock.send(data)
 
     def _dump_data(self, file_handle, direction, hex_data):
