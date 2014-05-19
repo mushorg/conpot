@@ -24,6 +24,7 @@ from gevent.server import StreamServer
 
 import conpot.core as conpot_core
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,7 +85,7 @@ class Proxy(object):
                         logging.info('Remote socket closed')
                         break
                     else:
-                        assert(False)
+                        assert False
                 if s is proxy_socket:
                     self.handle_out_data(data, sock, session)
                 elif s is sock:

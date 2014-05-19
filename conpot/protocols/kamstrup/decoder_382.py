@@ -16,13 +16,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+
 import crc16
+
 
 logger = logging.getLogger(__name__)
 
 
 class Decoder(object):
-
     REQUEST_MAGIC = 0x80
     RESPONSE_MAGIC = 0x40
     EOT_MAGIC = 0x0d
@@ -36,19 +37,19 @@ class Decoder(object):
     # this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
     # ----------------------------------------------------------------------------
     UNITS = {
-                0: '', 1: 'Wh', 2: 'kWh', 3: 'MWh', 4: 'GWh', 5: 'j', 6: 'kj', 7: 'Mj',
-                8: 'Gj', 9: 'Cal', 10: 'kCal', 11: 'Mcal', 12: 'Gcal', 13: 'varh',
-                14: 'kvarh', 15: 'Mvarh', 16: 'Gvarh', 17: 'VAh', 18: 'kVAh',
-                19: 'MVAh', 20: 'GVAh', 21: 'kW', 22: 'kW', 23: 'MW', 24: 'GW',
-                25: 'kvar', 26: 'kvar', 27: 'Mvar', 28: 'Gvar', 29: 'VA', 30: 'kVA',
-                31: 'MVA', 32: 'GVA', 33: 'V', 34: 'A', 35: 'kV',36: 'kA', 37: 'C',
-                38: 'K', 39: 'l', 40: 'm3', 41: 'l/h', 42: 'm3/h', 43: 'm3xC',
-                44: 'ton', 45: 'ton/h', 46: 'h', 47: 'hh:mm:ss', 48: 'yy:mm:dd',
-                49: 'yyyy:mm:dd', 50: 'mm:dd', 51: '', 52: 'bar', 53: 'RTC',
-                54: 'ASCII', 55: 'm3 x 10', 56: 'ton x 10', 57: 'GJ x 10',
-                58: 'minutes', 59: 'Bitfield', 60: 's', 61: 'ms', 62: 'days',
-                63: 'RTC-Q', 64: 'Datetime'
-            }
+        0: '', 1: 'Wh', 2: 'kWh', 3: 'MWh', 4: 'GWh', 5: 'j', 6: 'kj', 7: 'Mj',
+        8: 'Gj', 9: 'Cal', 10: 'kCal', 11: 'Mcal', 12: 'Gcal', 13: 'varh',
+        14: 'kvarh', 15: 'Mvarh', 16: 'Gvarh', 17: 'VAh', 18: 'kVAh',
+        19: 'MVAh', 20: 'GVAh', 21: 'kW', 22: 'kW', 23: 'MW', 24: 'GW',
+        25: 'kvar', 26: 'kvar', 27: 'Mvar', 28: 'Gvar', 29: 'VA', 30: 'kVA',
+        31: 'MVA', 32: 'GVA', 33: 'V', 34: 'A', 35: 'kV', 36: 'kA', 37: 'C',
+        38: 'K', 39: 'l', 40: 'm3', 41: 'l/h', 42: 'm3/h', 43: 'm3xC',
+        44: 'ton', 45: 'ton/h', 46: 'h', 47: 'hh:mm:ss', 48: 'yy:mm:dd',
+        49: 'yyyy:mm:dd', 50: 'mm:dd', 51: '', 52: 'bar', 53: 'RTC',
+        54: 'ASCII', 55: 'm3 x 10', 56: 'ton x 10', 57: 'GJ x 10',
+        58: 'minutes', 59: 'Bitfield', 60: 's', 61: 'ms', 62: 'days',
+        63: 'RTC-Q', 64: 'Datetime'
+    }
 
     ESCAPES = [0x06, 0x0d, 0x1b, 0x40, 0x80]
 
@@ -73,7 +74,6 @@ class Decoder(object):
         0x043a: "Power p3",
     }
 
-
     def __init__(self):
         self.in_data = []
         self.in_parsing = False
@@ -85,7 +85,6 @@ class Decoder(object):
 
     def decode_in(self, data):
         for d in data:
-            print d
             if not self.in_parsing and d != Decoder.REQUEST_MAGIC:
                 logger.debug('No kamstrup request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
@@ -100,13 +99,13 @@ class Decoder(object):
                     if self.in_data[2] in self.command_map:
                         return self.command_map[self.in_data[2]]()
                     else:
-                        return 'Expected request magic but got: {0}, ignoring request.'\
-                                .format(self.in_data[2].encode('hex-codec'))
+                        return 'Expected request magic but got: {0}, ignoring request.' \
+                            .format(self.in_data[2].encode('hex-codec'))
                 else:
                     self.in_data.append(d)
 
     def _decode_cmd_get_register(self):
-        assert(self.in_data[2] == 0x10)
+        assert (self.in_data[2] == 0x10)
         unknown_byte = self.in_data[1]
         cmd = self.in_data[2]
         register_count = self.in_data[3]
@@ -124,11 +123,11 @@ class Decoder(object):
 
     # meter type
     def _decode_cmd_get_type(self):
-        assert(self.in_data[2] == 0x01)
+        assert (self.in_data[2] == 0x01)
         return 'Request for GetType'
 
     def _decode_cmd_login(self):
-        assert(self.in_data[2] == 0x92)
+        assert (self.in_data[2] == 0x92)
         unknown_byte = self.in_data[1]
         pin_code = self.in_data[3] * 256 + self.in_data[4]
         return 'Login command with pin_code: {0}'.format(pin_code)
@@ -136,7 +135,7 @@ class Decoder(object):
     def decode_out(self, data):
         for d in data:
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                    logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
+                logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.out_parsing = True
                 if d is 0x0d:

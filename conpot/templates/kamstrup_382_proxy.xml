@@ -6,10 +6,10 @@
         </databus>
     </core>
     <protocols>
-        <snmp enabled="False" />
-        <modbus enabled="False" />
-        <s7comm enabled="False"  />
-        <http enabled="False" />
+        <snmp enabled="False"/>
+        <modbus enabled="False"/>
+        <s7comm enabled="False"/>
+        <http enabled="False"/>
     </protocols>
     <proxies>
         <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
