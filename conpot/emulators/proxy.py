@@ -17,6 +17,7 @@
 
 import logging
 import select
+import socket as _socket
 
 from gevent.socket import socket
 from gevent.server import StreamServer
@@ -47,7 +48,8 @@ class Proxy(object):
         self.port = port
         connection = (host, port)
         server = StreamServer(connection, self.handle)
-        logger.info('{0} proxy server started on: {1}, using {2} decoder.'.format(self.name, connection, self.decoder))
+        logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {3} decoder.'
+                    .format(self.name, connection, self.proxy_host, self.proxy_port, self.decoder))
         return server
 
     def handle(self, sock, address):
@@ -56,7 +58,13 @@ class Proxy(object):
                                                                              self.proxy_id, session.id))
 
         proxy_socket = socket()
-        proxy_socket.connect((self.proxy_host, self.proxy_port))
+        try:
+            proxy_socket.connect((self.proxy_host, self.proxy_port))
+        except _socket.error as ex:
+            logger.error('Error while connecting to proxied service at ({0}, {1}): {2}'
+                         .format(self.proxy_host, self.proxy_port, ex))
+            self._close([proxy_socket, sock])
+            return
 
         while True:
             sockets_read, _, sockets_err = select.select([proxy_socket, sock], [], [proxy_socket, sock], 10)
@@ -108,3 +116,7 @@ class Proxy(object):
     def _close(self, sockets):
         for s in sockets:
             s.close()
+
+    def stop(self):
+        # TODO: Keep active sockets in list and close them on stop()
+        return
