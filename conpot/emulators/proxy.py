@@ -61,7 +61,6 @@ class Proxy(object):
         session = conpot_core.get_session(self.proxy_id, address[0], address[1])
         logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
                                                                              self.proxy_id, session.id))
-
         proxy_socket = socket()
 
         if self.keyfile and self.certfile:
@@ -75,8 +74,9 @@ class Proxy(object):
             self._close([proxy_socket, sock])
             return
 
-        while True:
-            sockets_read, _, sockets_err = select.select([proxy_socket, sock], [], [proxy_socket, sock], 10)
+        sockets = [proxy_socket, sock]
+        while len(sockets) == 2:
+            sockets_read, _, sockets_err = select.select(sockets, [], sockets, 10)
 
             if len(sockets_err) > 0:
                 self._close([proxy_socket, sock])
@@ -87,10 +87,12 @@ class Proxy(object):
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
-                        logging.info('Proxied socket closed.')
+                        logging.info('Closing proxy connection because the proxied socket closed.')
+                        sockets = []
                         break
                     elif s is sock:
-                        logging.info('Remote socket closed')
+                        logging.info('Closing proxy connection because the remote socket closed')
+                        sockets = []
                         break
                     else:
                         assert False
