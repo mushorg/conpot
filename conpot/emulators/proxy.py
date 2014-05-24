@@ -20,6 +20,7 @@ import select
 import socket as _socket
 
 from gevent.socket import socket
+from gevent.ssl import wrap_socket
 from gevent.server import StreamServer
 
 import conpot.core as conpot_core
@@ -29,13 +30,15 @@ logger = logging.getLogger(__name__)
 
 
 class Proxy(object):
-    def __init__(self, name, proxy_host, proxy_port, decoder=None):
+    def __init__(self, name, proxy_host, proxy_port, decoder=None, keyfile=None, certfile=None):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
         self.name = name
         self.proxy_id = self.name.lower().replace(' ', '_')
         self.host = None
         self.port = None
+        self.keyfile = keyfile
+        self.certfile = certfile
         if decoder:
             namespace, _classname = decoder.rsplit('.', 1)
             module = __import__(namespace, fromlist=[_classname])
@@ -47,9 +50,10 @@ class Proxy(object):
     def get_server(self, host, port):
         self.host = host
         self.port = port
+
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
-        logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {3} decoder.'
+        server = StreamServer(connection, self.handle, keyfile=self.keyfile, certfile=self.certfile)
+        logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {4} decoder.'
                     .format(self.name, connection, self.proxy_host, self.proxy_port, self.decoder))
         return server
 
@@ -59,6 +63,10 @@ class Proxy(object):
                                                                              self.proxy_id, session.id))
 
         proxy_socket = socket()
+
+        if self.keyfile and self.certfile:
+            proxy_socket = wrap_socket(proxy_socket, self.keyfile, self.certfile)
+
         try:
             proxy_socket.connect((self.proxy_host, self.proxy_port))
         except _socket.error as ex:

@@ -197,6 +197,15 @@ def main():
     for p in proxies:
         name = p.attrib['name']
         host = p.attrib['host']
+        keyfile = None
+        certfile = None
+        if 'keyfile' in p.attrib and 'certfile' in p.attrib:
+            keyfile = p.attrib['keyfile']
+            certfile = p.attrib['certfile']
+            # if path is absolute we assert that the cert and key is located in same location as template
+            if not os.path.isabs(keyfile):
+                keyfile = os.path.join(os.path.dirname(args.template), keyfile)
+                certfile = os.path.join(os.path.dirname(args.template), certfile)
         port = ast.literal_eval(p.attrib['port'])
         proxy_host = p.xpath('./proxy_host/text()')[0]
         proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
@@ -205,7 +214,7 @@ def main():
             decoder = decoder[0]
         else:
             decoder = None
-        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder)
+        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
         proxy_server = proxy_instance.get_server(host, port)
         servers.append(proxy_instance)
         greenlets.append(gevent.spawn(proxy_server.start))
