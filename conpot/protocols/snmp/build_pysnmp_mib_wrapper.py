@@ -15,7 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import subprocess
+from gevent import subprocess
 import logging
 import os
 import re
@@ -39,8 +39,6 @@ def mib2pysnmp(mib_file):
     :return: A string representation of the compiled MIB file (string).
     """
     logger.debug('Compiling mib file: {0}'.format(mib_file))
-    # force subprocess to use select (poll does not work with gevent)
-    subprocess._has_poll = False
     try:
         proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
