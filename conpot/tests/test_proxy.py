@@ -19,11 +19,15 @@ import unittest
 
 import gevent
 import gevent.monkey
-gevent.monkey.patch_all()
+
 from gevent.server import StreamServer
 from gevent.socket import socket
 
 from conpot.emulators.proxy import Proxy
+
+gevent.monkey.patch_all()
+
+test_input = 'Hiya, this is a test'
 
 
 class TestProxy(unittest.TestCase):
@@ -40,16 +44,15 @@ class TestProxy(unittest.TestCase):
         s = socket()
         s.connect(('127.0.0.1', server.server_port))
         test_input = 'Hiya, this is a test'
-        for c in test_input:
-            s.send(c)
-            received = s.recv(1)
-            self.assertEqual(c, received)
+        s.sendall(test_input)
+        received = s.recv(len(test_input))
+        self.assertEqual(test_input, received)
+        mock_service.stop(1)
 
     def test_ssl_proxy(self):
         # TODO
         pass
 
     def echo_server(self, sock, address):
-        while True:
-            r = sock.recv(1)
-            sock.send(r)
+        r = sock.recv(len(test_input))
+        sock.send(r)
