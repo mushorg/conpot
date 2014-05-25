@@ -19,6 +19,7 @@ import logging
 import select
 import socket as _socket
 
+import gevent
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
 from gevent.server import StreamServer
@@ -49,10 +50,12 @@ class Proxy(object):
 
     def get_server(self, host, port):
         self.host = host
-        self.port = port
-
         connection = (host, port)
-        server = StreamServer(connection, self.handle, keyfile=self.keyfile, certfile=self.certfile)
+        if self.keyfile and self.certfile:
+            server = StreamServer(connection, self.handle, keyfile=self.keyfile, certfile=self.certfile)
+        else:
+            server = StreamServer(connection, self.handle)
+        self.port = server.server_port
         logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {4} decoder.'
                     .format(self.name, connection, self.proxy_host, self.proxy_port, self.decoder))
         return server
@@ -76,6 +79,7 @@ class Proxy(object):
 
         sockets = [proxy_socket, sock]
         while len(sockets) == 2:
+            gevent.sleep()
             sockets_read, _, sockets_err = select.select(sockets, [], sockets, 10)
 
             if len(sockets_err) > 0:
