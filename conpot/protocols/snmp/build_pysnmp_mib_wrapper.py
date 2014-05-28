@@ -60,10 +60,10 @@ def mib2pysnmp(mib_file):
         return stdout
 
 
-def _get_files(dir, recursive):
-    for dir_path, dirs, files in os.walk(dir, followlinks=True):
-        for file in files:
-            yield os.path.join(dir_path, file)
+def _get_files(raw_mibs_dir, recursive):
+    for dir_path, dirs, files in os.walk(raw_mibs_dir, followlinks=True):
+        for file_name in files:
+            yield os.path.join(dir_path, file_name)
         if not recursive:
             break
 
