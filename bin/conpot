@@ -144,6 +144,7 @@ def main():
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
     greenlets = list()
+    servers = list()
 
     session_manager = conpot_core.get_sessionManager()
     session_manager.initialize_databus(args.template)
@@ -157,41 +158,40 @@ def main():
     log_worker = LogWorker(config, dom, session_manager, public_ip)
     greenlets.append(gevent.spawn(log_worker.start))
 
-    modbus_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0])
-    snmp_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0])
-    s7comm_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0])
-    http_enabled = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0])
+    if dom.xpath('//conpot_template/protocols/modbus'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0]):
+            modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
+            modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
+            modbus_server = ModbusServer(args.template)
+            modbus_server = modbus_server.get_server(modbus_host, modbus_port)
+            servers.append(modbus_server)
+            greenlets.append(gevent.spawn(modbus_server.start))
 
-    servers = list()
-    if snmp_enabled:
-        snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
-        snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
-        snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
-        servers.append(snmp_server)
-        greenlets.append(gevent.spawn(snmp_server.start))
+    if dom.xpath('//conpot_template/protocols/snmp'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]):
+            snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
+            snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
+            snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
+            servers.append(snmp_server)
+            greenlets.append(gevent.spawn(snmp_server.start))
 
-    if modbus_enabled:
-        modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
-        modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
-        modbus_server = ModbusServer(args.template)
-        modbus_server = modbus_server.get_server(modbus_host, modbus_port)
-        servers.append(modbus_server)
-        greenlets.append(gevent.spawn(modbus_server.start))
+    if dom.xpath('//conpot_template/protocols/s7comm'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]):
+            s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
+            s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
+            s7_instance = S7Server(args.template)
+            s7_server = s7_instance.get_server(s7_host, s7_port)
+            servers.append(s7_server)
+            greenlets.append(gevent.spawn(s7_server.start))
 
-    if s7comm_enabled:
-        s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
-        s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
-        s7_instance = S7Server(args.template)
-        s7_server = s7_instance.get_server(s7_host, s7_port)
-        servers.append(s7_server)
-        greenlets.append(gevent.spawn(s7_server.start))
 
-    if http_enabled:
-        http_host = dom.xpath('//conpot_template/protocols/http/@host')[0]
-        http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
-        http_server = HTTPServer(http_host, http_port, args.template, args.www)
-        servers.append(http_server)
-        greenlets.append(gevent.spawn(http_server.start))
+    if dom.xpath('//conpot_template/protocols/http'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0]):
+            http_host = dom.xpath('//conpot_template/protocols/http/@host')[0]
+            http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
+            http_server = HTTPServer(http_host, http_port, args.template, args.www)
+            servers.append(http_server)
+            greenlets.append(gevent.spawn(http_server.start))
 
     proxies = dom.xpath('//conpot_template/proxies/*')
     for p in proxies:

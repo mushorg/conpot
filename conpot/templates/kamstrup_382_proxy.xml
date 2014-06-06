@@ -1,16 +1,4 @@
 <conpot_template name="Kamstrup 382 smart meter proxy" description="Proxy to kamstrup 382 series smart meter">
-    <core>
-        <databus>
-            <key_value_mappings>
-            </key_value_mappings>
-        </databus>
-    </core>
-    <protocols>
-        <snmp enabled="False"/>
-        <modbus enabled="False"/>
-        <s7comm enabled="False"/>
-        <http enabled="False"/>
-    </protocols>
     <proxies>
         <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
             <proxy_host>192.168.0.10</proxy_host>

@@ -1,16 +1,4 @@
 <conpot_template name="SSL Proxy" description="Example that shows how to proxy to a ssl enabled service">
-    <core>
-        <databus>
-            <key_value_mappings>
-            </key_value_mappings>
-        </databus>
-    </core>
-    <protocols>
-        <snmp enabled="False"/>
-        <modbus enabled="False"/>
-        <s7comm enabled="False"/>
-        <http enabled="False"/>
-    </protocols>
     <proxies>
         <proxy name="SSL proxy" host="0.0.0.0" port="1234" keyfile="example_ssl.key" certfile="example_ssl.crt">
             <proxy_host>192.168.1.123</proxy_host>
