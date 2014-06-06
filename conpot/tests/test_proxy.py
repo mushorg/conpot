@@ -15,6 +15,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import unittest
 import os
 
@@ -25,8 +28,6 @@ from gevent.ssl import wrap_socket
 
 import conpot
 from conpot.emulators.proxy import Proxy
-
-gevent.monkey.patch_all()
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 

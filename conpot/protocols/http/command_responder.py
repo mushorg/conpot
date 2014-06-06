@@ -23,8 +23,6 @@ from datetime import datetime
 
 from HTMLParser import HTMLParser
 from SocketServer import ThreadingMixIn
-import gevent.monkey
-gevent.monkey.patch_all()
 
 import BaseHTTPServer
 import httplib
@@ -32,6 +30,7 @@ import os
 from lxml import etree
 
 import conpot.core as conpot_core
+import gevent
 
 
 logger = logging.getLogger()

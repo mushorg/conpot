@@ -18,9 +18,7 @@
 import time
 
 from gevent.server import StreamServer
-import gevent.monkey
 
-gevent.monkey.patch_all()
 import socket
 from struct import unpack
 from conpot.protocols.s7comm.tpkt import TPKT

@@ -28,7 +28,7 @@ from conpot.core.loggers.stix_transform import StixTransformer
 from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 
 
-class Test_Loggers(unittest.TestCase):
+class TestLoggers(unittest.TestCase):
 
     def test_stix_transform(self):
         """

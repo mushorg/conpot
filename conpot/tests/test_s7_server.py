@@ -15,15 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import unittest
 
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
 
 import conpot.core as conpot_core
-
-from gevent import monkey
-monkey.patch_all()
 
 
 class TestBase(unittest.TestCase):
