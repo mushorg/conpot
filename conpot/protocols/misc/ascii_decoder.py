@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class AsciiDecoder(object):
 
     def decode_in(self, data):
-        return data.decode('ascii')
+        return data.decode('utf-8', 'replace').encode('utf-8')
 
     def decode_out(self, data):
-        return data.decode('ascii')
+        return data.decode('utf-8', 'replace').encode('utf-8')
