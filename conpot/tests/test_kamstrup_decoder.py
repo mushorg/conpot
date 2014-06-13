@@ -26,7 +26,7 @@ class TestKamstrupDecoder(unittest.TestCase):
         request = "803f1001041e7abb0d"
         decoder = Decoder()
         result = decoder.decode_in(bytearray.fromhex(request))
-        self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1)')
+        self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1) [0x3f]')
 
     def test_invalid_crc(self):
         invalid_sequences = ['803f1002000155a10d', '803f1001000265cf0d']
