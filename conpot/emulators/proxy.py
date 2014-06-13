@@ -115,7 +115,9 @@ class Proxy(object):
         session.add_event({'raw_request': hex_data, 'raw_response': ''})
         logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
+            # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_in(data)
+            logger.debug('Decoded request: {0}'.format(decoded))
             session.add_event({'request': decoded, 'raw_response': ''})
         sock.send(data)
 
@@ -124,7 +126,9 @@ class Proxy(object):
         session.add_event({'raw_request': '', 'raw_response': hex_data})
         logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
         if self.decoder:
+            # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_out(data)
+            logger.debug('Decoded response: {0}'.format(decoded))
             session.add_event({'request': '', 'raw_response': decoded})
         sock.send(data)
 
