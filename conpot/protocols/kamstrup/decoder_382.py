@@ -85,6 +85,7 @@ class Decoder(object):
 
     def decode_in(self, data):
         for d in data:
+            d = ord(d)
             if not self.in_parsing and d != Decoder.REQUEST_MAGIC:
                 logger.debug('No kamstrup request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
@@ -92,6 +93,7 @@ class Decoder(object):
                 if d is 0x0d:
                     if not self.valid_crc(self.in_data[1:]):
                         self.in_parsing = False
+                        self.in_data = []
                         # TODO: Log discarded bytes?
                         return 'Request discarded due to invalid CRC.'
                     # now we expect (0x80, 0x3f, 0x10) =>
@@ -133,6 +135,7 @@ class Decoder(object):
 
     def decode_out(self, data):
         for d in data:
+            d = ord(d)
             if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
                 logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
             else:

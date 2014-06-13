@@ -23,17 +23,19 @@ from conpot.protocols.kamstrup.decoder_382 import Decoder
 class TestKamstrupDecoder(unittest.TestCase):
     # TODO: Rename functions when i figure out the actual meaning of the requests / responses
     def test_request_one(self):
-        request = "803f1001041e7abb0d"
+        request = [chr(0x80), chr(0x3f), chr(0x10), chr(0x01), chr(0x04), chr(0x1e), chr(0x7a), chr(0xbb), chr(0x0d)]
         decoder = Decoder()
-        result = decoder.decode_in(bytearray.fromhex(request))
+        result = decoder.decode_in(request)
         self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1) [0x3f]')
 
     def test_invalid_crc(self):
-        invalid_sequences = ['803f1002000155a10d', '803f1001000265cf0d']
+        invalid_sequences = [
+            [chr(0x80), chr(0x3f), chr(0x10), chr(0x02), chr(0x00), chr(0x01), chr(0x55), chr(0xa1), chr(0x0d)],
+            [chr(0x80), chr(0x3f), chr(0x10), chr(0x01), chr(0x00), chr(0x02), chr(0x65), chr(0xcf), chr(0x0d)]]
 
         for seq in invalid_sequences:
             decoder = Decoder()
-            result = decoder.decode_in(bytearray.fromhex(seq))
+            result = decoder.decode_in(seq)
             self.assertEqual(result, 'Request discarded due to invalid CRC.',
                              'Invalid CRC {0} tested valid'.format(seq))
 
