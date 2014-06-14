@@ -79,11 +79,14 @@ class Decoder(object):
         self.in_parsing = False
         self.out_data = []
         self.out_parsing = False
-        self.command_map = {0x01: self._decode_cmd_get_type,
-                            0x10: self._decode_cmd_get_register,
-                            0x92: self._decode_cmd_login}
+        self.request_command_map = {0x01: self._decode_cmd_get_type,
+                                    0x10: self._decode_cmd_get_register,
+                                    0x92: self._decode_cmd_login}
+
+        self.response_map = { }
 
     def decode_in(self, data):
+        # TODO: handle escape (0x1b)
         for d in data:
             d = ord(d)
             if not self.in_parsing and d != Decoder.REQUEST_MAGIC:
@@ -99,13 +102,37 @@ class Decoder(object):
                     # now we expect (0x80, 0x3f, 0x10) =>
                     # (request magic, communication address, command byte)
                     comm_address = self.in_data[1]
-                    if self.in_data[2] in self.command_map:
-                        return self.command_map[self.in_data[2]]() + ' [{0}]'.format(hex(comm_address))
+                    if self.in_data[2] in self.request_command_map:
+                        decoded = self.request_command_map[self.in_data[2]]() + ' [{0}]'.format(hex(comm_address))
+                        self.in_data = []
+                        return decoded
                     else:
                         return 'Expected request magic but got: {0}, ignoring request.' \
                             .format(self.in_data[2].encode('hex-codec'))
                 else:
                     self.in_data.append(d)
+
+    def decode_out(self, data):
+        # TODO: handle escape (0x1b)
+        for d in data:
+            d = ord(d)
+            if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
+                logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
+            else:
+                self.out_parsing = True
+                if d is 0x0d:
+                    if not self.valid_crc(self.out_data[1:]):
+                        self.out_parsing = False
+                        self.out_data = []
+                        # TODO: Log discarded bytes?
+                        return 'Response discarded due to invalid CRC.'
+                    comm_address = self.out_data[1]
+                    if self.out_data[2] in self.response_map:
+                        decoded = self.response_map[self.out_data[2]]() + ' [{0}]'.format(hex(comm_address))
+                        self.out_data = []
+                        return decoded
+                else:
+                    self.out_data.append(d)
 
     def _decode_cmd_get_register(self):
         assert (self.in_data[2] == 0x10)
@@ -120,7 +147,6 @@ class Decoder(object):
                 message += 'Unknown ({1})'.format(register)
             if count + 1 < register_count:
                 message += ', '
-        self.in_data = []
         return message
 
     # meter type
@@ -132,22 +158,6 @@ class Decoder(object):
         assert (self.in_data[2] == 0x92)
         pin_code = self.in_data[3] * 256 + self.in_data[4]
         return 'Login command with pin_code: {0}'.format(pin_code)
-
-    def decode_out(self, data):
-        for d in data:
-            d = ord(d)
-            if not self.out_parsing and d != Decoder.RESPONSE_MAGIC:
-                logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
-            else:
-                self.out_parsing = True
-                if d is 0x0d:
-                    if not self.valid_crc(self.out_data[1:]):
-                        self.out_parsing = False
-                        # TODO: Log discarded bytes?
-                        return 'Response discarded due to invalid CRC.'
-                    return self._decode_req()
-                else:
-                    self.out_data.append(d)
 
     # supplied message should be stripped of leading and trailing magic
     def valid_crc(self, message):
