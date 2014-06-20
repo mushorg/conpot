@@ -17,14 +17,14 @@
 
 import unittest
 
-from conpot.protocols.kamstrup.decoder_382 import Decoder
+from conpot.protocols.kamstrup.decoder_382 import Decoder382
 
 
 class TestKamstrupDecoder(unittest.TestCase):
     # TODO: Rename functions when i figure out the actual meaning of the requests / responses
     def test_request_one(self):
         request = [chr(0x80), chr(0x3f), chr(0x10), chr(0x01), chr(0x04), chr(0x1e), chr(0x7a), chr(0xbb), chr(0x0d)]
-        decoder = Decoder()
+        decoder = Decoder382()
         result = decoder.decode_in(request)
         self.assertEqual(result, 'Request for 1 register(s): 1054 (Voltage p1) [0x3f]')
 
@@ -34,7 +34,7 @@ class TestKamstrupDecoder(unittest.TestCase):
             [chr(0x80), chr(0x3f), chr(0x10), chr(0x01), chr(0x00), chr(0x02), chr(0x65), chr(0xcf), chr(0x0d)]]
 
         for seq in invalid_sequences:
-            decoder = Decoder()
+            decoder = Decoder382()
             result = decoder.decode_in(seq)
             self.assertEqual(result, 'Request discarded due to invalid CRC.',
                              'Invalid CRC {0} tested valid'.format(seq))
