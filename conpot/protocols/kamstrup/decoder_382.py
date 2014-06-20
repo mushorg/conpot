@@ -209,7 +209,7 @@ class Decoder(object):
             if register in Decoder.KAMSTRUP_382_REGISTERS:
                 message += '{0} ({1})'.format(register, Decoder.KAMSTRUP_382_REGISTERS[register])
             else:
-                message += 'Unknown ({1})'.format(register)
+                message += 'Unknown ({0})'.format(register)
             if count + 1 < register_count:
                 message += ', '
         return message
