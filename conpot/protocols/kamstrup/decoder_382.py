@@ -28,7 +28,88 @@ class Decoder(object):
     RESPONSE_MAGIC = 0x40
     EOT_MAGIC = 0x0d
 
-    # Following constants has been taken from pykamstrup, thanks to PHK/Erik Jensen!
+    UNITS = {
+        0: 'None',
+        1: 'Wh',
+        2: 'kWh',
+        3: 'MWh',
+        4: 'GWh',
+        5: 'j',
+        6: 'kj',
+        7: 'Mj',
+        8: 'Gj',
+        9: 'Cal',
+        10: 'kCal',
+        11: 'MCal',
+        12: 'GCal',
+        13: 'varh',
+        14: 'kvarh',
+        15: 'Mvarh',
+        16: 'Gvarh',
+        17: 'VAh',
+        18: 'kVAh',
+        19: 'MVAh',
+        20: 'GVAh',
+        21: 'W',
+        22: 'kW',
+        23: 'MW',
+        24: 'GW',
+        25: 'var',
+        26: 'kvar',
+        27: 'MVar',
+        28: 'Gvar',
+        29: 'VA',
+        30: 'kVA',
+        31: 'MVA',
+        32: 'GVA',
+        33: 'V',
+        34: 'A',
+        35: 'kV',
+        35: 'kA',
+        37: 'C',
+        38: 'K',
+        39: 'I',
+        40: 'm3',
+        41: 'I_h',
+        42: 'm3_h',
+        43: 'm3xC',
+        44: 'ton',
+        45: 'ton_h',
+        46: 'h',
+        47: 'clock', # hh:mm:ss
+        48: 'date1', # yy:mm:dd
+        49: 'date2', # yyyy:mm:dd
+        50: 'date3', # mm:dd
+        51: 'number',
+        52: 'bar',
+        53: 'RTC',
+        54: 'ASCII',
+        55: 'm3x10',
+        56: 'tonx10',
+        57: 'GJx10',
+        58: 'minutes',
+        59: 'Bitfield',
+        60: 's',
+        61: 'ms',
+        62: 'days',
+        63: 'RTC_Q',
+        64: 'Datetime',
+        65: 'imp_L',
+        66: 'L_imp',
+        67: 'Hz',
+        68: 'Degree',
+        69: 'Percent',
+        70: 'USgal',
+        71: 'USgal_min',
+        72: 'KamDateTime',
+        73: 'IPv4Address',
+        74: 'IPv6Address'
+    }
+
+    ESCAPES = [0x06, 0x0d, 0x1b, 0x40, 0x80]
+
+
+    # Following register constants has been taken from pykamstrup, thanks to PHK/Erik Jensen!
     # I owe beer...
     # ----------------------------------------------------------------------------
     # "THE BEER-WARE LICENSE" (Revision 42):
@@ -36,22 +117,6 @@ class Decoder(object):
     # can do whatever you want with this stuff. If we meet some day, and you think
     # this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
     # ----------------------------------------------------------------------------
-    UNITS = {
-        0: '', 1: 'Wh', 2: 'kWh', 3: 'MWh', 4: 'GWh', 5: 'j', 6: 'kj', 7: 'Mj',
-        8: 'Gj', 9: 'Cal', 10: 'kCal', 11: 'Mcal', 12: 'Gcal', 13: 'varh',
-        14: 'kvarh', 15: 'Mvarh', 16: 'Gvarh', 17: 'VAh', 18: 'kVAh',
-        19: 'MVAh', 20: 'GVAh', 21: 'kW', 22: 'kW', 23: 'MW', 24: 'GW',
-        25: 'kvar', 26: 'kvar', 27: 'Mvar', 28: 'Gvar', 29: 'VA', 30: 'kVA',
-        31: 'MVA', 32: 'GVA', 33: 'V', 34: 'A', 35: 'kV', 36: 'kA', 37: 'C',
-        38: 'K', 39: 'l', 40: 'm3', 41: 'l/h', 42: 'm3/h', 43: 'm3xC',
-        44: 'ton', 45: 'ton/h', 46: 'h', 47: 'hh:mm:ss', 48: 'yy:mm:dd',
-        49: 'yyyy:mm:dd', 50: 'mm:dd', 51: '', 52: 'bar', 53: 'RTC',
-        54: 'ASCII', 55: 'm3 x 10', 56: 'ton x 10', 57: 'GJ x 10',
-        58: 'minutes', 59: 'Bitfield', 60: 's', 61: 'ms', 62: 'days',
-        63: 'RTC-Q', 64: 'Datetime'
-    }
-
-    ESCAPES = [0x06, 0x0d, 0x1b, 0x40, 0x80]
 
     KAMSTRUP_382_REGISTERS = {
 
@@ -83,7 +148,7 @@ class Decoder(object):
                                     0x10: self._decode_cmd_get_register,
                                     0x92: self._decode_cmd_login}
 
-        self.response_map = { }
+        self.response_map = {}
 
     def decode_in(self, data):
         # TODO: handle escape (0x1b)
