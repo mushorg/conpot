@@ -36,23 +36,28 @@ class Decoder382(object):
 
     REGISTERS = {
 
-        0x0001: "Energy in",
-        0x0002: "Energy out",
+        0x01: 'Energy in',
+        0x02: 'Energy out',
 
-        0x000d: "Energy in hi-res",
-        0x000e: "Energy out hi-res",
+        0x0d: 'Energy in hi-res',
+        0x0e: 'Energy out hi-res',
 
-        0x041e: "Voltage p1",
-        0x041f: "Voltage p2",
-        0x0420: "Voltage p3",
+        0x33:   'Meter number',
+        0x417:  'Time zone',
+        0x4f7:  'KMP address',
+        0x4f4:  'M-bus address',
 
-        0x0434: "Current p1",
-        0x0435: "Current p2",
-        0x0436: "Current p3",
+        0x041e: 'Voltage p1',
+        0x041f: 'Voltage p2',
+        0x0420: 'Voltage p3',
 
-        0x0438: "Power p1",
-        0x0439: "Power p2",
-        0x043a: "Power p3",
+        0x0434: 'Current p1',
+        0x0435: 'Current p2',
+        0x0436: 'Current p3',
+
+        0x0438: 'Power p1',
+        0x0439: 'Power p2',
+        0x043a: 'Power p3',
     }
 
     def __init__(self):
