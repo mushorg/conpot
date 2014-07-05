@@ -89,12 +89,12 @@ class Decoder382(object):
                     # (request magic, communication address, command byte)
                     comm_address = self.in_data[1]
                     if self.in_data[2] in self.request_command_map:
-                        decoded = self.request_command_map[self.in_data[2]]() + ' [{0}]'.format(hex(comm_address))
-                        self.in_data = []
-                        return decoded
+                        result = self.request_command_map[self.in_data[2]]() + ' [{0}]'.format(hex(comm_address))
                     else:
-                        return 'Expected request magic but got: {0}, ignoring request.' \
-                            .format(self.in_data[2].encode('hex-codec'))
+                        result = 'Unknown request command: {0}'.format(self.in_data[2])
+                    self.in_data = []
+                    return result
+
                 else:
                     self.in_data.append(d)
 
@@ -114,9 +114,12 @@ class Decoder382(object):
                         return 'Response discarded due to invalid CRC.'
                     comm_address = self.out_data[1]
                     if self.out_data[2] in self.response_map:
-                        decoded = self.response_map[self.out_data[2]]() + ' [{0}]'.format(hex(comm_address))
-                        self.out_data = []
-                        return decoded
+                        result = self.response_map[self.out_data[2]]() + ' [{0}]'.format(hex(comm_address))
+                    else:
+                        result = 'Unknown response command: {0}'.format(self.out_data[2])
+
+                    self.out_data = []
+                    return result
                 else:
                     self.out_data.append(d)
 
