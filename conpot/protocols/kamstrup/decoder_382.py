@@ -63,8 +63,10 @@ class Decoder382(object):
     def __init__(self):
         self.in_data = []
         self.in_parsing = False
+        self.in_data_escaped = False
         self.out_data = []
         self.out_parsing = False
+        self.out_data_escaped = False
         self.request_command_map = {0x01: self._decode_cmd_get_type,
                                     0x10: self._decode_cmd_get_register,
                                     0x92: self._decode_cmd_login}
@@ -79,7 +81,24 @@ class Decoder382(object):
                 logger.debug('No kamstrup request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.in_parsing = True
-                if d is 0x0d:
+
+                escape_escape_byte = False
+                if self.in_data_escaped:
+                    d ^= 0xff
+                    if d is kamstrup_constants.EOT_MAGIC:
+                        escape_escape_byte = True
+                    self.in_data_escaped = False
+                elif d is kamstrup_constants.ESCAPE:
+                        self.in_data_escaped = True
+                        continue
+
+                if d is kamstrup_constants.ESCAPE:
+                    if not self.in_data_escaped:
+                        self.in_data_escaped = True
+                        continue
+                self.in_data_escaped = False
+
+                if d is kamstrup_constants.EOT_MAGIC and not escape_escape_byte:
                     if not self.valid_crc(self.in_data[1:]):
                         self.in_parsing = False
                         self.in_data = []
@@ -106,7 +125,20 @@ class Decoder382(object):
                 logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.out_parsing = True
-                if d is 0x0d:
+
+                escape_escape_byte = False
+                if self.out_data_escaped:
+                    d ^= 0xff
+                    if d is kamstrup_constants.EOT_MAGIC:
+                        escape_escape_byte = True
+                    self.out_data_escaped = False
+                elif d is kamstrup_constants.ESCAPE:
+                        self.out_data_escaped = True
+                        continue
+
+                self.out_data_escaped = False
+
+                if d is kamstrup_constants.EOT_MAGIC and not escape_escape_byte:
                     if not self.valid_crc(self.out_data[1:]):
                         self.out_parsing = False
                         self.out_data = []
