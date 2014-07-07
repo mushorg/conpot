@@ -52,6 +52,9 @@ class Decoder382(object):
         0x0438: 'Power p1',
         0x0439: 'Power p2',
         0x043a: 'Power p3',
+
+        0x178a: 'Firmware revision A',  # not too sure on how to parse there.
+        0x178f: 'Firmware revision B',
     }
 
     def __init__(self):
