@@ -151,8 +151,10 @@ class Decoder382(object):
         cmd = self.in_data[2]
         register_count = self.in_data[3]
         message = 'Request for {0} register(s): '.format(register_count)
+        if len(self.in_data[2:]) < register_count:
+            return 'Invalid message, register count was too high'
         for count in range(register_count):
-            register = self.in_data[4 + count] * 256 + self.in_data[5 + count]
+            register = self.in_data[4 + count * 2] * 256 + self.in_data[5 + count * 2]
             if register in Decoder382.REGISTERS:
                 message += '{0} ({1})'.format(register, Decoder382.REGISTERS[register])
             else:
