@@ -25,14 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class Decoder382(object):
-    # Following register constants has been taken from pykamstrup, thanks to PHK/Erik Jensen!
-    # I owe beer...
-    # ----------------------------------------------------------------------------
-    # "THE BEER-WARE LICENSE" (Revision 42):
-    # <phk@FreeBSD.ORG> wrote this file.  As long as you retain this notice you
-    # can do whatever you want with this stuff. If we meet some day, and you think
-    # this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
-    # ----------------------------------------------------------------------------
 
     REGISTERS = {
 
@@ -42,8 +34,10 @@ class Decoder382(object):
         0x0d: 'Energy in hi-res',
         0x0e: 'Energy out hi-res',
 
-        0x33: 'Meter number',
-        0x417: 'Time zone',
+        0x33:  'Meter number',        # user configurable
+        0x3e9: 'Meter serialnumber',  # not user configurable
+        0x466: 'Meter type',
+        0x417: 'Time zone',           # how is this represented?
         0x4f7: 'KMP address',
         0x4f4: 'M-bus address',
 

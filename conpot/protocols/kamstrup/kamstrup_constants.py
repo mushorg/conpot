@@ -15,6 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+from enum import Enum
+
 REQUEST_MAGIC = 0x80
 RESPONSE_MAGIC = 0x40
 EOT_MAGIC = 0x0d
@@ -100,3 +102,12 @@ UNITS = {
     73: 'IPv4Address',
     74: 'IPv6Address'
 }
+
+
+class METER_TYPES(Enum):
+    Unknown = 0,
+    K382M = 1,
+    K162M = 2,
+    K351C = 3,
+    OMNIA = 4,
+    # where does 382J fit in? together with 382M?
