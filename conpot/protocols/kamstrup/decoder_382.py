@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import struct
 
 import crc16
 import kamstrup_constants
@@ -68,7 +69,7 @@ class Decoder382(object):
                                     0x10: self._decode_cmd_get_register,
                                     0x92: self._decode_cmd_login}
 
-        self.response_map = {}
+        self.response_map = {0x10: self._decode_cmd_return_register}
 
     def decode_in(self, data):
         for d in data:
@@ -162,6 +163,32 @@ class Decoder382(object):
             if count + 1 < register_count:
                 message += ', '
         return message
+
+    def _decode_cmd_return_register(self):
+        assert (self.out_data[2] == 0x10)
+        # skip command bytes and trailing checksum
+        msg = self.out_data[3:-2]
+
+        return_value = 'Register reponse: '
+        i = 0
+        while i < len(msg):
+            # Header is (ushort registerId, byte units, byte length, byte unknown)
+            register = msg[i] * 256 + msg[i+1]
+            unknown_byte_A = msg[i+2]
+            length = msg[i+3]
+            unknown_byte_B = msg[i+2]
+
+            # Payload
+            register_value = 0
+            for p in range(length):
+                register_value += msg[i + 5 + p] << (8 * ((length - p) - 1))
+            if register in Decoder382.REGISTERS:
+                return_value += '{0}({1}):{2}, '.format(register, Decoder382.REGISTERS[register], register_value)
+            else:
+                return_value += '{0}:{1}, '.format(register, register_value)
+            i += 5 + length
+
+        return return_value
 
     # meter type
     def _decode_cmd_get_type(self):
