@@ -101,7 +101,7 @@ class Proxy(object):
                         sockets = []
                         break
                     elif s is sock:
-                        logging.warning('Closing connection to remote while receiving from remote ({0}, {1}): {3}'
+                        logging.warning('Closing connection to remote while receiving from remote ({0}, {1}): {2}'
                                         .format(socket_close_reason, address[0], address[1]))
                         sockets = []
                         break
