@@ -170,23 +170,26 @@ class Decoder382(object):
         msg = self.out_data[3:-2]
 
         return_value = 'Register reponse: '
-        i = 0
-        while i < len(msg):
-            # Header is (ushort registerId, byte units, byte length, byte unknown)
-            register = msg[i] * 256 + msg[i+1]
-            unknown_byte_A = msg[i+2]
-            length = msg[i+3]
-            unknown_byte_B = msg[i+2]
+        if len(msg) == 0:
+            return_value += 'Invalid register'
+        else:
+            i = 0
+            while i < len(msg):
+                # Header is (ushort registerId, byte units, byte length, byte unknown)
+                register = msg[i] * 256 + msg[i+1]
+                unknown_byte_A = msg[i+2]
+                length = msg[i+3]
+                unknown_byte_B = msg[i+2]
 
-            # Payload
-            register_value = 0
-            for p in range(length):
-                register_value += msg[i + 5 + p] << (8 * ((length - p) - 1))
-            if register in Decoder382.REGISTERS:
-                return_value += '{0}({1}):{2}, '.format(register, Decoder382.REGISTERS[register], register_value)
-            else:
-                return_value += '{0}:{1}, '.format(register, register_value)
-            i += 5 + length
+                # Payload
+                register_value = 0
+                for p in range(length):
+                    register_value += msg[i + 5 + p] << (8 * ((length - p) - 1))
+                if register in Decoder382.REGISTERS:
+                    return_value += '{0}({1}):{2}, '.format(register, Decoder382.REGISTERS[register], register_value)
+                else:
+                    return_value += '{0}:{1}, '.format(register, register_value)
+                i += 5 + length
 
         return return_value
 
