@@ -87,26 +87,44 @@ class Proxy(object):
                 break
 
             for s in sockets_read:
-                data = s.recv(1024)
+                socket_close_reason = 'socket closed'
+                try:
+                    data = s.recv(1024)
+                except _socket.error as socket_err:
+                    data = []
+                    socket_close_reason = str(socket_err)
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
-                        logging.info('Closing proxy connection because the proxied socket closed.')
+                        logging.warning('Closing proxied socket while receiving ({0}, {1}): {2}.'
+                                        .format(self.proxy_host, self.proxy_port, socket_close_reason))
                         sockets = []
                         break
                     elif s is sock:
-                        logging.info('Closing proxy connection because the remote socket closed')
+                        logging.warning('Closing connection to remote while receiving from remote ({0}, {1}): {3}'
+                                        .format(socket_close_reason, address[0], address[1]))
                         sockets = []
                         break
                     else:
                         assert False
-                if s is proxy_socket:
-                    self.handle_out_data(data, sock, session)
-                elif s is sock:
-                    self.handle_in_data(data, proxy_socket, session)
-                else:
-                    assert False
 
+                try:
+                    if s is proxy_socket:
+                        self.handle_out_data(data, sock, session)
+                    elif s is sock:
+                        self.handle_in_data(data, proxy_socket, session)
+                    else:
+                        assert False
+                except _socket.error as socket_err:
+                    if s is proxy_socket:
+                        destination = 'proxied socket'
+                    else:
+                        destination = 'remote connection'
+                    logger.warning('Error while sending data to {0}: {1}.'.format(destination, str(socket_err)))
+                    sockets = []
+                    break
+
+        session.set_ended()
         proxy_socket.close()
         sock.close()
 
