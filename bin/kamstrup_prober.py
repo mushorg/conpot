@@ -16,11 +16,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import socket
+import json
+from datetime import datetime
+import calendar
 import crc16
 from conpot.protocols.kamstrup import kamstrup_constants
 
 
-class KamstrupRegisterRetriver(object):
+class KamstrupRegisterReader(object):
     def __init__(self, ip_address,  port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((ip_address, port))
@@ -32,15 +35,29 @@ class KamstrupRegisterRetriver(object):
         message.append(crc & 0xff)
         message.append(kamstrup_constants.EOT_MAGIC)
         self.sock.send(bytearray(message))
+        # TODO: Reconncet on failure, kamstrup drops after 20-30 requests.
         return self.sock.recv(1024)
 
-k = KamstrupRegisterRetriver('127.0.0.1', 1025)
 
-found_registers = []
+def json_default(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return None
 
-for x in range(0x30, 0x34):
-    result = k.get_register(x)
-    if len(result) > 6:
-        found_registers.append(result)
-        # TODO: Decode these...
-        print 'Found value at {0}:{1}'.format(hex(x), result.encode('hex-codec'))
+k = KamstrupRegisterReader('127.0.0.1', 1025)
+
+found_registers = {}
+
+for x in range(0x00, 0xff):
+    result = k.get_register(x).encode('hex-codec')
+    if len(result) > 12:
+        print result
+        assert x not in found_registers
+        # TODO: Strip message down to raw value
+        found_registers[x] = (datetime.utcnow(), result)
+        print 'Found register value at {0}:{1}'.format(hex(x), result)
+
+print 'Scan done, found {0} registers.'.format(len(found_registers))
+with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as the_file:
+    the_file.write(json.dumps(found_registers, indent=4, default=json_default))
