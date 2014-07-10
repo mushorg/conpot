@@ -20,23 +20,52 @@ import json
 from datetime import datetime
 import calendar
 import crc16
+import time
 from conpot.protocols.kamstrup import kamstrup_constants
 
 
 class KamstrupRegisterReader(object):
     def __init__(self, ip_address,  port):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((ip_address, port))
+        self._sock = None
+        self.ip_address = ip_address
+        self.port = port
+        self._connect()
+
+    def _connect(self):
+        print 'Connecting to {0}:{1}'.format(self.ip_address, self.port)
+        if self._sock is not None:
+            self._sock.close()
+            time.sleep(1)
+        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._sock.settimeout(2)
+        self._sock.connect((self.ip_address, self.port))
 
     def get_register(self, register):
-        message = [kamstrup_constants.REQUEST_MAGIC, 0x3f, 0x10, 0x01,register >> 8, register & 0xff]
+        message = [kamstrup_constants.REQUEST_MAGIC, 0x3f, 0x10, 0x01, register >> 8, register & 0xff]
         crc = crc16.crc16xmodem(''.join([chr(item) for item in message[1:]]))
         message.append(crc >> 8)
         message.append(crc & 0xff)
+        message_length = len(message)
+        y = 1
+        while y < message_length:
+            # TODO: Something is up with the CRC, sometimes it fails. seems related to escaping
+            if message[y] in kamstrup_constants.NEED_ESCAPE:
+                message.insert(y, kamstrup_constants.ESCAPE)
+                y += 1
+                message_length += 1
+            y += 1
         message.append(kamstrup_constants.EOT_MAGIC)
-        self.sock.send(bytearray(message))
-        # TODO: Reconncet on failure, kamstrup drops after 20-30 requests.
-        return self.sock.recv(1024)
+
+        received_data = None
+        while received_data is None:
+            try:
+                self._sock.send(bytearray(message))
+                received_data = self._sock.recv(1024)
+            except socket.error as socket_err:
+                print 'Error while communicating: {0}'.format(str(socket_err))
+                self._connect()
+
+        return received_data
 
 
 def json_default(obj):
@@ -49,10 +78,9 @@ k = KamstrupRegisterReader('127.0.0.1', 1025)
 
 found_registers = {}
 
-for x in range(0x00, 0xff):
+for x in range(0x01, 0xff):
     result = k.get_register(x).encode('hex-codec')
     if len(result) > 12:
-        print result
         assert x not in found_registers
         # TODO: Strip message down to raw value
         found_registers[x] = (datetime.utcnow(), result)
