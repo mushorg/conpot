@@ -48,8 +48,8 @@ class KamstrupRegisterReader(object):
         message_length = len(message)
         y = 1
         while y < message_length:
-            # TODO: Something is up with the CRC, sometimes it fails. seems related to escaping
             if message[y] in kamstrup_constants.NEED_ESCAPE:
+                message[y] ^= 0xff
                 message.insert(y, kamstrup_constants.ESCAPE)
                 y += 1
                 message_length += 1
@@ -78,14 +78,23 @@ k = KamstrupRegisterReader('127.0.0.1', 1025)
 
 found_registers = {}
 
-for x in range(0x01, 0xff):
+candidate_registers_values = range(0x00, 0xffff)
+not_found_counts = 0
+scanned = 0
+for x in candidate_registers_values:
     result = k.get_register(x).encode('hex-codec')
     if len(result) > 12:
         assert x not in found_registers
         # TODO: Strip message down to raw value
         found_registers[x] = (datetime.utcnow(), result)
         print 'Found register value at {0}:{1}'.format(hex(x), result)
+    else:
+        not_found_counts += 1
+        if not_found_counts % 10 == 0:
+            print ('Hang on, still scanning, so far scanned {0} and found {1} registers.'
+                    .format(scanned, len(found_registers)))
+    scanned += 1
 
-print 'Scan done, found {0} registers.'.format(len(found_registers))
-with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as the_file:
-    the_file.write(json.dumps(found_registers, indent=4, default=json_default))
+print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
+with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
+    json_file.write(json.dumps(  found_registers, indent=4, default=json_default))
