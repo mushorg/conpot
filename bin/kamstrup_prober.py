@@ -26,7 +26,7 @@ from conpot.protocols.kamstrup import kamstrup_constants
 
 
 class KamstrupRegisterCopier(object):
-    def __init__(self, ip_address,  port):
+    def __init__(self, ip_address, port):
         self._sock = None
         self.ip_address = ip_address
         self.port = port
@@ -62,9 +62,20 @@ class KamstrupRegisterCopier(object):
             try:
                 self._sock.send(bytearray(message))
                 received_data = self._sock.recv(1024)
+                received_data = bytearray(received_data)
             except socket.error as socket_err:
                 print 'Error while communicating: {0}'.format(str(socket_err))
                 self._connect()
+        data_length = len(received_data)
+
+        # remove escaped bytes
+        p = 0
+        while p < data_length:
+            if received_data[p] is kamstrup_constants.ESCAPE:
+                del received_data[p]
+                received_data[p] ^= 0xff
+                data_length -= 1
+            p += 1
 
         return received_data
 
@@ -81,8 +92,6 @@ parser.add_argument('--registerfile', dest='registerfile', help='Reads registers
                                                                 'bruteforcing the meter.')
 args = parser.parse_args()
 
-found_registers = {}
-
 if args.registerfile:
     candidate_registers_values = []
     with open(args.registerfile, 'r') as register_file:
@@ -93,21 +102,30 @@ else:
     candidate_registers_values = range(0x00, 0xffff)
 
 kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 1025)
-
+found_registers = {}
 not_found_counts = 0
 scanned = 0
 for x in candidate_registers_values:
-    result = kamstrupRegisterCopier.get_register(x).encode('hex-codec')
+    result = kamstrupRegisterCopier.get_register(x)
     if len(result) > 12:
-        assert x not in found_registers
-        # TODO: Strip message down to raw value
-        found_registers[x] = (datetime.utcnow(), result)
-        print 'Found register value at {0}:{1}'.format(hex(x), result)
+        units = result[5]
+        length = result[6]
+        unknown = result[7]
+
+        register_value = 0
+        for p in range(length):
+            register_value += result[8 + p] << (8 * ((length - p) - 1))
+
+        found_registers[x] = {'timestamp': datetime.utcnow(),
+                              'units': units,
+                              'value': register_value,
+                              'unknown': unknown}
+        print 'Found register value at {0}:{1}'.format(hex(x), register_value)
     else:
         not_found_counts += 1
         if not_found_counts % 10 == 0:
             print ('Hang on, still scanning, so far scanned {0} and found {1} registers'
-                    .format(scanned, len(found_registers)))
+                   .format(scanned, len(found_registers)))
     scanned += 1
 
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
