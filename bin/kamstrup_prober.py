@@ -19,12 +19,13 @@ import socket
 import json
 from datetime import datetime
 import calendar
-import crc16
 import time
+import argparse
+import crc16
 from conpot.protocols.kamstrup import kamstrup_constants
 
 
-class KamstrupRegisterReader(object):
+class KamstrupRegisterCopier(object):
     def __init__(self, ip_address,  port):
         self._sock = None
         self.ip_address = ip_address
@@ -74,15 +75,29 @@ def json_default(obj):
     else:
         return None
 
-k = KamstrupRegisterReader('127.0.0.1', 1025)
+
+parser = argparse.ArgumentParser(description='Probes kamstrup meter registers.')
+parser.add_argument('--registerfile', dest='registerfile', help='Reads registers from previous dumps files instead of'
+                                                                'bruteforcing the meter.')
+args = parser.parse_args()
 
 found_registers = {}
 
-candidate_registers_values = range(0x00, 0xffff)
+if args.registerfile:
+    candidate_registers_values = []
+    with open(args.registerfile, 'r') as register_file:
+        old_register_values = json.load(register_file)
+    for value in old_register_values.iterkeys():
+        candidate_registers_values.append(int(value))
+else:
+    candidate_registers_values = range(0x00, 0xffff)
+
+kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 1025)
+
 not_found_counts = 0
 scanned = 0
 for x in candidate_registers_values:
-    result = k.get_register(x).encode('hex-codec')
+    result = kamstrupRegisterCopier.get_register(x).encode('hex-codec')
     if len(result) > 12:
         assert x not in found_registers
         # TODO: Strip message down to raw value
@@ -91,10 +106,10 @@ for x in candidate_registers_values:
     else:
         not_found_counts += 1
         if not_found_counts % 10 == 0:
-            print ('Hang on, still scanning, so far scanned {0} and found {1} registers.'
+            print ('Hang on, still scanning, so far scanned {0} and found {1} registers'
                     .format(scanned, len(found_registers)))
     scanned += 1
 
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
 with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
-    json_file.write(json.dumps(  found_registers, indent=4, default=json_default))
+    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
