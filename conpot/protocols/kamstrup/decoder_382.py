@@ -106,7 +106,6 @@ class Decoder382(object):
                         result = 'Unknown request command: {0}'.format(self.in_data[2])
                     self.in_data = []
                     return result
-
                 else:
                     self.in_data.append(d)
 

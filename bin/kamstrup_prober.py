@@ -99,9 +99,9 @@ if args.registerfile:
     for value in old_register_values.iterkeys():
         candidate_registers_values.append(int(value))
 else:
-    candidate_registers_values = range(0x00, 0xffff)
+    candidate_registers_values = range(0x01, 0xffff)
 
-kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 1025)
+kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 6666)
 found_registers = {}
 not_found_counts = 0
 scanned = 0
@@ -119,6 +119,7 @@ for x in candidate_registers_values:
         found_registers[x] = {'timestamp': datetime.utcnow(),
                               'units': units,
                               'value': register_value,
+                              'value_length': length,
                               'unknown': unknown}
         print 'Found register value at {0}:{1}'.format(hex(x), register_value)
     else:
