@@ -22,6 +22,7 @@ import calendar
 import time
 import argparse
 import crc16
+import xml.dom.minidom
 from conpot.protocols.kamstrup import kamstrup_constants
 
 
@@ -129,6 +130,31 @@ for x in candidate_registers_values:
                    .format(scanned, len(found_registers)))
     scanned += 1
 
+def generate_conpot_config(result_list):
+    config_xml = """<conpot_template name="Kamstrup-Auto382" description="Register clone of an existing Kamstrup meter">
+    <core><databus><key_value_mappings>"""
+    for key, value in result_list.items():
+        config_xml += """<key name="register_{0}"><value type="value">{1}</value></key>""".format(key, value['value'])
+    config_xml += """</key_value_mappings></databus></core><protocols><kamstrup enabled="True" host="0.0.0.0" port="1025"><registers>"""
+
+    for key, value in result_list.items():
+        config_xml += """<register name="{0}" units="{1}" unknown="{2}"><value>register_{0}</value></register>"""\
+            .format(key, value['units'], value['unknown'])
+    config_xml += "</registers></kamstrup></protocols></conpot_template>"
+
+    parsed_xml = xml.dom.minidom.parseString(config_xml)
+    pretty_xml = parsed_xml.toprettyxml()
+    return pretty_xml
+
+
+found_registers = {}
+found_registers['1234'] = {'timestamp': datetime.utcnow(),
+                              'units': 33,
+                              'value': 555,
+                              'unknown': 11}
+
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
 with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
     json_file.write(json.dumps(found_registers, indent=4, default=json_default))
+print """*** Sample Conpot configuration from this scrape:"""
+print generate_conpot_config(found_registers)
