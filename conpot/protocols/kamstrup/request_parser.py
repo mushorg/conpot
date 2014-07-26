@@ -130,5 +130,5 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
         if len(self.message_bytes[1:] * 2) < register_count:
             raise Exception('Invalid register count in register request')
         for count in xrange(register_count):
-            register = self.message_bytes[count * 2] * 256 + self.message_bytes[1 + count * 2]
+            register = self.message_bytes[1 + count * 2] * 256 + self.message_bytes[2 + count * 2]
             self.registers.append(register)
