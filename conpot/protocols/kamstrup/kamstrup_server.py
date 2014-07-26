@@ -35,9 +35,10 @@ class KamstrupServer(object):
         self.timeout = timeout
         # key: kamstrup register, value: databus key
         self.registers = {}
+
         dom = etree.parse(template)
-        # template_name = dom.xpath('//kamstrup_protocol/@name')[0]
         registers = dom.xpath('//conpot_template/protocols/kamstrup/registers/*')
+        self.communication_address = int(dom.xpath('//conpot_template/protocols/kamstrup/config/communication_address/text()')[0])
         for register in registers:
             register_name = register.attrib['name']
             register_databuskey = register.xpath('./value/text()')[0]
@@ -62,6 +63,7 @@ class KamstrupServer(object):
                     parser.add_byte(x)
 
                 while True:
+                    # TODO: Handle requests to wrong communication address
                     request = parser.get_request()
                     if not request:
                         break

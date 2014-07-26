@@ -13,6 +13,9 @@
     </core>
     <protocols>
         <kamstrup enabled="True" host="0.0.0.0" port="1025">
+                <config>
+                    <communication_address>254</communication_address>
+                </config>
             <registers>
                 <register name="1024" units="22" unknown="67">
                         <value>register_1024</value>

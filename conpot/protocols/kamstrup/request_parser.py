@@ -16,10 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import binascii
 
 import crc16
 import kamstrup_constants
+from messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
 
 
 logger = logging.getLogger(__name__)
@@ -86,49 +86,3 @@ class KamstrupRequestParser(object):
         supplied_crc = message[-2] * 256 + message[-1]
         calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc
-
-
-class KamstrupProtocolBase(object):
-    def __init__(self, communication_address):
-        self.communication_address = communication_address
-
-
-class KamstrupRequestBase(KamstrupProtocolBase):
-    def __init__(self, communication_address, command, message_bytes):
-        super(KamstrupRequestBase, self).__init__(communication_address)
-        self.command = command
-        self.message_bytes = message_bytes
-        logger.debug('Request package created with bytes: {0}'.format(self.message_bytes))
-
-    def __str__(self):
-        return 'Comm address: {0}, Command: {1}, Message: {2}'.format(hex(self.communication_address),
-                                                                      hex(self.command),
-                                                                      binascii.hexlify(self.message_bytes))
-
-
-# Valid but request command unknown
-class KamstrupRequestUnknown(KamstrupRequestBase):
-    def __init__(self, communication_address, command_byte, message_bytes):
-        super(KamstrupRequestGetRegisters, self).__init__(communication_address,
-                                                          command_byte, message_bytes)
-        logger.warning('Unknown Kamstrup request: {0}'.format(self))
-
-
-class KamstrupRequestGetRegisters(KamstrupRequestBase):
-    command_byte = 0x10
-
-    def __init__(self, communication_address, command_byte, message_bytes):
-        assert command_byte is command_byte
-        super(KamstrupRequestGetRegisters, self).__init__(communication_address,
-                                                          KamstrupRequestGetRegisters.command_byte, message_bytes)
-        self.registers = []
-        self._parse_register_bytes()
-        logger.debug('Request for registers: {0}'.format(str(self.registers).strip('[]')))
-
-    def _parse_register_bytes(self):
-        register_count = self.message_bytes[0]
-        if len(self.message_bytes[1:] * 2) < register_count:
-            raise Exception('Invalid register count in register request')
-        for count in xrange(register_count):
-            register = self.message_bytes[1 + count * 2] * 256 + self.message_bytes[2 + count * 2]
-            self.registers.append(register)
