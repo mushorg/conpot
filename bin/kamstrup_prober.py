@@ -102,7 +102,7 @@ if args.registerfile:
 else:
     candidate_registers_values = range(0x01, 0xffff)
 
-kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 6666)
+kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 1025)
 found_registers = {}
 not_found_counts = 0
 scanned = 0
@@ -148,10 +148,6 @@ def generate_conpot_config(result_list):
 
 
 found_registers = {}
-found_registers['1234'] = {'timestamp': datetime.utcnow(),
-                              'units': 33,
-                              'value': 555,
-                              'unknown': 11}
 
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
 with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
