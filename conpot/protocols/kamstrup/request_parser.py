@@ -42,12 +42,10 @@ class KamstrupRequestParser(object):
         while position < bytes_len:
             d = self.bytes[position]
             if not self.parsing and d != kamstrup_constants.REQUEST_MAGIC:
-                assert position is 0
                 logger.debug('Skipping byte, expected kamstrup request magic but got: {0}'
                              .format(hex(d)))
                 del self.bytes[position]
                 bytes_len -= 1
-                position -= 1
                 continue
             else:
                 self.parsing = True

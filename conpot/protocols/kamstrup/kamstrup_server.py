@@ -18,29 +18,34 @@
 import logging
 import socket
 import binascii
-import time
-from lxml import etree
 
+from lxml import etree
 from gevent.server import StreamServer
 import gevent
 
 import conpot.core as conpot_core
 import request_parser
 
+
 logger = logging.getLogger(__name__)
 
 
 class KamstrupServer(object):
-
     def __init__(self, template, timeout=0):
         self.timeout = timeout
-        # TODO: Parse template and register registers
-        #dom = etree.parse(template)
-        #template_name = dom.xpath('//kamstrup_protocol/@name')[0]
-        #logger.info('Kamstrup protocol server initialized using the {0} template.'.format(template_name))
+        # key: kamstrup register, value: databus key
+        self.registers = {}
+        dom = etree.parse(template)
+        # template_name = dom.xpath('//kamstrup_protocol/@name')[0]
+        registers = dom.xpath('//conpot_template/protocols/kamstrup/registers/*')
+        for register in registers:
+            register_name = register.attrib['name']
+            register_databuskey = register.xpath('./value/text()')[0]
+            assert register_name not in self.registers
+            self.registers[register_name] = register_databuskey
+        logger.info('Kamstrup protocol server initialized.')
 
     def handle(self, sock, address):
-
         session = conpot_core.get_session('kamstrup_protocol', address[0], address[1])
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
 
@@ -61,11 +66,10 @@ class KamstrupServer(object):
                     if not request:
                         break
                     else:
-                        logdata = {'request':  binascii.hexlify(bytearray(request.message_bytes))}
+                        logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
                         logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
-                        # TODO: Also log decoded message
                         # TODO: Create response packet and log it.
-                        #logdata['response'] = binascii.hexlify(response.message_bytes)}
+                        # logdata['response'] = binascii.hexlify(response.message_bytes)}
                         session.add_event(logdata)
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
@@ -77,6 +81,7 @@ class KamstrupServer(object):
         server = StreamServer(connection, self.handle)
         logger.info('Kamstrup protocol server started on: {0}'.format(connection))
         return server
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
