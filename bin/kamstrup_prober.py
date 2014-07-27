@@ -146,9 +146,6 @@ def generate_conpot_config(result_list):
     pretty_xml = parsed_xml.toprettyxml()
     return pretty_xml
 
-
-found_registers = {}
-
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
 with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
     json_file.write(json.dumps(found_registers, indent=4, default=json_default))
