@@ -21,7 +21,8 @@ from conpot.core.loggers.hpfriends import HPFriendsLogger
 
 
 class Test_HPFriends(unittest.TestCase):
-
+    # disabled until honeycloud up and running again
+    @disabled
     def test_hpfriends(self):
         """
         Objective: Test if data can be published to hpfriends without errors.
