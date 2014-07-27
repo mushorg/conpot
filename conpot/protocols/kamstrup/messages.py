@@ -17,10 +17,10 @@
 
 import logging
 import binascii
-import struct
 
 import crc16
 import kamstrup_constants
+import conpot.core as conpot_core
 
 
 logger = logging.getLogger(__name__)
@@ -79,9 +79,8 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
         super(KamstrupResponseRegister, self).__init__(communication_address)
         self.registers = []
 
-    def add_register(self, register, value, units, unknown, length):
-        # TODO: create a struct instead of tuple, makes the code more readable
-        self.registers.append((register, value, units, unknown, length))
+    def add_register(self, register):
+        self.registers.append(register)
 
     def serialize(self):
         message = []
@@ -90,23 +89,21 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
         message.append(0x10)
 
         for register in self.registers:
-            # (ushort registerId, byte units, byte length, byte unknown)
-            # register number
-            message.append(register[0] >> 8)
-            message.append(register[0] & 0xff)
-            # units
-            message.append(register[2])
-            # length
-            message.append(register[4])
+            # each register must be packed: (ushort registerId, byte units, byte length, byte unknown)
+            # and the following $length payload with the register value
+            message.append(register.name >> 8)
+            message.append(register.name & 0xff)
+            message.append(register.units)
+            message.append(register.length)
             # mystery byte
-            message.append(register[3])
+            message.append(register.unknown)
 
             low_endian_value_packed = []
-            v = register[1]
-            for _ in range(register[4]):
+            register_value = conpot_core.get_databus().get_value(register.databus_key)
+            for _ in range(register.length):
                 # get least significant
-                low_endian_value_packed.append(v & 0xff)
-                v = v >> 8
+                low_endian_value_packed.append(register_value & 0xff)
+                register_value >>= 8
 
             # reverse to get pack high endian
             for b in reversed(low_endian_value_packed):
