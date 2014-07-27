@@ -19,12 +19,12 @@ import logging
 import socket
 import binascii
 
-from lxml import etree
 from gevent.server import StreamServer
 import gevent
 
 import conpot.core as conpot_core
 import request_parser
+from command_responder import CommandResponder
 
 
 logger = logging.getLogger(__name__)
@@ -33,17 +33,8 @@ logger = logging.getLogger(__name__)
 class KamstrupServer(object):
     def __init__(self, template, timeout=0):
         self.timeout = timeout
-        # key: kamstrup register, value: databus key
-        self.registers = {}
+        self.command_responder = CommandResponder(template)
 
-        dom = etree.parse(template)
-        registers = dom.xpath('//conpot_template/protocols/kamstrup/registers/*')
-        self.communication_address = int(dom.xpath('//conpot_template/protocols/kamstrup/config/communication_address/text()')[0])
-        for register in registers:
-            register_name = register.attrib['name']
-            register_databuskey = register.xpath('./value/text()')[0]
-            assert register_name not in self.registers
-            self.registers[register_name] = register_databuskey
         logger.info('Kamstrup protocol server initialized.')
 
     def handle(self, sock, address):
@@ -69,9 +60,12 @@ class KamstrupServer(object):
                         break
                     else:
                         logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
+                        response = self.command_responder.respond(request)
+                        logdata['response'] = binascii.hexlify(response.serialize())
+                        # TODO: Need a dealay here, real Kamstrup meter has a delay aroudn 60 - 200 ms
+                        # between each command
                         logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
-                        # TODO: Create response packet and log it.
-                        # logdata['response'] = binascii.hexlify(response.message_bytes)}
+                        sock.send(response.serialize())
                         session.add_event(logdata)
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))

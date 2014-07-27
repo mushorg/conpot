@@ -17,6 +17,7 @@
 
 import logging
 import binascii
+import struct
 
 import crc16
 import kamstrup_constants
@@ -75,11 +76,12 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
 ############# RESPONSE MESSAGES ##############
 class KamstrupResponseRegister(KamstrupProtocolBase):
     def __init__(self, communication_address):
-        super(self, KamstrupResponseRegister).__init__(communication_address)
+        super(KamstrupResponseRegister, self).__init__(communication_address)
         self.registers = []
 
-    def add_register(self, register, value, units, unknown):
-        self.registers.append((register, value, units, unknown))
+    def add_register(self, register, value, units, unknown, length):
+        # TODO: create a struct instead of tuple, makes the code more readable
+        self.registers.append((register, value, units, unknown, length))
 
     def serialize(self):
         message = []
@@ -88,22 +90,31 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
         message.append(0x10)
 
         for register in self.registers:
+            # (ushort registerId, byte units, byte length, byte unknown)
             # register number
             message.append(register[0] >> 8)
             message.append(register[0] & 0xff)
-            # bytes
+            # units
             message.append(register[2])
-            # pack value now because we need it to tell the total length
-            value_packed = []
-            n = register[1]
-            while n:
-                value_packed.append(n & 0xff)
-                n >>= 8
-            message.append(len(value_packed))
-            message.extend(value_packed)
+            # length
+            message.append(register[4])
+            # mystery byte
+            message.append(register[3])
+
+            low_endian_value_packed = []
+            v = register[1]
+            for _ in range(register[4]):
+                # get least significant
+                low_endian_value_packed.append(v & 0xff)
+                v = v >> 8
+
+            # reverse to get pack high endian
+            for b in reversed(low_endian_value_packed):
+                message.append(b)
+
             crc = crc16.crc16xmodem(''.join([chr(item) for item in message[1:]]))
             message.append(crc >> 8)
             message.append(crc & 0xff)
 
         message.append(kamstrup_constants.EOT_MAGIC)
-        return message
+        return bytearray(message)
