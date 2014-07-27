@@ -27,11 +27,13 @@ from conpot.protocols.kamstrup import kamstrup_constants
 
 
 class KamstrupRegisterCopier(object):
-    def __init__(self, ip_address, port):
+    def __init__(self, ip_address, port, comm_address):
         self._sock = None
         self.ip_address = ip_address
         self.port = port
+        self.comm_address = comm_address
         self._connect()
+
 
     def _connect(self):
         print 'Connecting to {0}:{1}'.format(self.ip_address, self.port)
@@ -40,10 +42,15 @@ class KamstrupRegisterCopier(object):
             time.sleep(1)
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._sock.settimeout(2)
-        self._sock.connect((self.ip_address, self.port))
+        try:
+            self._sock.connect((self.ip_address, self.port))
+        except socket.error as socket_err:
+            print 'Error while connecting: {0}'.format(str(socket_err))
+            self._connect()
+
 
     def get_register(self, register):
-        message = [kamstrup_constants.REQUEST_MAGIC, 0x3f, 0x10, 0x01, register >> 8, register & 0xff]
+        message = [kamstrup_constants.REQUEST_MAGIC, self.comm_address, 0x10, 0x01, register >> 8, register & 0xff]
         crc = crc16.crc16xmodem(''.join([chr(item) for item in message[1:]]))
         message.append(crc >> 8)
         message.append(crc & 0xff)
@@ -89,8 +96,11 @@ def json_default(obj):
 
 
 parser = argparse.ArgumentParser(description='Probes kamstrup meter registers.')
+parser.add_argument('host', help='Hostname or IP or Kamstrup meter')
+parser.add_argument('port', type=int, help='TCP port')
 parser.add_argument('--registerfile', dest='registerfile', help='Reads registers from previous dumps files instead of'
                                                                 'bruteforcing the meter.')
+parser.add_argument('--comaddress', dest='communication_address', default=0x3f)
 args = parser.parse_args()
 
 if args.registerfile:
@@ -102,10 +112,12 @@ if args.registerfile:
 else:
     candidate_registers_values = range(0x01, 0xffff)
 
-kamstrupRegisterCopier = KamstrupRegisterCopier('127.0.0.1', 1025)
+kamstrupRegisterCopier = KamstrupRegisterCopier(args.host, args.port, int(args.communication_address))
 found_registers = {}
 not_found_counts = 0
 scanned = 0
+dumpfile = 'kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple()))
+
 for x in candidate_registers_values:
     result = kamstrupRegisterCopier.get_register(x)
     if len(result) > 12:
@@ -123,6 +135,8 @@ for x in candidate_registers_values:
                               'value_length': length,
                               'unknown': unknown}
         print 'Found register value at {0}:{1}'.format(hex(x), register_value)
+        with open(dumpfile, 'w') as json_file:
+            json_file.write(json.dumps(found_registers, indent=4, default=json_default))
     else:
         not_found_counts += 1
         if not_found_counts % 10 == 0:
@@ -138,8 +152,8 @@ def generate_conpot_config(result_list):
     config_xml += """</key_value_mappings></databus></core><protocols><kamstrup enabled="True" host="0.0.0.0" port="1025"><registers>"""
 
     for key, value in result_list.items():
-        config_xml += """<register name="{0}" units="{1}" unknown="{2}"><value>register_{0}</value></register>"""\
-            .format(key, value['units'], value['unknown'])
+        config_xml += """<register name="{0}" units="{1}" unknown="{2}" length="{3}"><value>register_{0}</value></register>"""\
+            .format(key, value['units'], value['unknown'], value['value_length'])
     config_xml += "</registers></kamstrup></protocols></conpot_template>"
 
     parsed_xml = xml.dom.minidom.parseString(config_xml)
@@ -147,7 +161,7 @@ def generate_conpot_config(result_list):
     return pretty_xml
 
 print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
-with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
-    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
+#with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
+#    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
 print """*** Sample Conpot configuration from this scrape:"""
 print generate_conpot_config(found_registers)
