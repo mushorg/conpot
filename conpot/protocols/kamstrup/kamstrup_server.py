@@ -61,11 +61,12 @@ class KamstrupServer(object):
                     else:
                         logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
                         response = self.command_responder.respond(request)
-                        logdata['response'] = binascii.hexlify(response.serialize())
+                        serialized_response = response.serialize()
+                        logdata['response'] = binascii.hexlify(serialized_response)
                         # TODO: Need a dealay here, real Kamstrup meter has a delay aroudn 60 - 200 ms
                         # between each command
                         logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
-                        sock.send(response.serialize())
+                        sock.send(serialized_response)
                         session.add_event(logdata)
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))

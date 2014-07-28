@@ -30,19 +30,6 @@ class KamstrupProtocolBase(object):
     def __init__(self, communication_address):
         self.communication_address = communication_address
 
-    def escape(self, message):
-        escaped_message = []
-        escaped_message.append(message[0])
-        for c in message[1:-1]:
-            if c in kamstrup_constants.NEED_ESCAPE:
-                escaped_message.append(kamstrup_constants.ESCAPE)
-                escaped_message.append(c ^ 0xff)
-            else:
-                escaped_message.append(c)
-        escaped_message.append(message[-1])
-        return escaped_message
-
-
 
 # ############ REQUEST MESSAGES ##############
 class KamstrupRequestBase(KamstrupProtocolBase):
@@ -62,7 +49,7 @@ class KamstrupRequestBase(KamstrupProtocolBase):
 class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
         super(KamstrupRequestUnknown, self).__init__(communication_address,
-                                                          command_byte, message_bytes)
+                                                     command_byte, message_bytes)
         logger.warning('Unknown Kamstrup request: {0}'.format(self))
 
 
@@ -86,8 +73,48 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
             self.registers.append(register)
 
 
-############# RESPONSE MESSAGES ##############
-class KamstrupResponseRegister(KamstrupProtocolBase):
+# ############ RESPONSE MESSAGES ##############
+class KamstrupResponseBase(KamstrupProtocolBase):
+    def __init__(self, communication_address):
+        super(KamstrupResponseBase, self).__init__(communication_address)
+
+    def serialize(self, message):
+        final_message = []
+
+        # prefix message
+        final_message.append(kamstrup_constants.RESPONSE_MAGIC)
+        final_message.append(self.communication_address)
+
+        # add the original content
+        for c in message:
+            final_message.append(c)
+
+        # generate and append checksum
+        crc = crc16.crc16xmodem(''.join([chr(item) for item in final_message[1:]]))
+        final_message.append(crc >> 8)
+        final_message.append(crc & 0xff)
+
+        # trailing magic
+        final_message.append(kamstrup_constants.EOT_MAGIC)
+
+        escaped_message = self.escape(final_message)
+        return escaped_message
+
+    # escape everything but leading and trailing magic
+    def escape(self, message):
+        escaped_list = []
+        escaped_list.append(message[0])
+        for c in message[1:-1]:
+            if c in kamstrup_constants.NEED_ESCAPE:
+                escaped_list.append(kamstrup_constants.ESCAPE)
+                escaped_list.append(c ^ 0xff)
+            else:
+                escaped_list.append(c)
+        escaped_list.append(message[-1])
+        return escaped_list
+
+
+class KamstrupResponseRegister(KamstrupResponseBase):
     def __init__(self, communication_address):
         super(KamstrupResponseRegister, self).__init__(communication_address)
         self.registers = []
@@ -97,8 +124,6 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
 
     def serialize(self):
         message = []
-        message.append(kamstrup_constants.RESPONSE_MAGIC)
-        message.append(self.communication_address)
         message.append(0x10)
 
         for register in self.registers:
@@ -122,9 +147,6 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
             for b in reversed(low_endian_value_packed):
                 message.append(b)
 
-            crc = crc16.crc16xmodem(''.join([chr(item) for item in message[1:]]))
-            message.append(crc >> 8)
-            message.append(crc & 0xff)
-
-        message.append(kamstrup_constants.EOT_MAGIC)
-        return bytearray(self.escape(message))
+        # add leading/trailing magic and escape as appropriate
+        serialized_message = super(KamstrupResponseRegister, self).serialize(message)
+        return bytearray(serialized_message)
