@@ -30,6 +30,17 @@ class KamstrupProtocolBase(object):
     def __init__(self, communication_address):
         self.communication_address = communication_address
 
+    def escape(self, message):
+        escaped_message = []
+        for c in message:
+            if c in kamstrup_constants.NEED_ESCAPE:
+                escaped_message.append(kamstrup_constants.ESCAPE)
+                escaped_message.append(c ^ 0xff)
+            else:
+                escaped_message.append(c)
+        return escaped_message
+
+
 
 # ############ REQUEST MESSAGES ##############
 class KamstrupRequestBase(KamstrupProtocolBase):
@@ -114,4 +125,4 @@ class KamstrupResponseRegister(KamstrupProtocolBase):
             message.append(crc & 0xff)
 
         message.append(kamstrup_constants.EOT_MAGIC)
-        return bytearray(message)
+        return bytearray(self.escape(message))
