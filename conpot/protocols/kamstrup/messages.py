@@ -32,12 +32,14 @@ class KamstrupProtocolBase(object):
 
     def escape(self, message):
         escaped_message = []
-        for c in message:
+        escaped_message.append(message[0])
+        for c in message[1:-1]:
             if c in kamstrup_constants.NEED_ESCAPE:
                 escaped_message.append(kamstrup_constants.ESCAPE)
                 escaped_message.append(c ^ 0xff)
             else:
                 escaped_message.append(c)
+        escaped_message.append(message[-1])
         return escaped_message
 
 
