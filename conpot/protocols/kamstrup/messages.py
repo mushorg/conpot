@@ -48,7 +48,7 @@ class KamstrupRequestBase(KamstrupProtocolBase):
 # Valid but request command unknown
 class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
-        super(KamstrupRequestGetRegisters, self).__init__(communication_address,
+        super(KamstrupRequestUnknown, self).__init__(communication_address,
                                                           command_byte, message_bytes)
         logger.warning('Unknown Kamstrup request: {0}'.format(self))
 
