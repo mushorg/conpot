@@ -18,21 +18,32 @@
 
 import hpfeeds
 import gevent
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class HPFriendsLogger(object):
 
     def __init__(self, host, port, ident, secret, channels):
         self.channels = channels
-        try:
-            with gevent.Timeout(2):
-                self.hpc = hpfeeds.new(host, port, ident, secret)
-        except:
-            raise Exception("Connection to HPFriends timed out")
+        self._initial_connection_happend = False
+        gevent.spawn(self._start_connection, host, port, ident, secret)
+
+    def _start_connection(self, host, port, ident, secret):
+        # if no initial connection to hpfeeds this will hang forever, reconnect=True only comes into play
+        # when lost connection after the initial connect happend.
+        self.hpc = hpfeeds.new(host, port, ident, secret)
+        self._initial_connection_happend = True
 
     def log(self, data):
-        # hpfeed lib supports passing list of channels
-        self.hpc.publish(self.channels, data)
-        error_msg = self.hpc.wait()
-        return error_msg
+        if self._initial_connection_happend:
+            # hpfeed lib supports passing list of channels
+            self.hpc.publish(self.channels, data)
+            error_msg = self.hpc.wait()
+            return error_msg
+        else:
+            error_msg = 'Not logging event because initial hpfeeds connect has not happend yet.'
+            logger.warning(error_msg)
+            return error_msg
 
