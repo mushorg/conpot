@@ -62,7 +62,7 @@ def logo():
 """.format(conpot.__version__)
 
 
-def setup_logging(log_file='conpot.log'):
+def setup_logging(log_file):
     log_format = logging.Formatter('%(asctime)-15s %(message)s')
     root_logger = logging.getLogger()
     console_log = logging.StreamHandler()
@@ -95,7 +95,6 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 def main():
     logo()
-    setup_logging()
 
     parser = argparse.ArgumentParser()
 
@@ -119,6 +118,10 @@ def main():
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
     )
+    parser.add_argument("-l", "--logfile",
+                        help="the template to use",
+                        default="conpot.log"
+    )
     parser.add_argument("-a", "--raw_mib",
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
@@ -129,6 +132,8 @@ def main():
                         help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
                         default=[])
     args = parser.parse_args()
+
+    setup_logging(args.logfile)
 
     config = ConfigParser()
     if not os.path.isfile(args.config):
