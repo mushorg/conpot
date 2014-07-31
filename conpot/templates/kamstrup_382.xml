@@ -3,6 +3,10 @@
     <core>
         <databus>
             <key_value_mappings>
+             <key name="power_simulator">
+                    <value type="function" param="[]">
+                        conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>
+                </key>
                 <key name="register_1024">
                     <value type="value">0</value>
                 </key>
@@ -10,6 +14,39 @@
                     <value type="value">0</value>
                 </key>
                 <key name="register_2">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_13">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_14">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1054">
+                    <value type="value">228</value>
+                </key>
+                <key name="register_1055">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1056">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1076">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1077">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1078">
+                    <value type="value">0</value>
+                </key>
+               <key name="register_1080">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1081">
+                    <value type="value">0</value>
+                </key>
+                <key name="register_1082">
                     <value type="value">0</value>
                 </key>
                 <key name="register_3">
@@ -37,12 +74,6 @@
                     <value type="value">0</value>
                 </key>
                 <key name="register_1036">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_13">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_14">
                     <value type="value">0</value>
                 </key>
                 <key name="register_15">
@@ -249,9 +280,6 @@
                 <key name="register_1204">
                     <value type="value">340282366920938463463374607431768211455</value>
                 </key>
-                <key name="register_1054">
-                    <value type="value">228</value>
-                </key>
                 <key name="register_1206">
                     <value type="value">340282366920938463463374607431768211455</value>
                 </key>
@@ -264,14 +292,8 @@
                 <key name="register_1209">
                     <value type="value">340282366920938463463374607431768211455</value>
                 </key>
-                <key name="register_1055">
-                    <value type="value">0</value>
-                </key>
                 <key name="register_1029">
                     <value type="value">100</value>
-                </key>
-                <key name="register_1056">
-                    <value type="value">0</value>
                 </key>
                 <key name="register_1058">
                     <value type="value">227691635558201180633139</value>
@@ -327,26 +349,8 @@
                 <key name="register_1075">
                     <value type="value">0</value>
                 </key>
-                <key name="register_1076">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_1077">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_1078">
-                    <value type="value">0</value>
-                </key>
                 <key name="register_1079">
                     <value type="value">315</value>
-                </key>
-                <key name="register_1080">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_1081">
-                    <value type="value">0</value>
-                </key>
-                <key name="register_1082">
-                    <value type="value">0</value>
                 </key>
                 <key name="register_1181">
                     <value type="value">433534329705531658</value>
@@ -384,14 +388,57 @@
                 <communication_address>255</communication_address>
             </config>
             <registers>
-                <register length="4" name="1024" units="22" unknown="67">
-                    <value>register_1024</value>
-                </register>
+                <!-- Energy in -->
                 <register length="4" name="1" units="2" unknown="65">
                     <value>register_1</value>
                 </register>
+                <!-- Energy out -->
                 <register length="4" name="2" units="2" unknown="65">
                     <value>register_2</value>
+                </register>
+                <!-- Energy in hi-res -->
+                <register length="4" name="13" units="2" unknown="68">
+                    <value>register_13</value>
+                </register>
+                <!-- Energy out hi-res -->
+                <register length="4" name="14" units="2" unknown="68">
+                    <value>register_14</value>
+                </register>
+                <!-- Voltage p1 -->
+                <register length="2" name="1054" units="33" unknown="0">
+                    <value>register_1054</value>
+                </register>
+                <!-- Voltage p2 -->
+                <register length="2" name="1055" units="33" unknown="0">
+                    <value>register_1055</value>
+                </register>
+                <!-- Voltage p3 -->
+                <register length="2" name="1056" units="33" unknown="0">
+                    <value>register_1056</value>
+                </register>
+                <!-- Current p1 -->
+                <register length="4" name="1076" units="34" unknown="66">
+                    <value>register_1076</value>
+                </register>
+                <!-- Current p2 -->
+                <register length="4" name="1077" units="34" unknown="66">
+                    <value>register_1077</value>
+                </register>
+                <!-- Current p3 -->
+                <register length="4" name="1078" units="34" unknown="66">
+                    <value>register_1078</value>
+                </register>
+                <!-- Power p1 -->
+                <register length="2" name="1080" units="22" unknown="67">
+                    <value>register_1080</value>
+                </register>
+                <!-- Power p2 -->
+                <register length="2" name="1081" units="22" unknown="67">
+                    <value>register_1081</value>
+                </register>
+                <!-- Power p3 -->
+                <register length="2" name="1082" units="22" unknown="67">
+                    <value>register_1082</value>
                 </register>
                 <register length="4" name="3" units="14" unknown="65">
                     <value>register_3</value>
@@ -404,6 +451,9 @@
                 </register>
                 <register length="4" name="6" units="14" unknown="65">
                     <value>register_6</value>
+                </register>
+                <register length="4" name="1024" units="22" unknown="67">
+                    <value>register_1024</value>
                 </register>
                 <register length="4" name="1025" units="26" unknown="67">
                     <value>register_1025</value>
@@ -419,12 +469,6 @@
                 </register>
                 <register length="4" name="1036" units="22" unknown="67">
                     <value>register_1036</value>
-                </register>
-                <register length="4" name="13" units="2" unknown="68">
-                    <value>register_13</value>
-                </register>
-                <register length="4" name="14" units="2" unknown="68">
-                    <value>register_14</value>
                 </register>
                 <register length="4" name="15" units="14" unknown="68">
                     <value>register_15</value>
@@ -630,9 +674,6 @@
                 <register length="16" name="1204" units="0" unknown="0">
                     <value>register_1204</value>
                 </register>
-                <register length="2" name="1054" units="33" unknown="0">
-                    <value>register_1054</value>
-                </register>
                 <register length="16" name="1206" units="0" unknown="0">
                     <value>register_1206</value>
                 </register>
@@ -645,14 +686,8 @@
                 <register length="16" name="1209" units="0" unknown="0">
                     <value>register_1209</value>
                 </register>
-                <register length="2" name="1055" units="33" unknown="0">
-                    <value>register_1055</value>
-                </register>
                 <register length="4" name="1029" units="51" unknown="0">
                     <value>register_1029</value>
-                </register>
-                <register length="2" name="1056" units="33" unknown="0">
-                    <value>register_1056</value>
                 </register>
                 <register length="10" name="1058" units="54" unknown="0">
                     <value>register_1058</value>
@@ -708,26 +743,8 @@
                 <register length="4" name="1075" units="51" unknown="0">
                     <value>register_1075</value>
                 </register>
-                <register length="4" name="1076" units="34" unknown="66">
-                    <value>register_1076</value>
-                </register>
-                <register length="4" name="1077" units="34" unknown="66">
-                    <value>register_1077</value>
-                </register>
-                <register length="4" name="1078" units="34" unknown="66">
-                    <value>register_1078</value>
-                </register>
                 <register length="2" name="1079" units="38" unknown="0">
                     <value>register_1079</value>
-                </register>
-                <register length="2" name="1080" units="22" unknown="67">
-                    <value>register_1080</value>
-                </register>
-                <register length="2" name="1081" units="22" unknown="67">
-                    <value>register_1081</value>
-                </register>
-                <register length="2" name="1082" units="22" unknown="67">
-                    <value>register_1082</value>
                 </register>
                 <register length="8" name="1181" units="53" unknown="0">
                     <value>register_1181</value>

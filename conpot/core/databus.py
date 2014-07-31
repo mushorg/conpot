@@ -73,7 +73,7 @@ class Databus(object):
         entries = dom.xpath('//conpot_template/core/databus/key_value_mappings/*')
         for entry in entries:
             key = entry.attrib['name']
-            value = entry.xpath('./value/text()')[0]
+            value = entry.xpath('./value/text()')[0].strip()
             value_type = str(entry.xpath('./value/@type')[0])
             assert key not in self._data
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
@@ -81,7 +81,7 @@ class Databus(object):
                 self.set_value(key, eval(value))
             elif value_type == 'function':
                 namespace, _classname = value.rsplit('.', 1)
-                params = entry.xpath('./value/@param')
+                params = eval(entry.xpath('./value/@param')[0])
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
                 if len(params) > 0:
