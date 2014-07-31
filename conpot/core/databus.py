@@ -81,10 +81,12 @@ class Databus(object):
                 self.set_value(key, eval(value))
             elif value_type == 'function':
                 namespace, _classname = value.rsplit('.', 1)
-                params = eval(entry.xpath('./value/@param')[0])
+                params = entry.xpath('./value/@param')
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
                 if len(params) > 0:
+                    # eval param to list
+                    params = eval(params[0])
                     self.set_value(key, _class(*(tuple(params))))
                 else:
                     self.set_value(key, _class())
