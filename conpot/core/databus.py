@@ -32,6 +32,7 @@ class Databus(object):
     def __init__(self):
         self._data = {}
         self._observer_map = {}
+        self.initialized = gevent.event.Event()
 
     # the idea here is that we can store both values and functions in the key value store
     # functions could be used if a profile wants to simulate a sensor, or the function
@@ -92,6 +93,7 @@ class Databus(object):
                     self.set_value(key, _class())
             else:
                 raise Exception('Unknown value type: {0}'.format(value_type))
+        self.initialized.set()
 
     def get_shapshot(self):
         # takes a snapshot of the internal honeypot state and returns it as json.
