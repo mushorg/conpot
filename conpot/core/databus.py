@@ -22,6 +22,7 @@ import inspect
 import random
 
 import gevent
+import gevent.event
 from lxml import etree
 
 
