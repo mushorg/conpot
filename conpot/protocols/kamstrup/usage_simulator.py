@@ -16,8 +16,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import conpot.core as conpot_core
+
 import gevent
+import conpot.core as conpot_core
 
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,14 @@ class UsageSimulator(object):
         self.power = [0, 0, 0]
         gevent.spawn(self.initialize)
 
+    def usage_counter(self):
+        while True:
+            # since this is gevent, this is actually sleep for _at least_ 1 second
+            # TODO: measure last entry and figure it out
+            gevent.sleep(1)
+            for x in [0, 1, 2]:
+                self.energy_in += int(self.power[x] * 0.0036)
+
     def initialize(self):
         # we need the databus initialized before we can probe values
         databus = conpot_core.get_databus()
@@ -43,12 +52,12 @@ class UsageSimulator(object):
         # accumulated counter
         energy_in_register = 'register_13'
         self.energy_in = databus.get_value(energy_in_register)
-        databus.set_value(energy_in_register, self.energy_in)
+        databus.set_value(energy_in_register, self._get_energy_in)
         databus.set_value('register_1', self._get_energy_in_lowres)
 
         energy_out_register = 'register_14'
         self.energy_out = databus.get_value(energy_out_register)
-        databus.set_value(energy_out_register, self.energy_out)
+        databus.set_value(energy_out_register, self._get_energy_out)
         databus.set_value('register_2', self._get_energy_out_lowres)
 
         volt_1_register = 'register_1054'
@@ -87,6 +96,8 @@ class UsageSimulator(object):
         self.power[2] = databus.get_value(power_3_register)
         databus.set_value(power_3_register, self._get_power_3)
 
+        gevent.spawn(self.usage_counter)
+
     def _get_energy_in(self):
         return self.energy_in
 
@@ -94,10 +105,10 @@ class UsageSimulator(object):
         return self.energy_out
 
     def _get_energy_in_lowres(self):
-        return self.energy_in
+        return self.energy_in / 1000
 
     def _get_energy_out_lowres(self):
-        return self.energy_out
+        return self.energy_out / 1000
 
     def _get_voltage_1(self):
         return self.voltage[0]

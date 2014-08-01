@@ -4,8 +4,7 @@
         <databus>
             <key_value_mappings>
              <key name="power_simulator">
-                    <value type="function" param="[]">
-                        conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>
+                    <value type="function">conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>
                 </key>
                 <key name="register_1024">
                     <value type="value">0</value>
@@ -17,7 +16,7 @@
                     <value type="value">0</value>
                 </key>
                 <key name="register_13">
-                    <value type="value">78010</value>
+                    <value type="value">71832712</value>
                 </key>
                 <key name="register_14">
                     <value type="value">0</value>
@@ -41,13 +40,13 @@
                     <value type="value">144</value>
                 </key>
                <key name="register_1080">
-                    <value type="value">2111</value>
+                    <value type="value">1000</value>
                 </key>
                 <key name="register_1081">
                     <value type="value">5499</value>
                 </key>
                 <key name="register_1082">
-                    <value type="value">1191</value>
+                    <value type="value">895</value>
                 </key>
                 <key name="register_3">
                     <value type="value">0</value>
