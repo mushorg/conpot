@@ -22,6 +22,7 @@ import inspect
 import random
 
 import gevent
+import gevent.event
 from lxml import etree
 
 
@@ -32,6 +33,7 @@ class Databus(object):
     def __init__(self):
         self._data = {}
         self._observer_map = {}
+        self.initialized = gevent.event.Event()
 
     # the idea here is that we can store both values and functions in the key value store
     # functions could be used if a profile wants to simulate a sensor, or the function
@@ -44,6 +46,8 @@ class Databus(object):
             # this could potentially generate a context switch, but as long the called method
             # does not "callback" the databus we should be fine
             return item.get_value()
+        elif hasattr(item, '__call__'):
+            return item()
         else:
             # guaranteed to not generate context switch
             return item
@@ -73,7 +77,7 @@ class Databus(object):
         entries = dom.xpath('//conpot_template/core/databus/key_value_mappings/*')
         for entry in entries:
             key = entry.attrib['name']
-            value = entry.xpath('./value/text()')[0]
+            value = entry.xpath('./value/text()')[0].strip()
             value_type = str(entry.xpath('./value/@type')[0])
             assert key not in self._data
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
@@ -85,11 +89,14 @@ class Databus(object):
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
                 if len(params) > 0:
+                    # eval param to list
+                    params = eval(params[0])
                     self.set_value(key, _class(*(tuple(params))))
                 else:
                     self.set_value(key, _class())
             else:
                 raise Exception('Unknown value type: {0}'.format(value_type))
+        self.initialized.set()
 
     def get_shapshot(self):
         # takes a snapshot of the internal honeypot state and returns it as json.

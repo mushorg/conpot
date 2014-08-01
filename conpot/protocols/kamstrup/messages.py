@@ -42,7 +42,7 @@ class KamstrupRequestBase(KamstrupProtocolBase):
     def __str__(self):
         return 'Comm address: {0}, Command: {1}, Message: {2}'.format(hex(self.communication_address),
                                                                       hex(self.command),
-                                                                      binascii.hexlify(self.message_bytes))
+                                                                      binascii.hexlify(bytearray(self.message_bytes)))
 
 
 # Valid but request command unknown
