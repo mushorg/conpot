@@ -44,12 +44,12 @@ class UsageSimulator(object):
         energy_in_register = 'register_13'
         self.energy_in = databus.get_value(energy_in_register)
         databus.set_value(energy_in_register, self.energy_in)
-        databus.set_value('register_1', self._get_energy_in_lowres())
+        databus.set_value('register_1', self._get_energy_in_lowres)
 
         energy_out_register = 'register_14'
         self.energy_out = databus.get_value(energy_out_register)
         databus.set_value(energy_out_register, self.energy_out)
-        databus.set_value('register_2', self._get_energy_out_lowres())
+        databus.set_value('register_2', self._get_energy_out_lowres)
 
         volt_1_register = 'register_1054'
         self.voltage[0] = databus.get_value(volt_1_register)
@@ -81,7 +81,7 @@ class UsageSimulator(object):
 
         power_2_register = 'register_1081'
         self.power[1] = databus.get_value(power_2_register)
-        databus.set_value(power_2_register, self._get_power_3)
+        databus.set_value(power_2_register, self._get_power_2)
 
         power_3_register = 'register_1082'
         self.power[2] = databus.get_value(power_3_register)
@@ -94,10 +94,10 @@ class UsageSimulator(object):
         return self.energy_out
 
     def _get_energy_in_lowres(self):
-        return int(self.energy_in)
+        return self.energy_in
 
     def _get_energy_out_lowres(self):
-        return int(self.energy_out)
+        return self.energy_out
 
     def _get_voltage_1(self):
         return self.voltage[0]

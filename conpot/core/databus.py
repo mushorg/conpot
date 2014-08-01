@@ -45,6 +45,8 @@ class Databus(object):
             # this could potentially generate a context switch, but as long the called method
             # does not "callback" the databus we should be fine
             return item.get_value()
+        elif hasattr(item, '__call__'):
+            return item()
         else:
             # guaranteed to not generate context switch
             return item
