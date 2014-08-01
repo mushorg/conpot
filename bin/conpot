@@ -141,14 +141,20 @@ def main():
         logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(args.config))
     config.read(args.config)
 
+    # look for template in CWD
     if not os.path.isfile(args.template):
-        logger.error('Template not found: {0}'.format(args.template))
-        sys.exit(1)
+        if os.path.join(package_directory, 'templates', args.template):
+            template = os.path.join(package_directory, 'templates', args.template)
+        else:
+        	logger.error('Template not found: {0}'.format(args.template))
+        	sys.exit(1)
+    else:
+        template = args.template
     if not os.path.isfile(args.config):
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
-    logger.info('Starting Conpot using template found in: {0}'.format(args.template))
+    logger.info('Starting Conpot using template found in: {0}'.format(template))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
@@ -156,13 +162,13 @@ def main():
     servers = list()
 
     session_manager = conpot_core.get_sessionManager()
-    session_manager.initialize_databus(args.template)
+    session_manager.initialize_databus(template)
 
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
-    dom = etree.parse(args.template)
+    dom = etree.parse(template)
 
     log_worker = LogWorker(config, dom, session_manager, public_ip)
     greenlets.append(gevent.spawn(log_worker.start))
@@ -171,7 +177,7 @@ def main():
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0]):
             modbus_host = dom.xpath('//conpot_template/protocols/modbus/@host')[0]
             modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
-            modbus_server = ModbusServer(args.template)
+            modbus_server = ModbusServer(template)
             modbus_server = modbus_server.get_server(modbus_host, modbus_port)
             servers.append(modbus_server)
             greenlets.append(gevent.spawn(modbus_server.start))
@@ -180,7 +186,7 @@ def main():
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]):
             snmp_host = dom.xpath('//conpot_template/protocols/snmp/@host')[0]
             snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
-            snmp_server = SNMPServer(snmp_host, snmp_port, args.template, args.mibpaths, args.raw_mib)
+            snmp_server = SNMPServer(snmp_host, snmp_port, template, args.mibpaths, args.raw_mib)
             servers.append(snmp_server)
             greenlets.append(gevent.spawn(snmp_server.start))
 
@@ -188,7 +194,7 @@ def main():
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]):
             s7_host = dom.xpath('//conpot_template/protocols/s7comm/@host')[0]
             s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
-            s7_instance = S7Server(args.template)
+            s7_instance = S7Server(template)
             s7_server = s7_instance.get_server(s7_host, s7_port)
             servers.append(s7_server)
             greenlets.append(gevent.spawn(s7_server.start))
@@ -197,7 +203,7 @@ def main():
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0]):
             http_host = dom.xpath('//conpot_template/protocols/http/@host')[0]
             http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
-            http_server = HTTPServer(http_host, http_port, args.template, args.www)
+            http_server = HTTPServer(http_host, http_port, template, args.www)
             servers.append(http_server)
             greenlets.append(gevent.spawn(http_server.start))
 
@@ -205,7 +211,7 @@ def main():
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup/@enabled')[0]):
             host = dom.xpath('//conpot_template/protocols/kamstrup/@host')[0]
             port = ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup/@port')[0])
-            kamstrup_instance = KamstrupServer(args.template)
+            kamstrup_instance = KamstrupServer(template)
             kamstrup_server = kamstrup_instance.get_server(host, port)
             servers.append(kamstrup_server)
             greenlets.append(gevent.spawn(kamstrup_server.start))
@@ -222,8 +228,8 @@ def main():
             certfile = p.attrib['certfile']
             # if path is absolute we assert that the cert and key is located in same location as template
             if not os.path.isabs(keyfile):
-                keyfile = os.path.join(os.path.dirname(args.template), keyfile)
-                certfile = os.path.join(os.path.dirname(args.template), certfile)
+                keyfile = os.path.join(os.path.dirname(template), keyfile)
+                certfile = os.path.join(os.path.dirname(template), certfile)
         port = ast.literal_eval(p.attrib['port'])
         proxy_host = p.xpath('./proxy_host/text()')[0]
         proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
