@@ -17,7 +17,7 @@
 
 import unittest
 
-from conpot.protocols.kamstrup.decoder_382 import Decoder382
+from conpot.protocols.kamstrup.meter_protocol.decoder_382 import Decoder382
 
 
 class TestKamstrupDecoder(unittest.TestCase):
