@@ -218,10 +218,10 @@ def main():
             servers.append(kamstrup_server)
             greenlets.append(gevent.spawn(kamstrup_server.start))
 
-    if dom.xpath('//conpot_template/protocols/kamstrup_managment_protocol'):
-        if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_managment_protocol/@enabled')[0]):
-            host = dom.xpath('//conpot_template/protocols/kamstrup_managment_protocol/@host')[0]
-            port = ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_managment_protocol/@port')[0])
+    if dom.xpath('//conpot_template/protocols/kamstrup_managment'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_managment/@enabled')[0]):
+            host = dom.xpath('//conpot_template/protocols/kamstrup_managment/@host')[0]
+            port = ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_managment/@port')[0])
             kamstrup_managment_instance = KamstrupManagmentServer(template)
             kamstrup_managment_server = kamstrup_managment_instance.get_server(host, port)
             servers.append(kamstrup_managment_server)
