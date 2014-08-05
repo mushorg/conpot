@@ -25,20 +25,20 @@ from command_responder import CommandResponder
 logger = logging.getLogger(__name__)
 
 
-class KamstrupManagmentServer(object):
+class KamstrupManagementServer(object):
     def __init__(self, template, timeout=0):
         self.template = template
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
 
         dom = etree.parse(template)
-        mac_address = dom.xpath('//conpot_template/protocols/kamstrup_managment/mac_address/text()')[0]
+        mac_address = dom.xpath('//conpot_template/protocols/kamstrup_management/mac_address/text()')[0]
         self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n".format(mac_address)
 
-        logger.info('Kamstrup managment protocol server initialized.')
+        logger.info('Kamstrup management protocol server initialized.')
 
     def handle(self, sock, address):
-        session = conpot_core.get_session('kamstrup_managment_protocol', address[0], address[1])
+        session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1])
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
 
         try:
@@ -53,7 +53,7 @@ class KamstrupManagmentServer(object):
                 logdata = {'request': request}
                 response = self.command_responder.respond(request)
                 logdata['response'] = response
-                logger.debug('Kamstrup managment traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
+                logger.debug('Kamstrup management traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                 session.add_event(logdata)
 
                 if response is None:
@@ -68,7 +68,7 @@ class KamstrupManagmentServer(object):
     def get_server(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
-        logger.info('Kamstrup managment protocol server started on: {0}'.format(connection))
+        logger.info('Kamstrup management protocol server started on: {0}'.format(connection))
         return server
 
 

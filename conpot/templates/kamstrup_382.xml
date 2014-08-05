@@ -382,9 +382,9 @@
         </databus>
     </core>
     <protocols>
-        <kamstrup_managment enabled="True" host="0.0.0.0" port="50100">
+        <kamstrup_management enabled="True" host="0.0.0.0" port="50100">
             <mac_address>00:13:EA:00:00:00</mac_address>
-        </kamstrup_managment>
+        </kamstrup_management>
         <kamstrup enabled="True" host="0.0.0.0" port="1025">
             <config>
                 <communication_address>63</communication_address>
