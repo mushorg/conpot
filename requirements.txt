@@ -11,3 +11,5 @@ sphinx
 libtaxii>=1.1.0
 xlrd
 crc16
+stix
+cybox
