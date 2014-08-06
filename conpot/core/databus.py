@@ -83,6 +83,8 @@ class Databus(object):
             logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
             if value_type == 'value':
                 self.set_value(key, eval(value))
+            elif value_type == 'string':
+                self.set_value(key, str(value))
             elif value_type == 'function':
                 namespace, _classname = value.rsplit('.', 1)
                 params = entry.xpath('./value/@param')
