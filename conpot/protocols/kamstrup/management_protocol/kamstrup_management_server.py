@@ -15,7 +15,6 @@
 
 import logging
 import socket
-from lxml import etree
 
 from gevent.server import StreamServer
 
@@ -30,11 +29,7 @@ class KamstrupManagementServer(object):
         self.template = template
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
-
-        dom = etree.parse(template)
-        mac_address = dom.xpath('//conpot_template/protocols/kamstrup_management/mac_address/text()')[0]
-        self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n".format(mac_address)
-
+        self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n"
         logger.info('Kamstrup management protocol server initialized.')
 
     def handle(self, sock, address):
@@ -42,7 +37,8 @@ class KamstrupManagementServer(object):
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
 
         try:
-            sock.send(self.banner)
+            sock.send(self.banner.format(
+                conpot_core.get_databus().get_value("mac_address")))
 
             while True:
                 request = sock.recv(1024)
