@@ -15,21 +15,21 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import unittest
 import tempfile
 import shutil
 
 import gevent
-from gevent import monkey
-
-monkey.patch_all()
 
 from pysnmp.proto import rfc1902
 
 import conpot.core as conpot_core
 from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
+
 
 class TestBase(unittest.TestCase):
     def setUp(self):

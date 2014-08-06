@@ -36,6 +36,7 @@ class AttackSession(object):
         self.databus = databus
         self.public_ip = None
         self.data = dict()
+        self._ended = False
 
     def _dump_event(self, event_data):
         data = {
@@ -54,7 +55,7 @@ class AttackSession(object):
         while elapse_ms in self.data:
             elapse_ms += 1
         self.data[elapse_ms] = event_data
-        # We should only log the session when we finish it
+        # TODO: We should only log the session when it is finished
         self.log_queue.put(self._dump_event(event_data))
 
     def dump(self):
@@ -67,3 +68,6 @@ class AttackSession(object):
             "data": self.data
         }
         return data
+
+    def set_ended(self):
+        self._ended = True

@@ -15,6 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import unittest
 from datetime import datetime
@@ -26,7 +28,6 @@ from modbus_tk.modbus import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
-#we need to monkey patch for modbus_tcp.TcpMaster
 from conpot.protocols.modbus import modbus_server
 import conpot.core as conpot_core
 

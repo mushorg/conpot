@@ -15,6 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import unittest
 import datetime
@@ -22,8 +24,6 @@ import datetime
 from lxml import etree
 import gevent
 import requests
-import gevent.monkey
-gevent.monkey.patch_all()
 
 from conpot.protocols.http import web_server
 import conpot.core as conpot_core

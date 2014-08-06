@@ -15,14 +15,14 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import unittest
 import conpot.utils.ext_ip
 
 from gevent.wsgi import WSGIServer
 import gevent
-import gevent.monkey
-gevent.monkey.patch_all()
 
 
 class TestExtIPUtil(unittest.TestCase):
