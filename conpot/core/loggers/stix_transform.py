@@ -49,14 +49,26 @@ class StixTransformer(object):
     def __init__(self, config, dom):
         self.config = config._sections['taxii']
         # This should not be hardcoded
-        modbus_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@port')[0])
-        snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
-        http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
-        s7_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@port')[0])
-        self.protocol_to_port_mapping = {'modbus': modbus_port,
-                                         'http': http_port,
-                                         's7comm': s7_port,
-                                         'snmp': snmp_port}
+        port_path_list = [
+            '//conpot_template/protocols/modbus/@port',
+            '//conpot_template/protocols/snmp/@port',
+            '//conpot_template/protocols/http/@port',
+            '//conpot_template/protocols/s7comm/@port'
+        ]
+        self.protocol_to_port_mapping = dict(
+            modbus=502,
+            snmp=161,
+            http=80,
+            s7comm=102,
+        )
+        for port_path in port_path_list:
+            try:
+                protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
+                protocol_name = port_path.rsplit("/", 2)[1]
+                self.protocol_to_port_mapping[protocol_name] = protocol_port
+            except IndexError:
+                continue
+        print self.protocol_to_port_mapping
 
     def _set_namespace(self, domain, name):
         stix_namespace = {domain: name}
