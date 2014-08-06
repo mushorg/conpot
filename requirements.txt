@@ -1,7 +1,6 @@
 gevent>=1.0
 pysnmp>=4.2.4
 lxml
-hpfeeds
 bottle
 jinja2
 beautifulsoup4
@@ -11,4 +10,5 @@ libtaxii>=1.1.0
 xlrd
 crc16
 enum
-modbus_tk
+hpfeeds
+modbus-tk
