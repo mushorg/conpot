@@ -58,16 +58,34 @@ class CommandResponder(object):
             "Kamstrup (R)\r\n"
         )
 
+        self.invalid_parameter = (
+            "\r\n"
+            "? Invalid parameter.\r\n"
+            "Try 'H cmd' for specific help.\r\n"
+            " Ie: H !SC\r\n"
+        )
+
     def respond(self, request):
-        stripped_request = request.rstrip('\r\n').upper()
-        if len(stripped_request) > 3:
+        stripped_request = request.strip().upper()
+        split_request = stripped_request.split(" ", 1)
+        command = split_request[0]
+
+        if len(command) > 3:
             return self.cmd_not_found
 
-        if stripped_request.startswith("Q"):
-            return
-        if stripped_request.startswith("H"):
+        if command.startswith("Q"):
+            return  # quit
+
+        if command.startswith("H"):
+            if len(split_request) > 1:
+                return self.show_help(split_request[1:])
             return self.service_menu
+
         # if stripped_request.startswith("!"):
             # return "UNIMPLEMENTED"  # TODO
 
-        return ""
+        return ""  # default: idle
+
+    def show_help(self, params):
+        # TODO implement help for single commands
+        return self.invalid_parameter

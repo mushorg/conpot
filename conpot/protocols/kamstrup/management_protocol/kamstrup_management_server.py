@@ -16,6 +16,7 @@
 import logging
 import socket
 
+import gevent
 from gevent.server import StreamServer
 
 import conpot.core as conpot_core
@@ -51,6 +52,7 @@ class KamstrupManagementServer(object):
                 logdata['response'] = response
                 logger.debug('Kamstrup management traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                 session.add_event(logdata)
+                gevent.sleep(0.25)
 
                 if response is None:
                     break
@@ -66,5 +68,3 @@ class KamstrupManagementServer(object):
         server = StreamServer(connection, self.handle)
         logger.info('Kamstrup management protocol server started on: {0}'.format(connection))
         return server
-
-
