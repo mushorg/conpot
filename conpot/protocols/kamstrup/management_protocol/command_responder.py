@@ -32,8 +32,23 @@ class CommandResponder(object):
 
     def __init__(self, template):
         self.commands = {
+            "!AC": commands.AccessControlCommand(),
+            "!AS": commands.AlarmServerCommand(),
             "!GC": commands.GetConfigCommand(),
             "!GV": commands.SoftwareVersionCommand(),
+            "!SA": commands.SetKap1Command(),
+            "!SB": commands.SetKap2Command(),
+            "!SC": commands.SetConfigCommand(),
+            "!SD": commands.SetDeviceNameCommand(),
+            "!SH": commands.SetLookupCommand(),
+            "!SI": commands.SetIPCommand(),
+            "!SK": commands.SetWatchdogCommand(),
+            "!SN": commands.SetNameserverCommand(),
+            "!SP": commands.SetPortsCommand(),
+            "!SS": commands.SetSerialCommand(),
+            "!RC": commands.RequestConnectCommand(),
+            "!RR": commands.RequestRestartCommand(),
+            "!WM": commands.WinkModuleCommand(),
         }
 
         self.help_command = commands.HelpCommand(self.commands)
