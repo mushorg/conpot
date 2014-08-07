@@ -17,126 +17,49 @@
 
 import logging
 
+import commands
+
 
 logger = logging.getLogger(__name__)
 
 
 class CommandResponder(object):
+    COMMAND_NOT_FOUND = (
+        "\r\n"
+        "? Command not found.\r\n"
+        "Send 'H' for help.\r\n"
+    )
+
     def __init__(self, template):
-        self.command_not_found = (
-            "\r\n"
-            "? Command not found.\r\n"
-            "Send 'H' for help.\r\n"
-        )
+        self.commands = {
+            "!GC": commands.GetConfigCommand(),
+            "!GV": commands.SoftwareVersionCommand(),
+        }
 
-        self.service_menu = (
-            "==============================================================================\r\n"
-            "Service Menu\r\n"
-            "==============================================================================\r\n"
-            "H:   Help [cmd].\r\n"
-            "Q:   Close connection.\r\n"
-            "!AC: Access control.\r\n"
-            "!AS: Alarm Server.\r\n"
-            "!GC: Get Config.\r\n"
-            "!GV: Software version.\r\n"
-            "!SA: Set KAP Server IP and port (*1).\r\n"
-            "!SB: Set 2nd KAP Server IP and port.\r\n"
-            "!SC: Set Config (*1).\r\n"
-            "!SD: Set device name (*1).\r\n"
-            "!SH: Set KAP Server lookup (DNS or DHCP)\r\n"
-            "!SI: Set IP (enter either valid IP or 0 to force DHCP)(*1).\r\n"
-            "!SK: Set KAP watchdog timeout(WDT).\r\n"
-            "!SN: Set IP for DNS Name servers to use.\r\n"
-            "!SP: Set IP Ports\r\n"
-            "!SS: Set Serial Settings.\r\n"
-            "!RC: Request connect\r\n"
-            "!RR: Request restart (*1).\r\n"
-            "!WM: Wink module.\r\n"
-            "==============================================================================\r\n"
-            "(*1) Forces system restart\r\n"
-            "==============================================================================\r\n"
-            "Kamstrup (R)\r\n"
-        )
-
-        self.invalid_parameter = (
-            "\r\n"
-            "? Invalid parameter.\r\n"
-            "Try 'H cmd' for specific help.\r\n"
-            " Ie: H !SC\r\n"
-        )
-
-        self.help_GC = (
-            "!GC: Get Config.\r\n"
-            "     Returns the module configuration.\r\n"
-        )
-
-        self.command_GC = (
-            "Device Name         : {}\r\n"
-            "Use DHCP            : {}\r\n"
-            "IP addr.            : {}\r\n"
-            "IP Subnet           : {}\r\n"
-            "Gateway addr.       : {}\r\n"
-            "Service server addr.: {}\r\n"
-            "Service server hostname.: {}\r\n"
-            "DNS Server No. 1: {}\r\n"
-            "DNS Server No. 2: {}\r\n"
-            "DNS Server No. 3: {}\r\n"
-            "MAC addr. (HEX)     : {}\r\n"
-            "Channel A device meterno.: {}\r\n"
-            "Channel B device meterno.: {}\r\n"
-            "Keep alive timer (flash setting): {} {}\r\n"
-            "Keep alive timer (current setting): {} {}\r\n"
-            "Has the module received acknowledge from the server: {}\r\n"
-            "KAP Server port: {}\r\n"
-            "KAP Local port: {}\r\n"
-            "Software watchdog: {} {}\r\n"
-        )
-
-        self.help_GV = (
-            "!GV: Software version.\r\n"
-            "     Returns the software revision of the module.\r\n"
-        )
-
-        self.command_GV = (
-            "\r\n"
-            "Software Version: {}\r\n"
-        )
+        self.help_command = commands.HelpCommand(self.commands)
 
     def respond(self, request):
         stripped_request = request.strip()
+
+        if len(stripped_request) == 0:
+            return ""  # idle
+
         split_request = stripped_request.split(" ", 1)
         command = split_request[0].upper()
 
         if len(command) > 3:
-            return self.command_not_found
-
+            return self.COMMAND_NOT_FOUND
         if command.startswith("Q"):
             return  # quit
 
+        params = None
+        if len(split_request) > 1:
+            params = split_request[1]
+
         if command.startswith("H"):
-            if len(split_request) > 1:
-                return self.show_help(split_request[1])
-            return self.service_menu
-
+            return self.help_command.run(params)
         if command.startswith("!"):
-            return self.run_command(command)
+            if command in self.commands.keys():
+                return self.commands[command].run(params)
 
-        return ""  # default: idle
-
-    def show_help(self, command):
-        if command == "!GC":
-            return self.help_GC
-        if command == "!GV":
-            return self.help_GV
-
-        # TODO implement help
-        return self.invalid_parameter
-
-    def run_command(self, command, params=None):
-        if command == "!GC":
-            return self.command_GC  # TODO format
-        if command == "!GV":
-            return self.command_GV  # TODO format
-
-        # TODO implement commands
-        return self.command_not_found
+        return self.COMMAND_NOT_FOUND

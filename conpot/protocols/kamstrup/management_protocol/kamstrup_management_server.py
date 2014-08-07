@@ -52,7 +52,7 @@ class KamstrupManagementServer(object):
                 logdata['response'] = response
                 logger.debug('Kamstrup management traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                 session.add_event(logdata)
-                gevent.sleep(0.25)
+                gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
                     break
