@@ -11,14 +11,6 @@ before_install:
  - "sudo apt-get -qq install python2.7 python-pip git unzip"
  - "sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader"
  - "sudo apt-get install libxml2 libxml2-dev"
- - cd /tmp
- - git clone git://github.com/rep/hpfeeds.git hpfeeds
- - cd hpfeeds
- - sudo python setup.py install
- - cd /tmp
- - wget https://modbus-tk.googlecode.com/files/modbus-tk-0.4.2.zip
- - unzip modbus-tk-0.4.2.zip -d modbus_tk
- - cd modbus_tk
  - sudo python setup.py install
 install:
  - export PYTHONIOENCODING=UTF8 # just in case
