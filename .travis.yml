@@ -18,7 +18,7 @@ install:
 # command to run tests
 script:
  - nosetests -v
- - sudo conpot -t conpot/tests/empty_template.xml
+ - conpot -t conpot/tests/empty_template.xml
 notifications:
  irc:
   - "irc.freenode.org#conpot-dev"
