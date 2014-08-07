@@ -1,0 +1,10 @@
+<conpot_template name="empty" description="empty">
+    <core>
+        <databus>
+            <key_value_mappings>
+            </key_value_mappings>
+        </databus>
+    </core>
+    <protocols>
+    </protocols>
+</conpot_template>
