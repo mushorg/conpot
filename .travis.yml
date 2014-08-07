@@ -13,7 +13,7 @@ before_install:
  - "sudo apt-get install libxml2 libxml2-dev"
 install:
  - export PYTHONIOENCODING=UTF8 # just in case
- - sudo {envpython} setup.py install
+ - python setup.py install
  - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 # command to run tests
 script:
