@@ -60,14 +60,14 @@ class Databus(object):
             gevent.spawn(self.notify_observers, key)
 
     def notify_observers(self, key):
-        for cb in self._observer_map:
+        for cb in self._observer_map[key]:
             cb(key)
 
     def observe_value(self, key, callback):
         assert hasattr(callback, '__call__')
         assert len(inspect.getargspec(callback)[0])
         if key not in self._observer_map:
-            self._observer_map = []
+            self._observer_map[key] = []
         self._observer_map[key].append(callback)
 
     def initialize(self, config_file):
