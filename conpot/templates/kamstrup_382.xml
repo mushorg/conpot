@@ -379,7 +379,7 @@
                     <value type="value">0</value>
                 </key>
                 <key name="mac_address">
-                    <value type="string">00:13:EA:00:00:00</value>
+                    <value type="value">'00:13:EA:00:00:00'</value>
                 </key>
             </key_value_mappings>
         </databus>
