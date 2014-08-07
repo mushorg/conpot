@@ -378,6 +378,9 @@
                 <key name="register_1023">
                     <value type="value">0</value>
                 </key>
+                <key name="reboot_signal">
+                    <value type="value">0</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
