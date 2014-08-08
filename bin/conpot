@@ -93,6 +93,15 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
+def validate_template(xml_file):
+    xml_schema = etree.parse(os.path.join(package_directory, 'template.xsd'))
+    xsd = etree.XMLSchema(xml_schema)
+    xml = etree.parse(xml_file)
+    xsd.validate(xml)
+    if xsd.error_log:
+        logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
+        sys.exit(1)
+
 def main():
     logo()
 
@@ -167,6 +176,8 @@ def main():
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
+
+    validate_template(template)
 
     dom = etree.parse(template)
 
