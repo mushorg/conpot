@@ -152,7 +152,7 @@ def main():
 
     # look for template in CWD
     if not os.path.isfile(args.template):
-        if os.path.join(package_directory, 'templates', args.template):
+        if os.path.isfile(os.path.join(package_directory, 'templates', args.template)):
             template = os.path.join(package_directory, 'templates', args.template)
         else:
             logger.error('Template not found: {0}'.format(args.template))
