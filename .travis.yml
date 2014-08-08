@@ -18,6 +18,7 @@ install:
 # command to run tests
 script:
  - nosetests -v
+ - find / -name conpot
  - sudo -E conpot -t conpot/tests/empty_template.xml
 notifications:
  irc:
