@@ -15,8 +15,8 @@
 
 import logging
 import socket
-from lxml import etree
 
+import gevent
 from gevent.server import StreamServer
 
 import conpot.core as conpot_core
@@ -30,11 +30,7 @@ class KamstrupManagementServer(object):
         self.template = template
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
-
-        dom = etree.parse(template)
-        mac_address = dom.xpath('//conpot_template/protocols/kamstrup_management/mac_address/text()')[0]
-        self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n".format(mac_address)
-
+        self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n"
         logger.info('Kamstrup management protocol server initialized.')
 
     def handle(self, sock, address):
@@ -42,7 +38,8 @@ class KamstrupManagementServer(object):
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
 
         try:
-            sock.send(self.banner)
+            sock.send(self.banner.format(
+                conpot_core.get_databus().get_value("mac_address")))
 
             while True:
                 request = sock.recv(1024)
@@ -55,6 +52,7 @@ class KamstrupManagementServer(object):
                 logdata['response'] = response
                 logger.debug('Kamstrup management traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                 session.add_event(logdata)
+                gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
                     break
@@ -70,5 +68,3 @@ class KamstrupManagementServer(object):
         server = StreamServer(connection, self.handle)
         logger.info('Kamstrup management protocol server started on: {0}'.format(connection))
         return server
-
-
