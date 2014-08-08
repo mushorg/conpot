@@ -1,83 +1,507 @@
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:element name="conpot_template">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element name="core">
-          <xs:complexType>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:simpleType name="databus_value_type">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="value"/>
+            <xs:enumeration value="function"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:element name="conpot_template">
+        <xs:complexType>
             <xs:sequence>
-              <xs:element name="databus">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="key_value_mappings">
-                      <xs:complexType>
+                <xs:element name="core" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
                         <xs:sequence>
-                          <xs:element name="key" maxOccurs="unbounded" minOccurs="0">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element name="value">
-                                  <xs:complexType>
-                                    <xs:simpleContent>
-                                      <xs:extension base="xs:string">
-                                        <xs:attribute type="xs:string" name="type" use="optional"/>
-                                      </xs:extension>
-                                    </xs:simpleContent>
-                                  </xs:complexType>
-                                </xs:element>
-                              </xs:sequence>
-                              <xs:attribute type="xs:string" name="name" use="optional"/>
-                            </xs:complexType>
-                          </xs:element>
+                            <xs:element name="databus">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="key_value_mappings">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="key" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="value" minOccurs="1" maxOccurs="1">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="databus_value_type"
+                                                                                              name="type"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:string" name="name" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
                         </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="protocols" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="kamstrup" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="config">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:byte" name="communication_address"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="registers">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="register" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element type="xs:string" name="value"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:byte" name="length" use="optional"/>
+                                                            <xs:attribute type="xs:short" name="name" use="optional"/>
+                                                            <xs:attribute type="xs:byte" name="units" use="optional"/>
+                                                            <xs:attribute type="xs:byte" name="unknown" use="optional"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:short" name="port" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="snmp" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="config">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="entity" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:annotation>
+                                                            <xs:documentation>Configure individual delays for SNMP
+                                                                commands Configure DoS evasion thresholds
+                                                                (req_per_ip/minute;req_overall/minute)
+                                                            </xs:documentation>
+                                                        </xs:annotation>
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute type="xs:string" name="name"
+                                                                                  use="required"/>
+                                                                    <xs:attribute type="xs:string" name="command"
+                                                                                  use="required"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="mibs">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="mib">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="symbol" maxOccurs="unbounded"
+                                                                            minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element type="xs:string" name="value">
+                                                                                <xs:annotation>
+                                                                                    <xs:documentation>Value is key in
+                                                                                        databus
+                                                                                    </xs:documentation>
+                                                                                </xs:annotation>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                        <xs:attribute type="xs:string" name="name"
+                                                                                      use="required"/>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:string" name="name" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:short" name="port" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="modbus" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="device_info">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="VendorName"/>
+                                                    <xs:element type="xs:string" name="ProductCode"/>
+                                                    <xs:element type="xs:string" name="MajorMinorRevision"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="slaves">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="slave" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="blocks">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="block"
+                                                                                        maxOccurs="unbounded"
+                                                                                        minOccurs="0">
+                                                                                <xs:complexType>
+                                                                                    <xs:sequence>
+                                                                                        <xs:element type="xs:string"
+                                                                                                    name="type"
+                                                                                                    minOccurs="1"
+                                                                                                    maxOccurs="1">
+                                                                                        </xs:element>
+                                                                                        <xs:element type="xs:int"
+                                                                                                    name="starting_address"
+                                                                                                    minOccurs="1"
+                                                                                                    maxOccurs="1"/>
+                                                                                        <xs:element type="xs:short"
+                                                                                                    name="size"
+                                                                                                    minOccurs="1"
+                                                                                                    maxOccurs="1"/>
+                                                                                        <xs:element type="xs:string"
+                                                                                                    name="content"
+                                                                                                    minOccurs="1"
+                                                                                                    maxOccurs="1"/>
+                                                                                    </xs:sequence>
+                                                                                    <xs:attribute type="xs:string"
+                                                                                                  name="name"
+                                                                                                  use="required"/>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:byte" name="id" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:short" name="port" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="s7comm" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="system_status_lists">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="ssl" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="system_name" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="module_name" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="plant_ident" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="copyright" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="serial" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="module_type_name" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="oem_id" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="location" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="module_identification" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="hardware_identification"
+                                                                            minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="firmware_identification"
+                                                                            minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string" name="id"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:string" name="id" use="required"/>
+                                                            <xs:attribute type="xs:string" name="name" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="enabled"/>
+                                    <xs:attribute type="xs:string" name="host"/>
+                                    <xs:attribute type="xs:byte" name="port"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="http" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="global">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="config">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="entity" maxOccurs="unbounded"
+                                                                            minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string"
+                                                                                              name="name"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="headers">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="entity">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string"
+                                                                                              name="name"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="htdocs">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="node" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element type="xs:short" name="status" minOccurs="0">
+                                                                </xs:element>
+                                                                <xs:element type="xs:string" name="tarpit"
+                                                                            minOccurs="0">
+                                                                </xs:element>
+                                                                <xs:element name="triggers" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="entity">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute
+                                                                                                    type="xs:string"
+                                                                                                    name="appendix"
+                                                                                                    use="required"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element name="headers" minOccurs="0">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="entity"
+                                                                                        maxOccurs="unbounded"
+                                                                                        minOccurs="0">
+                                                                                <xs:complexType>
+                                                                                    <xs:simpleContent>
+                                                                                        <xs:extension base="xs:string">
+                                                                                            <xs:attribute
+                                                                                                    type="xs:string"
+                                                                                                    name="name"
+                                                                                                    use="required"/>
+                                                                                        </xs:extension>
+                                                                                    </xs:simpleContent>
+                                                                                </xs:complexType>
+                                                                            </xs:element>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                                <xs:element type="xs:string" name="alias" minOccurs="0">
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:string" name="name" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="statuscodes">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="status" maxOccurs="unbounded" minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element type="xs:byte" name="tarpit"/>
+                                                                <xs:element name="entity">
+                                                                    <xs:complexType>
+                                                                        <xs:simpleContent>
+                                                                            <xs:extension base="xs:string">
+                                                                                <xs:attribute type="xs:string"
+                                                                                              name="name"
+                                                                                              use="required"/>
+                                                                            </xs:extension>
+                                                                        </xs:simpleContent>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:short" name="name" use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:byte" name="port" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="proxies" minOccurs="0" maxOccurs="unbounded">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="proxy" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:string" name="proxy_host"/>
+                                        <xs:element type="xs:int" name="proxy_port"/>
+                                        <xs:element type="xs:string" name="decoder"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:int" name="port" use="required"/>
+                                    <xs:attribute type="xs:string" name="keyfile" use="optional"/>
+                                    <xs:attribute type="xs:string" name="certfile" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
             </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-        <xs:element name="protocols">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="kamstrup">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element name="config">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element type="xs:byte" name="communication_address"/>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                    <xs:element name="registers">
-                      <xs:complexType>
-                        <xs:sequence>
-                          <xs:element name="register" maxOccurs="unbounded" minOccurs="0">
-                            <xs:complexType>
-                              <xs:sequence>
-                                <xs:element type="xs:string" name="value"/>
-                              </xs:sequence>
-                              <xs:attribute type="xs:byte" name="length" use="optional"/>
-                              <xs:attribute type="xs:short" name="name" use="optional"/>
-                              <xs:attribute type="xs:byte" name="units" use="optional"/>
-                              <xs:attribute type="xs:byte" name="unknown" use="optional"/>
-                            </xs:complexType>
-                          </xs:element>
-                        </xs:sequence>
-                      </xs:complexType>
-                    </xs:element>
-                  </xs:sequence>
-                  <xs:attribute type="xs:string" name="enabled"/>
-                  <xs:attribute type="xs:string" name="host"/>
-                  <xs:attribute type="xs:short" name="port"/>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
-      </xs:sequence>
-      <xs:attribute type="xs:string" name="description"/>
-      <xs:attribute type="xs:string" name="name"/>
-    </xs:complexType>
-  </xs:element>
+            <xs:attribute type="xs:string" name="description" use="required"/>
+            <xs:attribute type="xs:string" name="name" use="required"/>
+        </xs:complexType>
+    </xs:element>
 </xs:schema>
