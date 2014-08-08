@@ -18,8 +18,7 @@ install:
 # command to run tests
 script:
  - nosetests -v
- - find / -name conpot
- - sudo -E conpot -t conpot/tests/empty_template.xml
+ - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
 notifications:
  irc:
   - "irc.freenode.org#conpot-dev"
