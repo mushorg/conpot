@@ -3,7 +3,7 @@
     <core>
         <databus>
             <key_value_mappings>
-             <key name="power_simulator">
+                <key name="power_simulator">
                     <value type="function">conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>
                 </key>
                 <key name="register_1024">
@@ -39,7 +39,7 @@
                 <key name="register_1078">
                     <value type="value">144</value>
                 </key>
-               <key name="register_1080">
+                <key name="register_1080">
                     <value type="value">1000</value>
                 </key>
                 <key name="register_1081">
@@ -378,12 +378,14 @@
                 <key name="register_1023">
                     <value type="value">0</value>
                 </key>
+                <key name="mac_address">
+                    <value type="value">'00:13:EA:00:00:00'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
     <protocols>
         <kamstrup_management enabled="True" host="0.0.0.0" port="50100">
-            <mac_address>00:13:EA:00:00:00</mac_address>
         </kamstrup_management>
         <kamstrup enabled="True" host="0.0.0.0" port="1025">
             <config>

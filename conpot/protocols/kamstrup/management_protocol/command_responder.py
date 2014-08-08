@@ -17,57 +17,64 @@
 
 import logging
 
+import commands
+
 
 logger = logging.getLogger(__name__)
 
 
 class CommandResponder(object):
-    def __init__(self, template):
-        self.cmd_not_found = (
-            "\r\n"
-            "? Command not found.\r\n"
-            "Send 'H' for help.\r\n"
-        )
+    COMMAND_NOT_FOUND = (
+        "\r\n"
+        "? Command not found.\r\n"
+        "Send 'H' for help.\r\n"
+    )
 
-        self.service_menu = (
-            "==============================================================================\r\n"
-            "Service Menu\r\n"
-            "==============================================================================\r\n"
-            "H:   Help [cmd].\r\n"
-            "Q:   Close connection.\r\n"
-            "!AC: Access control.\r\n"
-            "!AS: Alarm Server.\r\n"
-            "!GC: Get Config.\r\n"
-            "!GV: Software version.\r\n"
-            "!SA: Set KAP Server IP and port (*1).\r\n"
-            "!SB: Set 2nd KAP Server IP and port.\r\n"
-            "!SC: Set Config (*1).\r\n"
-            "!SD: Set device name (*1).\r\n"
-            "!SH: Set KAP Server lookup (DNS or DHCP)\r\n"
-            "!SI: Set IP (enter either valid IP or 0 to force DHCP)(*1).\r\n"
-            "!SK: Set KAP watchdog timeout(WDT).\r\n"
-            "!SN: Set IP for DNS Name servers to use.\r\n"
-            "!SP: Set IP Ports\r\n"
-            "!SS: Set Serial Settings.\r\n"
-            "!RC: Request connect\r\n"
-            "!RR: Request restart (*1).\r\n"
-            "!WM: Wink module.\r\n"
-            "==============================================================================\r\n"
-            "(*1) Forces system restart\r\n"
-            "==============================================================================\r\n"
-            "Kamstrup (R)\r\n"
-        )
+    def __init__(self, template):
+        self.commands = {
+            "!AC": commands.AccessControlCommand(),
+            "!AS": commands.AlarmServerCommand(),
+            "!GC": commands.GetConfigCommand(),
+            "!GV": commands.SoftwareVersionCommand(),
+            "!SA": commands.SetKap1Command(),
+            "!SB": commands.SetKap2Command(),
+            "!SC": commands.SetConfigCommand(),
+            "!SD": commands.SetDeviceNameCommand(),
+            "!SH": commands.SetLookupCommand(),
+            "!SI": commands.SetIPCommand(),
+            "!SK": commands.SetWatchdogCommand(),
+            "!SN": commands.SetNameserverCommand(),
+            "!SP": commands.SetPortsCommand(),
+            "!SS": commands.SetSerialCommand(),
+            "!RC": commands.RequestConnectCommand(),
+            "!RR": commands.RequestRestartCommand(),
+            "!WM": commands.WinkModuleCommand(),
+        }
+
+        self.help_command = commands.HelpCommand(self.commands)
 
     def respond(self, request):
-        stripped_request = request.rstrip('\r\n').upper()
-        if len(stripped_request) > 3:
-            return self.cmd_not_found
+        stripped_request = request.strip()
 
-        if stripped_request.startswith("Q"):
-            return
-        if stripped_request.startswith("H"):
-            return self.service_menu
-        # if stripped_request.startswith("!"):
-            # return "UNIMPLEMENTED"  # TODO
+        if len(stripped_request) == 0:
+            return ""  # idle
 
-        return ""
+        split_request = stripped_request.split(" ", 1)
+        command = split_request[0].upper()
+
+        if len(command) > 3:
+            return self.COMMAND_NOT_FOUND
+        if command.startswith("Q"):
+            return  # quit
+
+        params = None
+        if len(split_request) > 1:
+            params = split_request[1]
+
+        if command.startswith("H"):
+            return self.help_command.run(params)
+        if command.startswith("!"):
+            if command in self.commands.keys():
+                return self.commands[command].run(params)
+
+        return self.COMMAND_NOT_FOUND
