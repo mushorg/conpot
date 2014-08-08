@@ -10,7 +10,7 @@ before_install:
  - "sudo apt-get -qq update"
  - "sudo apt-get -qq install python2.7 python-pip git unzip"
  - "sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader"
- - "sudo apt-get install libxml2 libxml2-dev"
+ - "sudo apt-get install libxml2 libxml2-dev libxml2-utils"
 install:
  - export PYTHONIOENCODING=UTF8 # just in case
  - python setup.py install
@@ -19,6 +19,7 @@ install:
 script:
  - nosetests -v
  - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
+ - xmllint --schema conpot/template.xsd conpot/templates/*.xml
 notifications:
  irc:
   - "irc.freenode.org#conpot-dev"
