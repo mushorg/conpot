@@ -1,0 +1,9 @@
+<conpot_template name="DNP3 outstation proxy" description="Proxy to DNP3 outstation">
+    <proxies>
+        <proxy name="DNP3 outstation" host="0.0.0.0" port="20000">
+            <proxy_host>127.0.0.1</proxy_host>
+            <proxy_port>20001</proxy_port>
+            <decoder>conpot.protocols.dnp3.decoder.Decoder</decoder>
+        </proxy>
+    </proxies>
+</conpot_template>

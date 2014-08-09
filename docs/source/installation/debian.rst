@@ -1,5 +1,5 @@
 Debian
-======================================
+======
 
 Tested Versions
 ---------------
@@ -102,7 +102,7 @@ Please note that by enabling hpfriends your conpot installation will automatical
 Project. The fetch_public_ip option enables fetching the honeypot public ip address from a external resource.
 
 Example usage
---------------
+-------------
 
 ::
 

@@ -14,6 +14,7 @@ Contents:
    installation/index
    usage/index
    development/index
+   components/index
    faq
 
 

@@ -77,6 +77,9 @@ def setup_logging(log_file):
 
 
 def drop_privileges(uid_name='nobody', gid_name='nogroup'):
+    if not os.geteuid() == 0:
+        logger.info("Running as {0}/{1}.".format(pwd.getpwuid(os.getuid()).pw_name, os.getgid()))
+        return
     wanted_uid = pwd.getpwnam(uid_name)[2]
     #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
