@@ -1,25 +1,33 @@
 language: python
 python:
-  - "2.7"
+- '2.7'
 virtualenv:
   system_site_packages: false
 before_install:
- - REPO=`pwd`
- - echo $REPO
- - pwd
- - "sudo apt-get -qq update"
- - "sudo apt-get -qq install python2.7 python-pip git unzip"
- - "sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader"
- - "sudo apt-get install libxml2 libxml2-dev libxml2-utils"
+- "export TRAVIS_COMMIT_MSG=\"$(git log --format=%B --no-merges -n 1)\""
+- REPO=`pwd`
+- echo $REPO
+- pwd
+- sudo apt-get -qq update
+- sudo apt-get -qq install python2.7 python-pip git unzip
+- sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader
+- sudo apt-get install libxml2 libxml2-dev libxml2-utils
 install:
- - export PYTHONIOENCODING=UTF8 # just in case
- - python setup.py install
- - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
-# command to run tests
+- export PYTHONIOENCODING=UTF8
+- python setup.py install
+- git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 script:
- - nosetests -v
- - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
- - xmllint --schema conpot/template.xsd conpot/templates/*.xml
+- nosetests -v
+- sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
+- xmllint --schema conpot/template.xsd conpot/templates/*.xml
 notifications:
- irc:
-  - "irc.freenode.org#conpot-dev"
+  irc:
+  - irc.freenode.org#conpot-dev
+deploy:
+  provider: pypi
+  user: Johnny.Vestergaard
+  password:
+    secure: dMH8ewnka+UkTMGqmgeuT8AzWXJTtCPx7le0hPIJrGV4cnfSDlWwkU145aTMQgjia9BkW+KeR+nK9Q+ERmiJyencm0lUJ9pZj9i49OmLmppOv/U3kEvWFlLCe+HopXVk4VzFnlen7nNMVUNpQoy39WE1WulSxGtbAdXXUX/ZKSw=
+  on:
+    repo: glastopf/conpot
+    condition: "$TRAVIS_TAG =~ ^Release_\d{1,}\.\d{1,}\.\d{1,}"
