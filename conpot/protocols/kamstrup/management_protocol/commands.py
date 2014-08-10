@@ -380,7 +380,7 @@ class SetNameserverCommand(BaseCommand):
         if len(nameservers) != 3:
             return self.INVALID_PARAMETER
 
-        for nameserver in nameservers
+        for nameserver in nameservers:
             if not self._is_valid(nameserver):
                 nameserver = "0.0.0.0"
 
