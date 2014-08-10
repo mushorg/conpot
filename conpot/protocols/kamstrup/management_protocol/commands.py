@@ -17,6 +17,8 @@
 
 import logging
 
+import conpot.core as conpot_core
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +102,12 @@ class AccessControlCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "{} \r\n"
+        " [1] {}\r\n"
+        " [2] {}\r\n"
+        " [3] {}\r\n"
+        " [4] {}\r\n"
+        " [5] {}\r\n"
     )
 
 
@@ -118,6 +126,7 @@ class AlarmServerCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Alarm server:  {} "  # no CRLF
     )
 
 
@@ -181,6 +190,8 @@ class SetKap1Command(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Service server addr.: {}:{}\r\n"
     )
 
 
@@ -204,6 +215,9 @@ class SetKap2Command(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Service server addr.: {}:{} (from DNS)\r\n"
+        "No redundancy.\r\n"
     )
 
 
@@ -221,6 +235,7 @@ class SetConfigCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Service server hostname.: {}\r\n"
     )
 
 
@@ -232,6 +247,7 @@ class SetDeviceNameCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "OK"
     )
 
 
@@ -256,6 +272,7 @@ class SetLookupCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Service server hostname.: {}\r\n"
     )
 
 
@@ -277,6 +294,9 @@ class SetIPCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Use DHCP            : {}\r\n"
+        "\r\n"
+        "IP addr.            : {}\r\n"
     )
 
 
@@ -301,6 +321,9 @@ class SetWatchdogCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Software watchdog: {} {}\r\n"
+        "KAP Missing warning: {} {}\r\n"
+        "Keep alive timer (flash setting): {} {}\r\n"
     )
 
 
@@ -312,9 +335,20 @@ class SetNameserverCommand(BaseCommand):
         "      Example: !SN 172.16.0.83 172.16.0.84 0.0.0.0\r\n"
     )
 
-    CMD_OUTPUT = (
+    CMD_SUCCESSFUL = (
         "\r\n"
+        "OK"
     )
+
+    def run(self, params=None):
+        if params is None:
+            return self.INVALID_PARAMETER
+
+        nameservers = params.split(" ")
+        if len(nameservers) != 3:
+            return self.INVALID_PARAMETER
+
+        return self.CMD_SUCCESSFUL
 
 
 class SetPortsCommand(BaseCommand):
@@ -334,6 +368,11 @@ class SetPortsCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "KAP on server: {}\r\n"
+        "ChA on module: {}\r\n"
+        "ChB on module: {}\r\n"
+        "Cfg on module: {}\r\n"
     )
 
 
@@ -353,6 +392,8 @@ class SetSerialCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "UART A setup : {}\r\n"
+        "UART B setup : {},{},{},{} {}\r\n"
     )
 
 
@@ -371,6 +412,8 @@ class RequestConnectCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Status: {}\r\n"
     )
 
 
@@ -379,13 +422,9 @@ class RequestRestartCommand(BaseCommand):
         "!RR: Request restart (*1).\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-    )
-
     def run(self, params=None):
-        # TODO conpot_core.get_databus().set_value("reboot_signal", 1)
-        return self.CMD_OUTPUT
+        conpot_core.get_databus().set_value("reboot_signal", 1)
+        return
 
 
 class WinkModuleCommand(BaseCommand):
@@ -396,4 +435,6 @@ class WinkModuleCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "OK\r\n"
     )
