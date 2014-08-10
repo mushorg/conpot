@@ -7,6 +7,7 @@ before_install:
 - "export TRAVIS_COMMIT_MSG=\"$(git log --format=%B --no-merges -n 1)\""
 - REPO=`pwd`
 - echo $REPO
+- echo $TRAVIS_TAG
 - pwd
 - sudo apt-get -qq update
 - sudo apt-get -qq install python2.7 python-pip git unzip
