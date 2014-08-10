@@ -24,14 +24,9 @@ Commit all the changes you want to have in the tag.
 Travis CI has been configured to deploy when it encounters a tag matching the regex 
 
 ::
-  ^Release_\d{1,}\.\d{1,}\.\d{1,}
 
-::
+    ^Release_\d{1,}\.\d{1,}\.\d{1,}
 
-    git tag -a $VERSION_NUMBER$
-    git push --tag
-
-$VERSION_NUMBER$ should be latest pypi version +1
 
 
 Mess ups
