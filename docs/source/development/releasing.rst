@@ -17,31 +17,14 @@ Make sure all tests are passing:
   nosetests
 
 
-Check Usage
------------
-
-Run the server to see if he loads properly.
-
-::
-
-    python conpot
-
-
-Setup.py
---------
-
-Bump the version number in conpot/__init__.py before tagging:
-
-::
-
-    version='$VERSION_NUMBER$'
-
-
 Tagging and Pushing
 -------------------
 
 Commit all the changes you want to have in the tag.
-Make sure to add a git tag before making a new release:
+Travis CI has been configured to deploy when it encounters a tag matching the regex 
+
+::
+  ^Release_\d{1,}\.\d{1,}\.\d{1,}
 
 ::
 
