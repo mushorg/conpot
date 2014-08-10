@@ -137,26 +137,35 @@ class GetConfigCommand(BaseCommand):
     )
 
     CMD_OUTPUT = (
-        "Device Name         : {}\r\n"
-        "Use DHCP            : {}\r\n"
-        "IP addr.            : {}\r\n"
-        "IP Subnet           : {}\r\n"
-        "Gateway addr.       : {}\r\n"
-        "Service server addr.: {}\r\n"
-        "Service server hostname.: {}\r\n"
-        "DNS Server No. 1: {}\r\n"
-        "DNS Server No. 2: {}\r\n"
-        "DNS Server No. 3: {}\r\n"
-        "MAC addr. (HEX)     : {}\r\n"
-        "Channel A device meterno.: {}\r\n"
-        "Channel B device meterno.: {}\r\n"
-        "Keep alive timer (flash setting): {} {}\r\n"
-        "Keep alive timer (current setting): {} {}\r\n"
-        "Has the module received acknowledge from the server: {}\r\n"
-        "KAP Server port: {}\r\n"
-        "KAP Local port: {}\r\n"
-        "Software watchdog: {} {}\r\n"
+        "Device Name         : {device_name}\r\n"
+        #"Use DHCP            : {}\r\n"
+        #"IP addr.            : {}\r\n"
+        #"IP Subnet           : {}\r\n"
+        #"Gateway addr.       : {}\r\n"
+        #"Service server addr.: {}\r\n"
+        #"Service server hostname.: {}\r\n"
+        "DNS Server No. 1: {nameserver_1}\r\n"
+        "DNS Server No. 2: {nameserver_2}\r\n"
+        "DNS Server No. 3: {nameserver_3}\r\n"
+        "MAC addr. (HEX)     : {mac_address}\r\n"
+        #"Channel A device meterno.: {}\r\n"
+        #"Channel B device meterno.: {}\r\n"
+        #"Keep alive timer (flash setting): {} {}\r\n"
+        #"Keep alive timer (current setting): {} {}\r\n"
+        #"Has the module received acknowledge from the server: {}\r\n"
+        #"KAP Server port: {}\r\n"
+        #"KAP Local port: {}\r\n"
+        #"Software watchdog: {} {}\r\n"
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            device_name=databus.get_value("device_name"),
+            nameserver_1=databus.get_value("nameserver_1"),
+            nameserver_2=databus.get_value("nameserver_2"),
+            nameserver_3=databus.get_value("nameserver_3"),
+            mac_address=databus.get_value("mac_address"))
 
 
 class SoftwareVersionCommand(BaseCommand):
@@ -167,8 +176,12 @@ class SoftwareVersionCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "Software Version: {}\r\n"
+        "Software Version: {software_version}\r\n"
     )
+
+    def run(self, params=None):
+        return self.CMD_OUTPUT.format(
+            software_version=conpot_core.get_databus().get_value("software_version"))
 
 
 class SetKap1Command(BaseCommand):
@@ -245,10 +258,20 @@ class SetDeviceNameCommand(BaseCommand):
         "     Option for individual naming of the module (0-20 chars).\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "OK"
-    )
+    def run(self, params=None):
+        if params is None:
+            params = ""
+
+        if len(params) > 20:
+            params = params[0:20]
+            output = ""
+        else:
+            output = "\r\nOK"
+
+        databus = conpot_core.get_databus()
+        databus.set_value("device_name", params)
+        databus.set_value("reboot_signal", 1)
+        return output
 
 
 class SetLookupCommand(BaseCommand):
@@ -335,10 +358,19 @@ class SetNameserverCommand(BaseCommand):
         "      Example: !SN 172.16.0.83 172.16.0.84 0.0.0.0\r\n"
     )
 
-    CMD_SUCCESSFUL = (
-        "\r\n"
-        "OK"
-    )
+    def _is_valid(self, address):
+        if "." in address:
+            octets = address.split(".")
+        else:
+            octets = [int(address[i:i+3]) for i in range(0, len(address), 3)]
+
+        if len(octets) is not 4:
+            return False
+        for octet in octets:
+            if octet < 0 or octet > 255:
+                return False
+
+        return True
 
     def run(self, params=None):
         if params is None:
@@ -348,7 +380,15 @@ class SetNameserverCommand(BaseCommand):
         if len(nameservers) != 3:
             return self.INVALID_PARAMETER
 
-        return self.CMD_SUCCESSFUL
+        for nameserver in nameservers
+            if not self._is_valid(nameserver):
+                nameserver = "0.0.0.0"
+
+        databus = conpot_core.get_databus()
+        databus.set_value("nameserver_1", nameservers[0])
+        databus.set_value("nameserver_2", nameservers[1])
+        databus.set_value("nameserver_3", nameservers[2])
+        return "\r\nOK"
 
 
 class SetPortsCommand(BaseCommand):

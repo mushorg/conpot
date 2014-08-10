@@ -378,6 +378,21 @@
                 <key name="register_1023">
                     <value type="value">0</value>
                 </key>
+                <key name="software_version">
+                    <value type="value">'5.5 (E5)'</value>
+                </key>
+                <key name="device_name">
+                    <value type="value">''</value>
+                </key>
+                <key name="nameserver_1">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="nameserver_2">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="nameserver_3">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
                 <key name="mac_address">
                     <value type="value">'00:13:EA:00:00:00'</value>
                 </key>
