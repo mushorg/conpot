@@ -1,3 +1,9 @@
+Conpot 0.3.0 (release 2013-08-10)
+    * Moves all honeypot configuration to XML templates
+    * Added STIX and TAXII reporting
+    * Added Kamstrup smart meter protocol
+    * Numerous bugfixes and minor enhancements
+
 Conpot 0.2.1 (release 2013-05-29)
     * Fixed modbus_tk install issue
 
