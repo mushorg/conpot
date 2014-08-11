@@ -69,20 +69,24 @@ class KamstrupServer(object):
                     parser.add_byte(x)
 
                 while True:
-                    # TODO: Handle requests to wrong communication address
                     request = parser.get_request()
                     if not request:
                         break
                     else:
                         logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
                         response = self.command_responder.respond(request)
-                        serialized_response = response.serialize()
-                        logdata['response'] = binascii.hexlify(serialized_response)
-                        logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                         # real Kamstrup meters has delay in this interval
                         gevent.sleep(random.uniform(0.24, 0.34))
-                        sock.send(serialized_response)
-                        session.add_event(logdata)
+                        if response:
+                            serialized_response = response.serialize()
+                            logdata['response'] = binascii.hexlify(serialized_response)
+                            logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
+                            sock.send(serialized_response)
+                            session.add_event(logdata)
+                        else:
+                            session.add_event(logdata)
+                            break
+
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
