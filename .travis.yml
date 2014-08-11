@@ -31,4 +31,5 @@ deploy:
     secure: dMH8ewnka+UkTMGqmgeuT8AzWXJTtCPx7le0hPIJrGV4cnfSDlWwkU145aTMQgjia9BkW+KeR+nK9Q+ERmiJyencm0lUJ9pZj9i49OmLmppOv/U3kEvWFlLCe+HopXVk4VzFnlen7nNMVUNpQoy39WE1WulSxGtbAdXXUX/ZKSw=
   on:
     repo: glastopf/conpot
+    all_branches: true
     condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"
