@@ -18,6 +18,7 @@
 import logging
 import socket
 import binascii
+import random
 
 from gevent.server import StreamServer
 import gevent
@@ -77,9 +78,9 @@ class KamstrupServer(object):
                         response = self.command_responder.respond(request)
                         serialized_response = response.serialize()
                         logdata['response'] = binascii.hexlify(serialized_response)
-                        # TODO: Need a delay here, real Kamstrup meter has a delay aroudn 60 - 200 ms
-                        # between each command
                         logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
+                        # real Kamstrup meters has delay in this interval
+                        gevent.sleep(random.uniform(0.24, 0.34))
                         sock.send(serialized_response)
                         session.add_event(logdata)
         except socket.timeout:
