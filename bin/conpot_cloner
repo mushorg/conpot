@@ -1,7 +1,7 @@
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
-from conpot.snmp import snmp_client
+from conpot.tests.helpers import snmp_client
 
 import gevent
 from gevent.pool import Pool
