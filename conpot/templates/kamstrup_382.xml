@@ -395,6 +395,7 @@
                 </key>
                 <key name="mac_address">
                     <value type="value">'00:13:EA:00:00:00'</value>
+                </key>
                 <key name="reboot_signal">
                     <value type="value">0</value>
                 </key>
@@ -402,8 +403,7 @@
         </databus>
     </core>
     <protocols>
-        <kamstrup_management enabled="True" host="0.0.0.0" port="50100">
-        </kamstrup_management>
+        <kamstrup_management enabled="True" host="0.0.0.0" port="50100"/>
         <kamstrup enabled="True" host="0.0.0.0" port="1025">
             <config>
                 <communication_address>63</communication_address>
