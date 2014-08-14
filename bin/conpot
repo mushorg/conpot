@@ -95,6 +95,15 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
+def validate_template(xml_file):
+    xml_schema = etree.parse(os.path.join(package_directory, 'template.xsd'))
+    xsd = etree.XMLSchema(xml_schema)
+    xml = etree.parse(xml_file)
+    xsd.validate(xml)
+    if xsd.error_log:
+        logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
+        sys.exit(1)
+
 def main():
     logo()
 
@@ -145,11 +154,11 @@ def main():
 
     # look for template in CWD
     if not os.path.isfile(args.template):
-        if os.path.join(package_directory, 'templates', args.template):
+        if os.path.isfile(os.path.join(package_directory, 'templates', args.template)):
             template = os.path.join(package_directory, 'templates', args.template)
         else:
-        	logger.error('Template not found: {0}'.format(args.template))
-        	sys.exit(1)
+            logger.error('Template not found: {0}'.format(args.template))
+            sys.exit(1)
     else:
         template = args.template
     if not os.path.isfile(args.config):
@@ -160,7 +169,7 @@ def main():
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
     logger.info('Starting Conpot using www templates found in: {0}'.format(args.www))
 
-    greenlets = list()
+    protocol_greenlets = list()
     servers = list()
 
     session_manager = conpot_core.get_sessionManager()
@@ -170,10 +179,12 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
+    validate_template(template)
+
     dom = etree.parse(template)
 
     log_worker = LogWorker(config, dom, session_manager, public_ip)
-    greenlets.append(gevent.spawn(log_worker.start))
+    gevent.spawn(log_worker.start)
 
     if dom.xpath('//conpot_template/protocols/modbus'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/modbus/@enabled')[0]):
@@ -182,7 +193,7 @@ def main():
             modbus_server = ModbusServer(template)
             modbus_server = modbus_server.get_server(modbus_host, modbus_port)
             servers.append(modbus_server)
-            greenlets.append(gevent.spawn(modbus_server.start))
+            protocol_greenlets.append(gevent.spawn(modbus_server.start))
 
     if dom.xpath('//conpot_template/protocols/snmp'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@enabled')[0]):
@@ -190,7 +201,7 @@ def main():
             snmp_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/snmp/@port')[0])
             snmp_server = SNMPServer(snmp_host, snmp_port, template, args.mibpaths, args.raw_mib)
             servers.append(snmp_server)
-            greenlets.append(gevent.spawn(snmp_server.start))
+            protocol_greenlets.append(gevent.spawn(snmp_server.start))
 
     if dom.xpath('//conpot_template/protocols/s7comm'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/s7comm/@enabled')[0]):
@@ -199,7 +210,7 @@ def main():
             s7_instance = S7Server(template)
             s7_server = s7_instance.get_server(s7_host, s7_port)
             servers.append(s7_server)
-            greenlets.append(gevent.spawn(s7_server.start))
+            protocol_greenlets.append(gevent.spawn(s7_server.start))
 
     if dom.xpath('//conpot_template/protocols/http'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@enabled')[0]):
@@ -207,7 +218,7 @@ def main():
             http_port = ast.literal_eval(dom.xpath('//conpot_template/protocols/http/@port')[0])
             http_server = HTTPServer(http_host, http_port, template, args.www)
             servers.append(http_server)
-            greenlets.append(gevent.spawn(http_server.start))
+            protocol_greenlets.append(gevent.spawn(http_server.start))
 
     if dom.xpath('//conpot_template/protocols/kamstrup'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup/@enabled')[0]):
@@ -216,7 +227,7 @@ def main():
             kamstrup_instance = KamstrupServer(template)
             kamstrup_server = kamstrup_instance.get_server(host, port)
             servers.append(kamstrup_server)
-            greenlets.append(gevent.spawn(kamstrup_server.start))
+            protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
 
     if dom.xpath('//conpot_template/protocols/kamstrup_management'):
         if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_management/@enabled')[0]):
@@ -225,8 +236,7 @@ def main():
             kamstrup_management_instance = KamstrupManagementServer(template)
             kamstrup_management_server = kamstrup_management_instance.get_server(host, port)
             servers.append(kamstrup_management_server)
-            greenlets.append(gevent.spawn(kamstrup_management_server.start))
-
+            protocol_greenlets.append(gevent.spawn(kamstrup_management_server.start))
 
     proxies = dom.xpath('//conpot_template/proxies/*')
     for p in proxies:
@@ -252,20 +262,21 @@ def main():
         proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
         proxy_server = proxy_instance.get_server(host, port)
         servers.append(proxy_instance)
-        greenlets.append(gevent.spawn(proxy_server.start))
+        protocol_greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
     drop_privileges()
     try:
-        gevent.joinall(greenlets)
+        if len(protocol_greenlets) > 0:
+            gevent.wait()
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')
         for server in servers:
             server.stop()
     finally:
         # Just being nice and cosy!
-        gevent.joinall(greenlets, 2)
+        gevent.joinall(protocol_greenlets, 2)
 
 
 if __name__ == "__main__":

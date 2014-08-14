@@ -1,7 +1,6 @@
 gevent>=1.0
 pysnmp>=4.2.4
 lxml
-hpfeeds
 bottle
 jinja2
 beautifulsoup4
@@ -9,6 +8,9 @@ requests
 sphinx
 libtaxii>=1.1.0
 xlrd
+stix
+cybox
 crc16
 enum
-modbus_tk
+hpfeeds
+modbus-tk

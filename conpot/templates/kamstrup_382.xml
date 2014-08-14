@@ -395,6 +395,8 @@
                 </key>
                 <key name="mac_address">
                     <value type="value">'00:13:EA:00:00:00'</value>
+                <key name="reboot_signal">
+                    <value type="value">0</value>
                 </key>
             </key_value_mappings>
         </databus>

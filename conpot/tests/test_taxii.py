@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
+import uuid
 from datetime import datetime
 from StringIO import StringIO
 
@@ -39,20 +40,20 @@ class TestLoggers(unittest.TestCase):
         config.read(config_file)
         config.set('taxii', 'enabled', True)
         config.set('taxii', 'use_contact_info', True)
-        config.set('taxii', 'contact_name', 'James Bond')
+        config.set('taxii', 'contact_name', 'conpot')
         config.set('taxii', 'contact_mail', 'a@b.c')
+        config.set('taxii', 'contact_domain', 'http://conpot.org/stix-1')
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'public_ip': '111.222.111.222',
                       'timestamp': datetime.now(),
-                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
+                      'session_id': str(uuid.uuid4()),
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
         dom = etree.parse('conpot/templates/default.xml')
         stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
         xmlValidator = STIXValidator(None, True, False)
-
         result_dict = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
         errors = ''
         if 'errors' in result_dict:
@@ -72,7 +73,8 @@ class TestLoggers(unittest.TestCase):
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'timestamp': datetime.now(),
-                      'session_id': '101d9884-b695-4d8b-bf24-343c7dda1b68',
+                      'public_ip': '111.222.111.222',
+                      'session_id': str(uuid.uuid4()),
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
         dom = etree.parse('conpot/templates/default.xml')

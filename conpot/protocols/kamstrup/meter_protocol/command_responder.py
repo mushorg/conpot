@@ -45,7 +45,11 @@ class CommandResponder(object):
             self.registers[name] = kamstrup_register
 
     def respond(self, request):
-        if isinstance(request, messages.KamstrupRequestGetRegisters):
+        if request.communication_address != self.communication_address:
+            logger.debug('Request received with wrong communication address, got {0} but expected {1}.'.format(request.communication_address,
+                                                                                                               self.communication_address))
+            return None
+        elif isinstance(request, messages.KamstrupRequestGetRegisters):
             response = messages.KamstrupResponseRegister(self.communication_address)
             for register in request.registers:
                 if register in self.registers:

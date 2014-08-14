@@ -18,6 +18,7 @@
 import logging
 
 import libtaxii
+import libtaxii.messages
 from libtaxii.messages_11 import ContentBlock, InboxMessage, generate_message_id
 from libtaxii.clients import HttpClient
 
