@@ -27,9 +27,12 @@ import pwd
 import grp
 import platform
 import ast
+import gc
+
 from ConfigParser import ConfigParser
 
 import gevent
+from greenlet import greenlet
 from lxml import etree
 
 import conpot
@@ -101,6 +104,17 @@ def validate_template(xml_file):
     if xsd.error_log:
         logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
         sys.exit(1)
+
+
+def restart():
+    args = sys.argv[:]
+    logger.info('Re-spawning %s' % ' '.join(args))
+
+    args.insert(0, sys.executable)
+    if sys.platform == 'win32':
+        args = ['"%s"' % arg for arg in args]
+    os.execv(sys.executable, args)
+
 
 def main():
     logo()
@@ -236,7 +250,7 @@ def main():
         if 'keyfile' in p.attrib and 'certfile' in p.attrib:
             keyfile = p.attrib['keyfile']
             certfile = p.attrib['certfile']
-            # if path is absolute we assert that the cert and key is located in same location as template
+            # if path is absolute[obj for obj in gc.get_objects() we assert that the cert and key is located in same location as template
             if not os.path.isabs(keyfile):
                 keyfile = os.path.join(os.path.dirname(template), keyfile)
                 certfile = os.path.join(os.path.dirname(template), certfile)
@@ -254,8 +268,22 @@ def main():
         protocol_greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
+    #gevent.sleep(5)
+    #drop_privileges()
     gevent.sleep(5)
-    drop_privileges()
+    for server in servers:
+        server.stop()
+    for p_greenlet in protocol_greenlets:
+        p_greenlet.kill()
+    gevent.killall(protocol_greenlets)
+    greens = [obj for obj in gc.get_objects() if isinstance(obj, greenlet)]
+    for green in greens:
+        print green
+        try:
+            green.kill()
+        except AttributeError:
+            pass
+    restart()
     try:
         if len(protocol_greenlets) > 0:
             gevent.wait()
