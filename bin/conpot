@@ -106,13 +106,15 @@ def validate_template(xml_file):
         sys.exit(1)
 
 
-def restart():
+def restart(servers, protocol_greenlets):
+    for server in servers:
+        server.stop()
+    for p_greenlet in protocol_greenlets:
+        p_greenlet.kill()
+    gevent.joinall(protocol_greenlets)
     args = sys.argv[:]
     logger.info('Re-spawning %s' % ' '.join(args))
-
     args.insert(0, sys.executable)
-    if sys.platform == 'win32':
-        args = ['"%s"' % arg for arg in args]
     os.execv(sys.executable, args)
 
 
@@ -268,22 +270,9 @@ def main():
         protocol_greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
-    #gevent.sleep(5)
-    #drop_privileges()
     gevent.sleep(5)
-    for server in servers:
-        server.stop()
-    for p_greenlet in protocol_greenlets:
-        p_greenlet.kill()
-    gevent.killall(protocol_greenlets)
-    greens = [obj for obj in gc.get_objects() if isinstance(obj, greenlet)]
-    for green in greens:
-        print green
-        try:
-            green.kill()
-        except AttributeError:
-            pass
-    restart()
+    #drop_privileges()
+    restart(servers, protocol_greenlets)
     try:
         if len(protocol_greenlets) > 0:
             gevent.wait()
