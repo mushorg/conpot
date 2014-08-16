@@ -61,15 +61,16 @@ class CommandResponder(object):
         mibBuilder.setMibSources(*mibSources)
 
         # Transport setup
-        udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
-        udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
-        udp_sock.bind((host, port))
-        self.server_port = udp_sock.getsockname()[1]
+        self.udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
+        self.udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
+        self.udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_REUSEADDR, 1)
+        self.udp_sock.bind((host, port))
+        self.server_port = self.udp_sock.getsockname()[1]
         # UDP over IPv4
         self.addSocketTransport(
             self.snmpEngine,
             udp.domainName,
-            udp_sock
+            self.udp_sock
         )
 
         # SNMPv1
@@ -151,6 +152,7 @@ class CommandResponder(object):
         self.snmpEngine.transportDispatcher.serve_forever()
 
     def stop(self):
+        self.udp_sock.close()
         self.snmpEngine.transportDispatcher.stop_accepting()
 
 

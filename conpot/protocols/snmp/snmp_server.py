@@ -181,6 +181,7 @@ class SNMPServer(object):
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+            self.cmd_responder.snmpEngine.transportDispatcher.stop()
 
     def get_port(self):
         if self.cmd_responder:
