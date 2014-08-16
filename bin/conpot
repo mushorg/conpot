@@ -27,12 +27,10 @@ import pwd
 import grp
 import platform
 import ast
-import gc
 
 from ConfigParser import ConfigParser
 
 import gevent
-from greenlet import greenlet
 from lxml import etree
 
 import conpot
@@ -46,6 +44,7 @@ from conpot.protocols.http.web_server import HTTPServer
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
+from conpot.utils.update import UpdateService
 
 
 logger = logging.getLogger()
@@ -104,18 +103,6 @@ def validate_template(xml_file):
     if xsd.error_log:
         logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
         sys.exit(1)
-
-
-def restart(servers, protocol_greenlets):
-    for server in servers:
-        server.stop()
-    for p_greenlet in protocol_greenlets:
-        p_greenlet.kill()
-    gevent.joinall(protocol_greenlets)
-    args = sys.argv[:]
-    logger.info('Re-spawning %s' % ' '.join(args))
-    args.insert(0, sys.executable)
-    os.execv(sys.executable, args)
 
 
 def main():
@@ -271,8 +258,11 @@ def main():
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
-    #drop_privileges()
-    restart(servers, protocol_greenlets)
+    if config.getboolean('system', 'drop_privileges'):
+        drop_privileges()
+    if config.getboolean('system', 'auto_update'):
+        update_service = UpdateService(logger, servers, protocol_greenlets)
+        gevent.spawn(update_service.run)
     try:
         if len(protocol_greenlets) > 0:
             gevent.wait()
