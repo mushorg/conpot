@@ -42,6 +42,7 @@ class HTTPServer(object):
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+            self.cmd_responder.httpd.server_close()
 
     def shutdown(self):
         if self.cmd_responder:
