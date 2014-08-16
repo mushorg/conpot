@@ -266,7 +266,7 @@ def main():
             decoder = None
         proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
         proxy_server = proxy_instance.get_server(host, port)
-        servers.append(proxy_instance)
+        servers.append(proxy_server)
         protocol_greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
