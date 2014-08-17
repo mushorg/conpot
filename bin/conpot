@@ -31,6 +31,7 @@ import ast
 from ConfigParser import ConfigParser
 
 import gevent
+from gevent import subprocess
 from lxml import etree
 
 import conpot
@@ -78,13 +79,22 @@ def setup_logging(log_file):
     root_logger.addHandler(file_log)
 
 
-def drop_privileges(uid_name='nobody', gid_name='nogroup'):
+def drop_privileges(config, logfile=None, uid_name='nobody', gid_name='nogroup'):
     wanted_uid = pwd.getpwnam(uid_name)[2]
     #special handling for os x. (getgrname has trouble with gid below 0)
     if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
         wanted_gid = -2
     else:
+        if config.getboolean('update', 'auto_update'):
+            real_interpreter_path = os.path.realpath(sys.executable)
+            out = subprocess.check_output(['getcap', real_interpreter_path])
+            if not "cap_net_bind_service+ep" in out:
+                # This has consequences for your systems security
+                subprocess.check_call(['setcap', 'cap_net_bind_service=+ep', real_interpreter_path])
         wanted_gid = grp.getgrnam(gid_name)[2]
+
+    if logfile:
+        os.chown(logfile, wanted_uid, wanted_gid)
 
     os.setgid(wanted_gid)
     os.setuid(wanted_uid)
@@ -239,7 +249,8 @@ def main():
         if 'keyfile' in p.attrib and 'certfile' in p.attrib:
             keyfile = p.attrib['keyfile']
             certfile = p.attrib['certfile']
-            # if path is absolute[obj for obj in gc.get_objects() we assert that the cert and key is located in same location as template
+            # if path is absolute[obj for obj in gc.get_objects() we assert that the cert and key is located in same
+            # location as template
             if not os.path.isabs(keyfile):
                 keyfile = os.path.join(os.path.dirname(template), keyfile)
                 certfile = os.path.join(os.path.dirname(template), certfile)
@@ -258,10 +269,10 @@ def main():
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
-    if config.getboolean('system', 'drop_privileges'):
-        drop_privileges()
-    if config.getboolean('system', 'auto_update'):
-        update_service = UpdateService(logger, servers, protocol_greenlets)
+    if config.getboolean('system', 'drop_privileges') and os.getuid() == 0:
+        drop_privileges(config, args.logfile)
+    if config.getboolean('update', 'auto_update'):
+        update_service = UpdateService(config, logger, servers, protocol_greenlets)
         gevent.spawn(update_service.run)
     try:
         if len(protocol_greenlets) > 0:
@@ -273,6 +284,9 @@ def main():
     finally:
         # Just being nice and cosy!
         gevent.joinall(protocol_greenlets, 2)
+        # Cleaning up the capabilities in case we are still root
+        if os.getuid() == 0:
+            subprocess.check_call(['setcap', 'cap_net_bind_service=-ep', os.path.realpath(sys.executable)])
 
 
 if __name__ == "__main__":
