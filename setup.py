@@ -1,7 +1,9 @@
+# Import required for setup
 import multiprocessing
 from ez_setup import use_setuptools
 use_setuptools()
 from setuptools import setup, find_packages
+import textwrap
 
 import conpot
 
@@ -29,8 +31,10 @@ setup(
         "Programming Language :: Python",
         "Topic :: Security",
     ],
-    description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
-    and methods of adversaries targeting industrial control systems""",
+    description=textwrap.dedent(
+        """Conpot is an ICS honeypot with the goal to collect intelligence about the motives
+        and methods of adversaries targeting industrial control systems"""
+    ),
     keywords="ICS SCADA honeypot",
     test_suite='nose.collector',
     tests_require="nose",
