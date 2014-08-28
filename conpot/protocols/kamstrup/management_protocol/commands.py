@@ -102,13 +102,23 @@ class AccessControlCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "{} \r\n"
-        " [1] {}\r\n"
-        " [2] {}\r\n"
-        " [3] {}\r\n"
-        " [4] {}\r\n"
-        " [5] {}\r\n"
+        "{access_control_status} \r\n"
+        " [1] {access_control_1}\r\n"
+        " [2] {access_control_2}\r\n"
+        " [3] {access_control_3}\r\n"
+        " [4] {access_control_4}\r\n"
+        " [5] {access_control_5}\r\n"
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            access_control_status=databus.get_value("access_control_status"),
+            access_control_1=databus.get_value("access_control_1"),
+            access_control_2=databus.get_value("access_control_2"),
+            access_control_3=databus.get_value("access_control_3"),
+            access_control_4=databus.get_value("access_control_4"),
+            access_control_5=databus.get_value("access_control_5"))
 
 
 class AlarmServerCommand(BaseCommand):
@@ -126,8 +136,13 @@ class AlarmServerCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "Alarm server:  {} "  # no CRLF
+        "Alarm server:  {alarm_server_status} "  # no CRLF
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            alarm_server_status=databus.get_value("alarm_server_status"))
 
 
 class GetConfigCommand(BaseCommand):

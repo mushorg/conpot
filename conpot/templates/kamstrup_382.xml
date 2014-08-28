@@ -381,6 +381,27 @@
                 <key name="software_version">
                     <value type="value">'5.5 (E5)'</value>
                 </key>
+                <key name="alarm_server_status">
+                    <value type="value">'DISABLED'</value>
+                </key>
+                <key name="access_control_status">
+                    <value type="value">'DISABLED'</value>
+                </key>
+                <key name="access_control_1">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_2">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_3">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_4">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_5">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
                 <key name="device_name">
                     <value type="value">''</value>
                 </key>
