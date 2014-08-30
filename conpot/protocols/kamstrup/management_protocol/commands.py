@@ -17,6 +17,8 @@
 
 import logging
 
+import conpot.core as conpot_core
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +102,23 @@ class AccessControlCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "{access_control_status} \r\n"
+        " [1] {access_control_1}\r\n"
+        " [2] {access_control_2}\r\n"
+        " [3] {access_control_3}\r\n"
+        " [4] {access_control_4}\r\n"
+        " [5] {access_control_5}\r\n"
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            access_control_status=databus.get_value("access_control_status"),
+            access_control_1=databus.get_value("access_control_1"),
+            access_control_2=databus.get_value("access_control_2"),
+            access_control_3=databus.get_value("access_control_3"),
+            access_control_4=databus.get_value("access_control_4"),
+            access_control_5=databus.get_value("access_control_5"))
 
 
 class AlarmServerCommand(BaseCommand):
@@ -118,7 +136,13 @@ class AlarmServerCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Alarm server:  {alarm_server_status} "  # no CRLF
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            alarm_server_status=databus.get_value("alarm_server_status"))
 
 
 class GetConfigCommand(BaseCommand):
@@ -128,26 +152,35 @@ class GetConfigCommand(BaseCommand):
     )
 
     CMD_OUTPUT = (
-        "Device Name         : {}\r\n"
-        "Use DHCP            : {}\r\n"
-        "IP addr.            : {}\r\n"
-        "IP Subnet           : {}\r\n"
-        "Gateway addr.       : {}\r\n"
-        "Service server addr.: {}\r\n"
-        "Service server hostname.: {}\r\n"
-        "DNS Server No. 1: {}\r\n"
-        "DNS Server No. 2: {}\r\n"
-        "DNS Server No. 3: {}\r\n"
-        "MAC addr. (HEX)     : {}\r\n"
-        "Channel A device meterno.: {}\r\n"
-        "Channel B device meterno.: {}\r\n"
-        "Keep alive timer (flash setting): {} {}\r\n"
-        "Keep alive timer (current setting): {} {}\r\n"
-        "Has the module received acknowledge from the server: {}\r\n"
-        "KAP Server port: {}\r\n"
-        "KAP Local port: {}\r\n"
-        "Software watchdog: {} {}\r\n"
+        "Device Name         : {device_name}\r\n"
+        #"Use DHCP            : {}\r\n"
+        #"IP addr.            : {}\r\n"
+        #"IP Subnet           : {}\r\n"
+        #"Gateway addr.       : {}\r\n"
+        #"Service server addr.: {}\r\n"
+        #"Service server hostname.: {}\r\n"
+        "DNS Server No. 1: {nameserver_1}\r\n"
+        "DNS Server No. 2: {nameserver_2}\r\n"
+        "DNS Server No. 3: {nameserver_3}\r\n"
+        "MAC addr. (HEX)     : {mac_address}\r\n"
+        #"Channel A device meterno.: {}\r\n"
+        #"Channel B device meterno.: {}\r\n"
+        #"Keep alive timer (flash setting): {} {}\r\n"
+        #"Keep alive timer (current setting): {} {}\r\n"
+        #"Has the module received acknowledge from the server: {}\r\n"
+        #"KAP Server port: {}\r\n"
+        #"KAP Local port: {}\r\n"
+        #"Software watchdog: {} {}\r\n"
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        return self.CMD_OUTPUT.format(
+            device_name=databus.get_value("device_name"),
+            nameserver_1=databus.get_value("nameserver_1"),
+            nameserver_2=databus.get_value("nameserver_2"),
+            nameserver_3=databus.get_value("nameserver_3"),
+            mac_address=databus.get_value("mac_address"))
 
 
 class SoftwareVersionCommand(BaseCommand):
@@ -158,8 +191,12 @@ class SoftwareVersionCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "Software Version: {}\r\n"
+        "Software Version: {software_version}\r\n"
     )
+
+    def run(self, params=None):
+        return self.CMD_OUTPUT.format(
+            software_version=conpot_core.get_databus().get_value("software_version"))
 
 
 class SetKap1Command(BaseCommand):
@@ -181,6 +218,8 @@ class SetKap1Command(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Service server addr.: {}:{}\r\n"
     )
 
 
@@ -204,6 +243,9 @@ class SetKap2Command(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Service server addr.: {}:{} (from DNS)\r\n"
+        "No redundancy.\r\n"
     )
 
 
@@ -221,6 +263,7 @@ class SetConfigCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Service server hostname.: {}\r\n"
     )
 
 
@@ -230,9 +273,20 @@ class SetDeviceNameCommand(BaseCommand):
         "     Option for individual naming of the module (0-20 chars).\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-    )
+    def run(self, params=None):
+        if params is None:
+            params = ""
+
+        if len(params) > 20:
+            params = params[0:20]
+            output = ""
+        else:
+            output = "\r\nOK"
+
+        databus = conpot_core.get_databus()
+        databus.set_value("device_name", params)
+        databus.set_value("reboot_signal", 1)
+        return output
 
 
 class SetLookupCommand(BaseCommand):
@@ -256,6 +310,7 @@ class SetLookupCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Service server hostname.: {}\r\n"
     )
 
 
@@ -277,6 +332,9 @@ class SetIPCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Use DHCP            : {}\r\n"
+        "\r\n"
+        "IP addr.            : {}\r\n"
     )
 
 
@@ -301,6 +359,9 @@ class SetWatchdogCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "Software watchdog: {} {}\r\n"
+        "KAP Missing warning: {} {}\r\n"
+        "Keep alive timer (flash setting): {} {}\r\n"
     )
 
 
@@ -312,9 +373,37 @@ class SetNameserverCommand(BaseCommand):
         "      Example: !SN 172.16.0.83 172.16.0.84 0.0.0.0\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-    )
+    def _is_valid(self, address):
+        if "." in address:
+            octets = address.split(".")
+        else:
+            octets = [int(address[i:i+3]) for i in range(0, len(address), 3)]
+
+        if len(octets) is not 4:
+            return False
+        for octet in octets:
+            if octet < 0 or octet > 255:
+                return False
+
+        return True
+
+    def run(self, params=None):
+        if params is None:
+            return self.INVALID_PARAMETER
+
+        nameservers = params.split(" ")
+        if len(nameservers) != 3:
+            return self.INVALID_PARAMETER
+
+        for nameserver in nameservers:
+            if not self._is_valid(nameserver):
+                nameserver = "0.0.0.0"
+
+        databus = conpot_core.get_databus()
+        databus.set_value("nameserver_1", nameservers[0])
+        databus.set_value("nameserver_2", nameservers[1])
+        databus.set_value("nameserver_3", nameservers[2])
+        return "\r\nOK"
 
 
 class SetPortsCommand(BaseCommand):
@@ -334,6 +423,11 @@ class SetPortsCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "KAP on server: {}\r\n"
+        "ChA on module: {}\r\n"
+        "ChB on module: {}\r\n"
+        "Cfg on module: {}\r\n"
     )
 
 
@@ -353,6 +447,8 @@ class SetSerialCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "UART A setup : {}\r\n"
+        "UART B setup : {},{},{},{} {}\r\n"
     )
 
 
@@ -371,6 +467,8 @@ class RequestConnectCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "Status: {}\r\n"
     )
 
 
@@ -379,13 +477,9 @@ class RequestRestartCommand(BaseCommand):
         "!RR: Request restart (*1).\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-    )
-
     def run(self, params=None):
-        # TODO conpot_core.get_databus().set_value("reboot_signal", 1)
-        return self.CMD_OUTPUT
+        conpot_core.get_databus().set_value("reboot_signal", 1)
+        return
 
 
 class WinkModuleCommand(BaseCommand):
@@ -396,4 +490,6 @@ class WinkModuleCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
+        "\r\n"
+        "OK\r\n"
     )
