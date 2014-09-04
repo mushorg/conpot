@@ -417,9 +417,43 @@
                 <key name="mac_address">
                     <value type="value">'00:13:EA:00:00:00'</value>
                 </key>
+                <key name="use_dhcp">
+                    <value type="value">'YES'</value>
+                </key>
+                <key name="ip_addr">
+                    <value type="value">'192.168.1.210'</value>
+                </key>
+                <key name="ip_gateway">
+                    <value type="value">'192.168.1.1'</value>
+                </key>
+                <key name="ip_subnet">
+                    <value type="value">'255.255.255.0'</value>
+                </key>
+                <key name="service_server_ip">
+                    <value type="value">'202.202.202.1'</value>
+                </key>
+                <key name="service_server_host">
+                    <value type="value">'kapserver.evilpowerprovider.org'</value>
+                </key>
+                <key name="channel_a_meternumber">
+                    <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
+                </key>
+                <key name="channel_b_meternumber">
+                    <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
+                </key>
+                <key name="kap_ack_server">
+                    <value type="value">'NO'</value>
+                </key>
+                <key name="kap_server_port">
+                    <value type="value">'50'</value>
+                </key>
+                <key name="kap_local_port">
+                    <value type="value">'800'</value>
+                </key>
                 <key name="reboot_signal">
                     <value type="value">0</value>
                 </key>
+
             </key_value_mappings>
         </databus>
     </core>

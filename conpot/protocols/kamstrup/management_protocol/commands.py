@@ -153,24 +153,27 @@ class GetConfigCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "Device Name         : {device_name}\r\n"
-        #"Use DHCP            : {}\r\n"
-        #"IP addr.            : {}\r\n"
-        #"IP Subnet           : {}\r\n"
-        #"Gateway addr.       : {}\r\n"
-        #"Service server addr.: {}\r\n"
-        #"Service server hostname.: {}\r\n"
+        "Use DHCP            : {use_dhcp}\r\n"
+        "IP addr.            : {ip_addr}\r\n"
+        "IP Subnet           : {ip_subnet}\r\n"
+        "Gateway addr.       : {ip_gateway}\r\n"
+        "Service server addr.: {service_server_ip}\r\n"
+        "Service server hostname.: {service_server_host}\r\n"
         "DNS Server No. 1: {nameserver_1}\r\n"
         "DNS Server No. 2: {nameserver_2}\r\n"
         "DNS Server No. 3: {nameserver_3}\r\n"
         "MAC addr. (HEX)     : {mac_address}\r\n"
-        #"Channel A device meterno.: {}\r\n"
-        #"Channel B device meterno.: {}\r\n"
-        #"Keep alive timer (flash setting): {} {}\r\n"
-        #"Keep alive timer (current setting): {} {}\r\n"
-        #"Has the module received acknowledge from the server: {}\r\n"
-        #"KAP Server port: {}\r\n"
-        #"KAP Local port: {}\r\n"
-        #"Software watchdog: {} {}\r\n"
+        # TODO: i think was can get these from the other protocol also
+        "Channel A device meterno.: {channel_a_meternumber}\r\n"
+        "Channel B device meterno.: {channel_b_meternumber}\r\n"
+        # TODO: these...
+        "Keep alive timer (flash setting): ENABLED 10\r\n"
+        "Keep alive timer (current setting): ENABLED 10\r\n"
+        "Has the module received acknowledge from the server: {kap_ack_server}\r\n"
+        "KAP Server port: {kap_server_port}\r\n"
+        "KAP Local port: {kap_local_port}\r\n"
+        # TODO: This, read from other proto also?
+        "Software watchdog: ENABLED 3600\r\n"
     )
 
     def run(self, params=None):
@@ -180,7 +183,18 @@ class GetConfigCommand(BaseCommand):
             nameserver_1=databus.get_value("nameserver_1"),
             nameserver_2=databus.get_value("nameserver_2"),
             nameserver_3=databus.get_value("nameserver_3"),
-            mac_address=databus.get_value("mac_address"))
+            mac_address=databus.get_value("mac_address"),
+            use_dhcp=databus.get_value("use_dhcp"),
+            ip_addr=databus.get_value("ip_addr"),
+            ip_subnet=databus.get_value("ip_subnet"),
+            ip_gateway=databus.get_value("ip_gateway"),
+            service_server_ip=databus.get_value("service_server_ip"),
+            service_server_host=databus.get_value("service_server_host"),
+            channel_a_meternumber=databus.get_value("channel_a_meternumber"),
+            channel_b_meternumber=databus.get_value("channel_b_meternumber"),
+            kap_ack_server=databus.get_value("kap_ack_server"),
+            kap_server_port=databus.get_value("kap_server_port"),
+            kap_local_port=databus.get_value("kap_local_port"),)
 
 
 class SoftwareVersionCommand(BaseCommand):
