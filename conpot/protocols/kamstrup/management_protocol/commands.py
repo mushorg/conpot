@@ -115,17 +115,7 @@ class AccessControlCommand(BaseCommand):
         if ip_string.count('.') == 3:
             if any(x in number for x in ['1', '2', ' 3', '4', '5']):
                 acl_number = int(number)
-                # trying to simulate real lame Kamstrup IP validation
-                final_ip = ''
-                elements = ip_string.split('.')
-                for element in elements:
-                    try:
-                        value = int(element)
-                        if value < 0 or value > 254:
-                            value = 0
-                    except ValueError:
-                        value = '0'
-                    final_ip += '{0}.'.format(value)
+                final_ip = parse_ip(ip_string)
                 databus.set_value('access_control_{0}'.format(acl_number), final_ip)
 
     def run(self, params=None):
@@ -152,7 +142,6 @@ class AccessControlCommand(BaseCommand):
             access_control_5=databus.get_value("access_control_5"))
 
 
-
 class AlarmServerCommand(BaseCommand):
     HELP_MESSAGE = (
         "!AS: Alarm Server.\r\n"
@@ -168,13 +157,36 @@ class AlarmServerCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "Alarm server:  {alarm_server_status} "  # no CRLF
+        "Alarm server:  {alarm_server_output} "  # no CRLF
     )
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
-        return self.CMD_OUTPUT.format(
-            alarm_server_status=databus.get_value("alarm_server_status"))
+        output_prefix = ''
+        output_postfix = ''
+        if not params:
+            if databus.get_value('alarm_server_status') == 'DISABLED':
+                output = 'DISABLED'
+            else:
+                output = '{0}:{1}'.format(databus.get_value('alarm_server_ip'), databus.get_value('alarm_server_port'))
+        else:
+            output_prefix = '\r\nOK'
+            # in this case the command has CRLF... really funky...
+            output_postfix = '\r\n'
+            databus.set_value('alarm_server_status', 'ENABLED')
+            params_split = params.split(' ')
+            databus.set_value('alarm_server_ip', parse_ip(params_split[0]))
+            # port provided also
+            if len(params_split) > 1:
+                try:
+                    value = int(params_split[1])
+                    if 0 < value < 65535:
+                        databus.set_value('alarm_server_port', params_split[1])
+                except ValueError:
+                    pass
+            output = '{0}:{1}'.format(databus.get_value('alarm_server_ip'), databus.get_value('alarm_server_port'))
+        return output_prefix + self.CMD_OUTPUT.format(
+            alarm_server_output=output) + output_postfix
 
 
 class GetConfigCommand(BaseCommand):
@@ -539,3 +551,18 @@ class WinkModuleCommand(BaseCommand):
         "\r\n"
         "OK\r\n"
     )
+
+
+# trying to simulate real lame Kamstrup IP validation
+def parse_ip(ip_string):
+    final_ip = ''
+    elements = ip_string.split('.')
+    for element in elements:
+        try:
+            value = int(element)
+            if value < 0 or value > 254:
+                value = 0
+        except ValueError:
+            value = '0'
+        final_ip += '{0}.'.format(value)
+    return final_ip

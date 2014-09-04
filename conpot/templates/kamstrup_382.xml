@@ -381,9 +381,6 @@
                 <key name="software_version">
                     <value type="value">'5.5 (E5)'</value>
                 </key>
-                <key name="alarm_server_status">
-                    <value type="value">'DISABLED'</value>
-                </key>
                 <key name="access_control_status">
                     <value type="value">'DISABLED'</value>
                 </key>
@@ -453,7 +450,15 @@
                 <key name="reboot_signal">
                     <value type="value">0</value>
                 </key>
-
+                <key name="alarm_server_status">
+                    <value type="value">'DISABLED'</value>
+                </key>
+                <key name="alarm_server_ip">
+                    <value type="value">''</value>
+                </key>
+                <key name="alarm_server_port">
+                    <value type="value">'4000'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
