@@ -110,15 +110,47 @@ class AccessControlCommand(BaseCommand):
         " [5] {access_control_5}\r\n"
     )
 
+    def set_access_ip(self, number, ip_string):
+        databus = conpot_core.get_databus()
+        if ip_string.count('.') == 3:
+            if any(x in number for x in ['1', '2', ' 3', '4', '5']):
+                acl_number = int(number)
+                # trying to simulate real lame Kamstrup IP validation
+                final_ip = ''
+                elements = ip_string.split('.')
+                for element in elements:
+                    try:
+                        value = int(element)
+                        if value < 0 or value > 254:
+                            value = 0
+                    except ValueError:
+                        value = '0'
+                    final_ip += '{0}.'.format(value)
+                databus.set_value('access_control_{0}'.format(acl_number), final_ip)
+
     def run(self, params=None):
         databus = conpot_core.get_databus()
-        return self.CMD_OUTPUT.format(
+        cmd_output = ''
+        if params:
+            # return is always OK apparently...
+            cmd_output = '\r\nOK\r\n'
+            if len(params) == 1 and params == '0':
+                databus.set_value("access_control_status", "DISABLED")
+            elif len(params) == 1 and params == '1':
+                databus.set_value("access_control_status", "ENABLED")
+            elif len(params.split(' ')) == 3:
+                cmd, acl_number, ip_address = params.split(' ')
+                if cmd == '0':
+                    self.set_access_ip(acl_number, ip_address)
+
+        return cmd_output + self.CMD_OUTPUT.format(
             access_control_status=databus.get_value("access_control_status"),
             access_control_1=databus.get_value("access_control_1"),
             access_control_2=databus.get_value("access_control_2"),
             access_control_3=databus.get_value("access_control_3"),
             access_control_4=databus.get_value("access_control_4"),
             access_control_5=databus.get_value("access_control_5"))
+
 
 
 class AlarmServerCommand(BaseCommand):
