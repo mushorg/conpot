@@ -214,7 +214,7 @@ class GetConfigCommand(BaseCommand):
         "Keep alive timer (flash setting): ENABLED 10\r\n"
         "Keep alive timer (current setting): ENABLED 10\r\n"
         "Has the module received acknowledge from the server: {kap_ack_server}\r\n"
-        "KAP Server port: {kap_server_port}\r\n"
+        "KAP Server port: {kap_a_server_port}\r\n"
         "KAP Local port: {kap_local_port}\r\n"
         # TODO: This, read from other proto also?
         "Software watchdog: ENABLED 3600\r\n"
@@ -232,12 +232,12 @@ class GetConfigCommand(BaseCommand):
             ip_addr=databus.get_value("ip_addr"),
             ip_subnet=databus.get_value("ip_subnet"),
             ip_gateway=databus.get_value("ip_gateway"),
-            service_server_ip=databus.get_value("service_server_ip"),
-            service_server_host=databus.get_value("service_server_host"),
+            service_server_ip=databus.get_value("kap_a_server_ip"),
+            service_server_host=databus.get_value("kap_a_server_hostname"),
             channel_a_meternumber=databus.get_value("channel_a_meternumber"),
             channel_b_meternumber=databus.get_value("channel_b_meternumber"),
             kap_ack_server=databus.get_value("kap_ack_server"),
-            kap_server_port=databus.get_value("kap_server_port"),
+            kap_a_server_port=databus.get_value("kap_a_server_port"),
             kap_local_port=databus.get_value("kap_local_port"),)
 
 
@@ -274,10 +274,32 @@ class SetKap1Command(BaseCommand):
         "               Disables KAP.\r\n"
     )
 
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        if params:
+            output_prefix = '\r\nOK'
+            params_split = params.split(' ')
+            databus.set_value('kap_a_server_ip', parse_ip(params_split[0]))
+            # TODO: The meter might do a lookup on the ip, and the result of that
+            # lookup might be stored in a_server_host...
+            databus.set_value('kap_a_server_hostname', '0 - none')
+            # port provided also
+            if len(params_split) > 1:
+                try:
+                    value = int(params_split[1])
+                    if 0 < value < 65535:
+                        databus.set_value('kap_a_server_port', params_split[1])
+                except ValueError:
+                    pass
+        else:
+            output_prefix = '\r\n'
+        output = '{0}:{1}'.format(databus.get_value('kap_a_server_ip'), databus.get_value('kap_a_server_port'))
+        return output_prefix + self.CMD_OUTPUT.format(
+            kap_a_output=output)
+
     CMD_OUTPUT = (
         "\r\n"
-        "\r\n"
-        "Service server addr.: {}:{}\r\n"
+        "Service server addr.: {kap_a_output}\r\n"
     )
 
 
