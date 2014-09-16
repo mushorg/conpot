@@ -12,7 +12,7 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get -qq install python2.7 python-pip git unzip
 - sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader
-- sudo apt-get install libxml2 libxml2-dev libxml2-utils
+- sudo apt-get install libxml2 libxml2-dev libxml2-utils libmysqlclient-dev
 install:
 - export PYTHONIOENCODING=UTF8
 - python setup.py install
