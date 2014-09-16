@@ -24,7 +24,9 @@ class MySQLlogger(object):
     def __init__(self, host, port, db, username, passphrase, logdevice, logsocket):
 
         if str(logsocket).lower() == 'tcp':
-            self.conn = MySQLdb.connect(host, username, passphrase, db)
+            self.conn = MySQLdb.connect(host=host, port=port, user=username, passwd=passphrase, db=db)
+        elif str(logsocket).lower() == 'dev':
+            self.conn = MySQLdb.connect(unix_socket=logdevice, user=username, passwd=passphrase, db=db)
 
         self._create_db()
 
@@ -44,10 +46,16 @@ class MySQLlogger(object):
     def log(self, event):
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
-                       (str(event["id"]), str(event["remote"]), event['data_type'],
-                        event["data"].get('request'), event["data"].get('response'))
-        )
+                       (str(event["id"]),
+                        str(event["remote"]),
+                        event['data_type'],
+                        event["data"].get('request'),
+                        event["data"].get('response')
+                        )
+                       )
+
         self.conn.commit()
+
         return cursor.lastrowid
 
     def log_session(self, session):
