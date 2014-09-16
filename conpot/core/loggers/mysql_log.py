@@ -21,8 +21,9 @@ import MySQLdb
 
 class MySQLlogger(object):
 
-    def __init__(self, host, port, db, username, passphrase, logdevice, logsocket):
+    def __init__(self, host, port, db, username, passphrase, logdevice, logsocket, sensorid):
 
+        self.sensorid = sensorid
         if str(logsocket).lower() == 'tcp':
             self.conn = MySQLdb.connect(host=host, port=port, user=username, passwd=passphrase, db=db)
         elif str(logsocket).lower() == 'dev':
@@ -32,27 +33,31 @@ class MySQLlogger(object):
 
     def _create_db(self):
         cursor = self.conn.cursor()
-        cursor.execute("""CREATE TABLE IF NOT EXISTS events
-            (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                session TEXT,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                remote TEXT,
-                protocol TEXT,
-                request TEXT,
-                response TEXT
-            )""")
+        cursor.execute("""CREATE TABLE IF NOT EXISTS `events` (
+                        `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                        `sensorid` text NOT NULL,
+                        `session` text NOT NULL,
+                        `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        `remote` text NOT NULL,
+                        `protocol` text NOT NULL,
+                        `request` text NOT NULL,
+                        `response` text NOT NULL,
+                        PRIMARY KEY (`id`)
+                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+                       """)
 
     def log(self, event):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
-                       (str(event["id"]),
+        cursor.execute("""INSERT INTO
+                            events (sensorid, session, remote, protocol, request, response)
+                          VALUES
+                            (%s, %s, %s, %s, %s, %s)""",
+                       (str(self.sensorid),
+                        str(event["id"]),
                         str(event["remote"]),
-                        event['data_type'],
+                        event["data_type"],
                         event["data"].get('request'),
-                        event["data"].get('response')
-                        )
-                       )
+                        event["data"].get('response')))
 
         self.conn.commit()
 

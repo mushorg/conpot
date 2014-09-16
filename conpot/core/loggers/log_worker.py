@@ -58,7 +58,8 @@ class LogWorker(object):
             passphrase = config.get('mysql', 'passphrase')
             logdevice = config.get('mysql', 'device')
             logsocket = config.get('mysql', 'socket')
-            self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket)
+            sensorid = config.get('general', 'sensorid')
+            self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
         if config.getboolean('hpfriends', 'enabled'):
             host = config.get('hpfriends', 'host')
