@@ -21,9 +21,11 @@ import MySQLdb
 
 class MySQLlogger(object):
 
-    def __init__(self):
+    def __init__(self, host, port, db, username, passphrase, logdevice, logsocket):
 
-        self.conn = sqlite3.connect(db_path)
+        if str(logsocket).lower() == 'tcp':
+            self.conn = MySQLdb.connect(host, username, passphrase, db)
+
         self._create_db()
 
     def _create_db(self):
