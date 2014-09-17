@@ -17,19 +17,40 @@
 
 
 import MySQLdb
+import gevent
 
 
 class MySQLlogger(object):
 
     def __init__(self, host, port, db, username, passphrase, logdevice, logsocket, sensorid):
-
+        self.host = host
+        self.port = port
+        self.db = db
+        self.username = username
+        self.passphrase = passphrase
+        self.logdevice = logdevice
+        self.logsocket = logsocket
         self.sensorid = sensorid
-        if str(logsocket).lower() == 'tcp':
-            self.conn = MySQLdb.connect(host=host, port=port, user=username, passwd=passphrase, db=db)
-        elif str(logsocket).lower() == 'dev':
-            self.conn = MySQLdb.connect(unix_socket=logdevice, user=username, passwd=passphrase, db=db)
 
-        self._create_db()
+        self._connect()
+
+    def _connect(self):
+        try:
+            if str(self.logsocket).lower() == 'tcp':
+                self.conn = MySQLdb.connect(host=self.host,
+                                            port=self.port,
+                                            user=self.username,
+                                            passwd=self.passphrase,
+                                            db=self.db)
+                self._create_db()
+            elif str(self.logsocket).lower() == 'dev':
+                self.conn = MySQLdb.connect(unix_socket=self.logdevice,
+                                            user=self.username,
+                                            passwd=self.passphrase,
+                                            db=self.db)
+                self._create_db()
+        except (AttributeError, MySQLdb.OperationalError):
+            print "Connection to MySQL database failed."
 
     def _create_db(self):
         cursor = self.conn.cursor()
@@ -46,20 +67,30 @@ class MySQLlogger(object):
                         ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
                        """)
 
-    def log(self, event):
+    def log(self, event, retry=1):
         cursor = self.conn.cursor()
-        cursor.execute("""INSERT INTO
-                            events (sensorid, session, remote, protocol, request, response)
-                          VALUES
-                            (%s, %s, %s, %s, %s, %s)""",
-                       (str(self.sensorid),
-                        str(event["id"]),
-                        str(event["remote"]),
-                        event["data_type"],
-                        event["data"].get('request'),
-                        event["data"].get('response')))
 
-        self.conn.commit()
+        try:
+            cursor.execute("""INSERT INTO
+                                events (sensorid, session, remote, protocol, request, response)
+                              VALUES
+                                (%s, %s, %s, %s, %s, %s)""", (str(self.sensorid),
+                                                              str(event["id"]),
+                                                              str(event["remote"]),
+                                                              event["data_type"],
+                                                              event["data"].get('request'),
+                                                              event["data"].get('response')))
+            self.conn.commit()
+        except (AttributeError, MySQLdb.OperationalError):
+            self._connect()
+
+            if retry == 0:
+                print "Connection to MySQL database failed."
+            else:
+                print "Connection to MySQL database failed. Retrying ({0} tries left)...".format(retry)
+                retry -= 1
+                gevent.sleep(float(0.5))
+                self.log(event, retry)
 
         return cursor.lastrowid
 
