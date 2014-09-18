@@ -451,11 +451,47 @@ class SetWatchdogCommand(BaseCommand):
     )
 
     CMD_OUTPUT = (
-        "\r\n"
-        "Software watchdog: {} {}\r\n"
-        "KAP Missing warning: {} {}\r\n"
-        "Keep alive timer (flash setting): {} {}\r\n"
+        "Software watchdog: {0}\r\n"
+        "KAP Missing warning: {1}\r\n"
+        "Keep alive timer (flash setting): {2}\r\n"
     )
+
+    def run(self, params=None):
+
+        output = "\r\n"
+        databus = conpot_core.get_databus()
+
+        if params is not None:
+            params_split = params.split(" ")
+
+            if len(params_split) > 0:
+                # meh, actually the real value is non-existing. If you supply a larger value the smart meter
+                # just overwrite memory and starts writing to the next memory location - yep, you heard it here first!
+                watchdog_value = str(try_parse_uint(params_split[0], min=5, max=4294967295))
+                databus.set_value('software_watchdog', watchdog_value)
+                if len(params_split) > 1:
+                    kap_missing = str(try_parse_uint(params_split[1], min=0, max=4294967295))
+                    databus.set_value('kap_missing_warning', kap_missing)
+                if len(params_split) > 2:
+                    keep_alive_timer = str(try_parse_uint(params_split[2], min=0, max=4294967295))
+                    databus.set_value('keep_alive_timer', keep_alive_timer)
+                output = "\r\nOK" + output
+
+        return_values = [databus.get_value('software_watchdog'),
+                         databus.get_value('kap_missing_warning'),
+                         databus.get_value('keep_alive_timer')]
+
+        for i in range(0, len(return_values)):
+            if return_values[i] == '0':
+                return_values[i] = 'DISABLED {0}'.format(return_values[i])
+            else:
+                return_values[i] = 'ENABLED {0}'.format(return_values[i])
+
+        output += SetWatchdogCommand.CMD_OUTPUT.format(return_values[0],
+                                                       return_values[1],
+                                                       return_values[2])
+
+        return output.format(databus.get_value('kap_server_lookup'))
 
 
 class SetNameserverCommand(BaseCommand):
@@ -588,16 +624,20 @@ class WinkModuleCommand(BaseCommand):
     )
 
 
+def try_parse_uint(str, min=0, max=254):
+    try:
+        value = int(str)
+        if value < 0 or value > 254:
+            value = 0
+    except ValueError:
+        value = '0'
+    return value
+
 # trying to simulate real lame Kamstrup IP validation
 def parse_ip(ip_string):
     final_ip = ''
     elements = ip_string.split('.')
     for element in elements:
-        try:
-            value = int(element)
-            if value < 0 or value > 254:
-                value = 0
-        except ValueError:
-            value = '0'
+        value = try_parse_uint(element)
         final_ip += '{0}.'.format(value)
     return final_ip

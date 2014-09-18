@@ -462,6 +462,15 @@
                 <key name="kap_server_lookup">
                     <value type="value">'0 - none'</value>
                 </key>
+                <key name="software_watchdong">
+                    <value type="value">'3600'</value>
+                </key>
+                <key name="kap_missing_warning">
+                    <value type="value">'60'</value>
+                </key>
+                <key name="keep_alive_timer">
+                    <value type="value">'10'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
