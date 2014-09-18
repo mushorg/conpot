@@ -388,10 +388,23 @@ class SetLookupCommand(BaseCommand):
         "               The module uses the IP provided by !SA if the DHCP offer dos not include option xxx data.\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "Service server hostname.: {}\r\n"
-    )
+    def run(self, params=None):
+        if params is None:
+            params = ""
+
+        output = "\r\n"
+
+        databus = conpot_core.get_databus()
+        # no, i am not making this up... this is actually how it is implemented on the Kamstrup meter..
+        if len(params) == 1:
+            databus.set_value('kap_server_lookup', '0 - none')
+            output = "\r\nOK" + output
+        elif len(params) > 1:
+            databus.set_value('kap_server_lookup', params)
+            output = "\r\nOK" + output
+
+        output += "Service server hostname.: {0}\r\n"
+        return output.format(databus.get_value('kap_server_lookup'))
 
 
 class SetIPCommand(BaseCommand):

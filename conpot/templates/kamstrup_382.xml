@@ -459,6 +459,9 @@
                 <key name="alarm_server_port">
                     <value type="value">'4000'</value>
                 </key>
+                <key name="kap_server_lookup">
+                    <value type="value">'0 - none'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
