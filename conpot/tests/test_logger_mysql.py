@@ -32,7 +32,7 @@ class Test_MySQLlogger(unittest.TestCase):
         port = 3306
         username = 'travis'
         passphrase = ''
-        db = 'conpot-unittest'
+        db = 'conpot_unittest'
         logdevice = ''
         logsocket = 'tcp'
         sensorid = 'default'
