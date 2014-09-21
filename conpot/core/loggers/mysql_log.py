@@ -86,6 +86,7 @@ class MySQLlogger(object):
 
             if retry == 0:
                 print "Connection to MySQL database failed."
+                return False
             else:
                 print "Connection to MySQL database failed. Retrying ({0} tries left)...".format(retry)
                 retry -= 1
