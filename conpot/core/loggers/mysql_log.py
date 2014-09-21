@@ -18,8 +18,12 @@
 
 import MySQLdb
 import gevent
+import logging
+
 from warnings import filterwarnings
-filterwarnings('ignore', category = MySQLdb.Warning)
+filterwarnings('ignore', category=MySQLdb.Warning)
+
+logger = logging.getLogger(__name__)
 
 
 class MySQLlogger(object):
@@ -52,7 +56,7 @@ class MySQLlogger(object):
                                             db=self.db)
                 self._create_db()
         except (AttributeError, MySQLdb.OperationalError):
-            print "Connection to MySQL database failed."
+            logger.error('Could not create a stable database connection for logging. Check database and credentials.')
 
     def _create_db(self):
         cursor = self.conn.cursor()
@@ -87,10 +91,10 @@ class MySQLlogger(object):
             self._connect()
 
             if retry == 0:
-                print "Connection to MySQL database failed."
+                logger.error('Logging failed. Database connection not available.')
                 return False
             else:
-                print "Connection to MySQL database failed. Retrying ({0} tries left)...".format(retry)
+                logger.debug("Logging failed: Database connection lost. Retrying ({0} tries left)...".format(retry))
                 retry -= 1
                 gevent.sleep(float(0.5))
                 return self.log(event, retry)
