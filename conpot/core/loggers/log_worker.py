@@ -27,6 +27,7 @@ import ConfigParser
 from gevent.queue import Empty
 
 from conpot.core.loggers.sqlite_log import SQLiteLogger
+from conpot.core.loggers.mysql_log import MySQLlogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
 from conpot.core.loggers.taxii_log import TaxiiLogger
@@ -40,6 +41,7 @@ class LogWorker(object):
         self.log_queue = session_manager.log_queue
         self.session_manager = session_manager
         self.sqlite_logger = None
+        self.mysql_logger = None
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
@@ -47,6 +49,17 @@ class LogWorker(object):
 
         if config.getboolean('sqlite', 'enabled'):
             self.sqlite_logger = SQLiteLogger()
+
+        if config.getboolean('mysql', 'enabled'):
+            host = config.get('mysql', 'host')
+            port = config.getint('mysql', 'port')
+            db = config.get('mysql', 'db')
+            username = config.get('mysql', 'username')
+            passphrase = config.get('mysql', 'passphrase')
+            logdevice = config.get('mysql', 'device')
+            logsocket = config.get('mysql', 'socket')
+            sensorid = config.get('common', 'sensorid')
+            self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
         if config.getboolean('hpfriends', 'enabled'):
             host = config.get('hpfriends', 'host')
@@ -117,6 +130,9 @@ class LogWorker(object):
 
                 if self.sqlite_logger:
                     self.sqlite_logger.log(event)
+
+                if self.mysql_logger:
+                    self.mysql_logger.log(event)
 
                 if self.syslog_client:
                     self.syslog_client.log(event)
