@@ -1,0 +1,99 @@
+<http enabled="True" host="0.0.0.0" port="80">
+    <global>
+        <config>
+            <!-- what protocol shall we use by default? -->
+            <entity name="protocol_version">HTTP/1.1</entity>
+            <!-- if we find any date header to be delivered, should we update it to a real value? -->
+            <entity name="update_header_date">true</entity>
+            <!-- should we disable the HTTP HEAD method? -->
+            <entity name="disable_method_head">false</entity>
+            <!-- should we disable the HTTP TRACE method? -->
+            <entity name="disable_method_trace">false</entity>
+            <!-- should we disable the HTTP OPTIONS method? -->
+            <entity name="disable_method_options">false</entity>
+            <!-- TARPIT: how much latency should we introduce to any response by default? -->
+            <entity name="tarpit">0</entity>
+        </config>
+
+        <!-- these headers will be sent with each response -->
+        <headers>
+            <!-- this date header will be updated, if enabled above -->
+            <entity name="Date">Sat, 28 Apr 1984 07:30:00 GMT</entity>
+        </headers>
+    </global>
+
+    <!-- how should the different URI requests be handled -->
+    <htdocs>
+        <node name="/">
+            <!-- force response status code to 302 -->
+            <status>302</status>
+            <headers>
+                <!-- these headers will be sent along with this response -->
+                <entity name="Content-Type">text/html</entity>
+                <entity name="Location">/index.html</entity>
+            </headers>
+        </node>
+        <node name="/index.html">
+            <!-- this tarpit will override the globally set tarpit for this node -->
+            <tarpit>0.0;0.3</tarpit>
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+                <entity name="Set-cookie">path=/</entity>
+            </headers>
+        </node>
+        <node name="/index.htm">
+            <!-- this node will inherit the payload from the referenced alias node without telling the browser -->
+            <alias>/index.html</alias>
+        </node>
+
+        <!-- the following nodes are used for unit testing and should be removed for production -->
+        <node name="/tests/unittest_base.html">
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+            </headers>
+        </node>
+        <node name="/tests/unittest_databus.html">
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+            </headers>
+        </node>
+        <node name="/tests/unittest_tarpit.html">
+            <tarpit>5</tarpit>
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+            </headers>
+        </node>
+        <node name="/tests/unittest_subselects.html">
+            <triggers>
+                <entity appendix="5459fa05e5c1db37f2679b65a5175bcf">action=unit;subaction=test</entity>
+            </triggers>
+            <headers>
+                <entity name="Last-Modified">Tue, 19 May 1993 09:00:00 GMT</entity>
+                <entity name="Content-Type">text/html</entity>
+            </headers>
+        </node>
+    </htdocs>
+
+    <!-- how should the different status codes be handled -->
+    <statuscodes>
+        <status name="400">
+                <!-- 400 (BAD REQUEST) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+        <status name="404">
+                <!-- 404 (NOT FOUND) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+        <status name="501">
+                <!-- 501 (NOT IMPLEMENTED) errors should be super fast and responsive -->
+                <tarpit>0</tarpit>
+                <entity name="Content-Type">text/html</entity>
+        </status>
+    </statuscodes>
+</http>
