@@ -91,7 +91,7 @@ class MySQLlogger(object):
                 print "Connection to MySQL database failed. Retrying ({0} tries left)...".format(retry)
                 retry -= 1
                 gevent.sleep(float(0.5))
-                self.log(event, retry)
+                return self.log(event, retry)
 
         return cursor.lastrowid
 
@@ -102,3 +102,8 @@ class MySQLlogger(object):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM events")
         print cursor.fetchall()
+
+    def select_session_data(self, sessionid):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM events WHERE session = %s", sessionid)
+        return cursor.fetchall()

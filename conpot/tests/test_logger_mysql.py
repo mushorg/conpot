@@ -27,6 +27,7 @@ class Test_MySQLlogger(unittest.TestCase):
         Objective: Test if events can be stored to and retrieved from mysql properly.
         """
 
+        # instanciate our mysql logging infrastructure
         host = '127.0.0.1'
         port = 3306
         username = 'travis'
@@ -38,6 +39,7 @@ class Test_MySQLlogger(unittest.TestCase):
 
         mysqllogger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
+        # create a test event
         test_event = {}
         test_event['id'] = 1337
         test_event['remote'] = "127.0.0.2"
@@ -45,8 +47,10 @@ class Test_MySQLlogger(unittest.TestCase):
         test_event['request'] = "foo"
         test_event['response'] = "bar"
 
-        mysqllogger.log(test_event)
+        # lets do it, but do not retry in case of failure
+        success = mysqllogger.log(test_event, 0)
+        self.assertTrue(success, 'Could not log to mysql database')
 
-
-        gevent.sleep(2)
-        self.assertIsNone(error_message, 'Unexpected error message: {0}'.format(error_message))
+        # now that we logged something, lets try to retrieve the event again..
+        retrieved_event = mysqllogger.select_session_data('1337')
+        self.assertGreaterEqual(len(retrieved_event), 1, 'Could not retrieve event from mysql database properly')
