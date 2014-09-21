@@ -18,7 +18,7 @@ install:
 - python setup.py install
 - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 before_script:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot;'
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot-unittest;'
 script:
 - nosetests -v
 - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml

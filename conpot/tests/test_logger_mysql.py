@@ -32,7 +32,7 @@ class Test_MySQLlogger(unittest.TestCase):
         port = 3306
         username = 'travis'
         passphrase = ''
-        db = 'conpot'
+        db = 'conpot-unittest'
         logdevice = ''
         logsocket = 'tcp'
         sensorid = 'default'
@@ -44,13 +44,12 @@ class Test_MySQLlogger(unittest.TestCase):
         test_event['id'] = 1337
         test_event['remote'] = "127.0.0.2"
         test_event['data_type'] = "unittest"
-        test_event['request'] = "foo"
-        test_event['response'] = "bar"
+        test_event['data'] = {'request': 'foo', 'response': 'bar'}
 
         # lets do it, but do not retry in case of failure
         success = mysqllogger.log(test_event, 0)
         self.assertTrue(success, 'Could not log to mysql database')
 
         # now that we logged something, lets try to retrieve the event again..
-        retrieved_event = mysqllogger.select_session_data('1337')
-        self.assertGreaterEqual(len(retrieved_event), 1, 'Could not retrieve event from mysql database properly')
+        retrieved_event = mysqllogger.select_session_data(test_event['id'])
+        self.assertEqual(len(retrieved_event), 1, 'Retrieved wrong number of events (or no event at all)')

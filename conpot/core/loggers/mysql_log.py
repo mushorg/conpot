@@ -18,6 +18,8 @@
 
 import MySQLdb
 import gevent
+from warnings import filterwarnings
+filterwarnings('ignore', category = MySQLdb.Warning)
 
 
 class MySQLlogger(object):
@@ -105,5 +107,15 @@ class MySQLlogger(object):
 
     def select_session_data(self, sessionid):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM events WHERE session = %s", sessionid)
+        cursor.execute("SELECT * FROM events WHERE session = %s", [str(sessionid)])
         return cursor.fetchall()
+
+    def truncate_table(self, table):
+        cursor = self.conn.cursor()
+        try:
+            affected = cursor.execute("TRUNCATE TABLE %s", [str(table)])
+            self.conn.commit()
+        except (AttributeError, MySQLdb.IntegrityError, MySQLdb.OperationalError):
+            return False
+
+        return affected
