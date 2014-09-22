@@ -35,7 +35,7 @@ class ModbusServer(modbus.Server):
 
     def _configure_slaves(self, template):
         dom = etree.parse(template)
-        slaves = dom.xpath('//conpot_template/protocols/modbus/slaves/*')
+        slaves = dom.xpath('//modbus/slaves/*')
         for s in slaves:
             slave_id = int(s.attrib['id'])
             slave = self.add_slave(slave_id)
@@ -49,8 +49,8 @@ class ModbusServer(modbus.Server):
                 logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'.format(
                     name, slave_id, request_type, start_addr, size
                 ))
-        template_name = dom.xpath('//conpot_template/@name')[0]
-        logger.info('Conpot modbus initialized using the {0} template.'.format(template_name))
+
+        logger.info('Conpot modbus initialized')
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
