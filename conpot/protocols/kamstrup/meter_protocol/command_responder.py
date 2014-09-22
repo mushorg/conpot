@@ -32,8 +32,8 @@ class CommandResponder(object):
         self.registers = {}
 
         dom = etree.parse(template)
-        registers = dom.xpath('//conpot_template/protocols/kamstrup/registers/*')
-        self.communication_address = int(dom.xpath('//conpot_template/protocols/kamstrup/config/communication_address/text()')[0])
+        registers = dom.xpath('//kamstrup/registers/*')
+        self.communication_address = int(dom.xpath('//kamstrup/config/communication_address/text()')[0])
         for register in registers:
             name = int(register.attrib['name'])
             length = int(register.attrib['length'])
