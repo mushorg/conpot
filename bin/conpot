@@ -102,6 +102,7 @@ def validate_template(xml_file):
         logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
         sys.exit(1)
 
+
 def main():
     logo()
 
@@ -111,25 +112,27 @@ def main():
                         help="the template to use",
                         default='',
                         metavar="template.xml"
-    )
+                        )
     parser.add_argument("-c", "--config",
                         help="the configuration file to use",
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
-    )
+                        )
     parser.add_argument("-l", "--logfile",
                         help="the template to use",
                         default="conpot.log"
-    )
+                        )
     parser.add_argument("-a", "--raw_mib",
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
                         action='append',
-                        default=[os.getcwd()])
+                        default=[os.getcwd()]
+                        )
     parser.add_argument("-m", "--mibpaths",
                         action='append',
                         help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
-                        default=[])
+                        default=[]
+                        )
     args = parser.parse_args()
 
     setup_logging(args.logfile)
@@ -170,9 +173,8 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
-
     template_base = os.path.join(template, 'template.xml')
-    if(os.path.isfile(template_base)):
+    if os.path.isfile(template_base):
         validate_template(template_base)
         dom_base = etree.parse(template_base)
     else:
@@ -180,64 +182,64 @@ def main():
         sys.exit(1)
 
     template_http = os.path.join(template, 'http', 'template.xml')
-    if(os.path.isfile(template_http)):
+    if os.path.isfile(template_http):
         validate_template(template_http)
         dom_http = etree.parse(template_http)
         if dom_http.xpath('//http'):
-            if ast.literal_eval(dom.xpath('//http/@enabled')[0]):
-                http_host = dom.xpath('//http/@host')[0]
-                http_port = ast.literal_eval(dom.xpath('//http/@port')[0])
+            if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
+                http_host = dom_http.xpath('//http/@host')[0]
+                http_port = ast.literal_eval(dom_http.xpath('//http/@port')[0])
                 http_server = HTTPServer(http_host, http_port, template_http, os.path.join(template, 'http'))
                 servers.append(http_server)
                 protocol_greenlets.append(gevent.spawn(http_server.start))
 
     template_kamstrup = os.path.join(template, 'kamstrup', 'template.xml')
-    if(os.path.isfile(template_kamstrup)):
+    if os.path.isfile(template_kamstrup):
         validate_template(template_kamstrup)
         dom_kamstrup = etree.parse(template_kamstrup)
         if dom_kamstrup.xpath('//kamstrup'):
-            if ast.literal_eval(dom.xpath('//kamstrup/@enabled')[0]):
-                host = dom.xpath('//kamstrup/@host')[0]
-                port = ast.literal_eval(dom.xpath('//kamstrup/@port')[0])
+            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup/@enabled')[0]):
+                host = dom_kamstrup.xpath('//kamstrup/@host')[0]
+                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup/@port')[0])
                 kamstrup_instance = KamstrupServer(template_kamstrup)
                 kamstrup_server = kamstrup_instance.get_server(host, port)
                 servers.append(kamstrup_server)
                 protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
 
     template_modbus = os.path.join(template, 'modbus', 'template.xml')
-    if(os.path.isfile(template_modbus)):
+    if os.path.isfile(template_modbus):
         validate_template(template_modbus)
         dom_modbus = etree.parse(template_modbus)
         if dom_modbus.xpath('//modbus'):
-            if ast.literal_eval(dom.xpath('//modbus/@enabled')[0]):
-                modbus_host = dom.xpath('//modbus/@host')[0]
-                modbus_port = ast.literal_eval(dom.xpath('//modbus/@port')[0])
+            if ast.literal_eval(dom_modbus.xpath('//modbus/@enabled')[0]):
+                modbus_host = dom_modbus.xpath('//modbus/@host')[0]
+                modbus_port = ast.literal_eval(dom_modbus.xpath('//modbus/@port')[0])
                 modbus_server = ModbusServer(template_modbus)
                 modbus_server = modbus_server.get_server(modbus_host, modbus_port)
                 servers.append(modbus_server)
                 protocol_greenlets.append(gevent.spawn(modbus_server.start))
 
     template_s7comm = os.path.join(template, 's7comm', 'template.xml')
-    if(os.path.isfile(template_s7comm)):
+    if os.path.isfile(template_s7comm):
         validate_template(template_s7comm)
         dom_s7comm = etree.parse(template_s7comm)
         if dom_s7comm.xpath('//s7comm'):
-            if ast.literal_eval(dom.xpath('//s7comm/@enabled')[0]):
-                s7_host = dom.xpath('//s7comm/@host')[0]
-                s7_port = ast.literal_eval(dom.xpath('//s7comm/@port')[0])
+            if ast.literal_eval(dom_s7comm.xpath('//s7comm/@enabled')[0]):
+                s7_host = dom_s7comm.xpath('//s7comm/@host')[0]
+                s7_port = ast.literal_eval(dom_s7comm.xpath('//s7comm/@port')[0])
                 s7_instance = S7Server(template_s7comm)
                 s7_server = s7_instance.get_server(s7_host, s7_port)
                 servers.append(s7_server)
                 protocol_greenlets.append(gevent.spawn(s7_server.start))
 
     template_snmp = os.path.join(template, 'snmp', 'template.xml')
-    if(os.path.isfile(template_snmp)):
+    if os.path.isfile(template_snmp):
         validate_template(template_snmp)
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
             if ast.literal_eval(dom.xpath('//snmp/@enabled')[0]):
-                snmp_host = dom.xpath('//snmp/@host')[0]
-                snmp_port = ast.literal_eval(dom.xpath('//snmp/@port')[0])
+                snmp_host = dom_snmp.xpath('//snmp/@host')[0]
+                snmp_port = ast.literal_eval(dom_snmp.xpath('//snmp/@port')[0])
                 snmp_server = SNMPServer(snmp_host, snmp_port, template_snmp, args.mibpaths, args.raw_mib)
                 servers.append(snmp_server)
                 protocol_greenlets.append(gevent.spawn(snmp_server.start))
