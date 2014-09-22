@@ -36,8 +36,12 @@ class TestBase(unittest.TestCase):
         self.tmp_dir = tempfile.mkdtemp()
         self.host = '127.0.0.1'
         databus = conpot_core.get_databus()
-        databus.initialize('conpot/templates/default.xml')
-        self.snmp_server = SNMPServer(self.host, 0, 'conpot/templates/default.xml', [self.tmp_dir], [self.tmp_dir])
+        databus.initialize('conpot/templates/default/template.xml')
+        self.snmp_server = SNMPServer(self.host,
+                                      0,
+                                      'conpot/templates/default/snmp/template.xml',
+                                      [self.tmp_dir],
+                                      [self.tmp_dir])
         self.port = self.snmp_server.get_port()
         self.server_greenlet = gevent.spawn(self.snmp_server.start)
 
@@ -49,8 +53,8 @@ class TestBase(unittest.TestCase):
         Objective: Test if we can get data via snmp_get
         """
         client = snmp_client.SNMPClient(self.host, self.port)
-        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
-        client.get_command(OID, callback=self.mock_callback)
+        oid = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
+        client.get_command(oid, callback=self.mock_callback)
         self.assertEqual("Siemens, SIMATIC, S7-200", self.result)
 
     def test_snmp_set(self):
@@ -59,8 +63,8 @@ class TestBase(unittest.TestCase):
         """
         client = snmp_client.SNMPClient(self.host, self.port)
         # syslocation
-        OID = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
-        client.set_command(OID, callback=self.mock_callback)
+        oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
+        client.set_command(oid, callback=self.mock_callback)
         databus = conpot_core.get_databus()
         self.assertEqual('TESTVALUE', databus.get_value('sysLocation'))
 

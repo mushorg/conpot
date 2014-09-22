@@ -30,9 +30,9 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default.xml')
-        S7_instance = S7Server('conpot/templates/default.xml')
-        self.S7_server = S7_instance.get_server('localhost', 0)
+        self.databus.initialize('conpot/templates/default/template.xml')
+        s7_instance = S7Server('conpot/templates/default/s7comm/template.xml')
+        self.S7_server = s7_instance.get_server('localhost', 0)
         self.S7_server.start()
         self.server_port = self.S7_server.server_port
 
