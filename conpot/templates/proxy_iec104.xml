@@ -1,0 +1,9 @@
+<conpot_template name="IEC104 Proxy" description="Example that shows how to proxy to an IEC104 slave">
+    <proxies>
+        <proxy name="IEC104 proxy" host="0.0.0.0" port="2404">
+            <proxy_host>127.0.0.1</proxy_host>
+            <proxy_port>2405</proxy_port>
+            <decoder>conpot.protocols.iec104.decoder.Decoder</decoder>
+        </proxy>
+    </proxies>
+</conpot_template>
