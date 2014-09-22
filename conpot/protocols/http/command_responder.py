@@ -61,7 +61,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def get_entity_headers(self, rqfilename, headers, configuration):
 
         xml_headers = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/headers/*'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/headers/*'
         )
 
         if xml_headers:
@@ -75,7 +75,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
     def get_trigger_appendix(self, rqfilename, rqparams, configuration):
 
         xml_triggers = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/triggers/*'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/triggers/*'
         )
 
         if xml_triggers:
@@ -100,7 +100,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         trailers = []
         xml_trailers = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/trailers/*'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/trailers/*'
         )
 
         if xml_trailers:
@@ -113,7 +113,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def get_status_headers(self, status, headers, configuration):
 
-        xml_headers = configuration.xpath('//conpot_template/protocols/http/statuscodes/status[@name="' +
+        xml_headers = configuration.xpath('//http/statuscodes/status[@name="' +
                                           str(status) + '"]/headers/*')
 
         if xml_headers:
@@ -128,7 +128,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         trailers = []
         xml_trailers = configuration.xpath(
-            '//conpot_template/protocols/http/statuscodes/status[@name="' + str(status) + '"]/trailers/*'
+            '//http/statuscodes/status[@name="' + str(status) + '"]/trailers/*'
         )
 
         if xml_trailers:
@@ -182,7 +182,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
            a minimal response"""
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//conpot_template/protocols/http/statuscodes/status[@name="' +
+        entity_proxy = configuration.xpath('//http/statuscodes/status[@name="' +
                                            str(status) +
                                            '"]/proxy')
 
@@ -194,7 +194,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # handle TARPIT tag
         entity_tarpit = configuration.xpath(
-            '//conpot_template/protocols/http/statuscodes/status[@name="' + str(status) + '"]/tarpit'
+            '//http/statuscodes/status[@name="' + str(status) + '"]/tarpit'
         )
 
         if entity_tarpit:
@@ -225,7 +225,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(docpath + 'statuscodes/' + str(status) + '.status', 'rb') as f:
+                with open(os.path.join(docpath, 'statuscodes', str(status) + '.status'), 'rb') as f:
                     payload = f.read()
 
             except IOError, e:
@@ -240,7 +240,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//conpot_template/protocols/http/htdocs/node[@name="' +
+            chunked_transfer = configuration.xpath('//http/htdocs/node[@name="' +
                                                    str(status) + '"]/chunks')
 
             if chunked_transfer:
@@ -326,7 +326,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # handle ALIAS tag
         entity_alias = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/alias'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/alias'
         )
         if entity_alias:
             rqfilename = entity_alias[0].xpath('./text()')[0]
@@ -338,7 +338,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/proxy'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/proxy'
         )
         if entity_proxy:
             source = 'proxy'
@@ -348,7 +348,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # handle TARPIT tag
         entity_tarpit = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/tarpit'
+            '//http/htdocs/node[@name="' + rqfilename + '"]/tarpit'
         )
         if entity_tarpit:
             tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
@@ -372,7 +372,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # handle STATUS tag
             # ( filesystem only, since proxied requests come with their own status )
             entity_status = configuration.xpath(
-                '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/status'
+                '//http/htdocs/node[@name="' + rqfilename + '"]/status'
             )
             if entity_status:
                 status = int(entity_status[0].xpath('./text()')[0])
@@ -388,11 +388,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(docpath + 'htdocs' + rqfilename, 'rb') as f:
+                with open(os.path.join(docpath, 'htdocs', rqfilename), 'rb') as f:
                     payload = f.read()
 
             except IOError as e:
-                if not os.path.isdir(docpath + 'htdocs' + rqfilename):
+                if not os.path.isdir(os.path.join(docpath, 'htdocs', rqfilename)):
                     logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
@@ -411,7 +411,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # How do we transport the content?
             chunked_transfer = configuration.xpath(
-                '//conpot_template/protocols/http/htdocs/node[@name="' + rqfilename + '"]/chunks'
+                '//http/htdocs/node[@name="' + rqfilename + '"]/chunks'
             )
 
             if chunked_transfer:
@@ -641,7 +641,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # try to find a configuration item for this GET request
             entity_xml = configuration.xpath(
-                '//conpot_template/protocols/http/htdocs/node[@name="'
+                '//http/htdocs/node[@name="'
                 + self.path.partition('?')[0].decode('utf8') + '"]'
             )
 
@@ -774,7 +774,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this GET request
         entity_xml = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+            '//http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
         )
 
         if entity_xml:
@@ -835,7 +835,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this POST request
         entity_xml = configuration.xpath(
-            '//conpot_template/protocols/http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+            '//http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
         )
 
         if entity_xml:
@@ -963,7 +963,7 @@ class SubHTTPServer(ThreadedHTTPServer):
         # for the first time in order to reduce further handling..
         self.configuration = etree.parse(template)
 
-        xml_config = self.configuration.xpath('//conpot_template/protocols/http/global/config/*')
+        xml_config = self.configuration.xpath('//http/global/config/*')
         if xml_config:
 
             # retrieve all global configuration entities
@@ -1010,7 +1010,7 @@ class SubHTTPServer(ThreadedHTTPServer):
 
         # load global headers from XML
         self.global_headers = []
-        xml_headers = self.configuration.xpath('//conpot_template/protocols/http/global/headers/*')
+        xml_headers = self.configuration.xpath('//http/global/headers/*')
         if xml_headers:
 
             # retrieve all headers assigned to this status code

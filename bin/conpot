@@ -187,7 +187,7 @@ def main():
             if ast.literal_eval(dom.xpath('//http/@enabled')[0]):
                 http_host = dom.xpath('//http/@host')[0]
                 http_port = ast.literal_eval(dom.xpath('//http/@port')[0])
-                http_server = HTTPServer(http_host, http_port, template_http, args.www)
+                http_server = HTTPServer(http_host, http_port, template_http, os.path.join(template, 'http'))
                 servers.append(http_server)
                 protocol_greenlets.append(gevent.spawn(http_server.start))
 
