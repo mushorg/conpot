@@ -192,6 +192,8 @@ def main():
                 http_server = HTTPServer(http_host, http_port, template_http, os.path.join(template, 'http'))
                 servers.append(http_server)
                 protocol_greenlets.append(gevent.spawn(http_server.start))
+    else:
+        logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
     template_kamstrup = os.path.join(template, 'kamstrup', 'template.xml')
     if os.path.isfile(template_kamstrup):
@@ -205,6 +207,8 @@ def main():
                 kamstrup_server = kamstrup_instance.get_server(host, port)
                 servers.append(kamstrup_server)
                 protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
+    else:
+        logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
 
     template_modbus = os.path.join(template, 'modbus', 'template.xml')
     if os.path.isfile(template_modbus):
@@ -218,6 +222,8 @@ def main():
                 modbus_server = modbus_server.get_server(modbus_host, modbus_port)
                 servers.append(modbus_server)
                 protocol_greenlets.append(gevent.spawn(modbus_server.start))
+    else:
+        logger.info('No Modbus template found. Service will remain unconfigured/stopped.')
 
     template_s7comm = os.path.join(template, 's7comm', 'template.xml')
     if os.path.isfile(template_s7comm):
@@ -231,47 +237,55 @@ def main():
                 s7_server = s7_instance.get_server(s7_host, s7_port)
                 servers.append(s7_server)
                 protocol_greenlets.append(gevent.spawn(s7_server.start))
+    else:
+        logger.info('No s7comm template found. Service will remain unconfigured/stopped.')
 
     template_snmp = os.path.join(template, 'snmp', 'template.xml')
     if os.path.isfile(template_snmp):
         validate_template(template_snmp)
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
-            if ast.literal_eval(dom.xpath('//snmp/@enabled')[0]):
+            if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
                 snmp_host = dom_snmp.xpath('//snmp/@host')[0]
                 snmp_port = ast.literal_eval(dom_snmp.xpath('//snmp/@port')[0])
                 snmp_server = SNMPServer(snmp_host, snmp_port, template_snmp, args.mibpaths, args.raw_mib)
                 servers.append(snmp_server)
                 protocol_greenlets.append(gevent.spawn(snmp_server.start))
+    else:
+        logger.info('No SNMP template found. Service will remain unconfigured/stopped.')
 
     log_worker = LogWorker(config, dom_base, session_manager, public_ip)
     gevent.spawn(log_worker.start)
 
-    proxies = dom.xpath('//conpot_template/proxies/*')
-    for p in proxies:
-        name = p.attrib['name']
-        host = p.attrib['host']
-        keyfile = None
-        certfile = None
-        if 'keyfile' in p.attrib and 'certfile' in p.attrib:
-            keyfile = p.attrib['keyfile']
-            certfile = p.attrib['certfile']
-            # if path is absolute we assert that the cert and key is located in same location as template
-            if not os.path.isabs(keyfile):
-                keyfile = os.path.join(os.path.dirname(template), keyfile)
-                certfile = os.path.join(os.path.dirname(template), certfile)
-        port = ast.literal_eval(p.attrib['port'])
-        proxy_host = p.xpath('./proxy_host/text()')[0]
-        proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
-        decoder = p.xpath('./decoder/text()')
-        if len(decoder) > 0:
-            decoder = decoder[0]
-        else:
-            decoder = None
-        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
-        proxy_server = proxy_instance.get_server(host, port)
-        servers.append(proxy_instance)
-        protocol_greenlets.append(gevent.spawn(proxy_server.start))
+    template_proxy = os.path.join(template, 'proxy', 'template.xml')
+    if os.path.isfile(template_proxy):
+        validate_template(template_proxy)
+        dom_proxy = etree.parse(template_proxy)
+        proxies = dom_proxy.xpath('//proxies/*')
+        for p in proxies:
+            name = p.attrib['name']
+            host = p.attrib['host']
+            keyfile = None
+            certfile = None
+            if 'keyfile' in p.attrib and 'certfile' in p.attrib:
+                keyfile = p.attrib['keyfile']
+                certfile = p.attrib['certfile']
+                # if path is absolute we assert that the cert and key is located in the ssl standard location
+                if not os.path.isabs(keyfile):
+                    keyfile = os.path.join(os.path.dirname(template), 'ssl', keyfile)
+                    certfile = os.path.join(os.path.dirname(template), 'ssl', certfile)
+            port = ast.literal_eval(p.attrib['port'])
+            proxy_host = p.xpath('./proxy_host/text()')[0]
+            proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
+            decoder = p.xpath('./decoder/text()')
+            if len(decoder) > 0:
+                decoder = decoder[0]
+            else:
+                decoder = None
+            proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
+            proxy_server = proxy_instance.get_server(host, port)
+            servers.append(proxy_instance)
+            protocol_greenlets.append(gevent.spawn(proxy_server.start))
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
