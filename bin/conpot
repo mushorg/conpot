@@ -126,7 +126,7 @@ def main():
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
                         action='append',
-                        default=[os.getcwd()]
+                        default=[]
                         )
     parser.add_argument("-m", "--mibpaths",
                         action='append',
@@ -246,9 +246,20 @@ def main():
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
             if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
+
+                if args.mibpaths:
+                    compiled_mibs = args.mibpaths
+                else:
+                    compiled_mibs = os.path.join(template, 'snmp', 'mibs_compiled')
+
+                if args.raw_mib:
+                    raw_mibs = args.raw_mib
+                else:
+                    raw_mibs = os.path.join(template, 'snmp', 'mibs_raw')
+
                 snmp_host = dom_snmp.xpath('//snmp/@host')[0]
                 snmp_port = ast.literal_eval(dom_snmp.xpath('//snmp/@port')[0])
-                snmp_server = SNMPServer(snmp_host, snmp_port, template_snmp, args.mibpaths, args.raw_mib)
+                snmp_server = SNMPServer(snmp_host, snmp_port, template_snmp, compiled_mibs, raw_mibs)
                 servers.append(snmp_server)
                 protocol_greenlets.append(gevent.spawn(snmp_server.start))
     else:
