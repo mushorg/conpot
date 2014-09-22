@@ -1,4 +1,4 @@
-<proxies>
+<proxies enabled="True">
     <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
         <proxy_host>192.168.1.176</proxy_host>
         <proxy_port>1025</proxy_port>
