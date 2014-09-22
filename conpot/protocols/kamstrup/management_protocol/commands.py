@@ -238,7 +238,7 @@ class GetConfigCommand(BaseCommand):
             channel_b_meternumber=databus.get_value("channel_b_meternumber"),
             kap_ack_server=databus.get_value("kap_ack_server"),
             kap_a_server_port=databus.get_value("kap_a_server_port"),
-            kap_local_port=databus.get_value("kap_local_port"),)
+            kap_local_port=databus.get_value("kap_local_port"), )
 
 
 class SoftwareVersionCommand(BaseCommand):
@@ -467,13 +467,13 @@ class SetWatchdogCommand(BaseCommand):
             if len(params_split) > 0:
                 # meh, actually the real value is non-existing. If you supply a larger value the smart meter
                 # just overwrite memory and starts writing to the next memory location - yep, you heard it here first!
-                watchdog_value = str(try_parse_uint(params_split[0], min=5, max=4294967295))
+                watchdog_value = str(try_parse_uint(params_split[0], min_value=5, max_value=4294967295))
                 databus.set_value('software_watchdog', watchdog_value)
                 if len(params_split) > 1:
-                    kap_missing = str(try_parse_uint(params_split[1], min=0, max=4294967295))
+                    kap_missing = str(try_parse_uint(params_split[1], min_value=0, max_value=4294967295))
                     databus.set_value('kap_missing_warning', kap_missing)
                 if len(params_split) > 2:
-                    keep_alive_timer = str(try_parse_uint(params_split[2], min=0, max=4294967295))
+                    keep_alive_timer = str(try_parse_uint(params_split[2], min_value=0, max_value=4294967295))
                     databus.set_value('keep_alive_timer', keep_alive_timer)
                 output = "\r\nOK" + output
 
@@ -506,7 +506,7 @@ class SetNameserverCommand(BaseCommand):
         if "." in address:
             octets = address.split(".")
         else:
-            octets = [int(address[i:i+3]) for i in range(0, len(address), 3)]
+            octets = [int(address[i:i + 3]) for i in range(0, len(address), 3)]
 
         if len(octets) is not 4:
             return False
@@ -624,14 +624,15 @@ class WinkModuleCommand(BaseCommand):
     )
 
 
-def try_parse_uint(str, min=0, max=254):
+def try_parse_uint(uint_string, min_value=0, max_value=254):
     try:
-        value = int(str)
-        if value < 0 or value > 254:
+        value = int(uint_string)
+        if value < min_value or value > max_value:
             value = 0
     except ValueError:
         value = '0'
     return value
+
 
 # trying to simulate real lame Kamstrup IP validation
 def parse_ip(ip_string):
