@@ -178,12 +178,9 @@ class AlarmServerCommand(BaseCommand):
             databus.set_value('alarm_server_ip', parse_ip(params_split[0]))
             # port provided also
             if len(params_split) > 1:
-                try:
-                    value = int(params_split[1])
-                    if 0 < value < 65535:
-                        databus.set_value('alarm_server_port', params_split[1])
-                except ValueError:
-                    pass
+                port = parse_port(params_split[1])
+                if port != 0:
+                    databus.set_value('alarm_server_port', port)
             output = '{0}:{1}'.format(databus.get_value('alarm_server_ip'), databus.get_value('alarm_server_port'))
         return output_prefix + self.CMD_OUTPUT.format(
             alarm_server_output=output) + output_postfix
@@ -290,12 +287,9 @@ class SetKap1Command(BaseCommand):
             databus.set_value('kap_a_server_hostname', '0 - none')
             # port provided also
             if len(params_split) > 1:
-                try:
-                    value = int(params_split[1])
-                    if 0 < value < 65536:
-                        databus.set_value('kap_a_server_port', params_split[1])
-                except ValueError:
-                    pass
+                port = parse_port(params_split[1])
+                if port != 0:
+                    databus.set_value('kap_a_server_port', port)
         else:
             output_prefix = '\r\n'
         output = '{0}:{1}'.format(databus.get_value('kap_a_server_ip'), databus.get_value('kap_a_server_port'))
@@ -342,12 +336,9 @@ class SetKap2Command(BaseCommand):
             params_split = params.split(" ")
             databus.set_value("kap_b_server_ip", parse_ip(params_split[0]))
             if len(params_split) > 1:
-                try:
-                    value = int(params_split[1])
-                    if 0 < value < 65536:
-                        databus.set_value("kap_b_server_port", params_split[1])
-                except ValueError:
-                    pass
+                port = parse_port(params_split[1])
+                if port != 0:
+                    databus.set_value("kap_b_server_port", params_split[1])
 
         if databus.get_value("kap_b_server_ip") == "0.0.0.0":
             return self.CMD_OUTPUT_SINGLE.format(cmd_ok,
@@ -546,7 +537,6 @@ class SetWatchdogCommand(BaseCommand):
     )
 
     def run(self, params=None):
-
         output = "\r\n"
         databus = conpot_core.get_databus()
 
@@ -623,15 +613,48 @@ class SetPortsCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "\r\n"
+        "{}\r\n"
         "KAP on server: {}\r\n"
         "ChA on module: {}\r\n"
         "ChB on module: {}\r\n"
         "Cfg on module: {}\r\n"
     )
 
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        cmd_ok = ""
+        if params:
+            params_split = params.split(" ")
+            cmd_ok = "OK"
 
-class SetSerialCommand(BaseCommand):
+            kap_port = parse_port(params_split[0])
+            if kap_port != 0:
+                databus.set_value("kap_a_server_port", kap_port)
+
+            if len(params_split) > 1:
+                cha_port = parse_port(params_split[1])
+                if cha_port != 0:
+                    databus.set_value("channel_a_port", cha_port)
+
+            if len(params_split) > 2:
+                chb_port = parse_port(params_split[2])
+                if chb_port != 0:
+                    databus.set_value("channel_b_port", chb_port)
+
+            # FIXME: how do we change the port we are connected to?
+            #if len(params_split) > 3:
+                #cfg_port = parse_port(params_split[3])
+                #if cfg_port != 0:
+                    #databus.set_value("", cfg_port)
+
+        return self.CMD_OUTPUT.format(cmd_ok,
+            databus.get_value("kap_a_server_port"),
+            databus.get_value("channel_a_port"),
+            databus.get_value("channel_b_port"),
+            50100)  # FIXME: see above
+
+
+class SetSerialCommand(BaseCommand):  # TODO
     HELP_MESSAGE = (
         "!SS: Set Serial Settings.\r\n"
         "     Used for setting the serial interface for channel A or B.\r\n"
@@ -652,7 +675,7 @@ class SetSerialCommand(BaseCommand):
     )
 
 
-class RequestConnectCommand(BaseCommand):
+class RequestConnectCommand(BaseCommand):  # TODO
     HELP_MESSAGE = (
         "!RC: Request connect\r\n"
         "     Makes the module crate a ChA or ChB socket to a remote server.\r\n"
@@ -696,16 +719,6 @@ class WinkModuleCommand(BaseCommand):
     )
 
 
-def try_parse_uint(uint_string, min_value=0, max_value=254):
-    try:
-        value = int(uint_string)
-        if value < min_value or value > max_value:
-            value = 0
-    except ValueError:
-        value = '0'
-    return value
-
-
 def parse_ip(ip_string):
     default = "0.0.0.0"
     if "." in ip_string:
@@ -719,3 +732,23 @@ def parse_ip(ip_string):
         if int(octet) < 0 or int(octet) > 255:
             return default
     return ".".join(octets)
+
+
+def parse_port(port_string):
+    try:
+        port = int(port_string)
+        if 0 < port < 65536:
+            return port
+        return 0
+    except ValueError:
+        return 0
+
+
+def try_parse_uint(uint_string, min_value=0, max_value=254):
+    try:
+        value = int(uint_string)
+        if value < min_value or value > max_value:
+            value = 0
+    except ValueError:
+        value = '0'
+    return value

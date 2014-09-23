@@ -456,6 +456,12 @@
                 <key name="channel_b_meternumber">
                     <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
                 </key>
+                <key name="channel_a_port">
+                    <value type="value">'1025'</value>
+                </key>
+                <key name="channel_b_port">
+                    <value type="value">'1027'</value>
+                </key>
                 <key name="kap_ack_server">
                     <value type="value">'NO'</value>
                 </key>
