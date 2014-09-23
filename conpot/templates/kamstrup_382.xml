@@ -426,11 +426,20 @@
                 <key name="ip_subnet">
                     <value type="value">'255.255.255.0'</value>
                 </key>
+                <key name="kap_a_server_hostname">
+                    <value type="value">'kapserver.evilpowerprovider.org'</value>
+                </key>
                 <key name="kap_a_server_ip">
                     <value type="value">'202.202.202.1'</value>
                 </key>
-                <key name="kap_a_server_hostname">
-                    <value type="value">'kapserver.evilpowerprovider.org'</value>
+                <key name="kap_a_server_port">
+                    <value type="value">'50'</value>
+                </key>
+                <key name="kap_b_server_ip">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="kap_b_server_port">
+                    <value type="value">'50'</value>
                 </key>
                 <key name="channel_a_meternumber">
                     <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
@@ -440,9 +449,6 @@
                 </key>
                 <key name="kap_ack_server">
                     <value type="value">'NO'</value>
-                </key>
-                <key name="kap_a_server_port">
-                    <value type="value">'50'</value>
                 </key>
                 <key name="kap_local_port">
                     <value type="value">'800'</value>

@@ -259,7 +259,7 @@ class SoftwareVersionCommand(BaseCommand):
 
 class SetKap1Command(BaseCommand):
     HELP_MESSAGE = (
-        "!SA: Set KAP Server IP and port (*1).\r\n"
+        "!SA: Set KAP Server IP and port (*1).\r\n"  # restart is not forced...
         "     Used for setting the IP of the Server to receive KAP-pacakeges.\r\n"
         "     UDP port on server can be provided optionally.\r\n"
         "      Format:  !SA SrvIP [SrvPort]\r\n"
@@ -272,6 +272,11 @@ class SetKap1Command(BaseCommand):
         "               from module port 8000.\r\n"
         "      Example: !SA 0.0.0.0 \r\n"
         "               Disables KAP.\r\n"
+    )
+
+    CMD_OUTPUT = (
+        "\r\n"
+        "Service server addr.: {kap_a_output}\r\n"
     )
 
     def run(self, params=None):
@@ -287,20 +292,14 @@ class SetKap1Command(BaseCommand):
             if len(params_split) > 1:
                 try:
                     value = int(params_split[1])
-                    if 0 < value < 65535:
+                    if 0 < value < 65536:
                         databus.set_value('kap_a_server_port', params_split[1])
                 except ValueError:
                     pass
         else:
             output_prefix = '\r\n'
         output = '{0}:{1}'.format(databus.get_value('kap_a_server_ip'), databus.get_value('kap_a_server_port'))
-        return output_prefix + self.CMD_OUTPUT.format(
-            kap_a_output=output)
-
-    CMD_OUTPUT = (
-        "\r\n"
-        "Service server addr.: {kap_a_output}\r\n"
-    )
+        return output_prefix + self.CMD_OUTPUT.format(kap_a_output=output)
 
 
 class SetKap2Command(BaseCommand):
@@ -321,12 +320,44 @@ class SetKap2Command(BaseCommand):
         "               from module port 8000.\r\n"
     )
 
-    CMD_OUTPUT = (
+    CMD_OUTPUT_SINGLE = (
         "\r\n"
-        "\r\n"
+        "{}\r\n"
         "Service server addr.: {}:{} (from DNS)\r\n"
-        "No redundancy.\r\n"
+        "No redundancy."
     )
+
+    CMD_OUTPUT_DOUBLE = (
+        "\r\n"
+        "{}\r\n"
+        "Service server addr.: {}:{} (from DNS)\r\n"
+        "and fallback KAP to:  {}:{}\r\n"
+    )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        cmd_ok = ""
+        if params:
+            cmd_ok = "OK"
+            params_split = params.split(" ")
+            databus.set_value("kap_b_server_ip", parse_ip(params_split[0]))
+            if len(params_split) > 1:
+                try:
+                    value = int(params_split[1])
+                    if 0 < value < 65536:
+                        databus.set_value("kap_b_server_port", params_split[1])
+                except ValueError:
+                    pass
+
+        if databus.get_value("kap_b_server_ip") == "0.0.0.0":
+            return self.CMD_OUTPUT_SINGLE.format(cmd_ok,
+                databus.get_value("kap_a_server_ip"),
+                databus.get_value("kap_a_server_port"))
+        return self.CMD_OUTPUT_DOUBLE.format(cmd_ok,
+            databus.get_value("kap_a_server_ip"),
+            databus.get_value("kap_a_server_port"),
+            databus.get_value("kap_b_server_ip"),
+            databus.get_value("kap_b_server_port"))
 
 
 class SetConfigCommand(BaseCommand):
@@ -502,20 +533,6 @@ class SetNameserverCommand(BaseCommand):
         "      Example: !SN 172.16.0.83 172.16.0.84 0.0.0.0\r\n"
     )
 
-    def _is_valid(self, address):
-        if "." in address:
-            octets = address.split(".")
-        else:
-            octets = [int(address[i:i + 3]) for i in range(0, len(address), 3)]
-
-        if len(octets) is not 4:
-            return False
-        for octet in octets:
-            if octet < 0 or octet > 255:
-                return False
-
-        return True
-
     def run(self, params=None):
         if params is None:
             return self.INVALID_PARAMETER
@@ -524,14 +541,10 @@ class SetNameserverCommand(BaseCommand):
         if len(nameservers) != 3:
             return self.INVALID_PARAMETER
 
-        for nameserver in nameservers:
-            if not self._is_valid(nameserver):
-                nameserver = "0.0.0.0"
-
         databus = conpot_core.get_databus()
-        databus.set_value("nameserver_1", nameservers[0])
-        databus.set_value("nameserver_2", nameservers[1])
-        databus.set_value("nameserver_3", nameservers[2])
+        databus.set_value("nameserver_1", parse_ip(nameservers[0]))
+        databus.set_value("nameserver_2", parse_ip(nameservers[1]))
+        databus.set_value("nameserver_3", parse_ip(nameservers[2]))
         return "\r\nOK"
 
 
@@ -634,11 +647,16 @@ def try_parse_uint(uint_string, min_value=0, max_value=254):
     return value
 
 
-# trying to simulate real lame Kamstrup IP validation
 def parse_ip(ip_string):
-    final_ip = ''
-    elements = ip_string.split('.')
-    for element in elements:
-        value = try_parse_uint(element)
-        final_ip += '{0}.'.format(value)
-    return final_ip
+    default = "0.0.0.0"
+    if "." in ip_string:
+        octets = ip_string.split(".")
+    else:
+        octets = [int(ip_string[i:i + 3]) for i in range(0, len(ip_string), 3)]
+
+    if len(octets) is not 4:
+        return default
+    for octet in octets:
+        if int(octet) < 0 or int(octet) > 255:
+            return default
+    return ".".join(octets)
