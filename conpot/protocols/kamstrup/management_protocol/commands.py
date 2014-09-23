@@ -113,7 +113,7 @@ class AccessControlCommand(BaseCommand):
     def set_access_ip(self, number, ip_string):
         databus = conpot_core.get_databus()
         if ip_string.count('.') == 3:
-            if any(x in number for x in ['1', '2', ' 3', '4', '5']):
+            if any(x in number for x in ['1', '2', '3', '4', '5']):
                 acl_number = int(number)
                 final_ip = parse_ip(ip_string)
                 databus.set_value('access_control_{0}'.format(acl_number), final_ip)
