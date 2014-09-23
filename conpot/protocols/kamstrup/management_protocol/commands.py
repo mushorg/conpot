@@ -377,6 +377,41 @@ class SetConfigCommand(BaseCommand):
         "Service server hostname.: {}\r\n"
     )
 
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        if params:
+            params_split = params.split(" ")
+            if len(params_split) >= 10:
+
+                if params_split[0] == "1":
+                    databus.set_value("use_dhcp", "YES")
+                else:
+                    databus.set_value("use_dhcp", "NO")
+                    databus.set_value("ip_addr", parse_ip(params_split[1]))
+                    databus.set_value("ip_subnet", parse_ip(params_split[2]))
+                    databus.set_value("ip_gateway", parse_ip(params_split[3]))
+
+                databus.set_value("nameserver_1", parse_ip(params_split[4]))
+                databus.set_value("nameserver_2", parse_ip(params_split[5]))
+                databus.set_value("nameserver_3", parse_ip(params_split[6]))
+
+                if params_split[9] == "0":
+                    databus.set_value("kap_a_server_ip", params_split[7])
+                    databus.set_value("kap_a_server_hostname", "0 - none")
+                else:
+                    databus.set_value("kap_a_server_hostname", params_split[9])
+                    # FIXME: server IP should be resolved from the hostname
+                    # using nameserver_1, nameserver_2, nameserver_3
+                    databus.set_value("kap_a_server_ip", params_split[7])
+
+                device_name = params_split[8]
+                if len(device_name) > 20:
+                    device_name = device_name[0:20]
+                databus.set_value("device_name", device_name)
+
+        databus.set_value("reboot_signal", 1)
+        return output
+
 
 class SetDeviceNameCommand(BaseCommand):
     HELP_MESSAGE = (
