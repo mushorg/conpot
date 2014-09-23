@@ -145,6 +145,39 @@ def main():
 
     # Did the user specify a template at all?
     if not args.template:
+
+        available_templates = os.listdir(os.path.join(package_directory, 'templates'))
+
+        template_unit = template_vendor = template_description = template_creator = ''
+        logger.info("Available templates:\n")
+
+        for folder in available_templates:
+            template_xml = os.path.join(package_directory, 'templates', folder, 'template.xml')
+            if os.path.isfile(template_xml):
+                dom_template = etree.parse(template_xml)
+                template_details = dom_template.xpath('//core/template/*')
+                if template_details:
+
+                    # retrieve all template details
+                    for entity in template_details:
+
+                        if entity.attrib['name'] == 'unit':
+                            template_unit = entity.text
+
+                        elif entity.attrib['name'] == 'vendor':
+                            template_vendor = entity.text
+
+                        elif entity.attrib['name'] == 'description':
+                            template_description = entity.text
+
+                        elif entity.attrib['name'] == 'creator':
+                            template_creator = entity.text
+
+                    logger.info('   --template ' + folder)
+                    logger.info("       Unit:        {0} - {1}".format(template_vendor, template_unit))
+                    logger.info("       Desc:        {0}".format(template_description))
+                    logger.info("       Created by:  {0}\n".format(template_creator))
+
         logger.error('Please specify a template. (TODO: LIST AVAILABLE TEMPLATES)')
         sys.exit(1)
 
