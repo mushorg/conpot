@@ -37,7 +37,9 @@ ASDU_TYPE_71 = {
 
 
 class Decoder(object):
-
+    """
+    http://infosys.beckhoff.com/english.php?content=../content/1033/tcplclibiec870_5_104/html/tcplclibiec870_5_104_telegrammstructure.htm&id=
+    """
     @staticmethod
     def unpack(data):
         print len(data)
