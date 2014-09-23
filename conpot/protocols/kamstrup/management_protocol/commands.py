@@ -456,10 +456,33 @@ class SetIPCommand(BaseCommand):
 
     CMD_OUTPUT = (
         "\r\n"
-        "Use DHCP            : {}\r\n"
+        "Use DHCP            : {use_dhcp}\r\n"
         "\r\n"
-        "IP addr.            : {}\r\n"
+        "IP addr.            : {ip_addr}\r\n"
     )
+
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        if params:
+            ip_addr = parse_ip(params)
+            if ip_addr == "0.0.0.0":
+                if databus.get_value("use_dhcp") == "NO":
+                    databus.set_value("use_dhcp", "YES")
+                    databus.set_value("ip_addr",
+                        databus.get_value("ip_addr_dhcp"))
+                    databus.set_value("ip_gateway",
+                        databus.get_value("ip_gateway_dhcp"))
+                    databus.set_value("ip_subnet",
+                        databus.get_value("ip_subnet_dhcp"))
+                    databus.set_value("reboot_signal", 1)
+            else:
+                databus.set_value("use_dhcp", "NO")
+                databus.set_value("ip_addr", ip_addr)
+                databus.set_value("reboot_signal", 1)
+
+        return self.CMD_OUTPUT.format(
+            use_dhcp=databus.get_value("use_dhcp"),
+            ip_addr=databus.get_value("ip_addr"))
 
 
 class SetWatchdogCommand(BaseCommand):
@@ -630,6 +653,7 @@ class WinkModuleCommand(BaseCommand):
         "     Causes the WINK LED on the module to blink for physical identification.\r\n"
     )
 
+    # no other output
     CMD_OUTPUT = (
         "\r\n"
         "\r\n"

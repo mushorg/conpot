@@ -426,6 +426,15 @@
                 <key name="ip_subnet">
                     <value type="value">'255.255.255.0'</value>
                 </key>
+                <key name="ip_addr_dhcp">
+                    <value type="value">'192.168.0.1'</value>
+                </key>
+                <key name="ip_gateway_dhcp">
+                    <value type="value">'192.168.0.254'</value>
+                </key>
+                <key name="ip_subnet_dhcp">
+                    <value type="value">'255.255.255.0'</value>
+                </key>
                 <key name="kap_a_server_hostname">
                     <value type="value">'kapserver.evilpowerprovider.org'</value>
                 </key>
