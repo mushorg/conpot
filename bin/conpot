@@ -135,11 +135,11 @@ def main():
                         help="path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
                         action='append',
-                        default=[os.getcwd()])
+                        default=[package_directory])
     parser.add_argument("-m", "--mibpaths",
                         action='append',
                         help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
-                        default=[])
+                        default=[package_directory])
     args = parser.parse_args()
 
     setup_logging(args.logfile)
