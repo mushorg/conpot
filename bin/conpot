@@ -109,28 +109,29 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-t", "--template",
-                        help="the template to use",
+                        help="The template to use",
                         default='',
                         metavar="template.xml"
                         )
     parser.add_argument("-c", "--config",
-                        help="the configuration file to use",
+                        help="The configuration file to use",
                         default=os.path.join(package_directory, 'conpot.cfg'),
                         metavar="config.cfg"
                         )
     parser.add_argument("-l", "--logfile",
-                        help="the template to use",
+                        help="The logfile to use",
                         default="conpot.log"
                         )
     parser.add_argument("-a", "--raw_mib",
-                        help="path to raw MIB files."
+                        help="Path to raw MIB files."
                              "(will automatically get compiled by build-pysnmp-mib)",
                         action='append',
                         default=[]
                         )
     parser.add_argument("-m", "--mibpaths",
                         action='append',
-                        help="path to compiled PySNMP MIB files. (must be compiled with build-pysnmp-mib)",
+                        help="Path to compiled PySNMP MIB files."
+                             "(must be compiled with build-pysnmp-mib)",
                         default=[]
                         )
     args = parser.parse_args()
@@ -148,8 +149,10 @@ def main():
 
         available_templates = os.listdir(os.path.join(package_directory, 'templates'))
 
-        template_unit = template_vendor = template_description = template_creator = ''
-        logger.info("Available templates:\n")
+        template_unit = template_vendor = template_description = template_creator = 'Unknown'
+        logger.info("--------------------------------------------------:")
+        logger.info("Available templates:")
+        logger.info("--------------------------------------------------:\n")
 
         for folder in available_templates:
             template_xml = os.path.join(package_directory, 'templates', folder, 'template.xml')
@@ -178,7 +181,6 @@ def main():
                     logger.info("       Desc:        {0}".format(template_description))
                     logger.info("       Created by:  {0}\n".format(template_creator))
 
-        logger.error('Please specify a template. (TODO: LIST AVAILABLE TEMPLATES)')
         sys.exit(1)
 
     # Check if the template exists in our template root..
@@ -226,7 +228,7 @@ def main():
                 servers.append(http_server)
                 protocol_greenlets.append(gevent.spawn(http_server.start))
             else:
-                logger.info('HTTP disabled by configuration.')
+                logger.info('HTTP available but disabled by configuration.')
     else:
         logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
@@ -243,7 +245,7 @@ def main():
                 servers.append(kamstrup_server)
                 protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
             else:
-                logger.info('Kamstrup disabled by configuration.')
+                logger.info('Kamstrup available but disabled by configuration.')
     else:
         logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
 
@@ -260,7 +262,7 @@ def main():
                 servers.append(modbus_server)
                 protocol_greenlets.append(gevent.spawn(modbus_server.start))
             else:
-                logger.info('Modbus disabled by configuration.')
+                logger.info('Modbus available but disabled by configuration.')
     else:
         logger.info('No Modbus template found. Service will remain unconfigured/stopped.')
 
@@ -277,7 +279,7 @@ def main():
                 servers.append(s7_server)
                 protocol_greenlets.append(gevent.spawn(s7_server.start))
             else:
-                logger.info('S7comm disabled by configuration.')
+                logger.info('S7comm available but disabled by configuration.')
     else:
         logger.info('No s7comm template found. Service will remain unconfigured/stopped.')
 
@@ -304,7 +306,7 @@ def main():
                 servers.append(snmp_server)
                 protocol_greenlets.append(gevent.spawn(snmp_server.start))
             else:
-                logger.info('SNMP disabled by template.')
+                logger.info('SNMP available but disabled by template.')
     else:
         logger.info('No SNMP template found. Service will remain unconfigured/stopped.')
 
@@ -326,7 +328,10 @@ def main():
                     if 'keyfile' in p.attrib and 'certfile' in p.attrib:
                         keyfile = p.attrib['keyfile']
                         certfile = p.attrib['certfile']
-                        # if path is absolute we assert that the cert and key is located in the ssl standard location
+
+                        # if path is absolute we assert that the cert and key is located in
+                        # the templates ssl standard location
+
                         if not os.path.isabs(keyfile):
                             keyfile = os.path.join(os.path.dirname(template), 'ssl', keyfile)
                             certfile = os.path.join(os.path.dirname(template), 'ssl', certfile)
@@ -343,7 +348,7 @@ def main():
                     servers.append(proxy_instance)
                     protocol_greenlets.append(gevent.spawn(proxy_server.start))
             else:
-                logger.info('Proxy disabled by template.')
+                logger.info('Proxy available but disabled by template.')
     else:
             logger.info('No proxy template found. Service will remain unconfigured/stopped.')
 
