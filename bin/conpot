@@ -41,6 +41,8 @@ from conpot.protocols.modbus.modbus_server import ModbusServer
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.protocols.http.web_server import HTTPServer
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
+from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
+
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
 
@@ -226,6 +228,15 @@ def main():
             kamstrup_server = kamstrup_instance.get_server(host, port)
             servers.append(kamstrup_server)
             protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
+
+    if dom.xpath('//conpot_template/protocols/kamstrup_management'):
+        if ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_management/@enabled')[0]):
+            host = dom.xpath('//conpot_template/protocols/kamstrup_management/@host')[0]
+            port = ast.literal_eval(dom.xpath('//conpot_template/protocols/kamstrup_management/@port')[0])
+            kamstrup_management_instance = KamstrupManagementServer(template)
+            kamstrup_management_server = kamstrup_management_instance.get_server(host, port)
+            servers.append(kamstrup_management_server)
+            protocol_greenlets.append(gevent.spawn(kamstrup_management_server.start))
 
     proxies = dom.xpath('//conpot_template/proxies/*')
     for p in proxies:

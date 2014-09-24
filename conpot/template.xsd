@@ -48,6 +48,13 @@
                 <xs:element name="protocols" minOccurs="0" maxOccurs="unbounded">
                     <xs:complexType>
                         <xs:sequence>
+                            <xs:element name="kamstrup_management" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                    <xs:attribute type="xs:string" name="host" use="required"/>
+                                    <xs:attribute type="xs:int" name="port" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
                             <xs:element name="kamstrup" maxOccurs="unbounded" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>

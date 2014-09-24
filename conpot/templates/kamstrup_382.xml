@@ -3,7 +3,7 @@
     <core>
         <databus>
             <key_value_mappings>
-             <key name="power_simulator">
+                <key name="power_simulator">
                     <value type="function">conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>
                 </key>
                 <key name="register_1024">
@@ -39,7 +39,7 @@
                 <key name="register_1078">
                     <value type="value">144</value>
                 </key>
-               <key name="register_1080">
+                <key name="register_1080">
                     <value type="value">1000</value>
                 </key>
                 <key name="register_1081">
@@ -378,13 +378,137 @@
                 <key name="register_1023">
                     <value type="value">0</value>
                 </key>
+                <key name="software_version">
+                    <value type="value">'5.5 (E5)'</value>
+                </key>
+                <key name="access_control_status">
+                    <value type="value">'DISABLED'</value>
+                </key>
+                <key name="access_control_1">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_2">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_3">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_4">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="access_control_5">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="device_name">
+                    <value type="value">''</value>
+                </key>
+                <key name="nameserver_1">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="nameserver_2">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="nameserver_3">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="mac_address">
+                    <value type="value">'00:13:EA:00:00:00'</value>
+                </key>
+                <key name="use_dhcp">
+                    <value type="value">'YES'</value>
+                </key>
+                <key name="ip_addr">
+                    <value type="value">'192.168.1.210'</value>
+                </key>
+                <key name="ip_gateway">
+                    <value type="value">'192.168.1.1'</value>
+                </key>
+                <key name="ip_subnet">
+                    <value type="value">'255.255.255.0'</value>
+                </key>
+                <key name="ip_addr_dhcp">
+                    <value type="value">'192.168.0.1'</value>
+                </key>
+                <key name="ip_gateway_dhcp">
+                    <value type="value">'192.168.0.254'</value>
+                </key>
+                <key name="ip_subnet_dhcp">
+                    <value type="value">'255.255.255.0'</value>
+                </key>
+                <key name="kap_a_server_hostname">
+                    <value type="value">'kapserver.evilpowerprovider.org'</value>
+                </key>
+                <key name="kap_a_server_ip">
+                    <value type="value">'202.202.202.1'</value>
+                </key>
+                <key name="kap_a_server_port">
+                    <value type="value">'50'</value>
+                </key>
+                <key name="kap_b_server_ip">
+                    <value type="value">'0.0.0.0'</value>
+                </key>
+                <key name="kap_b_server_port">
+                    <value type="value">'50'</value>
+                </key>
+                <key name="channel_a_meternumber">
+                    <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
+                </key>
+                <key name="channel_b_meternumber">
+                    <value type="value">'A1 06 A1 02 B7 34 12 00 00 03'</value>
+                </key>
+                <key name="channel_a_port">
+                    <value type="value">'1025'</value>
+                </key>
+                <key name="channel_b_port">
+                    <value type="value">'1027'</value>
+                </key>
+                <key name="kap_ack_server">
+                    <value type="value">'NO'</value>
+                </key>
+                <key name="kap_local_port">
+                    <value type="value">'800'</value>
+                </key>
                 <key name="reboot_signal">
                     <value type="value">0</value>
+                </key>
+                <key name="alarm_server_status">
+                    <value type="value">'DISABLED'</value>
+                </key>
+                <key name="alarm_server_ip">
+                    <value type="value">''</value>
+                </key>
+                <key name="alarm_server_port">
+                    <value type="value">'4000'</value>
+                </key>
+                <key name="kap_server_lookup">
+                    <value type="value">'0 - none'</value>
+                </key>
+                <key name="software_watchdong">
+                    <value type="value">'3600'</value>
+                </key>
+                <key name="kap_missing_warning">
+                    <value type="value">'60'</value>
+                </key>
+                <key name="keep_alive_timer">
+                    <value type="value">'10'</value>
+                </key>
+                <key name="serial_settings_a">
+                    <value type="value">'Auto'</value>
+                </key>
+                <key name="serial_settings_b">
+                    <value type="value">'115200,8,E,1'</value>
+                </key>
+                <key name="channel_a_connect_socket">
+                    <value type="value">'0 - None'</value>
+                </key>
+                <key name="channel_b_connect_socket">
+                    <value type="value">'0 - None'</value>
                 </key>
             </key_value_mappings>
         </databus>
     </core>
     <protocols>
+        <kamstrup_management enabled="True" host="0.0.0.0" port="50100"/>
         <kamstrup enabled="True" host="0.0.0.0" port="1025">
             <config>
                 <communication_address>63</communication_address>
