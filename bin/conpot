@@ -151,7 +151,7 @@ def main():
 
         template_unit = template_vendor = template_description = template_creator = 'Unknown'
         logger.info("--------------------------------------------------:")
-        logger.info("Available templates:")
+        logger.info(" Available templates:")
         logger.info("--------------------------------------------------:\n")
 
         for folder in available_templates:

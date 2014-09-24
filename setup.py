@@ -17,7 +17,7 @@ setup(
     author_email="glastopf@public.honeynet.org",
     package_data={
         "": ["*.txt", "*.rst"],
-        "conpot": ["templates/*.xml", "conpot.cfg", "tests/data/*", "template.xsd"],
+        "conpot": ["templates/*", "conpot.cfg", "tests/data/*", "template.xsd"],
     },
     long_description=open('README.rst').read(),
     classifiers=[
