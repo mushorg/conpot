@@ -64,7 +64,7 @@ class CommandResponder(object):
 
         if len(command) > 3:
             return self.COMMAND_NOT_FOUND
-        if command.startswith("Q"):
+        elif command.startswith("Q"):
             return  # quit
 
         params = None

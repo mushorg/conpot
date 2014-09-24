@@ -492,6 +492,12 @@
                 <key name="keep_alive_timer">
                     <value type="value">'10'</value>
                 </key>
+                <key name="serial_settings_a">
+                    <value type="value">'Auto'</value>
+                </key>
+                <key name="serial_settings_b">
+                    <value type="value">'115200,8,E,1'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>

@@ -19,7 +19,6 @@ import logging
 
 import conpot.core as conpot_core
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -401,7 +400,6 @@ class SetConfigCommand(BaseCommand):
                 databus.set_value("device_name", device_name)
 
         databus.set_value("reboot_signal", 1)
-        return output
 
 
 class SetDeviceNameCommand(BaseCommand):
@@ -668,11 +666,29 @@ class SetSerialCommand(BaseCommand):  # TODO
         "     Chanel A supports auto mode (Also enables load profile logger in old E-Meters).\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "UART A setup : {}\r\n"
-        "UART B setup : {},{},{},{} {}\r\n"
-    )
+    def run(self, params=None):
+        databus = conpot_core.get_databus()
+        output = "UART A setup : {0}\r\n" \
+                 "UART B setup : {1}\r\n"
+        if params:
+            params_split = params.split(" ")
+            if len(params_split) == 2:
+                output = "\r\nOK\r\n" + output
+                if params_split[0] == "A":
+                    # TODO: figure out how these are parsed when meter is online again
+                    databus.set_value('serial_settings_a', params_split[1])
+                elif params_split[0] == "B":
+                    databus.set_value('serial_settings_b', params_split[1])
+                else:
+                    return self.INVALID_PARAMETER
+            else:
+                return self.INVALID_PARAMETER
+        else:
+            output = "\r\n" + output
+
+        return output.format(databus.get_value('serial_settings_a'),
+                             databus.get_value('serial_settings_b'))
+
 
 
 class RequestConnectCommand(BaseCommand):  # TODO
