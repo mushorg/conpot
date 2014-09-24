@@ -35,6 +35,116 @@ ASDU_TYPE_71 = {
     "6B": ["C_TS_TA_1", "Test command with time tag CP56Time2a"]
 }
 
+E_IEC870_5_101COTType = {
+    0: 'eIEC870_COT_UNUSED',
+    1: 'eIEC870_COT_CYCLIC',
+    2: 'eIEC870_COT_BACKGROUND',
+    3: 'eIEC870_COT_SPONTAN',
+    4: 'eIEC870_COT_INIT',
+    5: 'eIEC870_COT_REQ',
+    6: 'eIEC870_COT_ACT',
+    7: 'eIEC870_COT_ACT_CON',
+    8: 'eIEC870_COT_DEACT',
+    9: 'eIEC870_COT_DEACT_CON',
+    10: 'eIEC870_COT_ACT_TERM',
+    11: 'eIEC870_COT_RETREM',
+    12: 'eIEC870_COT_RETLOC',
+    13: 'eIEC870_COT_FILE',
+    14: 'eIEC870_COT_14',
+    15: 'eIEC870_COT_15',
+    16: 'eIEC870_COT_16',
+    17: 'eIEC870_COT_17',
+    18: 'eIEC870_COT_18',
+    19: 'eIEC870_COT_19',
+    20: 'eIEC870_COT_INROGEN',
+    21: 'eIEC870_COT_INRO1',
+    22: 'eIEC870_COT_INRO2',
+    23: 'eIEC870_COT_INRO3',
+    24: 'eIEC870_COT_INRO4',
+    25: 'eIEC870_COT_INRO5',
+    26: 'eIEC870_COT_INRO6',
+    27: 'eIEC870_COT_INRO7',
+    28: 'eIEC870_COT_INRO8',
+    29: 'eIEC870_COT_INRO9',
+    30: 'eIEC870_COT_INRO10',
+    31: 'eIEC870_COT_INRO11',
+    32: 'eIEC870_COT_INRO12',
+    33: 'eIEC870_COT_INRO13',
+    34: 'eIEC870_COT_INRO14',
+    35: 'eIEC870_COT_INRO15',
+    36: 'eIEC870_COT_INRO16',
+    37: 'eIEC870_COT_REQCOGEN',
+    38: 'eIEC870_COT_REQCO1',
+    39: 'eIEC870_COT_REQCO2',
+    40: 'eIEC870_COT_REQCO3',
+    41: 'eIEC870_COT_REQCO4',
+    42: 'eIEC870_COT_42',
+    43: 'eIEC870_COT_43',
+    44: 'eIEC870_COT_UNKNOWN_TYPE',
+    45: 'eIEC870_COT_UNKNOWN_CAUSE',
+    46: 'eIEC870_COT_UNKNOWN_ASDU_ADDRESS',
+    47: 'eIEC870_COT_UNKNOWN_OBJECT_ADDRESS',
+    48: 'eIEC870_COT_48',
+    49: 'eIEC870_COT_49',
+    50: 'eIEC870_COT_50',
+    51: 'eIEC870_COT_51',
+    52: 'eIEC870_COT_52',
+    53: 'eIEC870_COT_53',
+    54: 'eIEC870_COT_54',
+    55: 'eIEC870_COT_55',
+    56: 'eIEC870_COT_56',
+    57: 'eIEC870_COT_57',
+    58: 'eIEC870_COT_58',
+    59: 'eIEC870_COT_59',
+    60: 'eIEC870_COT_60',
+    61: 'eIEC870_COT_61',
+    62: 'eIEC870_COT_62',
+    63: 'eIEC870_COT_63'
+}
+
+E_IEC870_5_101COTDesc = {
+    "eIEC870_COT_UNUSED": "Not used",
+    "eIEC870_COT_CYCLIC": "Cyclic data",
+    "eIEC870_COT_BACKGROUND": "Background request",
+    "eIEC870_COT_SPONTAN": "Spontaneous data",
+    "eIEC870_COT_INIT": "End of initialisation",
+    "eIEC870_COT_REQ": "Read-Request",
+    "eIEC870_COT_ACT": "Command activation",
+    "eIEC870_COT_ACT_CON": "Acknowledgement of command activation",
+    "eIEC870_COT_DEACT": "Command abort",
+    "eIEC870_COT_DEACT_CON": "Acknowledgement of command abort",
+    "eIEC870_COT_ACT_TERM": "Termination of command activation",
+    "eIEC870_COT_RETREM": "Return because of remote command",
+    "eIEC870_COT_RETLOC": "Return because local command",
+    "eIEC870_COT_FILE": "File access",
+    "eIEC870_COT_INROGEN": "Station interrogation (general)",
+    "eIEC870_COT_INRO1": "Station interrogation of group 1",
+    "eIEC870_COT_INRO2": "Station interrogation of group 2",
+    "eIEC870_COT_INRO3": "Station interrogation of group 3",
+    "eIEC870_COT_INRO4": "Station interrogation of group 4",
+    "eIEC870_COT_INRO5": "Station interrogation of group 5",
+    "eIEC870_COT_INRO6": "Station interrogation of group 6",
+    "eIEC870_COT_INRO7": "Station interrogation of group 7",
+    "eIEC870_COT_INRO8": "Station interrogation of group 8",
+    "eIEC870_COT_INRO9": "Station interrogation of group 9",
+    "eIEC870_COT_INRO10": "Station interrogation of group 10",
+    "eIEC870_COT_INRO11": "Station interrogation of group 11",
+    "eIEC870_COT_INRO12": "Station interrogation of group 12",
+    "eIEC870_COT_INRO13": "Station interrogation of group 13",
+    "eIEC870_COT_INRO14": "Station interrogation of group 14",
+    "eIEC870_COT_INRO15": "Station interrogation of group 15",
+    "eIEC870_COT_INRO16": "Station interrogation of group 16",
+    "eIEC870_COT_REQCOGEN": "Counter request (general)",
+    "eIEC870_COT_REQCO1": "Counter request of group 1",
+    "eIEC870_COT_REQCO2": "Counter request of group 2",
+    "eIEC870_COT_REQCO3": "Counter request of group 3",
+    "eIEC870_COT_REQCO4": "Counter request of group 4",
+    "eIEC870_COT_UNKNOWN_TYPE": "Unknown type",
+    "eIEC870_COT_UNKNOWN_CAUSE": "Unknown transmission cause",
+    "eIEC870_COT_UNKNOWN_ASDU_ADDRESS": "Unknown collective ASDU address",
+    "eIEC870_COT_UNKNOWN_OBJECT_ADDRESS": "Unknown object address",
+}
+
 
 class Decoder(object):
     """
@@ -56,6 +166,13 @@ class Decoder(object):
                 print ASDU_TYPE_71[type_id]
             except KeyError:
                 print "Unknown type: ASDU_TYPE_{}".format(type_id)
+            if len(data) >= 8:
+                num_obj = struct.unpack("b", data[7])[0]
+                print "num_objects:", num_obj
+            if len(data) >= 9:
+                cot = struct.unpack("b", data[8])[0]
+                cot_desc = E_IEC870_5_101COTDesc[E_IEC870_5_101COTType[cot]]
+                print cot_desc
         return unpacked_apci
 
     def decode_in(self, data):
