@@ -690,8 +690,7 @@ class SetSerialCommand(BaseCommand):  # TODO
                              databus.get_value('serial_settings_b'))
 
 
-
-class RequestConnectCommand(BaseCommand):  # TODO
+class RequestConnectCommand(BaseCommand):
     HELP_MESSAGE = (
         "!RC: Request connect\r\n"
         "     Makes the module crate a ChA or ChB socket to a remote server.\r\n"
@@ -704,11 +703,34 @@ class RequestConnectCommand(BaseCommand):  # TODO
         "               Status only.\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "\r\n"
-        "Status: {}\r\n"
-    )
+    def run(self, params):
+        databus = conpot_core.get_databus()
+        # TODO: What to actually print here? need meter online..
+        output = "Status: \r\n"
+        if params:
+            params_split = params.split(" ")
+            output = "\r\nOK\r\n" + output
+            if len(params_split) == 2:
+                channel, value = params_split
+                if channel == "A":
+                    # TODO: figure out how these are parsed when meter is online again
+                    databus.set_value('channel_a_connect_socket', value)
+                elif channel == "B":
+                    databus.set_value('channel_b_connect_socket', value)
+                elif channel == "D":
+                    # since we don't actually connect back we have no socket to disconect
+                    # TODO: How does the meter respond?
+                    pass
+                else:
+                    return self.INVALID_PARAMETER
+            else:
+                return self.INVALID_PARAMETER
+        else:
+            output = "\r\n" + output
+
+        return output
+
+
 
 
 class RequestRestartCommand(BaseCommand):

@@ -498,6 +498,12 @@
                 <key name="serial_settings_b">
                     <value type="value">'115200,8,E,1'</value>
                 </key>
+                <key name="channel_a_connect_socket">
+                    <value type="value">'0 - None'</value>
+                </key>
+                <key name="channel_b_connect_socket">
+                    <value type="value">'0 - None'</value>
+                </key>
             </key_value_mappings>
         </databus>
     </core>
