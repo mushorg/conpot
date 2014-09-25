@@ -4,7 +4,7 @@ python:
 virtualenv:
   system_site_packages: false
 before_install:
-- "export TRAVIS_COMMIT_MSG=\"$(git log --format=%B --no-merges -n 1)\""
+- export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
 - REPO=`pwd`
 - echo $REPO
 - echo $TRAVIS_TAG
@@ -18,7 +18,7 @@ install:
 - python setup.py install
 - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 before_script:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
+- mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 script:
 - nosetests -v
 - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
@@ -30,8 +30,8 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: EqKq8T1JCY+vLCSciTwHk/735PkS30GUOXdtZ6Mjh7gABMb830rTRIeqH1M8WltLrrfyd5S34V7Y2kWdmYi7HZp5lK2Gve8TfuqVFYqFjFsEDoA9Jh+4e54Os+CBofiD5/NcXw4ZkfK4rB+9T0b/xBOGwP8TypK1nzHkH/T8aGM=
+    secure: SQ5TTqSe4FDEuCxnhnyURJ6jKVjwc76GCRCgTF6Md0EUNUdZmnxUqdVPC2IcwnNqA5JGUWmn8l+Fy+n/0vs2T/ZtyG1fDOHjiZSWHnwkiHWYCBg616lsI3LO6npDjpsO/vEzzRepgzPKLNjbQoUepv9ZtuOLUZwl/Uz6FidhEKQ=
   on:
     repo: glastopf/conpot
     all_branches: true
-    condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"
+    condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
