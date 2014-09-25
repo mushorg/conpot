@@ -652,7 +652,7 @@ class SetPortsCommand(BaseCommand):
             50100)  # FIXME: see above
 
 
-class SetSerialCommand(BaseCommand):  # TODO
+class SetSerialCommand(BaseCommand):
     HELP_MESSAGE = (
         "!SS: Set Serial Settings.\r\n"
         "     Used for setting the serial interface for channel A or B.\r\n"
@@ -668,23 +668,23 @@ class SetSerialCommand(BaseCommand):  # TODO
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
-        output = "UART A setup : {0}\r\n" \
-                 "UART B setup : {1}\r\n"
+        invalid_message = "\r\nInvalid data!\r\n\r\n"
         if params:
             params_split = params.split(" ")
             if len(params_split) == 2:
-                output = "\r\nOK\r\n" + output
+                output = "\r\nOK\r\n"
                 if params_split[0] == "A":
-                    # TODO: figure out how these are parsed when meter is online again
                     databus.set_value('serial_settings_a', params_split[1])
                 elif params_split[0] == "B":
                     databus.set_value('serial_settings_b', params_split[1])
                 else:
-                    return self.INVALID_PARAMETER
+                    return invalid_message
             else:
-                return self.INVALID_PARAMETER
+                return invalid_message
         else:
-            output = "\r\n" + output
+            output = "\r\n" \
+                     "UART A setup : {0}\r\n" \
+                     "UART B setup : {1}\r\n"
 
         return output.format(databus.get_value('serial_settings_a'),
                              databus.get_value('serial_settings_b'))
@@ -705,22 +705,20 @@ class RequestConnectCommand(BaseCommand):
 
     def run(self, params):
         databus = conpot_core.get_databus()
-        # TODO: What to actually print here? need meter online..
-        output = "Status: \r\n"
+        # TODO: Further investigations needed... How does this remote socket work? How should copot react?
+        output = "Status: 0100\r\n"
         if params:
             params_split = params.split(" ")
             output = "\r\nOK\r\n" + output
-            if len(params_split) == 2:
+            if len(params_split) == 1 and params_split[0] == 'D':
+                pass
+            elif len(params_split) == 2:
                 channel, value = params_split
                 if channel == "A":
                     # TODO: figure out how these are parsed when meter is online again
                     databus.set_value('channel_a_connect_socket', value)
                 elif channel == "B":
                     databus.set_value('channel_b_connect_socket', value)
-                elif channel == "D":
-                    # since we don't actually connect back we have no socket to disconect
-                    # TODO: How does the meter respond?
-                    pass
                 else:
                     return self.INVALID_PARAMETER
             else:

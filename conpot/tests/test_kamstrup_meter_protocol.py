@@ -19,10 +19,7 @@ import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 
-
-
 import unittest
-
 
 
 class TestKamstrup(unittest.TestCase):
