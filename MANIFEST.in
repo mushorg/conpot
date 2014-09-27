@@ -1,4 +1,4 @@
 recursive-include conpot *
-recursive-exclude *.pyc
+recursive-exclude conpot *.pyc
 include ez_setup.py
 include requirements.txt
