@@ -386,13 +386,13 @@ class SetConfigCommand(BaseCommand):
                 databus.set_value("nameserver_3", parse_ip(params_split[6]))
 
                 if params_split[9] == "0":
-                    databus.set_value("kap_a_server_ip", params_split[7])
+                    databus.set_value("kap_a_server_ip", parse_ip(params_split[7]))
                     databus.set_value("kap_a_server_hostname", "0 - none")
                 else:
                     databus.set_value("kap_a_server_hostname", params_split[9])
                     # FIXME: server IP should be resolved from the hostname
                     # using nameserver_1, nameserver_2, nameserver_3
-                    databus.set_value("kap_a_server_ip", params_split[7])
+                    databus.set_value("kap_a_server_ip", parse_ip(params_split[7]))
 
                 device_name = params_split[8]
                 if len(device_name) > 20:
