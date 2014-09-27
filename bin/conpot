@@ -210,7 +210,7 @@ def main():
 
     template_base = os.path.join(template, 'template.xml')
     if os.path.isfile(template_base):
-        validate_template(template_base)
+        #validate_template(template_base)
         dom_base = etree.parse(template_base)
     else:
         logger.error('Could not access template configuration')
@@ -218,7 +218,7 @@ def main():
 
     template_http = os.path.join(template, 'http', 'template.xml')
     if os.path.isfile(template_http):
-        validate_template(template_http)
+        #validate_template(template_http)
         dom_http = etree.parse(template_http)
         if dom_http.xpath('//http'):
             if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
@@ -234,7 +234,7 @@ def main():
 
     template_kamstrup = os.path.join(template, 'kamstrup', 'template.xml')
     if os.path.isfile(template_kamstrup):
-        validate_template(template_kamstrup)
+        #validate_template(template_kamstrup)
         dom_kamstrup = etree.parse(template_kamstrup)
         if dom_kamstrup.xpath('//kamstrup'):
             if ast.literal_eval(dom_kamstrup.xpath('//kamstrup/@enabled')[0]):
@@ -251,7 +251,7 @@ def main():
 
     template_modbus = os.path.join(template, 'modbus', 'template.xml')
     if os.path.isfile(template_modbus):
-        validate_template(template_modbus)
+        #validate_template(template_modbus)
         dom_modbus = etree.parse(template_modbus)
         if dom_modbus.xpath('//modbus'):
             if ast.literal_eval(dom_modbus.xpath('//modbus/@enabled')[0]):
@@ -268,7 +268,7 @@ def main():
 
     template_s7comm = os.path.join(template, 's7comm', 'template.xml')
     if os.path.isfile(template_s7comm):
-        validate_template(template_s7comm)
+        #validate_template(template_s7comm)
         dom_s7comm = etree.parse(template_s7comm)
         if dom_s7comm.xpath('//s7comm'):
             if ast.literal_eval(dom_s7comm.xpath('//s7comm/@enabled')[0]):
@@ -285,7 +285,7 @@ def main():
 
     template_snmp = os.path.join(template, 'snmp', 'template.xml')
     if os.path.isfile(template_snmp):
-        validate_template(template_snmp)
+        #validate_template(template_snmp)
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
             if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
@@ -315,7 +315,7 @@ def main():
 
     template_proxy = os.path.join(template, 'proxy', 'template.xml')
     if os.path.isfile(template_proxy):
-        validate_template(template_proxy)
+        #validate_template(template_proxy)
         dom_proxy = etree.parse(template_proxy)
         if dom_proxy.xpath('//proxies'):
             if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):

@@ -17,6 +17,7 @@
 
 import logging
 import json
+import os
 import inspect
 # this is needed because we use it in the xml.
 import random
@@ -73,8 +74,8 @@ class Databus(object):
     def initialize(self, config_file):
         self._reset()
         logger.debug('Initializing databus using {0}.'.format(config_file))
-        dom = etree.parse(config_file)
-        entries = dom.xpath('//conpot_template/core/databus/key_value_mappings/*')
+        dom = etree.parse(os.path.join(config_file, 'template.xml'))
+        entries = dom.xpath('//core/databus/key_value_mappings/*')
         for entry in entries:
             key = entry.attrib['name']
             value = entry.xpath('./value/text()')[0].strip()
