@@ -49,7 +49,7 @@ class SNMPServer(object):
         self.xml_mib_config(dom, mibpaths, rawmibs_dirs)
 
     def xml_general_config(self, dom):
-        snmp_config = dom.xpath('//conpot_template/protocols/snmp/config/*')
+        snmp_config = dom.xpath('//snmp/config/*')
         if snmp_config:
             for entity in snmp_config:
 
@@ -79,7 +79,7 @@ class SNMPServer(object):
 
     def xml_mib_config(self, dom, mibpaths, rawmibs_dirs):
         try:
-            mibs = dom.xpath('//conpot_template/protocols/snmp/mibs/*')
+            mibs = dom.xpath('//snmp/mibs/*')
             tmp_mib_dir = tempfile.mkdtemp()
             mibpaths.append(tmp_mib_dir)
             available_mibs = find_mibs(rawmibs_dirs)

@@ -293,12 +293,12 @@ def main():
                 if args.mibpaths:
                     compiled_mibs = args.mibpaths
                 else:
-                    compiled_mibs = os.path.join(template, 'snmp', 'mibs_compiled')
+                    compiled_mibs = [os.path.join(template, 'snmp', 'mibs_compiled')]
 
                 if args.raw_mib:
                     raw_mibs = args.raw_mib
                 else:
-                    raw_mibs = os.path.join(template, 'snmp', 'mibs_raw')
+                    raw_mibs = [os.path.join(template, 'snmp', 'mibs_raw')]
 
                 snmp_host = dom_snmp.xpath('//snmp/@host')[0]
                 snmp_port = ast.literal_eval(dom_snmp.xpath('//snmp/@port')[0])
