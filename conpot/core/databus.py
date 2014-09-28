@@ -74,7 +74,7 @@ class Databus(object):
     def initialize(self, config_file):
         self._reset()
         logger.debug('Initializing databus using {0}.'.format(config_file))
-        dom = etree.parse(os.path.join(config_file, 'template.xml'))
+        dom = etree.parse(config_file)
         entries = dom.xpath('//core/databus/key_value_mappings/*')
         for entry in entries:
             key = entry.attrib['name']

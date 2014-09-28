@@ -201,13 +201,6 @@ def main():
     protocol_greenlets = list()
     servers = list()
 
-    session_manager = conpot_core.get_sessionManager()
-    session_manager.initialize_databus(template)
-
-    public_ip = None
-    if config.getboolean('fetch_public_ip', 'enabled'):
-        public_ip = ext_ip.get_ext_ip(config)
-
     template_base = os.path.join(template, 'template.xml')
     if os.path.isfile(template_base):
         #validate_template(template_base)
@@ -215,6 +208,13 @@ def main():
     else:
         logger.error('Could not access template configuration')
         sys.exit(1)
+
+    session_manager = conpot_core.get_sessionManager()
+    session_manager.initialize_databus(template_base)
+
+    public_ip = None
+    if config.getboolean('fetch_public_ip', 'enabled'):
+        public_ip = ext_ip.get_ext_ip(config)
 
     template_http = os.path.join(template, 'http', 'template.xml')
     if os.path.isfile(template_http):
