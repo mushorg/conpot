@@ -387,12 +387,17 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
+            if os.path.isabs(rqfilename):
+                relrqfilename = rqfilename[1:]
+            else:
+                relrqfilename = rqfilename
+
             try:
-                with open(os.path.join(docpath, 'htdocs', rqfilename), 'rb') as f:
+                with open(os.path.join(docpath, 'htdocs', relrqfilename), 'rb') as f:
                     payload = f.read()
 
             except IOError as e:
-                if not os.path.isdir(os.path.join(docpath, 'htdocs', rqfilename)):
+                if not os.path.isdir(os.path.join(docpath, 'htdocs', relrqfilename)):
                     logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
