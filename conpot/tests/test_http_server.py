@@ -88,7 +88,7 @@ class TestBase(unittest.TestCase):
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default/template.xml')
+        dom = etree.parse('conpot/templates/default/http/template.xml')
 
         # check for proper tarpit support
         tarpit = dom.xpath('//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
