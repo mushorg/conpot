@@ -30,7 +30,7 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: SQ5TTqSe4FDEuCxnhnyURJ6jKVjwc76GCRCgTF6Md0EUNUdZmnxUqdVPC2IcwnNqA5JGUWmn8l+Fy+n/0vs2T/ZtyG1fDOHjiZSWHnwkiHWYCBg616lsI3LO6npDjpsO/vEzzRepgzPKLNjbQoUepv9ZtuOLUZwl/Uz6FidhEKQ=
+    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
   on:
     repo: glastopf/conpot
     all_branches: true
