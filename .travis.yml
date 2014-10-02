@@ -21,8 +21,8 @@ before_script:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 script:
 - nosetests -v
-- sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
-- xmllint --schema conpot/template.xsd conpot/templates/*.xml
+- sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot --template default
+- xmllint --schema conpot/tests/template_scheme_core.xsd conpot/templates/default/template.xml
 notifications:
   irc:
   - irc.freenode.org#conpot-dev
@@ -30,7 +30,7 @@ deploy:
   provider: pypi
   user: Johnny.Vestergaard
   password:
-    secure: dMH8ewnka+UkTMGqmgeuT8AzWXJTtCPx7le0hPIJrGV4cnfSDlWwkU145aTMQgjia9BkW+KeR+nK9Q+ERmiJyencm0lUJ9pZj9i49OmLmppOv/U3kEvWFlLCe+HopXVk4VzFnlen7nNMVUNpQoy39WE1WulSxGtbAdXXUX/ZKSw=
+    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
   on:
     repo: glastopf/conpot
     all_branches: true

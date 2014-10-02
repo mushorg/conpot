@@ -94,7 +94,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 def validate_template(xml_file):
-    xml_schema = etree.parse(os.path.join(package_directory, 'template.xsd'))
+    xml_schema = etree.parse(os.path.join(package_directory, 'tests', 'template_scheme_core.xsd'))
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)

@@ -24,7 +24,7 @@ setup(
     ],
     package_data={
         "": ["*.txt", "*.rst"],
-        "conpot": ["conpot.cfg", "tests/data/*", "template.xsd"],
+        "conpot": ["conpot.cfg", "tests/data/*"],
     },
     keywords="ICS SCADA honeypot",
     include_package_data=True,
