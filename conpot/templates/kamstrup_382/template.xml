@@ -1,11 +1,14 @@
 <core>
     <template>
+        <!-- General information about the template -->
         <entity name="unit">382</entity>
         <entity name="vendor">Kamstrup</entity>
         <entity name="description">Register clone of an existing Kamstrup 382 smart meter</entity>
+        <entity name="protocols">Kamstrup</entity>
         <entity name="creator">Johnny Vestergaard</entity>
     </template>
     <databus>
+        <!-- Core value that can be retrieved from the databus by key -->
         <key_value_mappings>
          <key name="power_simulator">
                 <value type="function">conpot.protocols.kamstrup.usage_simulator.UsageSimulator</value>

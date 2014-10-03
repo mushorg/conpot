@@ -149,14 +149,14 @@ def main():
 
         available_templates = os.listdir(os.path.join(package_directory, 'templates'))
 
-        template_unit = template_vendor = template_description = template_creator = 'Unknown'
-        logger.info("--------------------------------------------------:")
-        logger.info(" Available templates:")
-        logger.info("--------------------------------------------------:\n")
+        print "--------------------------------------------------"
+        print " Available templates:"
+        print "--------------------------------------------------\n"
 
         for folder in available_templates:
             template_xml = os.path.join(package_directory, 'templates', folder, 'template.xml')
             if os.path.isfile(template_xml):
+                template_unit = template_vendor = template_description = template_protocols = template_creator = 'N/A'
                 dom_template = etree.parse(template_xml)
                 template_details = dom_template.xpath('//core/template/*')
                 if template_details:
@@ -173,15 +173,19 @@ def main():
                         elif entity.attrib['name'] == 'description':
                             template_description = entity.text
 
+                        elif entity.attrib['name'] == 'protocols':
+                            template_protocols = entity.text
+
                         elif entity.attrib['name'] == 'creator':
                             template_creator = entity.text
 
-                    logger.info('   --template ' + folder)
-                    logger.info("       Unit:        {0} - {1}".format(template_vendor, template_unit))
-                    logger.info("       Desc:        {0}".format(template_description))
-                    logger.info("       Created by:  {0}\n".format(template_creator))
+                    print "   --template {0}".format(folder)
+                    print "       Unit:        {0} - {1}".format(template_vendor, template_unit)
+                    print "       Desc:        {0}".format(template_description)
+                    print "       Protocols:   {0}".format(template_protocols)
+                    print "       Created by:  {0}\n".format(template_creator)
 
-        sys.exit(1)
+        sys.exit(0)
 
     # Check if the template exists in our template root..
     if os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
