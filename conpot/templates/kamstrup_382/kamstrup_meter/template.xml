@@ -1,4 +1,4 @@
-<kamstrup enabled="True" host="0.0.0.0" port="1025">
+<kamstrup_meter enabled="True" host="0.0.0.0" port="1025">
     <config>
         <communication_address>63</communication_address>
     </config>
@@ -389,4 +389,4 @@
             <value>register_1023</value>
         </register>
     </registers>
-</kamstrup>
+</kamstrup_meter>

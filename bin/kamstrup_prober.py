@@ -95,7 +95,7 @@ def json_default(obj):
         return None
 
 
-parser = argparse.ArgumentParser(description='Probes kamstrup meter registers.')
+parser = argparse.ArgumentParser(description='Probes kamstrup_meter meter registers.')
 parser.add_argument('host', help='Hostname or IP or Kamstrup meter')
 parser.add_argument('port', type=int, help='TCP port')
 parser.add_argument('--registerfile', dest='registerfile', help='Reads registers from previous dumps files instead of'
@@ -149,12 +149,12 @@ def generate_conpot_config(result_list):
     <core><databus><key_value_mappings>"""
     for key, value in result_list.items():
         config_xml += """<key name="register_{0}"><value type="value">{1}</value></key>""".format(key, value['value'])
-    config_xml += """</key_value_mappings></databus></core><protocols><kamstrup enabled="True" host="0.0.0.0" port="1025"><registers>"""
+    config_xml += """</key_value_mappings></databus></core><protocols><kamstrup_meter enabled="True" host="0.0.0.0" port="1025"><registers>"""
 
     for key, value in result_list.items():
         config_xml += """<register name="{0}" units="{1}" unknown="{2}" length="{3}"><value>register_{0}</value></register>"""\
             .format(key, value['units'], value['unknown'], value['value_length'])
-    config_xml += "</registers></kamstrup></protocols></conpot_template>"
+    config_xml += "</registers></kamstrup_meter></protocols></conpot_template>"
 
     parsed_xml = xml.dom.minidom.parseString(config_xml)
     pretty_xml = parsed_xml.toprettyxml()

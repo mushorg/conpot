@@ -41,6 +41,8 @@ from conpot.protocols.modbus.modbus_server import ModbusServer
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.protocols.http.web_server import HTTPServer
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
+from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
+
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
 
@@ -239,15 +241,32 @@ def main():
     else:
         logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
-    template_kamstrup = os.path.join(template, 'kamstrup', 'template.xml')
-    if os.path.isfile(template_kamstrup):
+    template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'template.xml')
+    if os.path.isfile(template_kamstrup_meter):
         #validate_template(template_kamstrup)
-        dom_kamstrup = etree.parse(template_kamstrup)
-        if dom_kamstrup.xpath('//kamstrup'):
-            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup/@enabled')[0]):
-                host = dom_kamstrup.xpath('//kamstrup/@host')[0]
-                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup/@port')[0])
-                kamstrup_instance = KamstrupServer(template_kamstrup)
+        dom_kamstrup = etree.parse(template_kamstrup_meter)
+        if dom_kamstrup.xpath('//kamstrup_meter'):
+            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@enabled')[0]):
+                host = dom_kamstrup.xpath('//kamstrup_meter/@host')[0]
+                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@port')[0])
+                kamstrup_instance = KamstrupServer(template_kamstrup_meter)
+                kamstrup_server = kamstrup_instance.get_server(host, port)
+                servers.append(kamstrup_server)
+                protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
+            else:
+                logger.info('Kamstrup available but disabled by configuration.')
+    else:
+        logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
+
+    template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'template.xml')
+    if os.path.isfile(template_kamstrup_meter):
+        #validate_template(template_kamstrup)
+        dom_kamstrup = etree.parse(template_kamstrup_management)
+        if dom_kamstrup.xpath('//kamstrup_management'):
+            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@enabled')[0]):
+                host = dom_kamstrup.xpath('//kamstrup_management/@host')[0]
+                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@port')[0])
+                kamstrup_instance = KamstrupManagementServer(template_kamstrup_management)
                 kamstrup_server = kamstrup_instance.get_server(host, port)
                 servers.append(kamstrup_server)
                 protocol_greenlets.append(gevent.spawn(kamstrup_server.start))

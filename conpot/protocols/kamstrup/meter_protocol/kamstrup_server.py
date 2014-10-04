@@ -101,7 +101,7 @@ class KamstrupServer(object):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    print 'Starting kamstrup protocol server'
+    print 'Starting kamstrup_meter protocol server'
     kamstrup_server = KamstrupServer(None)
     server = kamstrup_server.get_server('0.0.0.0', 6666)
     server_greenlet = gevent.spawn(server.start)
