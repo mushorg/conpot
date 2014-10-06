@@ -38,7 +38,7 @@ class TestBase(unittest.TestCase):
 
         self.http_server = web_server.HTTPServer('127.0.0.1',
                                                  0,
-                                                 'conpot/templates/default/http/template.xml',
+                                                 'conpot/templates/default/http/http.xml',
                                                  'conpot/templates/default/http/',)
         # get the assigned ephemeral port for http
         self.http_port = self.http_server.server_port
