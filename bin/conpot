@@ -222,7 +222,7 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
-    template_http = os.path.join(template, 'http', 'template.xml')
+    template_http = os.path.join(template, 'http', 'http.xml')
     if os.path.isfile(template_http):
         #validate_template(template_http)
         dom_http = etree.parse(template_http)
@@ -241,7 +241,7 @@ def main():
     else:
         logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
-    template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'template.xml')
+    template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'kamstrup_meter.xml')
     if os.path.isfile(template_kamstrup_meter):
         #validate_template(template_kamstrup)
         dom_kamstrup = etree.parse(template_kamstrup_meter)
@@ -258,7 +258,7 @@ def main():
     else:
         logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
 
-    template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'template.xml')
+    template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'kamstrup_management.xml')
     if os.path.isfile(template_kamstrup_meter):
         #validate_template(template_kamstrup)
         dom_kamstrup = etree.parse(template_kamstrup_management)
@@ -275,7 +275,7 @@ def main():
     else:
         logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
 
-    template_modbus = os.path.join(template, 'modbus', 'template.xml')
+    template_modbus = os.path.join(template, 'modbus', 'modbus.xml')
     if os.path.isfile(template_modbus):
         #validate_template(template_modbus)
         dom_modbus = etree.parse(template_modbus)
@@ -292,7 +292,7 @@ def main():
     else:
         logger.info('No Modbus template found. Service will remain unconfigured/stopped.')
 
-    template_s7comm = os.path.join(template, 's7comm', 'template.xml')
+    template_s7comm = os.path.join(template, 's7comm', 's7comm.xml')
     if os.path.isfile(template_s7comm):
         #validate_template(template_s7comm)
         dom_s7comm = etree.parse(template_s7comm)
@@ -309,7 +309,7 @@ def main():
     else:
         logger.info('No s7comm template found. Service will remain unconfigured/stopped.')
 
-    template_snmp = os.path.join(template, 'snmp', 'template.xml')
+    template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
     if os.path.isfile(template_snmp):
         #validate_template(template_snmp)
         dom_snmp = etree.parse(template_snmp)
@@ -339,7 +339,7 @@ def main():
     log_worker = LogWorker(config, dom_base, session_manager, public_ip)
     gevent.spawn(log_worker.start)
 
-    template_proxy = os.path.join(template, 'proxy', 'template.xml')
+    template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
         #validate_template(template_proxy)
         dom_proxy = etree.parse(template_proxy)

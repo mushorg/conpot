@@ -39,7 +39,7 @@ class TestBase(unittest.TestCase):
         databus.initialize('conpot/templates/default/template.xml')
         self.snmp_server = SNMPServer(self.host,
                                       0,
-                                      'conpot/templates/default/snmp/template.xml',
+                                      'conpot/templates/default/snmp/snmp.xml',
                                       [self.tmp_dir],
                                       [self.tmp_dir])
         self.port = self.snmp_server.get_port()

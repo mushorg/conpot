@@ -42,7 +42,7 @@ class TestBase(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default/template.xml')
-        modbus = modbus_server.ModbusServer('conpot/templates/default/modbus/template.xml', timeout=2)
+        modbus = modbus_server.ModbusServer('conpot/templates/default/modbus/modbus.xml', timeout=2)
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
 
