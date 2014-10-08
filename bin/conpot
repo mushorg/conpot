@@ -243,7 +243,7 @@ def main():
 
     template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'kamstrup_meter.xml')
     if os.path.isfile(template_kamstrup_meter):
-        #validate_template(template_kamstrup)
+        validate_template(template_kamstrup_meter, 'template_schema_kamstrup_meter.xml')
         dom_kamstrup = etree.parse(template_kamstrup_meter)
         if dom_kamstrup.xpath('//kamstrup_meter'):
             if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@enabled')[0]):
@@ -260,7 +260,7 @@ def main():
 
     template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'kamstrup_management.xml')
     if os.path.isfile(template_kamstrup_meter):
-        #validate_template(template_kamstrup)
+        validate_template(template_kamstrup_management, 'template_schema_kamstrup_management.xml')
         dom_kamstrup = etree.parse(template_kamstrup_management)
         if dom_kamstrup.xpath('//kamstrup_management'):
             if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@enabled')[0]):
@@ -277,7 +277,7 @@ def main():
 
     template_modbus = os.path.join(template, 'modbus', 'modbus.xml')
     if os.path.isfile(template_modbus):
-        #validate_template(template_modbus)
+        validate_template(template_modbus, 'template_schema_modbus.xml')
         dom_modbus = etree.parse(template_modbus)
         if dom_modbus.xpath('//modbus'):
             if ast.literal_eval(dom_modbus.xpath('//modbus/@enabled')[0]):
@@ -294,7 +294,7 @@ def main():
 
     template_s7comm = os.path.join(template, 's7comm', 's7comm.xml')
     if os.path.isfile(template_s7comm):
-        #validate_template(template_s7comm)
+        validate_template(template_s7comm, 'template_schema_s7comm.xml')
         dom_s7comm = etree.parse(template_s7comm)
         if dom_s7comm.xpath('//s7comm'):
             if ast.literal_eval(dom_s7comm.xpath('//s7comm/@enabled')[0]):
