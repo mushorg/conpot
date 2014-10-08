@@ -95,8 +95,8 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
-def validate_template(xml_file):
-    xml_schema = etree.parse(os.path.join(package_directory, 'tests', 'template_scheme_core.xsd'))
+def validate_template(xml_file, schema_file):
+    xml_schema = etree.parse(os.path.join(package_directory, 'tests', schema_file))
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)
@@ -209,7 +209,7 @@ def main():
 
     template_base = os.path.join(template, 'template.xml')
     if os.path.isfile(template_base):
-        #validate_template(template_base)
+        validate_template(template_base, 'template_scheme_core.xsd')
         dom_base = etree.parse(template_base)
     else:
         logger.error('Could not access template configuration')
@@ -341,7 +341,7 @@ def main():
 
     template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
-        #validate_template(template_proxy)
+        validate_template(template_proxy)
         dom_proxy = etree.parse(template_proxy)
         if dom_proxy.xpath('//proxies'):
             if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
