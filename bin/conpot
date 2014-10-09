@@ -96,7 +96,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 def validate_template(xml_file, schema_file):
-    xml_schema = etree.parse(os.path.join(package_directory, 'tests', schema_file))
+    xml_schema = etree.parse(os.path.join(package_directory, 'tests/template_schemas', schema_file))
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)
@@ -209,7 +209,7 @@ def main():
 
     template_base = os.path.join(template, 'template.xml')
     if os.path.isfile(template_base):
-        validate_template(template_base, 'template_scheme_core.xsd')
+        validate_template(template_base, 'core.xsd')
         dom_base = etree.parse(template_base)
     else:
         logger.error('Could not access template configuration')
@@ -243,7 +243,7 @@ def main():
 
     template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'kamstrup_meter.xml')
     if os.path.isfile(template_kamstrup_meter):
-        validate_template(template_kamstrup_meter, 'template_schema_kamstrup_meter.xml')
+        validate_template(template_kamstrup_meter, 'kamstrup_meter.xsd')
         dom_kamstrup = etree.parse(template_kamstrup_meter)
         if dom_kamstrup.xpath('//kamstrup_meter'):
             if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@enabled')[0]):
@@ -260,7 +260,7 @@ def main():
 
     template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'kamstrup_management.xml')
     if os.path.isfile(template_kamstrup_meter):
-        validate_template(template_kamstrup_management, 'template_schema_kamstrup_management.xml')
+        validate_template(template_kamstrup_management, 'management.xsd')
         dom_kamstrup = etree.parse(template_kamstrup_management)
         if dom_kamstrup.xpath('//kamstrup_management'):
             if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@enabled')[0]):
@@ -277,7 +277,7 @@ def main():
 
     template_modbus = os.path.join(template, 'modbus', 'modbus.xml')
     if os.path.isfile(template_modbus):
-        validate_template(template_modbus, 'template_schema_modbus.xml')
+        validate_template(template_modbus, 'modbus.xsd')
         dom_modbus = etree.parse(template_modbus)
         if dom_modbus.xpath('//modbus'):
             if ast.literal_eval(dom_modbus.xpath('//modbus/@enabled')[0]):
@@ -294,7 +294,7 @@ def main():
 
     template_s7comm = os.path.join(template, 's7comm', 's7comm.xml')
     if os.path.isfile(template_s7comm):
-        validate_template(template_s7comm, 'template_schema_s7comm.xml')
+        validate_template(template_s7comm, 's7comm.xsd')
         dom_s7comm = etree.parse(template_s7comm)
         if dom_s7comm.xpath('//s7comm'):
             if ast.literal_eval(dom_s7comm.xpath('//s7comm/@enabled')[0]):
@@ -311,7 +311,7 @@ def main():
 
     template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
     if os.path.isfile(template_snmp):
-        #validate_template(template_snmp)
+        validate_template(template_snmp, 'snmp.xsd')
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
             if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
@@ -341,7 +341,7 @@ def main():
 
     template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
-        validate_template(template_proxy)
+        validate_template(template_proxy, 'proxy.xsd')
         dom_proxy = etree.parse(template_proxy)
         if dom_proxy.xpath('//proxies'):
             if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
