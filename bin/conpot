@@ -222,6 +222,32 @@ def main():
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
 
+    protocol_instance_mapping = (
+        ('modbus', ModbusServer),
+        ('s7comm', S7Server),
+        ('kamstrup_meter', KamstrupServer),
+        ('kamstrup_management', KamstrupManagementServer)
+    )
+    for protocol in protocol_instance_mapping:
+        protocol_name, server_class = protocol
+        protocol_template = os.path.join(template, protocol_name, '{0}.xml'.format(protocol_name))
+        if os.path.isfile(protocol_template):
+            validate_template(protocol_template, '{0}.xsd'.format(protocol_name))
+            dom_protocol = etree.parse(protocol_template)
+            if dom_protocol.xpath('//{0}'.format(protocol_name)):
+                if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
+                    host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
+                    port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
+                    server = server_class(protocol_template).get_server(host, port)
+                    servers.append(server)
+                    protocol_greenlets.append(gevent.spawn(server.start))
+                    logger.info('Found and enabled {0} protocol.'.format(protocol))
+            else:
+                logger.info('{0} available but disabled by configuration.'.format(protocol_name))
+    else:
+        logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
+
+    # TODO: Make http fit into protocol_instance_mapping
     template_http = os.path.join(template, 'http', 'http.xml')
     if os.path.isfile(template_http):
         validate_template(template_http, 'http.xsd')
@@ -241,74 +267,7 @@ def main():
     else:
         logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
-    template_kamstrup_meter = os.path.join(template, 'kamstrup_meter', 'kamstrup_meter.xml')
-    if os.path.isfile(template_kamstrup_meter):
-        validate_template(template_kamstrup_meter, 'kamstrup_meter.xsd')
-        dom_kamstrup = etree.parse(template_kamstrup_meter)
-        if dom_kamstrup.xpath('//kamstrup_meter'):
-            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@enabled')[0]):
-                host = dom_kamstrup.xpath('//kamstrup_meter/@host')[0]
-                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup_meter/@port')[0])
-                kamstrup_instance = KamstrupServer(template_kamstrup_meter)
-                kamstrup_server = kamstrup_instance.get_server(host, port)
-                servers.append(kamstrup_server)
-                protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
-            else:
-                logger.info('Kamstrup available but disabled by configuration.')
-    else:
-        logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
-
-    template_kamstrup_management = os.path.join(template, 'kamstrup_management', 'kamstrup_management.xml')
-    if os.path.isfile(template_kamstrup_meter):
-        validate_template(template_kamstrup_management, 'management.xsd')
-        dom_kamstrup = etree.parse(template_kamstrup_management)
-        if dom_kamstrup.xpath('//kamstrup_management'):
-            if ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@enabled')[0]):
-                host = dom_kamstrup.xpath('//kamstrup_management/@host')[0]
-                port = ast.literal_eval(dom_kamstrup.xpath('//kamstrup_management/@port')[0])
-                kamstrup_instance = KamstrupManagementServer(template_kamstrup_management)
-                kamstrup_server = kamstrup_instance.get_server(host, port)
-                servers.append(kamstrup_server)
-                protocol_greenlets.append(gevent.spawn(kamstrup_server.start))
-            else:
-                logger.info('Kamstrup available but disabled by configuration.')
-    else:
-        logger.info('No Kamstrup template found. Service will remain unconfigured/stopped.')
-
-    template_modbus = os.path.join(template, 'modbus', 'modbus.xml')
-    if os.path.isfile(template_modbus):
-        validate_template(template_modbus, 'modbus.xsd')
-        dom_modbus = etree.parse(template_modbus)
-        if dom_modbus.xpath('//modbus'):
-            if ast.literal_eval(dom_modbus.xpath('//modbus/@enabled')[0]):
-                modbus_host = dom_modbus.xpath('//modbus/@host')[0]
-                modbus_port = ast.literal_eval(dom_modbus.xpath('//modbus/@port')[0])
-                modbus_server = ModbusServer(template_modbus)
-                modbus_server = modbus_server.get_server(modbus_host, modbus_port)
-                servers.append(modbus_server)
-                protocol_greenlets.append(gevent.spawn(modbus_server.start))
-            else:
-                logger.info('Modbus available but disabled by configuration.')
-    else:
-        logger.info('No Modbus template found. Service will remain unconfigured/stopped.')
-
-    template_s7comm = os.path.join(template, 's7comm', 's7comm.xml')
-    if os.path.isfile(template_s7comm):
-        validate_template(template_s7comm, 's7comm.xsd')
-        dom_s7comm = etree.parse(template_s7comm)
-        if dom_s7comm.xpath('//s7comm'):
-            if ast.literal_eval(dom_s7comm.xpath('//s7comm/@enabled')[0]):
-                s7_host = dom_s7comm.xpath('//s7comm/@host')[0]
-                s7_port = ast.literal_eval(dom_s7comm.xpath('//s7comm/@port')[0])
-                s7_instance = S7Server(template_s7comm)
-                s7_server = s7_instance.get_server(s7_host, s7_port)
-                servers.append(s7_server)
-                protocol_greenlets.append(gevent.spawn(s7_server.start))
-            else:
-                logger.info('S7comm available but disabled by configuration.')
-    else:
-        logger.info('No s7comm template found. Service will remain unconfigured/stopped.')
-
+    # TODO: Make http fit into protocol_instance_mapping
     template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
     if os.path.isfile(template_snmp):
         validate_template(template_snmp, 'snmp.xsd')
