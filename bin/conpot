@@ -224,7 +224,7 @@ def main():
 
     template_http = os.path.join(template, 'http', 'http.xml')
     if os.path.isfile(template_http):
-        #validate_template(template_http)
+        validate_template(template_http, 'http.xsd')
         dom_http = etree.parse(template_http)
         if dom_http.xpath('//http'):
             if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):

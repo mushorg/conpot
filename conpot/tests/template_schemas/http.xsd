@@ -133,7 +133,4 @@
             <xs:attribute type="xs:byte" name="port" use="required"/>
         </xs:complexType>
     </xs:element>
-</xs:sequence>
-        </xs:complexType>
-        </xs:element>
-        </xs:schema>
+ </xs:schema>
