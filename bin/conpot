@@ -27,6 +27,7 @@ import pwd
 import grp
 import platform
 import ast
+import inspect
 from ConfigParser import ConfigParser
 
 import gevent
@@ -95,8 +96,8 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
 
 
-def validate_template(xml_file, schema_file):
-    xml_schema = etree.parse(os.path.join(package_directory, 'tests/template_schemas', schema_file))
+def validate_template(xml_file, xsd_file):
+    xml_schema = etree.parse(xsd_file);
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)
@@ -209,7 +210,7 @@ def main():
 
     template_base = os.path.join(template, 'template.xml')
     if os.path.isfile(template_base):
-        validate_template(template_base, 'core.xsd')
+        validate_template(template_base, os.path.join(package_directory, 'tests/template_schemas/core.xsd'))
         dom_base = etree.parse(template_base)
     else:
         logger.error('Could not access template configuration')
@@ -232,7 +233,8 @@ def main():
         protocol_name, server_class = protocol
         protocol_template = os.path.join(template, protocol_name, '{0}.xml'.format(protocol_name))
         if os.path.isfile(protocol_template):
-            validate_template(protocol_template, '{0}.xsd'.format(protocol_name))
+            xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
+            validate_template(protocol_template, xsd_file)
             dom_protocol = etree.parse(protocol_template)
             if dom_protocol.xpath('//{0}'.format(protocol_name)):
                 if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
@@ -244,13 +246,14 @@ def main():
                     logger.info('Found and enabled {0} protocol.'.format(protocol))
             else:
                 logger.info('{0} available but disabled by configuration.'.format(protocol_name))
-    else:
-        logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
+        else:
+            logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
 
     # TODO: Make http fit into protocol_instance_mapping
     template_http = os.path.join(template, 'http', 'http.xml')
     if os.path.isfile(template_http):
-        validate_template(template_http, 'http.xsd')
+        xsd_file = os.path.join(os.path.dirname(inspect.getfile(HTTPServer)), 'http.xsd')
+        validate_template(template_http, xsd_file)
         dom_http = etree.parse(template_http)
         if dom_http.xpath('//http'):
             if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
@@ -270,7 +273,8 @@ def main():
     # TODO: Make http fit into protocol_instance_mapping
     template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
     if os.path.isfile(template_snmp):
-        validate_template(template_snmp, 'snmp.xsd')
+        xsd_file = os.path.join(os.path.dirname(inspect.getfile(SNMPServer)), 'snmp.xsd')
+        validate_template(template_snmp, xsd_file)
         dom_snmp = etree.parse(template_snmp)
         if dom_snmp.xpath('//snmp'):
             if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
@@ -298,9 +302,11 @@ def main():
     log_worker = LogWorker(config, dom_base, session_manager, public_ip)
     gevent.spawn(log_worker.start)
 
+    # TODO: Make http fit into protocol_instance_mapping
     template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
-        validate_template(template_proxy, 'proxy.xsd')
+        xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
+        validate_template(template_proxy, xsd_file)
         dom_proxy = etree.parse(template_proxy)
         if dom_proxy.xpath('//proxies'):
             if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
