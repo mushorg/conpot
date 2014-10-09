@@ -22,7 +22,7 @@ before_script:
 script:
 - nosetests -v
 - sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot
-- xmllint --schema conpot/tests/core.xsd conpot/templates/default/template.xml
+- xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 notifications:
   irc:
   - irc.freenode.org#conpot-dev
