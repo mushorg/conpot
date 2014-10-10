@@ -38,15 +38,15 @@ class TestBase(unittest.TestCase):
 
         self.http_server = web_server.HTTPServer('127.0.0.1',
                                                  0,
-                                                 'conpot/templates/default.xml',
-                                                 'conpot/templates/www/default/',)
+                                                 'conpot/templates/default/http/http.xml',
+                                                 'conpot/templates/default/http/',)
         # get the assigned ephemeral port for http
         self.http_port = self.http_server.server_port
         self.http_worker = gevent.spawn(self.http_server.start)
 
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default.xml')
+        self.databus.initialize('conpot/templates/default/template.xml')
 
     def tearDown(self):
         self.http_server.cmd_responder.httpd.shutdown()
@@ -67,10 +67,10 @@ class TestBase(unittest.TestCase):
         Objective: Test if http backend is able to retrieve data from databus
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/template.xml')
 
         # retrieve reference value from configuration
-        sysName = dom.xpath('//conpot_template/core/databus/key_value_mappings/key[@name="sysName"]/value')
+        sysName = dom.xpath('//core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
             print sysName
             assert_reference = sysName[0].xpath('./text()')[0][1:-1]
@@ -88,10 +88,10 @@ class TestBase(unittest.TestCase):
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/http/http.xml')
 
         # check for proper tarpit support
-        tarpit = dom.xpath('//conpot_template/protocols/http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
+        tarpit = dom.xpath('//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
 
         if tarpit:
             tarpit_delay = tarpit[0].xpath('./text()')[0]

@@ -1,0 +1,24 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="proxies">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="proxy" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="proxy_host"/>
+                            <xs:element type="xs:int" name="proxy_port"/>
+                            <xs:element type="xs:string" name="decoder"/>
+                        </xs:sequence>
+                        <xs:attribute type="xs:string" name="name" use="required"/>
+                        <xs:attribute type="xs:string" name="host" use="required"/>
+                        <xs:attribute type="xs:int" name="port" use="required"/>
+                        <xs:attribute type="xs:string" name="keyfile" use="optional"/>
+                        <xs:attribute type="xs:string" name="certfile" use="optional"/>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

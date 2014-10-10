@@ -1,0 +1,392 @@
+<kamstrup_meter enabled="True" host="0.0.0.0" port="1025">
+    <config>
+        <communication_address>63</communication_address>
+    </config>
+    <registers>
+        <!-- Energy in -->
+        <register length="4" name="1" units="2" unknown="65">
+            <value>register_1</value>
+        </register>
+        <!-- Energy out -->
+        <register length="4" name="2" units="2" unknown="65">
+            <value>register_2</value>
+        </register>
+        <!-- Energy in hi-res -->
+        <register length="4" name="13" units="2" unknown="68">
+            <value>register_13</value>
+        </register>
+        <!-- Energy out hi-res -->
+        <register length="4" name="14" units="2" unknown="68">
+            <value>register_14</value>
+        </register>
+        <!-- Voltage p1 -->
+        <register length="2" name="1054" units="33" unknown="0">
+            <value>register_1054</value>
+        </register>
+        <!-- Voltage p2 -->
+        <register length="2" name="1055" units="33" unknown="0">
+            <value>register_1055</value>
+        </register>
+        <!-- Voltage p3 -->
+        <register length="2" name="1056" units="33" unknown="0">
+            <value>register_1056</value>
+        </register>
+        <!-- Current p1 -->
+        <register length="4" name="1076" units="34" unknown="66">
+            <value>register_1076</value>
+        </register>
+        <!-- Current p2 -->
+        <register length="4" name="1077" units="34" unknown="66">
+            <value>register_1077</value>
+        </register>
+        <!-- Current p3 -->
+        <register length="4" name="1078" units="34" unknown="66">
+            <value>register_1078</value>
+        </register>
+        <!-- Power p1 -->
+        <register length="2" name="1080" units="22" unknown="67">
+            <value>register_1080</value>
+        </register>
+        <!-- Power p2 -->
+        <register length="2" name="1081" units="22" unknown="67">
+            <value>register_1081</value>
+        </register>
+        <!-- Power p3 -->
+        <register length="2" name="1082" units="22" unknown="67">
+            <value>register_1082</value>
+        </register>
+        <register length="4" name="3" units="14" unknown="65">
+            <value>register_3</value>
+        </register>
+        <register length="4" name="4" units="14" unknown="65">
+            <value>register_4</value>
+        </register>
+        <register length="4" name="5" units="14" unknown="65">
+            <value>register_5</value>
+        </register>
+        <register length="4" name="6" units="14" unknown="65">
+            <value>register_6</value>
+        </register>
+        <register length="4" name="1024" units="22" unknown="67">
+            <value>register_1024</value>
+        </register>
+        <register length="4" name="1025" units="26" unknown="67">
+            <value>register_1025</value>
+        </register>
+        <register length="4" name="1033" units="22" unknown="67">
+            <value>register_1033</value>
+        </register>
+        <register length="4" name="1034" units="47" unknown="0">
+            <value>register_1034</value>
+        </register>
+        <register length="4" name="1035" units="48" unknown="0">
+            <value>register_1035</value>
+        </register>
+        <register length="4" name="1036" units="22" unknown="67">
+            <value>register_1036</value>
+        </register>
+        <register length="4" name="15" units="14" unknown="68">
+            <value>register_15</value>
+        </register>
+        <register length="4" name="16" units="14" unknown="68">
+            <value>register_16</value>
+        </register>
+        <register length="4" name="17" units="2" unknown="65">
+            <value>register_17</value>
+        </register>
+        <register length="4" name="18" units="2" unknown="65">
+            <value>register_18</value>
+        </register>
+        <register length="4" name="1027" units="47" unknown="0">
+            <value>register_1027</value>
+        </register>
+        <register length="4" name="20" units="2" unknown="65">
+            <value>register_20</value>
+        </register>
+        <register length="4" name="21" units="14" unknown="65">
+            <value>register_21</value>
+        </register>
+        <register length="4" name="22" units="14" unknown="65">
+            <value>register_22</value>
+        </register>
+        <register length="4" name="23" units="2" unknown="65">
+            <value>register_23</value>
+        </register>
+        <register length="4" name="24" units="2" unknown="65">
+            <value>register_24</value>
+        </register>
+        <register length="4" name="25" units="14" unknown="65">
+            <value>register_25</value>
+        </register>
+        <register length="4" name="26" units="14" unknown="65">
+            <value>register_26</value>
+        </register>
+        <register length="4" name="27" units="2" unknown="65">
+            <value>register_27</value>
+        </register>
+        <register length="4" name="28" units="2" unknown="65">
+            <value>register_28</value>
+        </register>
+        <register length="4" name="29" units="14" unknown="65">
+            <value>register_29</value>
+        </register>
+        <register length="4" name="30" units="14" unknown="65">
+            <value>register_30</value>
+        </register>
+        <register length="4" name="31" units="2" unknown="65">
+            <value>register_31</value>
+        </register>
+        <register length="4" name="32" units="2" unknown="65">
+            <value>register_32</value>
+        </register>
+        <register length="4" name="33" units="14" unknown="65">
+            <value>register_33</value>
+        </register>
+        <register length="4" name="34" units="14" unknown="65">
+            <value>register_34</value>
+        </register>
+        <register length="4" name="35" units="22" unknown="67">
+            <value>register_35</value>
+        </register>
+        <register length="4" name="36" units="22" unknown="67">
+            <value>register_36</value>
+        </register>
+        <register length="4" name="37" units="26" unknown="67">
+            <value>register_37</value>
+        </register>
+        <register length="4" name="38" units="26" unknown="67">
+            <value>register_38</value>
+        </register>
+        <register length="4" name="39" units="22" unknown="67">
+            <value>register_39</value>
+        </register>
+        <register length="4" name="40" units="22" unknown="67">
+            <value>register_40</value>
+        </register>
+        <register length="4" name="41" units="26" unknown="67">
+            <value>register_41</value>
+        </register>
+        <register length="4" name="42" units="26" unknown="67">
+            <value>register_42</value>
+        </register>
+        <register length="4" name="43" units="22" unknown="67">
+            <value>register_43</value>
+        </register>
+        <register length="4" name="44" units="22" unknown="67">
+            <value>register_44</value>
+        </register>
+        <register length="4" name="45" units="26" unknown="67">
+            <value>register_45</value>
+        </register>
+        <register length="4" name="46" units="26" unknown="67">
+            <value>register_46</value>
+        </register>
+        <register length="4" name="1071" units="14" unknown="65">
+            <value>register_1071</value>
+        </register>
+        <register length="4" name="1072" units="14" unknown="65">
+            <value>register_1072</value>
+        </register>
+        <register length="4" name="1073" units="14" unknown="65">
+            <value>register_1073</value>
+        </register>
+        <register length="4" name="50" units="51" unknown="0">
+            <value>register_50</value>
+        </register>
+        <register length="4" name="51" units="51" unknown="0">
+            <value>register_51</value>
+        </register>
+        <register length="4" name="52" units="51" unknown="0">
+            <value>register_52</value>
+        </register>
+        <register length="4" name="53" units="51" unknown="0">
+            <value>register_53</value>
+        </register>
+        <register length="4" name="54" units="51" unknown="0">
+            <value>register_54</value>
+        </register>
+        <register length="4" name="55" units="51" unknown="0">
+            <value>register_55</value>
+        </register>
+        <register length="4" name="56" units="51" unknown="0">
+            <value>register_56</value>
+        </register>
+        <register length="4" name="57" units="51" unknown="0">
+            <value>register_57</value>
+        </register>
+        <register length="4" name="58" units="0" unknown="0">
+            <value>register_58</value>
+        </register>
+        <register length="2" name="1083" units="51" unknown="0">
+            <value>register_1083</value>
+        </register>
+        <register length="2" name="1084" units="0" unknown="0">
+            <value>register_1084</value>
+        </register>
+        <register length="4" name="1086" units="51" unknown="0">
+            <value>register_1086</value>
+        </register>
+        <register length="16" name="1205" units="0" unknown="0">
+            <value>register_1205</value>
+        </register>
+        <register length="2" name="1092" units="51" unknown="0">
+            <value>register_1092</value>
+        </register>
+        <register length="4" name="1037" units="47" unknown="0">
+            <value>register_1037</value>
+        </register>
+        <register length="4" name="1038" units="48" unknown="0">
+            <value>register_1038</value>
+        </register>
+        <register length="2" name="1112" units="60" unknown="0">
+            <value>register_1112</value>
+        </register>
+        <register length="2" name="1113" units="60" unknown="0">
+            <value>register_1113</value>
+        </register>
+        <register length="2" name="1114" units="60" unknown="0">
+            <value>register_1114</value>
+        </register>
+        <register length="4" name="1039" units="22" unknown="67">
+            <value>register_1039</value>
+        </register>
+        <register length="4" name="1121" units="2" unknown="65">
+            <value>register_1121</value>
+        </register>
+        <register length="4" name="1026" units="26" unknown="67">
+            <value>register_1026</value>
+        </register>
+        <register length="13" name="1126" units="54" unknown="0">
+            <value>register_1126</value>
+        </register>
+        <register length="4" name="19" units="2" unknown="65">
+            <value>register_19</value>
+        </register>
+        <register length="8" name="1047" units="53" unknown="0">
+            <value>register_1047</value>
+        </register>
+        <register length="8" name="1049" units="53" unknown="0">
+            <value>register_1049</value>
+        </register>
+        <register length="8" name="1050" units="53" unknown="0">
+            <value>register_1050</value>
+        </register>
+        <register length="4" name="1028" units="48" unknown="0">
+            <value>register_1028</value>
+        </register>
+        <register length="8" name="1051" units="53" unknown="0">
+            <value>register_1051</value>
+        </register>
+        <register length="2" name="1189" units="0" unknown="0">
+            <value>register_1189</value>
+        </register>
+        <register length="16" name="1202" units="0" unknown="0">
+            <value>register_1202</value>
+        </register>
+        <register length="16" name="1203" units="0" unknown="0">
+            <value>register_1203</value>
+        </register>
+        <register length="16" name="1204" units="0" unknown="0">
+            <value>register_1204</value>
+        </register>
+        <register length="16" name="1206" units="0" unknown="0">
+            <value>register_1206</value>
+        </register>
+        <register length="16" name="1207" units="0" unknown="0">
+            <value>register_1207</value>
+        </register>
+        <register length="16" name="1208" units="0" unknown="0">
+            <value>register_1208</value>
+        </register>
+        <register length="16" name="1209" units="0" unknown="0">
+            <value>register_1209</value>
+        </register>
+        <register length="4" name="1029" units="51" unknown="0">
+            <value>register_1029</value>
+        </register>
+        <register length="10" name="1058" units="54" unknown="0">
+            <value>register_1058</value>
+        </register>
+        <register length="2" name="1115" units="60" unknown="0">
+            <value>register_1115</value>
+        </register>
+        <register length="4" name="1059" units="2" unknown="65">
+            <value>register_1059</value>
+        </register>
+        <register length="4" name="1060" units="2" unknown="65">
+            <value>register_1060</value>
+        </register>
+        <register length="4" name="1030" units="51" unknown="0">
+            <value>register_1030</value>
+        </register>
+        <register length="4" name="1061" units="2" unknown="65">
+            <value>register_1061</value>
+        </register>
+        <register length="4" name="1062" units="2" unknown="65">
+            <value>register_1062</value>
+        </register>
+        <register length="4" name="1063" units="2" unknown="65">
+            <value>register_1063</value>
+        </register>
+        <register length="4" name="1064" units="2" unknown="65">
+            <value>register_1064</value>
+        </register>
+        <register length="4" name="1065" units="2" unknown="65">
+            <value>register_1065</value>
+        </register>
+        <register length="4" name="1031" units="2" unknown="65">
+            <value>register_1031</value>
+        </register>
+        <register length="4" name="1066" units="2" unknown="65">
+            <value>register_1066</value>
+        </register>
+        <register length="4" name="1067" units="14" unknown="65">
+            <value>register_1067</value>
+        </register>
+        <register length="4" name="1068" units="14" unknown="65">
+            <value>register_1068</value>
+        </register>
+        <register length="4" name="1069" units="14" unknown="65">
+            <value>register_1069</value>
+        </register>
+        <register length="4" name="1070" units="14" unknown="65">
+            <value>register_1070</value>
+        </register>
+        <register length="4" name="1074" units="14" unknown="65">
+            <value>register_1074</value>
+        </register>
+        <register length="4" name="1075" units="51" unknown="0">
+            <value>register_1075</value>
+        </register>
+        <register length="2" name="1079" units="38" unknown="0">
+            <value>register_1079</value>
+        </register>
+        <register length="8" name="1181" units="53" unknown="0">
+            <value>register_1181</value>
+        </register>
+        <register length="4" name="1001" units="51" unknown="0">
+            <value>register_1001</value>
+        </register>
+        <register length="4" name="1002" units="47" unknown="0">
+            <value>register_1002</value>
+        </register>
+        <register length="4" name="1003" units="48" unknown="0">
+            <value>register_1003</value>
+        </register>
+        <register length="4" name="1004" units="46" unknown="0">
+            <value>register_1004</value>
+        </register>
+        <register length="4" name="1005" units="51" unknown="0">
+            <value>register_1005</value>
+        </register>
+        <register length="10" name="1010" units="51" unknown="0">
+            <value>register_1010</value>
+        </register>
+        <register length="4" name="1021" units="51" unknown="0">
+            <value>register_1021</value>
+        </register>
+        <register length="4" name="1023" units="22" unknown="67">
+            <value>register_1023</value>
+        </register>
+    </registers>
+</kamstrup_meter>

@@ -1,0 +1,22 @@
+<proxies enabled="True">
+    <proxy name="Kamstrup Channel A" host="0.0.0.0" port="1025">
+        <proxy_host>192.168.1.176</proxy_host>
+        <proxy_port>1025</proxy_port>
+        <decoder>conpot.protocols.kamstrup.meter_protocol.decoder_382.Decoder382</decoder>
+    </proxy>
+    <proxy name="Kamstrup Channel B" host="0.0.0.0" port="1026">
+        <proxy_host>192.168.0.10</proxy_host>
+        <proxy_port>1026</proxy_port>
+        <decoder>conpot.protocols.kamstrup.meter_protocol.decoder_382.Decoder382</decoder>
+    </proxy>
+    <proxy name="Kamstrup telnet" host="0.0.0.0" port="50100">
+        <proxy_host>192.168.0.10</proxy_host>
+        <proxy_port>50100</proxy_port>
+        <decoder>conpot.protocols.misc.ascii_decoder.AsciiDecoder</decoder>
+    </proxy>
+    <proxy name="SSL proxy" host="0.0.0.0" port="1234" keyfile="ssl.key" certfile="ssl.crt">
+        <proxy_host>192.168.1.123</proxy_host>
+        <proxy_port>443</proxy_port>
+        <decoder></decoder>
+    </proxy>
+</proxies>

@@ -50,7 +50,7 @@ class TestLoggers(unittest.TestCase):
                       'session_id': str(uuid.uuid4()),
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/template.xml')
         stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
         xmlValidator = STIXValidator(None, True, False)
@@ -77,7 +77,7 @@ class TestLoggers(unittest.TestCase):
                       'session_id': str(uuid.uuid4()),
                       'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
                                1: {'request': 'give me apples', 'response': 'no way'}}}
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/template.xml')
         taxiiLogger = TaxiiLogger(config, dom)
         taxii_result = taxiiLogger.log(test_event)
         # TaxiiLogger returns false if the message could not be delivered

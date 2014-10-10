@@ -21,8 +21,8 @@ before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 script:
 - nosetests -v
-- sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot -t conpot/tests/empty_template.xml
-- xmllint --schema conpot/template.xsd conpot/templates/*.xml
+- sudo -E /home/travis/virtualenv/python2.7.8/bin/conpot
+- xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 notifications:
   irc:
   - irc.freenode.org#conpot-dev

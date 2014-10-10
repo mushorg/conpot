@@ -27,7 +27,7 @@ class MBSlave(Slave):
         self.dom = dom
 
     def _device_info(self, request_pdu):
-        info_root = self.dom.xpath('//conpot_template/protocols/modbus/device_info')[0]
+        info_root = self.dom.xpath('//modbus/device_info')[0]
         vendor_name = info_root.xpath('./VendorName/text()')[0]
         product_code = info_root.xpath('./ProductCode/text()')[0]
         major_minor_revision = info_root.xpath('./MajorMinorRevision/text()')[0]

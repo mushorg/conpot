@@ -53,8 +53,8 @@ class TestProxy(unittest.TestCase):
 
     def test_ssl_proxy(self):
         self.test_input = 'Hiya, this is a test'
-        keyfile = os.path.join(package_directory, 'templates/example_ssl.key')
-        certfile = os.path.join(package_directory, 'templates/example_ssl.crt')
+        keyfile = os.path.join(package_directory, 'templates/default/ssl/ssl.key')
+        certfile = os.path.join(package_directory, 'templates/default/ssl/ssl.crt')
 
         mock_service = StreamServer(('127.0.0.1', 0), self.echo_server, keyfile=keyfile, certfile=certfile)
         gevent.spawn(mock_service.start)

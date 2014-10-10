@@ -1,0 +1,65 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="snmp">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="config">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="entity" maxOccurs="unbounded" minOccurs="0">
+                                <xs:annotation>
+                                    <xs:documentation>Configure individual delays for SNMP
+                                        commands Configure DoS evasion thresholds
+                                        (req_per_ip/minute;req_overall/minute)
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:simpleContent>
+                                        <xs:extension base="xs:string">
+                                            <xs:attribute type="xs:string" name="name"
+                                                          use="required"/>
+                                            <xs:attribute type="xs:string" name="command"
+                                                          use="required"/>
+                                        </xs:extension>
+                                    </xs:simpleContent>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="mibs">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="mib">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="symbol" maxOccurs="unbounded"
+                                                    minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="value">
+                                                        <xs:annotation>
+                                                            <xs:documentation>Value is key in
+                                                                databus
+                                                            </xs:documentation>
+                                                        </xs:annotation>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                                <xs:attribute type="xs:string" name="name"
+                                                              use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:short" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

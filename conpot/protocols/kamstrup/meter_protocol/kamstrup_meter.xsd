@@ -1,0 +1,36 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="kamstrup_meter">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="config">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:byte" name="communication_address"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="registers">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="register" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:string" name="value"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:byte" name="length" use="optional"/>
+                                    <xs:attribute type="xs:short" name="name" use="optional"/>
+                                    <xs:attribute type="xs:byte" name="units" use="optional"/>
+                                    <xs:attribute type="xs:byte" name="unknown" use="optional"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:short" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

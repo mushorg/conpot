@@ -42,9 +42,8 @@ class S7Server(object):
         S7.ssl_lists = self.ssl_lists
 
         dom = etree.parse(template)
-        template_name = dom.xpath('//conpot_template/@name')[0]
 
-        system_status_lists = dom.xpath('//conpot_template/protocols/s7comm/system_status_lists/*')
+        system_status_lists = dom.xpath('//s7comm/system_status_lists/*')
         for ssl in system_status_lists:
             ssl_id = ssl.attrib['id']
             ssl_dict = {}
@@ -56,7 +55,7 @@ class S7Server(object):
                 ssl_dict[item_id] = databus_key
 
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
-        logger.info('Conpot S7Comm initialized using the {0} template.'.format(template_name))
+        logger.info('Conpot S7Comm initialized')
 
 
     def handle(self, sock, address):

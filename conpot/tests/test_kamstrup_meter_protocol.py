@@ -29,9 +29,9 @@ class TestKamstrup(unittest.TestCase):
         conpot_core.get_sessionManager().purge_sessions()
 
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/kamstrup_382.xml')
+        self.databus.initialize('conpot/templates/kamstrup_382/template.xml')
         self.request_parser = request_parser.KamstrupRequestParser()
-        self.command_responder = CommandResponder('conpot/templates/kamstrup_382.xml')
+        self.command_responder = CommandResponder('conpot/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
 
     def test_request_get_register(self):
         # requesting register 1033
