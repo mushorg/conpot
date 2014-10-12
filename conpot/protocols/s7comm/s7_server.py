@@ -170,8 +170,8 @@ class S7Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('S7Comm server started on: {0}'.format(connection))
-        return server
+        server.start()

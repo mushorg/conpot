@@ -227,7 +227,8 @@ def main():
         ('modbus', ModbusServer),
         ('s7comm', S7Server),
         ('kamstrup_meter', KamstrupServer),
-        ('kamstrup_management', KamstrupManagementServer)
+        ('kamstrup_management', KamstrupManagementServer),
+        ('http', HTTPServer)
     )
     for protocol in protocol_instance_mapping:
         protocol_name, server_class = protocol
@@ -240,37 +241,37 @@ def main():
                 if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
                     host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
                     port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
-                    server = server_class(protocol_template).get_server(host, port)
+                    server = server_class(protocol_template)
+                    gevent.spawn(server.start, host, port)
                     servers.append(server)
-                    protocol_greenlets.append(gevent.spawn(server.start))
                     logger.info('Found and enabled {0} protocol.'.format(protocol))
             else:
                 logger.info('{0} available but disabled by configuration.'.format(protocol_name))
         else:
             logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
 
-    # TODO: Make http fit into protocol_instance_mapping
-    template_http = os.path.join(template, 'http', 'http.xml')
-    if os.path.isfile(template_http):
-        xsd_file = os.path.join(os.path.dirname(inspect.getfile(HTTPServer)), 'http.xsd')
-        validate_template(template_http, xsd_file)
-        dom_http = etree.parse(template_http)
-        if dom_http.xpath('//http'):
-            if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
-                http_host = dom_http.xpath('//http/@host')[0]
-                http_port = ast.literal_eval(dom_http.xpath('//http/@port')[0])
-                http_server = HTTPServer(http_host, http_port, template_http, os.path.join(package_directory,
-                                                                                           'templates',
-                                                                                           template,
-                                                                                           'http'))
-                servers.append(http_server)
-                protocol_greenlets.append(gevent.spawn(http_server.start))
-            else:
-                logger.info('HTTP available but disabled by configuration.')
-    else:
-        logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
+    # # TODO: Make http fit into protocol_instance_mapping
+    # template_http = os.path.join(template, 'http', 'http.xml')
+    # if os.path.isfile(template_http):
+    #     xsd_file = os.path.join(os.path.dirname(inspect.getfile(HTTPServer)), 'http.xsd')
+    #     validate_template(template_http, xsd_file)
+    #     dom_http = etree.parse(template_http)
+    #     if dom_http.xpath('//http'):
+    #         if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
+    #             http_host = dom_http.xpath('//http/@host')[0]
+    #             http_port = ast.literal_eval(dom_http.xpath('//http/@port')[0])
+    #             http_server = HTTPServer(http_host, http_port, template_http, os.path.join(package_directory,
+    #                                                                                        'templates',
+    #                                                                                        template,
+    #                                                                                        'http'))
+    #             servers.append(http_server)
+    #             protocol_greenlets.append(gevent.spawn(http_server.start))
+    #         else:
+    #             logger.info('HTTP available but disabled by configuration.')
+    # else:
+    #     logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
 
-    # TODO: Make http fit into protocol_instance_mapping
+    # TODO: Make snmp fit into protocol_instance_mapping
     template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
     if os.path.isfile(template_snmp):
         xsd_file = os.path.join(os.path.dirname(inspect.getfile(SNMPServer)), 'snmp.xsd')
@@ -302,7 +303,7 @@ def main():
     log_worker = LogWorker(config, dom_base, session_manager, public_ip)
     gevent.spawn(log_worker.start)
 
-    # TODO: Make http fit into protocol_instance_mapping
+    # TODO: Make proxy fit into protocol_instance_mapping
     template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
         xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
@@ -347,7 +348,7 @@ def main():
     gevent.sleep(5)
     drop_privileges()
     try:
-        if len(protocol_greenlets) > 0:
+        if len(servers) > 0:
             gevent.wait()
     except KeyboardInterrupt:
         logging.info('Stopping Conpot')

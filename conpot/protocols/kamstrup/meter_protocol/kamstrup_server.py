@@ -92,11 +92,11 @@ class KamstrupServer(object):
 
         sock.close()
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('Kamstrup protocol server started on: {0}'.format(connection))
-        return server
+        server.start()
 
 
 if __name__ == '__main__':
