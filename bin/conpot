@@ -345,7 +345,9 @@ def main():
 
     # Wait for the services to bind ports before dropping privileges
     gevent.sleep(5)
-    drop_privileges()
+    # Only drop if running as root
+    if os.getuid() == 0:
+        drop_privileges()
     try:
         if len(protocol_greenlets) > 0:
             gevent.wait()
