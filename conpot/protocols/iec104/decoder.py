@@ -24,16 +24,76 @@ from collections import namedtuple
 logger = logging.getLogger(__name__)
 
 
-ASDU_TYPE_71 = {
-    "64": ["C_IC_NA_1", "Interrogation command"],
-    "65": ["C_CI_NA_1", "Counter interrogation command"],
-    "66": ["C_RD_NA_1", "Read Command"],
-    "67": ["C_CS_NA_1", "Clock synchronisation command"],
-    "68": ["C_TS_NA_1", "Test command"],
-    "69": ["C_RP_NA_1", "Reset process command"],
-    "6A": ["C_CD_NA_1", "C_CD_NA_1 Delay acquisition command"],
-    "6B": ["C_TS_TA_1", "Test command with time tag CP56Time2a"]
+Type_ID = {
+    1: ['M_SP_NA_1', 'Single point information'],
+    2: ['M_SP_TA_1', 'Single point information with time tag'],
+    3: ['M_DP_NA_1', 'Double point information'],
+    4: ['M_DP_TA_1', 'Double point information with time tag'],
+    5: ['M_ST_NA_1', 'Step position information'],
+    6: ['M_ST_TA_1', 'Step position information with time tag'],
+    7: ['M_BO_NA_1', 'Bit string of 32 bit'],
+    8: ['M_BO_TA_1', 'Bit string of 32 bit with time tag'],
+    9: ['M_ME_NA_1', 'Measured value, normalized value'],
+    10: ['M_ME_TA_1', 'Measured value, normalized value with time tag'],
+    11: ['M_ME_NB_1', 'Measured value, scaled value'],
+    12: ['M_ME_TB_1', 'Measured value, scaled value with time tag'],
+    13: ['M_ME_NC_1', 'Measured value, short floating point value'],
+    14: ['M_ME_TC_1', 'Measured value, short floating point value with time tag'],
+    15: ['M_IT_NA_1', 'Integrated totals'],
+    16: ['M_IT_TA_1', 'Integrated totals with time tag'],
+    17: ['M_EP_TA_1', 'Event of protection equipment with time tag'],
+    18: ['M_EP_TB_1', 'Packed start events of protection equipment with time tag'],
+    19: ['M_EP_TC_1', 'Packed output circuit information of protection equipment with time tag'],
+    20: ['M_PS_NA_1', 'Packed single-point information with status change detection'],
+    21: ['M_ME_ND_1', 'Measured value, normalized value without quality descriptor'],
+    30: ['M_SP_TB_1', 'Single point information with time tag CP56Time2a'],
+    31: ['M_DP_TB_1', 'Double point information with time tag CP56Time2a'],
+    32: ['M_ST_TB_1', 'Step position information with time tag CP56Time2a'],
+    33: ['M_BO_TB_1', 'Bit string of 32 bit with time tag CP56Time2a'],
+    34: ['M_ME_TD_1', 'Measured value, normalized value with time tag CP56Time2a'],
+    35: ['M_ME_TE_1', 'Measured value, scaled value with time tag CP56Time2a'],
+    36: ['M_ME_TF_1', 'Measured value, short floating point value with time tag CP56Time2a'],
+    37: ['M_IT_TB_1', 'Integrated totals with time tag CP56Time2a'],
+    38: ['M_EP_TD_1', 'Event of protection equipment with time tag CP56Time2a'],
+    39: ['M_EP_TE_1', 'Packed start events of protection equipment with time tag CP56time2a'],
+    40: ['M_EP_TF_1', 'Packed output circuit information of protection equipment with time tag CP56Time2a'],
+    45: ['C_SC_NA_1', 'Single command'],
+    46: ['C_DC_NA_1', 'Double command'],
+    47: ['C_RC_NA_1', 'Regulating step command'],
+    48: ['C_SE_NA_1', 'Setpoint command, normalized value'],
+    49: ['C_SE_NB_1', 'Setpoint command, scaled value'],
+    50: ['C_SE_NC_1', 'Setpoint command, short floating point value'],
+    51: ['C_BO_NA_1', 'Bit string  32 bit'],
+    58: ['C_SC_TA_1', 'Single command with time tag CP56Time2a'],
+    59: ['C_DC_TA_1', 'Double command with time tag CP56Time2a'],
+    60: ['C_RC_TA_1', 'Regulating step command with time tag CP56Time2a'],
+    61: ['C_SE_TA_1', 'Setpoint command, normalized value with time tag CP56Time2a'],
+    62: ['C_SE_TB_1', 'Setpoint command, scaled value with time tag CP56Time2a'],
+    63: ['C_SE_TC_1', 'Setpoint command, short floating point value with time tag CP56Time2a'],
+    64: ['C_BO_TA_1', 'Bit string 32 bit with time tag CP56Time2a'],
+    70: ['M_EI_NA_1', 'End of initialization'],
+    100: ['C_IC_NA_1', '(General-) Interrogation command'],
+    101: ['C_CI_NA_1', 'Counter interrogation command'],
+    102: ['C_RD_NA_1', 'Read command'],
+    103: ['C_CS_NA_1', 'Clock synchronization command'],
+    104: ['C_TS_NB_1', '( IEC 101 ) Test command'],
+    105: ['C_RP_NC_1', 'Reset process command'],
+    106: ['C_CD_NA_1', '( IEC 101 ) Delay acquisition command'],
+    107: ['C_TS_TA_1', 'Test command with time tag CP56Time2a'],
+    110: ['P_ME_NA_1', 'Parameter of measured value, normalized value'],
+    111: ['P_ME_NB_1', 'Parameter of measured value, scaled value'],
+    112: ['P_ME_NC_1', 'Parameter of measured value, short floating point value'],
+    113: ['P_AC_NA_1', 'Parameter activation'],
+    120: ['F_FR_NA_1', 'File ready'],
+    121: ['F_SR_NA_1', 'Section ready'],
+    122: ['F_SC_NA_1', 'Call directory, select file, call file, call section'],
+    123: ['F_LS_NA_1', 'Last section, last segment'],
+    124: ['F_AF_NA_1', 'Ack file, Ack section'],
+    125: ['F_SG_NA_1', 'Segment'],
+    126: ['F_DR_TA_1', 'Directory'],
+    127: ['F_SC_NB_1', 'QueryLog - Request archive file']
 }
+
 
 E_IEC870_5_101COTType = {
     0: 'eIEC870_COT_UNUSED',
@@ -152,7 +212,6 @@ class Decoder(object):
     """
     @staticmethod
     def unpack(data):
-        print len(data)
         packed_apci, asdu = data[:6], data[6:]
         apci = namedtuple(
             'unpacked_header', 
@@ -160,19 +219,33 @@ class Decoder(object):
         )
         unpacked_apci = apci._make(struct.unpack("bbbbbb", packed_apci))
 
-        if len(data) >= 7:
-            type_id = data[6].encode("hex")
+        if len(asdu) >= 1:
+            type_id = int(asdu[0].encode("hex"), 16)
             try:
-                print ASDU_TYPE_71[type_id]
+                print type_id, Type_ID[type_id][1]
             except KeyError:
-                print "Unknown type: ASDU_TYPE_{}".format(type_id)
-            if len(data) >= 8:
-                num_obj = struct.unpack("b", data[7])[0]
+                print "Unknown type id: {}".format(type_id)
+            num_obj = 0
+            if len(asdu) >= 2:
+                num_obj = struct.unpack("b", asdu[1])[0]
                 print "num_objects:", num_obj
-            if len(data) >= 9:
-                cot = struct.unpack("b", data[8])[0]
+            if len(asdu) >= 3:
+                cot = struct.unpack("b", asdu[2])[0]
                 cot_desc = E_IEC870_5_101COTDesc[E_IEC870_5_101COTType[cot]]
                 print cot_desc
+            if len(asdu) >= 4:
+                org_addr = struct.unpack("b", asdu[3])[0]
+                print "org_addr:", org_addr
+            if len(asdu) >= 6:
+                com_addr = struct.unpack("bb", asdu[4:6])
+                print "com_addr:", com_addr
+            print len(asdu)
+            if num_obj > 0 and len(asdu) >= 8:
+                objects = dict()
+                for i in range(1, num_obj + 1):
+                    pos = i * 6
+                    objects[i] = asdu[pos:pos + 6]
+                    print struct.unpack("bbbbbb", objects[i])
         return unpacked_apci
 
     def decode_in(self, data):
@@ -187,7 +260,9 @@ class Decoder(object):
 
 
 if __name__ == "__main__":
-    in_data = '\x68\x0E\x4E\x14\x7C\x00\x65\x01\x0A\x00\x0C\x00\x00\x00\x00\x05'
+    #in_data = '\x68\x34\x5A\x14\x7C\x00\x0B\x07\x03\x00\x0C\x00\x10\x30\x00\xBE\x09\x00\x11\x30\x00\x90\x09\x00\x0E\x30\x00\x75\x00\x00\x28\x30\x00\x25\x09\x00\x29\x30\x00\x75\x00\x00\x0F\x30\x00\x0F\x0A\x00\x2E\x30\x00\xAE\x05\x00'
+    #in_data = '\x68\x0E\x4E\x14\x7C\x00\x65\x01\x0A\x00\x0C\x00\x00\x00\x00\x05'
+    in_data = 'h\x19\x04\x00\x04\x00$\x01\x03\x00\x01\x00\x01\x00\x00\xa4pEA\x00`{#\x91\x99\t\x0eh\x15\x06\x00\x04\x00\x1e\x01\x03\x00\x01\x00\x02\x00\x00\x00`{#\x91\x99\t\x0eh\x19\x08\x00\x04\x00%\x01\x03\x00\x01\x00\x03\x00\x00\x07\x87\x00\x00\x00`{#\x91\x99\t\x0e'
     #out_data = '\x05d\nD\x01\x00\n\x00n%\xc9\xc6\x81\x00\x00Q\x8a'
     d = Decoder()
     d.decode_in(in_data)
