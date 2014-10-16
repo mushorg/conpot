@@ -39,10 +39,11 @@ class TestBase(unittest.TestCase):
         databus = conpot_core.get_databus()
         databus.initialize('conpot/templates/default/template.xml')
         args = namedtuple('FakeArgs', 'mibpaths raw_mib')
-        args.mibpaths = self.tmp_dir
-        args.raw_mib = self.tmp_dir
+        args.mibpaths = [self.tmp_dir]
+        args.raw_mib = [self.tmp_dir]
         self.snmp_server = SNMPServer('conpot/templates/default/snmp/snmp.xml', 'none', args)
-        self.server_greenlet = gevent.spawn(self.snmp_server.start)
+        self.server_greenlet = gevent.spawn(self.snmp_server.start, self.host, 0)
+        gevent.sleep(1)
         self.port = self.snmp_server.get_port()
 
     def tearDown(self):
