@@ -252,61 +252,11 @@ def main():
         else:
             logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
 
-    # # TODO: Make http fit into protocol_instance_mapping
-    # template_http = os.path.join(template, 'http', 'http.xml')
-    # if os.path.isfile(template_http):
-    #     xsd_file = os.path.join(os.path.dirname(inspect.getfile(HTTPServer)), 'http.xsd')
-    #     validate_template(template_http, xsd_file)
-    #     dom_http = etree.parse(template_http)
-    #     if dom_http.xpath('//http'):
-    #         if ast.literal_eval(dom_http.xpath('//http/@enabled')[0]):
-    #             http_host = dom_http.xpath('//http/@host')[0]
-    #             http_port = ast.literal_eval(dom_http.xpath('//http/@port')[0])
-    #             http_server = HTTPServer(http_host, http_port, template_http, os.path.join(package_directory,
-    #                                                                                        'templates',
-    #                                                                                        template,
-    #                                                                                        'http'))
-    #             servers.append(http_server)
-    #             protocol_greenlets.append(gevent.spawn(http_server.start))
-    #         else:
-    #             logger.info('HTTP available but disabled by configuration.')
-    # else:
-    #     logger.info('No HTTP template found. Service will remain unconfigured/stopped.')
-
-    # TODO: Make snmp fit into protocol_instance_mapping
-    template_snmp = os.path.join(template, 'snmp', 'snmp.xml')
-    if os.path.isfile(template_snmp):
-        xsd_file = os.path.join(os.path.dirname(inspect.getfile(SNMPServer)), 'snmp.xsd')
-        validate_template(template_snmp, xsd_file)
-        dom_snmp = etree.parse(template_snmp)
-        if dom_snmp.xpath('//snmp'):
-            if ast.literal_eval(dom_snmp.xpath('//snmp/@enabled')[0]):
-
-                if args.mibpaths:
-                    compiled_mibs = args.mibpaths
-                else:
-                    compiled_mibs = [os.path.join(template, 'snmp', 'mibs_compiled')]
-
-                if args.raw_mib:
-                    raw_mibs = args.raw_mib
-                else:
-                    raw_mibs = [os.path.join(template, 'snmp', 'mibs_raw')]
-
-                snmp_host = dom_snmp.xpath('//snmp/@host')[0]
-                snmp_port = ast.literal_eval(dom_snmp.xpath('//snmp/@port')[0])
-                snmp_server = SNMPServer(snmp_host, snmp_port, template_snmp, compiled_mibs, raw_mibs)
-                servers.append(snmp_server)
-                protocol_greenlets.append(gevent.spawn(snmp_server.start))
-            else:
-                logger.info('SNMP available but disabled by template.')
-    else:
-        logger.info('No SNMP template found. Service will remain unconfigured/stopped.')
-
     log_worker = LogWorker(config, dom_base, session_manager, public_ip)
     gevent.spawn(log_worker.start)
 
     # TODO: Make proxy fit into protocol_instance_mapping
-    template_proxy = os.path.join(template, 'proxy', 'proxy.xml')
+    template_proxy = os.path.join(root_template_directory, 'proxy', 'proxy.xml')
     if os.path.isfile(template_proxy):
         xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
         validate_template(template_proxy, xsd_file)
@@ -327,8 +277,8 @@ def main():
                         # the templates ssl standard location
 
                         if not os.path.isabs(keyfile):
-                            keyfile = os.path.join(os.path.dirname(template), 'ssl', keyfile)
-                            certfile = os.path.join(os.path.dirname(template), 'ssl', certfile)
+                            keyfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', keyfile)
+                            certfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', certfile)
                     port = ast.literal_eval(p.attrib['port'])
                     proxy_host = p.xpath('./proxy_host/text()')[0]
                     proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])

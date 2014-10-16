@@ -18,6 +18,7 @@
 import logging
 import tempfile
 import shutil
+import os
 
 from lxml import etree
 
@@ -30,7 +31,7 @@ logger = logging.getLogger()
 
 
 class SNMPServer(object):
-    def __init__(self, host, port, template, mibpaths, rawmibs_dirs):
+    def __init__(self, template, template_directory, args):
         """
         :param host:        hostname or ip address on which to server the snmp service (string).
         :param port:        listen port (integer).
@@ -39,14 +40,18 @@ class SNMPServer(object):
         :param mibpaths:    collection of paths to search for COMPILED mib files (iterable collection of strings).
         :param rawmibs_dir: collection of paths to search for raw mib files, these files will get compiled by conpot (string).
         """
-        self.host = host
-        self.port = port
 
-        dom = etree.parse(template)
+        self.dom = etree.parse(template)
 
-        self.cmd_responder = CommandResponder(self.host, self.port, mibpaths)
-        self.xml_general_config(dom)
-        self.xml_mib_config(dom, mibpaths, rawmibs_dirs)
+        if args.mibpaths:
+            self.compiled_mibs = args.mibpaths
+        else:
+            self.compiled_mibs = [os.path.join(template_directory, 'snmp', 'mibs_compiled')]
+
+        if args.raw_mib:
+            self.raw_mibs = args.raw_mib
+        else:
+            self.raw_mibs = [os.path.join(template_directory, 'snmp', 'mibs_raw')]
 
     def xml_general_config(self, dom):
         snmp_config = dom.xpath('//snmp/config/*')
@@ -173,10 +178,13 @@ class SNMPServer(object):
         else:
             return '0;0'
 
-    def start(self):
-        if self.cmd_responder:
-            logger.info('SNMP server started on: {0}'.format((self.host, self.get_port())))
-            self.cmd_responder.serve_forever()
+    def start(self, host, port):
+        self.cmd_responder = CommandResponder(host, port, self.compiled_mibs)
+        self.xml_general_config(self.dom)
+        self.xml_mib_config(self.dom, self.compiled_mibs, self.raw_mibs)
+
+        logger.info('SNMP server started on: {0}'.format((host, self.get_port())))
+        self.cmd_responder.serve_forever()
 
     def stop(self):
         if self.cmd_responder:
