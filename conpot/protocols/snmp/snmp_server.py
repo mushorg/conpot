@@ -35,13 +35,11 @@ class SNMPServer(object):
         """
         :param host:        hostname or ip address on which to server the snmp service (string).
         :param port:        listen port (integer).
-        :param template:    path to conpot xml configuration file (string).
-        :param log_queue:   shared log queue (list).
-        :param mibpaths:    collection of paths to search for COMPILED mib files (iterable collection of strings).
-        :param rawmibs_dir: collection of paths to search for raw mib files, these files will get compiled by conpot (string).
+        :param template:    path to the protocol specific xml configuration file (string).
         """
 
         self.dom = etree.parse(template)
+        self.cmd_responder = None
 
         if args.mibpaths:
             self.compiled_mibs = args.mibpaths

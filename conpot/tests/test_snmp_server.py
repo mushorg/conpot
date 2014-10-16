@@ -21,6 +21,7 @@ gevent.monkey.patch_all()
 import unittest
 import tempfile
 import shutil
+from collections import namedtuple
 
 import gevent
 
@@ -37,13 +38,12 @@ class TestBase(unittest.TestCase):
         self.host = '127.0.0.1'
         databus = conpot_core.get_databus()
         databus.initialize('conpot/templates/default/template.xml')
-        self.snmp_server = SNMPServer(self.host,
-                                      0,
-                                      'conpot/templates/default/snmp/snmp.xml',
-                                      [self.tmp_dir],
-                                      [self.tmp_dir])
-        self.port = self.snmp_server.get_port()
+        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
+        args.mibpaths = self.tmp_dir
+        args.raw_mib = self.tmp_dir
+        self.snmp_server = SNMPServer('conpot/templates/default/snmp/snmp.xml', 'none', args)
         self.server_greenlet = gevent.spawn(self.snmp_server.start)
+        self.port = self.snmp_server.get_port()
 
     def tearDown(self):
         shutil.rmtree(self.tmp_dir)
