@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class KamstrupServer(object):
-    def __init__(self, template, timeout=0):
+    def __init__(self, template, template_directory, args, timeout=0):
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
         self.server_active = True

@@ -192,7 +192,7 @@ def main():
 
     # Check if the template exists in our template root..
     if os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
-        template = os.path.join(package_directory, 'templates', args.template)
+        root_template_directory = os.path.join(package_directory, 'templates', args.template)
     else:
             logger.error('Template not found: {0}'.format(args.template))
             sys.exit(1)
@@ -202,13 +202,13 @@ def main():
         logger.error('Config not found: {0}'.format(args.config))
         sys.exit(1)
 
-    logger.info('Starting Conpot using template: {0}'.format(template))
+    logger.info('Starting Conpot using template: {0}'.format(root_template_directory))
     logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
 
     protocol_greenlets = list()
     servers = list()
 
-    template_base = os.path.join(template, 'template.xml')
+    template_base = os.path.join(root_template_directory, 'template.xml')
     if os.path.isfile(template_base):
         validate_template(template_base, os.path.join(package_directory, 'tests/template_schemas/core.xsd'))
         dom_base = etree.parse(template_base)
@@ -228,11 +228,13 @@ def main():
         ('s7comm', S7Server),
         ('kamstrup_meter', KamstrupServer),
         ('kamstrup_management', KamstrupManagementServer),
-        ('http', HTTPServer)
+        ('http', HTTPServer),
+        ('snmp', SNMPServer)
     )
+
     for protocol in protocol_instance_mapping:
         protocol_name, server_class = protocol
-        protocol_template = os.path.join(template, protocol_name, '{0}.xml'.format(protocol_name))
+        protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
         if os.path.isfile(protocol_template):
             xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
             validate_template(protocol_template, xsd_file)
@@ -241,7 +243,7 @@ def main():
                 if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
                     host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
                     port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
-                    server = server_class(protocol_template)
+                    server = server_class(protocol_template, root_template_directory, args)
                     gevent.spawn(server.start, host, port)
                     servers.append(server)
                     logger.info('Found and enabled {0} protocol.'.format(protocol))

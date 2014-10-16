@@ -26,7 +26,7 @@ logger = logging.getLogger()
 
 
 class HTTPServer(object):
-    def __init__(self, template):
+    def __init__(self, template, template_directory, args):
         self.template = template
         self.server_port = None
 

@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class KamstrupManagementServer(object):
-    def __init__(self, template, timeout=0):
+    def __init__(self, template, template_directory, args, timeout=0):
         self.template = template
         self.timeout = timeout
         self.command_responder = CommandResponder(template)

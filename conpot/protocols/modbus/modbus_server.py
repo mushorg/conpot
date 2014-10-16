@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ModbusServer(modbus.Server):
 
-    def __init__(self, template, timeout=5):
+    def __init__(self, template, template_directory, args, timeout=5):
 
         self.timeout = timeout
         databank = slave_db.SlaveBase(template)

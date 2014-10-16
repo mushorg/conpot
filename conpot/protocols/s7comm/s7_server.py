@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 class S7Server(object):
-    def __init__(self, template):
+    def __init__(self, template, template_directory, args):
 
         self.timeout = 5
         self.ssl_lists = {}
@@ -175,3 +175,7 @@ class S7Server(object):
         server = StreamServer(connection, self.handle)
         logger.info('S7Comm server started on: {0}'.format(connection))
         server.start()
+
+    def stop(self):
+        # master, please feed me!
+        pass
