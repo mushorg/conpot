@@ -19,6 +19,7 @@ import gevent.monkey
 gevent.monkey.patch_all()
 
 import unittest
+from collections import namedtuple
 
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
@@ -31,13 +32,14 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/default/template.xml')
-        s7_instance = S7Server('conpot/templates/default/s7comm/s7comm.xml')
-        self.S7_server = s7_instance.get_server('localhost', 0)
-        self.S7_server.start()
-        self.server_port = self.S7_server.server_port
+        args = namedtuple('FakeArgs', '')
+        self.s7_instance = S7Server('conpot/templates/default/s7comm/s7comm.xml', 'none', args)
+        gevent.spawn(self.s7_instance.start, '127.0.0.1', 0)
+        gevent.sleep(0.5)
+        self.server_port = self.s7_instance.server.server_port
 
     def tearDown(self):
-        self.S7_server.stop()
+        self.s7_instance.stop()
 
     def test_s7(self):
         """

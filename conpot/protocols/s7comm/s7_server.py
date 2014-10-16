@@ -39,6 +39,7 @@ class S7Server(object):
 
         self.timeout = 5
         self.ssl_lists = {}
+        self.server = None
         S7.ssl_lists = self.ssl_lists
 
         dom = etree.parse(template)
@@ -172,10 +173,9 @@ class S7Server(object):
 
     def start(self, host, port):
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
+        self.server = StreamServer(connection, self.handle)
         logger.info('S7Comm server started on: {0}'.format(connection))
-        server.start()
+        self.server.start()
 
     def stop(self):
-        # master, please feed me!
-        pass
+        self.server.stop()
