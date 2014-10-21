@@ -17,9 +17,6 @@
 
 import logging
 
-import conpot
-import gevent
-import os
 from conpot.protocols.http.command_responder import CommandResponder
 
 
