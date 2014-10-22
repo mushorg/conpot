@@ -29,19 +29,19 @@
             <!-- This slave does some measuring. (analog inputs).
                  Map modbus addresses 30001-30009 to S7 PLC analog input bits AIW0-AIW8 -->
             <blocks>
-                <block name="memoryModbusSlave1BlockC">
+                <block name="memoryModbusSlave2BlockC">
                     <!-- Will be parsed with eval() -->
                     <type>ANALOG_INPUTS</type>
                     <starting_address>30001</starting_address>
                     <size>8</size>
-                    <content>memoryModbusSlave1BlockC</content>
+                    <content>memoryModbusSlave2BlockC</content>
                 </block>
-                <block name="memoryModbusSlave1BlockD">
+                <block name="memoryModbusSlave2BlockD">
                     <!-- Maps to S7-200 PLC addresses HoldStart+8 -->
                     <type>HOLDING_REGISTERS</type>
                     <starting_address>40001</starting_address>
                     <size>8</size>
-                    <content>memoryModbusSlave1BlockD</content>
+                    <content>memoryModbusSlave2BlockD</content>
                 </block>
             </blocks>
         </slave>
