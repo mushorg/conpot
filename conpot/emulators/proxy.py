@@ -53,6 +53,9 @@ class ProxyServer(object):
         server = self.proxy.get_server(host, port)
         server.start()
 
+    def stop(self):
+        self.proxy.stop()
+
 
 class Proxy(object):
     def __init__(self, name, proxy_host, proxy_port, decoder=None, keyfile=None, certfile=None):

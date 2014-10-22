@@ -245,7 +245,7 @@ class Decoder(object):
                 for i in range(1, num_obj + 1):
                     pos = i * 6
                     objects[i] = asdu[pos:pos + 6]
-                    print struct.unpack("bbbbbb", objects[i])
+                    print struct.unpack("b" * len(objects[i]), objects[i])
         return unpacked_apci
 
     def decode_in(self, data):
