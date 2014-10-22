@@ -98,16 +98,16 @@ class MBSlave(Slave):
 
     def add_block(self, block_name, block_type, starting_address, size):
         """Add a new block identified by its name"""
-        with self._data_lock: # thread-safe
+        with self._data_lock:  # thread-safe
             if size <= 0:
-                raise InvalidArgumentError, "size must be a positive number"
+                raise InvalidArgumentError("size must be a positive number")
             if starting_address < 0:
-                raise InvalidArgumentError, "starting address must be zero or positive number"
-            if self._blocks.has_key(block_name):
-                raise DuplicatedKeyError, "Block %s already exists. " % (block_name)
+                raise InvalidArgumentError("starting address must be zero or positive number")
+            if block_name in self._blocks:
+                raise DuplicatedKeyError("Block %s already exists. " % block_name)
 
-            if not self._memory.has_key(block_type):
-                raise InvalidModbusBlockError, "Invalid block type %d" % (block_type)
+            if not block_type in self._memory:
+                raise InvalidModbusBlockError("Invalid block type %d" % block_type)
 
             # check that the new block doesn't overlap an existing block
             # it means that only 1 block per type must correspond to a given address
