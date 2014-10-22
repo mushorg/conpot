@@ -44,7 +44,8 @@ from conpot.protocols.http.web_server import HTTPServer
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
 from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
 
-from conpot.emulators.proxy import Proxy
+
+from conpot.emulators.proxy import Proxy, ProxyServer
 from conpot.utils import ext_ip
 
 
@@ -97,7 +98,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
 
 
 def validate_template(xml_file, xsd_file):
-    xml_schema = etree.parse(xsd_file);
+    xml_schema = etree.parse(xsd_file)
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)
@@ -229,7 +230,8 @@ def main():
         ('kamstrup_meter', KamstrupServer),
         ('kamstrup_management', KamstrupManagementServer),
         ('http', HTTPServer),
-        ('snmp', SNMPServer)
+        ('snmp', SNMPServer),
+        ('proxy_iec104', ProxyServer)
     )
 
     for protocol in protocol_instance_mapping:
@@ -237,6 +239,8 @@ def main():
         protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
         if os.path.isfile(protocol_template):
             xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
+            if not os.path.exists(xsd_file):
+                xsd_file = os.path.join(root_template_directory, protocol_name, '{0}.xsd'.format(protocol_name))
             validate_template(protocol_template, xsd_file)
             dom_protocol = etree.parse(protocol_template)
             if dom_protocol.xpath('//{0}'.format(protocol_name)):

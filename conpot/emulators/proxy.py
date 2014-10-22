@@ -17,6 +17,8 @@
 
 import logging
 import select
+import ast
+
 import socket as _socket
 
 import gevent
@@ -24,10 +26,32 @@ from gevent.socket import socket
 from gevent.ssl import wrap_socket
 from gevent.server import StreamServer
 
+from lxml import etree
+
 import conpot.core as conpot_core
 
 
 logger = logging.getLogger(__name__)
+
+
+class ProxyServer(object):
+    def __init__(self, template, template_directory, args):
+        dom_proxy = etree.parse(template)
+        proxies = dom_proxy.xpath('//*/*')
+        p = proxies[0]
+        proxy_host = p.xpath('./proxy_host/text()')[0]
+        proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
+        name = p.attrib['name']
+        decoder = p.xpath('./decoder/text()')
+        if len(decoder) > 0:
+            decoder = decoder[0]
+        else:
+            decoder = None
+        self.proxy = Proxy(name, proxy_host, proxy_port, decoder)
+
+    def start(self, host, port):
+        server = self.proxy.get_server(host, port)
+        server.start()
 
 
 class Proxy(object):
