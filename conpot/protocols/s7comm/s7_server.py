@@ -35,16 +35,16 @@ logger = logging.getLogger(__name__)
 
 
 class S7Server(object):
-    def __init__(self, template):
+    def __init__(self, template, template_directory, args):
 
         self.timeout = 5
         self.ssl_lists = {}
+        self.server = None
         S7.ssl_lists = self.ssl_lists
 
         dom = etree.parse(template)
-        template_name = dom.xpath('//conpot_template/@name')[0]
 
-        system_status_lists = dom.xpath('//conpot_template/protocols/s7comm/system_status_lists/*')
+        system_status_lists = dom.xpath('//s7comm/system_status_lists/*')
         for ssl in system_status_lists:
             ssl_id = ssl.attrib['id']
             ssl_dict = {}
@@ -56,7 +56,7 @@ class S7Server(object):
                 ssl_dict[item_id] = databus_key
 
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
-        logger.info('Conpot S7Comm initialized using the {0} template.'.format(template_name))
+        logger.info('Conpot S7Comm initialized')
 
 
     def handle(self, sock, address):
@@ -171,8 +171,11 @@ class S7Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
+        self.server = StreamServer(connection, self.handle)
         logger.info('S7Comm server started on: {0}'.format(connection))
-        return server
+        self.server.start()
+
+    def stop(self):
+        self.server.stop()

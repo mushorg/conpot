@@ -1,0 +1,136 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="http">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="global">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="config">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="entity" maxOccurs="unbounded"
+                                                    minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute type="xs:string"
+                                                                      name="name"
+                                                                      use="required"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="headers">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="entity">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute type="xs:string"
+                                                                      name="name"
+                                                                      use="required"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="htdocs">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="node" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:short" name="status" minOccurs="0">
+                                        </xs:element>
+                                        <xs:element type="xs:string" name="tarpit"
+                                                    minOccurs="0">
+                                        </xs:element>
+                                        <xs:element name="triggers" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="entity">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute
+                                                                            type="xs:string"
+                                                                            name="appendix"
+                                                                            use="required"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="headers" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="entity"
+                                                                maxOccurs="unbounded"
+                                                                minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute
+                                                                            type="xs:string"
+                                                                            name="name"
+                                                                            use="required"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element type="xs:string" name="alias" minOccurs="0">
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="statuscodes">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="status" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:byte" name="tarpit"/>
+                                        <xs:element name="entity">
+                                            <xs:complexType>
+                                                <xs:simpleContent>
+                                                    <xs:extension base="xs:string">
+                                                        <xs:attribute type="xs:string"
+                                                                      name="name"
+                                                                      use="required"/>
+                                                    </xs:extension>
+                                                </xs:simpleContent>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:short" name="name" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:byte" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+ </xs:schema>

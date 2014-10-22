@@ -28,12 +28,12 @@ logger = logging.getLogger(__name__)
 
 class CommandResponder(object):
     def __init__(self, template):
-        # key: kamstrup register, value: databus key
+        # key: kamstrup_meter register, value: databus key
         self.registers = {}
 
         dom = etree.parse(template)
-        registers = dom.xpath('//conpot_template/protocols/kamstrup/registers/*')
-        self.communication_address = int(dom.xpath('//conpot_template/protocols/kamstrup/config/communication_address/text()')[0])
+        registers = dom.xpath('//kamstrup_meter/registers/*')
+        self.communication_address = int(dom.xpath('//kamstrup_meter/config/communication_address/text()')[0])
         for register in registers:
             name = int(register.attrib['name'])
             length = int(register.attrib['length'])

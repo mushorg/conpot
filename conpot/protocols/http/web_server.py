@@ -24,25 +24,19 @@ logger = logging.getLogger()
 
 
 class HTTPServer(object):
+    def __init__(self, template, template_directory, args):
+        self.template = template
+        self.template_directory = template_directory
+        self.server_port = None
+        self.cmd_responder = None
 
-    def __init__(self, host, port, template, docpath):
-        self.host = host
-        self.port = port
-        self.docpath = docpath
-
-        self.cmd_responder = CommandResponder(host, port, template, docpath)
+    def start(self, host, port):
+        logger.info('HTTP server started on: {0}'.format((host, port)))
+        self.cmd_responder = CommandResponder(host, port, self.template, self.template_directory)
         self.cmd_responder.httpd.allow_reuse_address = True
         self.server_port = self.cmd_responder.server_port
-
-    def start(self):
-        if self.cmd_responder:
-            logger.info('HTTP server started on: {0}'.format((self.host, self.port)))
-            self.cmd_responder.serve_forever()
+        self.cmd_responder.serve_forever()
 
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
-
-    def shutdown(self):
-        if self.cmd_responder:
-            self.cmd_responder.httpd.shutdown()

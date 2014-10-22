@@ -20,6 +20,7 @@ gevent.monkey.patch_all()
 
 import unittest
 import datetime
+from collections import namedtuple
 
 from lxml import etree
 import gevent
@@ -36,22 +37,18 @@ class TestBase(unittest.TestCase):
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
 
-        self.http_server = web_server.HTTPServer('127.0.0.1',
-                                                 0,
-                                                 'conpot/templates/default.xml',
-                                                 'conpot/templates/www/default/',)
-        # get the assigned ephemeral port for http
-        self.http_port = self.http_server.server_port
-        self.http_worker = gevent.spawn(self.http_server.start)
-
+        args = namedtuple('FakeArgs', '')
+        self.http_server = web_server.HTTPServer('conpot/templates/default/http/http.xml',
+                                                 'conpot/templates/default/http/',
+                                                 args)
+        self.http_worker = gevent.spawn(self.http_server.start, '127.0.0.1', 0)
+        gevent.sleep(0.5)
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default.xml')
+        self.databus.initialize('conpot/templates/default/template.xml')
 
     def tearDown(self):
-        self.http_server.cmd_responder.httpd.shutdown()
-        self.http_server.cmd_responder.httpd.server_close()
-
+        self.http_server.stop()
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
@@ -59,7 +56,7 @@ class TestBase(unittest.TestCase):
         """
         Objective: Test if http service delivers data on request
         """
-        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_port))
+        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_server.server_port))
         self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
 
     def test_http_backend_databus(self):
@@ -67,17 +64,17 @@ class TestBase(unittest.TestCase):
         Objective: Test if http backend is able to retrieve data from databus
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/template.xml')
 
         # retrieve reference value from configuration
-        sysName = dom.xpath('//conpot_template/core/databus/key_value_mappings/key[@name="sysName"]/value')
+        sysName = dom.xpath('//core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
             print sysName
             assert_reference = sysName[0].xpath('./text()')[0][1:-1]
         else:
             assert_reference = None
         if assert_reference is not None:
-            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_databus.html".format(self.http_port))
+            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_databus.html".format(self.http_server.server_port))
             self.assertIn(assert_reference, ret.text,
                           "Could not find databus entity 'sysName' (value '{0}') in output.".format(assert_reference))
         else:
@@ -88,17 +85,17 @@ class TestBase(unittest.TestCase):
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default.xml')
+        dom = etree.parse('conpot/templates/default/http/http.xml')
 
         # check for proper tarpit support
-        tarpit = dom.xpath('//conpot_template/protocols/http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
+        tarpit = dom.xpath('//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
 
         if tarpit:
             tarpit_delay = tarpit[0].xpath('./text()')[0]
 
             # requesting file via HTTP along with measuring the timedelta
             dt_req_start = datetime.datetime.now()
-            requests.get("http://127.0.0.1:{0}/tests/unittest_tarpit.html".format(self.http_port))
+            requests.get("http://127.0.0.1:{0}/tests/unittest_tarpit.html".format(self.http_server.server_port))
             dt_req_delta = datetime.datetime.now() - dt_req_start
 
             # check if the request took at least the expected delay to be processed
@@ -114,5 +111,5 @@ class TestBase(unittest.TestCase):
         """
         Objective: Test if http subselect triggers work correctly
         """
-        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(self.http_port))
+        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(self.http_server.server_port))
         self.assertIn('SUCCESSFUL', ret.text, "Trigger missed. An unexpected page was delivered.")

@@ -42,7 +42,7 @@ class S7(object):
 
         # maps valid pdu codes to name
         self.pdu_mapping = {0x01: set('request_pdu'),
-                            0x02: set('know_but_unindentified_pdu'),
+                            0x02: set('known_but_unindentified_pdu'),
                             0x03: set('response_pdu'),
                             0x07: set('system_status_list')}
 

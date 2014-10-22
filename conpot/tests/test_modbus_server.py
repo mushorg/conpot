@@ -20,6 +20,8 @@ gevent.monkey.patch_all()
 
 import unittest
 from datetime import datetime
+from collections import namedtuple
+
 
 from gevent.queue import Queue
 from gevent.server import StreamServer
@@ -41,8 +43,9 @@ class TestBase(unittest.TestCase):
         conpot_core.get_sessionManager().purge_sessions()
 
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default.xml')
-        modbus = modbus_server.ModbusServer('conpot/templates/default.xml', timeout=2)
+        self.databus.initialize('conpot/templates/default/template.xml')
+        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
+        modbus = modbus_server.ModbusServer('conpot/templates/default/modbus/modbus.xml', 'none', args, timeout=2)
         self.modbus_server = StreamServer(('127.0.0.1', 0), modbus.handle)
         self.modbus_server.start()
 
