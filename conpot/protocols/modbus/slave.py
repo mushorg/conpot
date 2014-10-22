@@ -79,7 +79,10 @@ class MBSlave(Slave):
                     raise ModbusInvalidRequestError("Function %d can not be broadcasted" % self.function_code)
 
                 # execute the corresponding function
-                response_pdu = self._fn_code_map[self.function_code](request_pdu)
+                try:
+                    response_pdu = self._fn_code_map[self.function_code](request_pdu)
+                except struct.error:
+                    raise ModbusError(exception_code=3)
                 if response_pdu:
                     if broadcast:
                         # not really sure whats going on here - better log it!
