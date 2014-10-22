@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class KamstrupManagementServer(object):
-    def __init__(self, template, timeout=0):
+    def __init__(self, template, template_directory, args, timeout=0):
         self.template = template
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
@@ -63,8 +63,8 @@ class KamstrupManagementServer(object):
 
         sock.close()
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('Kamstrup management protocol server started on: {0}'.format(connection))
-        return server
+        server.start()

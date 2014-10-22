@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ModbusServer(modbus.Server):
 
-    def __init__(self, template, timeout=5):
+    def __init__(self, template, template_directory, args, timeout=5):
 
         self.timeout = timeout
         databank = slave_db.SlaveBase(template)
@@ -87,8 +87,8 @@ class ModbusServer(modbus.Server):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('Modbus server started on: {0}'.format(connection))
-        return server
+        server.start()

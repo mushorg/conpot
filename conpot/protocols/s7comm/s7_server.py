@@ -35,10 +35,11 @@ logger = logging.getLogger(__name__)
 
 
 class S7Server(object):
-    def __init__(self, template):
+    def __init__(self, template, template_directory, args):
 
         self.timeout = 5
         self.ssl_lists = {}
+        self.server = None
         S7.ssl_lists = self.ssl_lists
 
         dom = etree.parse(template)
@@ -170,8 +171,11 @@ class S7Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
-    def get_server(self, host, port):
+    def start(self, host, port):
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
+        self.server = StreamServer(connection, self.handle)
         logger.info('S7Comm server started on: {0}'.format(connection))
-        return server
+        self.server.start()
+
+    def stop(self):
+        self.server.stop()
