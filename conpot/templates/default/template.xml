@@ -43,10 +43,10 @@
             <key name="memoryModbusSlave1BlockB">
                 <value type="value">[random.randint(0,1) for b in range(0,32)]</value>
             </key>
-            <key name="memoryModbusSlave1BlockC">
+            <key name="memoryModbusSlave2BlockC">
                 <value type="value">[random.randint(0,1) for b in range(0,8)]</value>
             </key>
-            <key name="memoryModbusSlave1BlockD">
+            <key name="memoryModbusSlave2BlockD">
                 <value type="value">[0 for b in range(0,32)]</value>
             </key>
             <key name="Copyright">

@@ -79,7 +79,10 @@ class MBSlave(Slave):
                     raise ModbusInvalidRequestError("Function %d can not be broadcasted" % self.function_code)
 
                 # execute the corresponding function
-                response_pdu = self._fn_code_map[self.function_code](request_pdu)
+                try:
+                    response_pdu = self._fn_code_map[self.function_code](request_pdu)
+                except struct.error:
+                    raise ModbusError(exception_code=3)
                 if response_pdu:
                     if broadcast:
                         # not really sure whats going on here - better log it!
@@ -95,16 +98,16 @@ class MBSlave(Slave):
 
     def add_block(self, block_name, block_type, starting_address, size):
         """Add a new block identified by its name"""
-        with self._data_lock: # thread-safe
+        with self._data_lock:  # thread-safe
             if size <= 0:
-                raise InvalidArgumentError, "size must be a positive number"
+                raise InvalidArgumentError("size must be a positive number")
             if starting_address < 0:
-                raise InvalidArgumentError, "starting address must be zero or positive number"
-            if self._blocks.has_key(block_name):
-                raise DuplicatedKeyError, "Block %s already exists. " % (block_name)
+                raise InvalidArgumentError("starting address must be zero or positive number")
+            if block_name in self._blocks:
+                raise DuplicatedKeyError("Block %s already exists. " % block_name)
 
-            if not self._memory.has_key(block_type):
-                raise InvalidModbusBlockError, "Invalid block type %d" % (block_type)
+            if not block_type in self._memory:
+                raise InvalidModbusBlockError("Invalid block type %d" % block_type)
 
             # check that the new block doesn't overlap an existing block
             # it means that only 1 block per type must correspond to a given address
