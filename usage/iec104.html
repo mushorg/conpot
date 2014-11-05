@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installation &mdash; Conpot 0.3.1 documentation</title>
+    <title>IEC 104 &mdash; Conpot 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -23,9 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.3.1 documentation" href="../index.html" />
-    <link rel="next" title="Ubuntu 12.04 LTS" href="ubuntu.html" />
-    <link rel="prev" title="Welcome to Conpot’s documentation!" href="../index.html" /> 
+    <link rel="top" title="Conpot 0.3.1 documentation" href="../index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,12 +32,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="../index.html" title="Welcome to Conpot’s documentation!"
-             accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -49,25 +41,20 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p>Basics instruction on how to install Conpot</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="ubuntu.html">Ubuntu 12.04 LTS</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ubuntu.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ubuntu.html#basic-configuration">Basic configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ubuntu.html#example-usage">Example usage</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="debian.html">Debian</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="debian.html#tested-versions">Tested Versions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="debian.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="debian.html#basic-configuration">Basic configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="debian.html#example-usage">Example usage</a></li>
-</ul>
-</li>
-</ul>
+  <div class="section" id="iec-104">
+<h1>IEC 104<a class="headerlink" href="#iec-104" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>clone <a class="reference external" href="https://github.com/vlet/iec104">https://github.com/vlet/iec104</a></p>
+<p>Install Event::Lib :</p>
+<p>Get <a class="reference external" href="http://search.cpan.org/~vparseval/Event-Lib-1.03/">http://search.cpan.org/~vparseval/Event-Lib-1.03/</a> and install patches:</p>
+<p><a class="reference external" href="https://rt.cpan.org/Public/Ticket/Attachment/1136922/598341/lib-event.patch">https://rt.cpan.org/Public/Ticket/Attachment/1136922/598341/lib-event.patch</a>
+<a class="reference external" href="https://rt.cpan.org/Public/Bug/Display.html?id=67230">https://rt.cpan.org/Public/Bug/Display.html?id=67230</a></p>
+<p>Install Event::Lib : perl Makefile.PL; make; make test; make install</p>
+<p>Install missing CPAN module: perl -MCPAN -e &#8216;install Date::Manip&#8217;</p>
+<p>Install Net::IEC104 : perl Makefile.PL; make; make test; make install</p>
+<p>Get client and server examples from here: <a class="reference external" href="https://github.com/vlet/iec104/blob/master/lib/Net/IEC104.pm#L1229">https://github.com/vlet/iec104/blob/master/lib/Net/IEC104.pm#L1229</a>
+Change slave/server port to 2405 and set up the proxy in conpot:</p>
 </div>
 </div>
 
@@ -77,15 +64,17 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="../index.html"
-                        title="previous chapter">Welcome to Conpot&#8217;s documentation!</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="ubuntu.html"
-                        title="next chapter">Ubuntu 12.04 LTS</a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">IEC 104</a><ul>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+</ul>
+</li>
+</ul>
+
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../_sources/installation/index.txt"
+    <li><a href="../_sources/usage/iec104.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -111,12 +100,6 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="../index.html" title="Welcome to Conpot’s documentation!"
-             >previous</a> |</li>
         <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li> 
       </ul>
     </div>

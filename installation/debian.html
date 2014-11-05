@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Debian &mdash; Conpot 0.2.2 documentation</title>
+    <title>Debian &mdash; Conpot 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.2.2',
+        VERSION:     '0.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.2.2 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.3.1 documentation" href="../index.html" />
     <link rel="up" title="Installation" href="index.html" />
     <link rel="next" title="Usage" href="../usage/index.html" />
     <link rel="prev" title="Ubuntu 12.04 LTS" href="ubuntu.html" /> 
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Installation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -74,11 +74,24 @@ pip install argparse</pre>
 <div class="highlight-python"><pre>wget $package_url
 dpkg -i $package_name</pre>
 </div>
+<p>Alternatively, add &#8220;non-free&#8221; to the /etc/apt/sources.list</p>
+<div class="highlight-python"><pre>deb http://ftp.nl.debian.org/debian squeeze main non-free</pre>
+</div>
+<p>And do an</p>
+<div class="highlight-python"><pre>apt-get update</pre>
+</div>
+<p>followed by</p>
+<div class="highlight-python"><pre>apt-get install snmp-mibs-downloader</pre>
+</div>
 <p>The stable version of Conpot can be downloaded from PyPI:</p>
 <div class="highlight-python"><pre>pip install conpot</pre>
 </div>
-<p>The development version can be cloned from github:</p>
+<p>The development version can be cloned from github - but we need a modified modbus-tk first.</p>
 <div class="highlight-python"><pre>cd /opt
+git clone https://github.com/glastopf/modbus-tk.git
+cd modbus-tk
+python setup.py install
+cd ..
 git clone https://github.com/glastopf/conpot.git
 cd conpot
 python setup.py install</pre>
@@ -192,7 +205,7 @@ Project. The fetch_public_ip option enables fetching the honeypot public ip addr
         <li class="right" >
           <a href="ubuntu.html" title="Ubuntu 12.04 LTS"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Installation</a> &raquo;</li> 
       </ul>
     </div>

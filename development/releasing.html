@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Releasing Conpot &mdash; Conpot 0.2.2 documentation</title>
+    <title>Releasing Conpot &mdash; Conpot 0.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.2.2',
+        VERSION:     '0.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <link rel="top" title="Conpot 0.2.2 documentation" href="../index.html" />
+    <link rel="top" title="Conpot 0.3.1 documentation" href="../index.html" />
     <link rel="up" title="Development" href="index.html" />
     <link rel="next" title="Frequently Asked Questions" href="../faq.html" />
     <link rel="prev" title="Guidelines" href="guidelines.html" /> 
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="guidelines.html" title="Guidelines"
              accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" accesskey="U">Development</a> &raquo;</li> 
       </ul>
     </div>  
@@ -64,27 +64,12 @@
 </pre></div>
 </div>
 </div>
-<div class="section" id="check-usage">
-<h2>Check Usage<a class="headerlink" href="#check-usage" title="Permalink to this headline">¶</a></h2>
-<p>Run the server to see if he loads properly.</p>
-<div class="highlight-python"><pre>python conpot</pre>
-</div>
-</div>
-<div class="section" id="setup-py">
-<h2>Setup.py<a class="headerlink" href="#setup-py" title="Permalink to this headline">¶</a></h2>
-<p>Bump the version number in conpot/__init__.py before tagging:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">version</span><span class="o">=</span><span class="s">&#39;$VERSION_NUMBER$&#39;</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="tagging-and-pushing">
 <h2>Tagging and Pushing<a class="headerlink" href="#tagging-and-pushing" title="Permalink to this headline">¶</a></h2>
 <p>Commit all the changes you want to have in the tag.
-Make sure to add a git tag before making a new release:</p>
-<div class="highlight-python"><pre>git tag -a $VERSION_NUMBER$
-git push --tag</pre>
+Travis CI has been configured to deploy when it encounters a tag matching the regex</p>
+<div class="highlight-python"><pre>^Release_\d{1,}\.\d{1,}\.\d{1,}</pre>
 </div>
-<p>$VERSION_NUMBER$ should be latest pypi version +1</p>
 <div class="section" id="mess-ups">
 <h3>Mess ups<a class="headerlink" href="#mess-ups" title="Permalink to this headline">¶</a></h3>
 <p>If you fucked up a tag, you can fix it using the following procedure:</p>
@@ -127,8 +112,6 @@ Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
 <li><a class="reference internal" href="#">Releasing Conpot</a><ul>
 <li><a class="reference internal" href="#update-readme">Update Readme</a></li>
 <li><a class="reference internal" href="#check-tests">Check Tests</a></li>
-<li><a class="reference internal" href="#check-usage">Check Usage</a></li>
-<li><a class="reference internal" href="#setup-py">Setup.py</a></li>
 <li><a class="reference internal" href="#tagging-and-pushing">Tagging and Pushing</a><ul>
 <li><a class="reference internal" href="#mess-ups">Mess ups</a></li>
 </ul>
@@ -182,7 +165,7 @@ Create new release on PyPI and add PKG-INFO to new release. Upload the .tgz</p>
         <li class="right" >
           <a href="guidelines.html" title="Guidelines"
              >previous</a> |</li>
-        <li><a href="../index.html">Conpot 0.2.2 documentation</a> &raquo;</li>
+        <li><a href="../index.html">Conpot 0.3.1 documentation</a> &raquo;</li>
           <li><a href="index.html" >Development</a> &raquo;</li> 
       </ul>
     </div>

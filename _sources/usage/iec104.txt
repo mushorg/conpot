@@ -1,0 +1,41 @@
+=======
+IEC 104
+=======
+
+Setup
+-----
+
+clone https://github.com/vlet/iec104
+
+Install Event::Lib :
+
+Get http://search.cpan.org/~vparseval/Event-Lib-1.03/ and install patches:
+
+https://rt.cpan.org/Public/Ticket/Attachment/1136922/598341/lib-event.patch
+https://rt.cpan.org/Public/Bug/Display.html?id=67230
+
+.. code-block::
+
+    --- a/Lib.xs    2007-07-29 15:02:37.000000000 +0400
+    +++ b/Lib.xs    2014-09-22 16:04:58.000000000 +0400
+    @@ -942,7 +942,7 @@
+
+         gettimeofday(&now, NULL);
+
+    -    if (!evtimer_pending(&args->ev, &tv))
+    +    if (!evtimer_initialized(&args->ev) || !evtimer_pending(&args->ev, &tv))
+        XSRETURN_NO;
+
+         if (tv.tv_sec == 0 && tv.tv_usec == 0)
+
+
+Install Event::Lib : perl Makefile.PL; make; make test; make install
+
+Install missing CPAN module: perl -MCPAN -e 'install Date::Manip'
+
+Install Net::IEC104 : perl Makefile.PL; make; make test; make install
+
+
+Get client and server examples from here: https://github.com/vlet/iec104/blob/master/lib/Net/IEC104.pm#L1229
+Change slave/server port to 2405 and set up the proxy in conpot:
+
