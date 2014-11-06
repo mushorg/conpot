@@ -393,11 +393,11 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 relrqfilename = rqfilename
 
             try:
-                with open(os.path.join(docpath, 'htdocs', relrqfilename), 'rb') as f:
+                with open(os.path.join(docpath, 'http/htdocs', relrqfilename), 'rb') as f:
                     payload = f.read()
 
             except IOError as e:
-                if not os.path.isdir(os.path.join(docpath, 'htdocs', relrqfilename)):
+                if not os.path.isdir(os.path.join(docpath, 'http/htdocs', relrqfilename)):
                     logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
