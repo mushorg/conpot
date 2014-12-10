@@ -48,7 +48,8 @@ class LogWorker(object):
         self.taxii_logger = None
 
         if config.getboolean('sqlite', 'enabled'):
-            self.sqlite_logger = SQLiteLogger()
+            sensorid = config.get('common', 'sensorid')
+            self.sqlite_logger = SQLiteLogger(sensorid)
 
         if config.getboolean('mysql', 'enabled'):
             host = config.get('mysql', 'host')

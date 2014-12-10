@@ -38,16 +38,18 @@ class SQLiteLogger(object):
             wanted_gid = grp.getgrnam(gid_name)[2]
         os.chown(path, wanted_uid, wanted_gid)
 
-    def __init__(self, db_path="logs/conpot.db"):
+    def __init__(self, sensorid, db_path="logs/conpot.db"):
         self._chown_db(db_path)
         self.conn = sqlite3.connect(db_path)
         self._create_db()
+        self.sensorid = sensorid
 
     def _create_db(self):
         cursor = self.conn.cursor()
         cursor.execute("""CREATE TABLE IF NOT EXISTS events
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sensorid TEXT,
                 session TEXT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 remote TEXT,
@@ -58,8 +60,8 @@ class SQLiteLogger(object):
 
     def log(self, event):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
-                       (str(event["id"]), str(event["remote"]), event['data_type'],
+        cursor.execute("INSERT INTO events(sensorid, session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?, ?)",
+                       (str(self.sensorid), str(event["id"]), str(event["remote"]), event['data_type'],
                         event["data"].get('request'), event["data"].get('response'))
         )
         self.conn.commit()
