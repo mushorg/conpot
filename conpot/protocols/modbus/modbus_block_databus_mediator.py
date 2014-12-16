@@ -3,10 +3,10 @@ from modbus_tk.hooks import call_hooks
 import conpot.core as conpot_core
 
 
-class ModbusBlockDatabusMediator:
+class ModbusBlockDatabusMediator(object):
     """This class represents the values for a range of addresses"""
 
-    def __init__(self, databus_key, starting_address, size):
+    def __init__(self, databus_key, starting_address):
         """
         Constructor: defines the address range and creates the array of values
         """

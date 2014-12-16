@@ -23,12 +23,17 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCommand(object):
+    def __init__(self):
+        self.HELP_MESSAGE = ''
+        self.CMD_OUTPUT = ''
+
     INVALID_PARAMETER = (
         "\r\n"
         "? Invalid parameter.\r\n"
         "Try 'H cmd' for specific help.\r\n"
         " Ie: H !SC\r\n"
     )
+
 
     def help(self):
         return self.HELP_MESSAGE

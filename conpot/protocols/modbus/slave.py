@@ -106,7 +106,7 @@ class MBSlave(Slave):
             if block_name in self._blocks:
                 raise DuplicatedKeyError("Block %s already exists. " % block_name)
 
-            if not block_type in self._memory:
+            if block_type not in self._memory:
                 raise InvalidModbusBlockError("Invalid block type %d" % block_type)
 
             # check that the new block doesn't overlap an existing block
@@ -124,4 +124,4 @@ class MBSlave(Slave):
             # if the block is ok: register it
             self._blocks[block_name] = (block_type, starting_address)
             # add it in the 'per type' shortcut
-            self._memory[block_type].insert(index, ModbusBlockDatabusMediator(block_name, starting_address, size))
+            self._memory[block_type].insert(index, ModbusBlockDatabusMediator(block_name, starting_address))
