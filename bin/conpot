@@ -65,17 +65,24 @@ def logo():
 """.format(conpot.__version__)
 
 
-def setup_logging(log_file):
+def setup_logging(log_file, verbose):
+    if verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
+
     log_format = logging.Formatter('%(asctime)-15s %(message)s')
-    root_logger = logging.getLogger()
     console_log = logging.StreamHandler()
-    console_log.setLevel(logging.DEBUG)
+    console_log.setLevel(log_level)
     console_log.setFormatter(log_format)
-    root_logger.addHandler(console_log)
-    logger.setLevel(logging.DEBUG)
+
+    logger.setLevel(log_level)
     file_log = logging.FileHandler(log_file)
     file_log.setFormatter(log_format)
-    file_log.setLevel(logging.DEBUG)
+    file_log.setLevel(log_level)
+
+    root_logger = logging.getLogger()
+    root_logger.addHandler(console_log)
     root_logger.addHandler(file_log)
 
 
@@ -137,9 +144,10 @@ def main():
                              "(must be compiled with build-pysnmp-mib)",
                         default=[]
                         )
+    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
-    setup_logging(args.logfile)
+    setup_logging(args.logfile, args.verbose)
 
     config = ConfigParser()
     if not os.path.isfile(args.config):
