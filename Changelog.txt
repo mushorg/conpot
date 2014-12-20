@@ -1,7 +1,7 @@
 Conpot 0.3.1 (release 2014-09-25)
-	* Added MySQL logging.
-	* Added Kamstrup managment protocol (telnet).
-	* Numerous bugfixes and minor enhancements.
+    * Added MySQL logging.
+    * Added Kamstrup managment protocol (telnet).
+    * Numerous bugfixes and minor enhancements.
 
 Conpot 0.3.0 (release 2014-08-10)
     * Moved all honeypot configuration to XML templates.
