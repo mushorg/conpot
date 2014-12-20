@@ -25,6 +25,7 @@ import gevent
 from gevent.server import StreamServer
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
+from conpot.helpers import fix_sslwrap
 
 import conpot
 from conpot.emulators.proxy import Proxy
@@ -52,6 +53,7 @@ class TestProxy(unittest.TestCase):
         mock_service.stop(1)
 
     def test_ssl_proxy(self):
+        fix_sslwrap()
         self.test_input = 'Hiya, this is a test'
         keyfile = os.path.join(package_directory, 'templates/default/ssl/ssl.key')
         certfile = os.path.join(package_directory, 'templates/default/ssl/ssl.crt')
