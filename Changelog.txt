@@ -1,3 +1,7 @@
+Conpot 0.4.0 (release 2015-01-03)
+    * Rework of template engine, templates are now specified as directories.
+    * Numerous bugfixes and minor enhancements.
+
 Conpot 0.3.1 (release 2014-09-25)
     * Added MySQL logging.
     * Added Kamstrup managment protocol (telnet).
