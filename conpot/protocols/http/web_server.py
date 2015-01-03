@@ -33,7 +33,7 @@ class HTTPServer(object):
 
     def start(self, host, port):
         logger.info('HTTP server started on: {0}'.format((host, port)))
-        self.cmd_responder = CommandResponder(host, port, self.template, os.path.join(self.template_directory, 'http')
+        self.cmd_responder = CommandResponder(host, port, self.template, os.path.join(self.template_directory, 'http'))
         self.cmd_responder.httpd.allow_reuse_address = True
         self.server_port = self.cmd_responder.server_port
         self.cmd_responder.serve_forever()
