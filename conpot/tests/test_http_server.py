@@ -39,7 +39,7 @@ class TestBase(unittest.TestCase):
 
         args = namedtuple('FakeArgs', '')
         self.http_server = web_server.HTTPServer('conpot/templates/default/http/http.xml',
-                                                 'conpot/templates/default/http/',
+                                                 'conpot/templates/default/',
                                                  args)
         self.http_worker = gevent.spawn(self.http_server.start, '127.0.0.1', 0)
         gevent.sleep(0.5)
