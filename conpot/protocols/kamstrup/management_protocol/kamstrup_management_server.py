@@ -36,6 +36,7 @@ class KamstrupManagementServer(object):
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1])
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
             sock.send(self.banner.format(
@@ -45,6 +46,7 @@ class KamstrupManagementServer(object):
                 request = sock.recv(1024)
                 if not request:
                     logger.info('Client disconnected. ({0})'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
                 logdata = {'request': request}
@@ -55,11 +57,13 @@ class KamstrupManagementServer(object):
                 gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
+                    session.add_event({'type': 'CONNECTION_LOST'})
                     break
                 sock.send(response)
 
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            session.add_event({'type': 'CONNECTION_LOST'})
 
         sock.close()
 
