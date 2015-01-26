@@ -113,7 +113,7 @@ class TestBase(unittest.TestCase):
 
         #extract the generated logentry
         log_queue = conpot_core.get_sessionManager().log_queue
-        log_item = log_queue.get(True, 3)
+        log_item = log_queue.get(True, 2)
 
         self.assertIsInstance(log_item['timestamp'], datetime)
         self.assertTrue('data' in log_item)
