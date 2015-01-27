@@ -111,17 +111,21 @@ class TestBase(unittest.TestCase):
         #issue request to modbus server
         master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
 
-        #extract the generated logentry
+        #extract the generated logentries
         log_queue = conpot_core.get_sessionManager().log_queue
-        log_item = log_queue.get(True, 2)
 
-        self.assertIsInstance(log_item['timestamp'], datetime)
-        self.assertTrue('data' in log_item)
+        conn_log_item = log_queue.get(True, 2)
+        conn_expected_payload = {'type': 'NEW_CONNECTION'}
+        self.assertDictEqual(conn_expected_payload, conn_log_item['data'])
+
+        modbus_log_item = log_queue.get(True, 2)
+        self.assertIsInstance(modbus_log_item['timestamp'], datetime)
+        self.assertTrue('data' in modbus_log_item)
         # we expect session_id to be 36 characters long (32 x char, 4 x dashes)
-        self.assertTrue(len(str(log_item['id'])), log_item)
-        self.assertEqual('127.0.0.1', log_item['remote'][0])
-        self.assertEquals('modbus', log_item['data_type'])
+        self.assertTrue(len(str(modbus_log_item['id'])), modbus_log_item)
+        self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
+        self.assertEquals('modbus', modbus_log_item['data_type'])
         #testing the actual modbus data
-        expected_payload = {'function_code': 1, 'slave_id': 1,'request': '000100000006010100010080',
+        modbus_expected_payload = {'function_code': 1, 'slave_id': 1,'request': '000100000006010100010080',
                             'response': '0110ffffffffffffffffffffffffffffffff'}
-        self.assertDictEqual(expected_payload, log_item['data'])
+        self.assertDictEqual(modbus_expected_payload, modbus_log_item['data'])

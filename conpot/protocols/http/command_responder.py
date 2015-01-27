@@ -45,6 +45,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         log_dict = {'remote': addr,
                     'timestamp': datetime.utcnow(),
                     'data_type': 'http',
+                    'dst_port': self.server.server_port,
                     'data': {0: {'request': '{0} {1}: {2}'.format(version, request_type, request)}}}
 
         logger.info('{0} {1} request from {2}: {3}. {4}'.format(version, request_type, addr, request, session.id))

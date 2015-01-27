@@ -59,15 +59,18 @@ class ModbusServer(modbus.Server):
 
         self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
             while True:
                 request = sock.recv(7)
                 if not request:
                     logger.info('Client disconnected. ({0})'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_LOST'})
                     break
                 if request.strip().lower() == 'quit.':
                     logger.info('Client quit. ({0})'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_QUIT'})
                     break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
@@ -86,6 +89,7 @@ class ModbusServer(modbus.Server):
                     sock.sendall(response)
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            session.add_event({'type': 'CONNECTION_LOST'})
 
     def start(self, host, port):
         connection = (host, port)

@@ -65,12 +65,14 @@ class S7Server(object):
 
         self.start_time = time.time()
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
             while True:
 
                 data = sock.recv(4, socket.MSG_WAITALL)
                 if len(data) == 0:
+                    session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
                 _, _, length = unpack('!BBH', data[:4])
@@ -165,10 +167,13 @@ class S7Server(object):
                     else:
                         logger.debug(
                             'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type))
+                        session.add_event({'error': 'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type)})
                 else:
                     logger.debug('Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type))
+                    session.add_event({'error': 'Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type)})
 
         except socket.timeout:
+            session.add_event({'type': 'CONNECTION_LOST'})
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
 
     def start(self, host, port):

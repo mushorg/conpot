@@ -53,6 +53,7 @@ class KamstrupServer(object):
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_protocol', address[0], address[1])
         logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        session.add_event({'type': 'NEW_CONNECTION'})
 
         server_active = True
 
@@ -63,6 +64,7 @@ class KamstrupServer(object):
 
                 if not raw_request:
                     logger.info('Client disconnected. ({0})'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
                 for x in raw_request:
@@ -71,6 +73,7 @@ class KamstrupServer(object):
                 while True:
                     request = parser.get_request()
                     if not request:
+                        session.add_event({'type': 'CONNECTION_LOST'})
                         break
                     else:
                         logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
@@ -89,6 +92,7 @@ class KamstrupServer(object):
 
         except socket.timeout:
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            session.add_event({'type': 'CONNECTION_LOST'})
 
         sock.close()
 
