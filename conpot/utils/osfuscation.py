@@ -110,19 +110,20 @@ ECN_URGT_PTR = 0xF7F5
 #
 # nmap mapping to vendors /usr/share/nmap/nmap-mac-prefixes
 
-#os.system('ifconfig eth0 down')
-#os.system('ifconfig eth0 hw ether 00:1F:F8:FF:DE:A4')
-#os.system('ifconfig eth0 up')
+# os.system('ifconfig eth0 down')
+# os.system('ifconfig eth0 hw ether 00:1F:F8:FF:DE:A4')
+# os.system('ifconfig eth0 up')
 
 # Configure NFQUEUE target
 # Capture incoming packets and put in nfqueue 1
 os.system('iptables -A INPUT -j NFQUEUE --queue-num 0')
 
-# ----------------------------------------------------------
-# Defining the OS characteristics
-# Take the values from the Nmap fingerprint
-# ----------------------------------------------------------
-class OSPattern():
+
+class OSPattern(object):
+    """
+    Defining the OS characteristics
+    Take the values from the Nmap fingerprint
+    """
 
     TTL = 0x20
 
@@ -149,8 +150,8 @@ class OSPattern():
 
         SEQ_std_dev = math.trunc(round((2 ** (SP_mean/8))))
 
-        SEQ_MAX += (SEQ_std_dev/8);
-        SEQ_MIN -= (SEQ_std_dev/8);
+        SEQ_MAX += (SEQ_std_dev/8)
+        SEQ_MIN -= (SEQ_std_dev/8)
 
     # start value of SEQNR
     TCP_SEQ_NR_tmp = random.randint(1, 10)
@@ -162,7 +163,7 @@ class OSPattern():
     #  BI (broken increment)
     IP_ID_TI_CNT = 'I'				# SEQ - TI field
     IP_ID_CI_CNT = 'I'			    # T5-7 - CI field
-    IP_ID_II_CNT	= 'I'				# IE - II field
+    IP_ID_II_CNT = 'I'				# IE - II field
     IP_ID_tmp = 1
 
     # Timestamp in reply packets
@@ -247,14 +248,14 @@ class OSPattern():
     # S =^ same as from probes
     ICMP_CODE  = 'S'
 
-# ----------------------------------------------------------
-# BEGIN   -  Reverse CRC32 creation
-# Used for TCP Replies with specific payload to be returned
-# ----------------------------------------------------------
-# https://github.com/StalkR/misc/blob/master/crypto/crc32.py
-# ----------------------------------------------------------
 
 def _build_crc_tables(crc32_table, crc32_reverse):
+    """
+    Reverse CRC32 creation
+    Used for TCP Replies with specific payload to be returned
+    ----------------------------------------------------------
+    https://github.com/StalkR/misc/blob/master/crypto/crc32.py
+    """
     for i in range(256):
         fwd = i
         rev = i << 24
@@ -272,7 +273,7 @@ def _build_crc_tables(crc32_table, crc32_reverse):
                 rev <<= 1
             crc32_reverse[i] = rev
 
-    return  crc32_table, crc32_reverse
+    return crc32_table, crc32_reverse
 
 
 def crc32(s, crc32_table):
@@ -281,20 +282,21 @@ def crc32(s, crc32_table):
         crc = (crc >> 8) ^ crc32_table[crc & 0xff ^ ord(c)]
     return crc ^ 0xffffffff
 
+
 def reverse_crc(wanted_crc):
-    str = " "
-    pos = len(str)
+    s = " "
+    pos = len(s)
     crc32_table, crc32_reverse = [0] * 256, [0] * 256
     crc32_table, crc32_reverse = _build_crc_tables(crc32_table, crc32_reverse)
 
     # forward calculation of CRC up to pos, sets current forward CRC state
     fwd_crc = 0xffffffff
-    for c in str[:pos]:
+    for c in s[:pos]:
         fwd_crc = (fwd_crc >> 8) ^ crc32_table[fwd_crc & 0xff ^ ord(c)]
 
     # backward calculation of CRC up to pos, sets wanted backward CRC state
     bkd_crc = wanted_crc ^ 0xffffffff
-    for c in str[pos:][::-1]:
+    for c in s[pos:][::-1]:
         bkd_crc = ((bkd_crc << 8) & 0xffffffff) ^ crc32_reverse[bkd_crc >> 24]
         bkd_crc ^= ord(c)
 
@@ -303,21 +305,18 @@ def reverse_crc(wanted_crc):
         bkd_crc = ((bkd_crc << 8) & 0xffffffff) ^ crc32_reverse[bkd_crc >> 24]
         bkd_crc ^= ord(c)
 
-    res = str[:pos] + struct.pack('<L', bkd_crc) + str[pos:]
+    res = s[:pos] + struct.pack('<L', bkd_crc) + s[pos:]
 
     assert(crc32(res, crc32_table) == wanted_crc)
     return res
 
 
-#   END   -   Reverse CRC32 creation
-# ----------------------------------------------------------
-
-
-# ----------------------------------------------------------
-# IP packet
-# ----------------------------------------------------------
-# setting the IP fields
-class ReplyPacket():
+class ReplyPacket(object):
+    """
+    IP packet
+    ----------------------------------------------------------
+    Setting the IP fields
+    """
     def __init__(self, pkt, OSPattern):
         self.ip = IP()
         self.ip.src = pkt[IP].dst
@@ -349,11 +348,13 @@ class ReplyPacket():
         else:
             self.ip.id = ip_id
 
-# ----------------------------------------------------------
-# TCP packet
-# ----------------------------------------------------------
-# setting the TCP fields
+
 class TCPPacket(ReplyPacket):
+    """
+    TCP packet
+    ----------------------------------------------------------
+    setting the TCP fields
+    """
     def __init__(self, pkt, OSPattern):
         ReplyPacket.__init__(self, pkt, OSPattern)
         self.pkt = pkt
@@ -361,28 +362,26 @@ class TCPPacket(ReplyPacket):
         self.tcp.sport = pkt[TCP].dport
         self.tcp.dport = pkt[TCP].sport
 
-# set TCP header fields
-# ----------------------
     def set_TCP_Flags(self, flags):
+        # set TCP header fields
         self.tcp.flags = flags
 
     def set_TCP_Options(self, options):
         self.tcp.options = options
 
-    # set the initial SQNR
     def set_IN_SEQ_NR(self, seqn):
-
-        if(seqn == 'O'):
+        # set the initial SQNR
+        if seqn == 'O':
             # The function of the calculation of the TCP Sequence Number belongs to honed
             # https://github.com/DataSoft/Honeyd/blob/master/personality.c   -  line 521 ff
 
             if self.OSPattern.GCD > 0 and self.OSPattern.GCD < 9:
-                temp = random.randint(0, self.OSPattern.SEQ_std_dev);
+                temp = random.randint(0, self.OSPattern.SEQ_std_dev)
 
                 ISN_delta = self.OSPattern.SEQNr_mean
 
                 while((self.OSPattern.SEQ_MAX < (self.OSPattern.SEQNr_mean + temp)) or (self.OSPattern.SEQ_MIN > (self.OSPattern.SEQNr_mean + temp))):
-                    temp = random.randint(0, self.OSPattern.SEQ_std_dev);
+                    temp = random.randint(0, self.OSPattern.SEQ_std_dev)
 
                 ISN_delta += temp
 
@@ -393,10 +392,10 @@ class TCPPacket(ReplyPacket):
                 self.OSPattern.TCP_SEQ_NR_tmp = (self.OSPattern.TCP_SEQ_NR_tmp + self.OSPattern.SEQNr_mean)%2**32
                 self.tcp.seq = self.OSPattern.TCP_SEQ_NR_tmp
 
-        elif(seqn == 'A'):
+        elif seqn == 'A':
             self.tcp.seq = self.pkt[TCP].ack
 
-        elif(seqn == 'A+'):
+        elif seqn == 'A+':
             self.tcp.seq = self.pkt[TCP].ack + 1
 
         else:
@@ -434,10 +433,11 @@ class TCPPacket(ReplyPacket):
         #print "Sending back a faked reply(TCP) to %s" % self.ip.dst
         send(self.ip/self.tcp, verbose=0)
 
-# ----------------------------------------------------------
-# ICMP packet
-# ----------------------------------------------------------
+
 class ICMPPacket(ReplyPacket):
+    """
+    ICMP packet
+    """
     def __init__(self, pkt, OSPattern, type):
         ReplyPacket.__init__(self, pkt, OSPattern)
         self.icmp = ICMP()
@@ -471,13 +471,14 @@ class ICMPPacket(ReplyPacket):
     def send_PUR_packet(self):
             send(self.ip/self.icmp/self.pkt, verbose=0)
 
-# ----------------------------------------------------------
-# send TCP reply packet
-# ----------------------------------------------------------
-#	following parameter are optional:
-#		ipid, seqn, ack,
-#
+
 def send_TCP_reply(pkt, OSPattern, O_W_DF_RD_PARAM, flags, ipid = 0, seqn = 'O', ack = 'S+'):
+    """
+    send TCP reply packet
+    ----------------------------------------------------------
+    following parameter are optional:
+        ipid, seqn, ack,
+    """
     # create reply packet and set flags
     tcp_rpl = TCPPacket(pkt, OSPattern)
 
@@ -503,10 +504,10 @@ def send_TCP_reply(pkt, OSPattern, O_W_DF_RD_PARAM, flags, ipid = 0, seqn = 'O',
     tcp_rpl.send_packet()
 
 
-# ----------------------------------------------------------
-# send ICMP reply packet
-# ----------------------------------------------------------
 def send_ICMP_reply(pkt, ICMP_type, OSPattern, O_W_DF_RD_PARAM):
+    """
+    send ICMP reply packet
+    """
     # create reply packet and set flags
     icmp_rpl = ICMPPacket(pkt, OSPattern, ICMP_type)
 
@@ -536,27 +537,26 @@ def send_ICMP_reply(pkt, ICMP_type, OSPattern, O_W_DF_RD_PARAM):
         # send ICMP Port Unreachable
         icmp_rpl.send_PUR_packet()
 
-# ----------------------------------------------------------
-# send the packet from NFQUEUE without modification
-# ----------------------------------------------------------
+
 def forward_packet(nfq_packet):
+    # send the packet from NFQUEUE without modification
     nfq_packet.set_verdict(nfqueue.NF_ACCEPT)
 
-# ----------------------------------------------------------
-# drop the packet from NFQUEUE
-# ----------------------------------------------------------
+
 def drop_packet(nfq_packet):
+    # drop the packet from NFQUEUE
     nfq_packet.set_verdict(nfqueue.NF_DROP)
 
-# ----------------------------------------------------------
-# Check if the packet is a Nmap probe
-# ----------------------------------------------------------
-#		IPflags and urgt_ptr are optional
-#
-#       return 1 if packet is a Nmap probe
 
 def check_TCP_Nmap_match(pkt, nfq_packet, options_2_cmp, TCP_wsz_flags, IP_flags = "no", urgt_ptr = 0):
-
+    """
+    # ----------------------------------------------------------
+    # Check if the packet is a Nmap probe
+    # ----------------------------------------------------------
+    #		IPflags and urgt_ptr are optional
+    #
+    #       return 1 if packet is a Nmap probe
+    """
     if pkt[TCP].window == TCP_wsz_flags['WSZ'] and pkt[TCP].flags == TCP_wsz_flags['FLGS'] and pkt[TCP].options == options_2_cmp:
         if IP_flags == "no":
             if urgt_ptr == 0:
@@ -570,10 +570,9 @@ def check_TCP_Nmap_match(pkt, nfq_packet, options_2_cmp, TCP_wsz_flags, IP_flags
             return 1
     return 0
 
-# ----------------------------------------------------------
-# Check TCP Probes
-# ----------------------------------------------------------
+
 def check_TCP_probes(pkt, nfq_packet, OSPattern):
+    # Check TCP Probes
 
     # calculate Timestamp for TCP header
     OSPattern.TCP_Timestamp_tmp += OSPattern.TCP_TS_CNT
@@ -652,11 +651,13 @@ def check_TCP_probes(pkt, nfq_packet, OSPattern):
         forward_packet(nfq_packet)
 
 
-# ----------------------------------------------------------
-# Identify the ICMP based probes
-# and reply with a faked packet if needed
-# ----------------------------------------------------------
 def check_ICMP_probes(pkt, nfq_packet, OSPattern):
+    """
+    # ----------------------------------------------------------
+    # Identify the ICMP based probes
+    # and reply with a faked packet if needed
+    # ----------------------------------------------------------
+    """
     if pkt[ICMP].type is 8:
 
         # Probe 1 + 2
@@ -673,11 +674,14 @@ def check_ICMP_probes(pkt, nfq_packet, OSPattern):
     else:
         forward_packet(nfq_packet)
 
-# ----------------------------------------------------------
-# Identify the UDP based probe
-# and reply with a faked reply if needed
-# ----------------------------------------------------------
+
 def check_UDP_probe(pkt, nfq_packet,  OSPattern):
+    """
+    # ----------------------------------------------------------
+    # Identify the UDP based probe
+    # and reply with a faked reply if needed
+    # ----------------------------------------------------------
+    """
     if pkt[IP].id == 0x1042 and pkt[UDP].payload.load[0] == "C" and pkt[UDP].payload.load[1] == "C" and pkt[UDP].payload.load[2] == "C":
         drop_packet(nfq_packet)
 
@@ -690,11 +694,14 @@ def check_UDP_probe(pkt, nfq_packet,  OSPattern):
     else:
         forward_packet(nfq_packet)
 
-# ----------------------------------------------------------
-# Do a separation according to the TCP/IP trasport layer
-# check if the packet is a nmap probe and send OS specific replies
-# ----------------------------------------------------------
-class process_pkt():
+
+class process_pkt(object):
+    """
+    # ----------------------------------------------------------
+    # Do a separation according to the TCP/IP trasport layer
+    # check if the packet is a nmap probe and send OS specific replies
+    # ----------------------------------------------------------
+    """
     def __init__(self, OSPattern):
         self.OSPattern = OSPattern
 
