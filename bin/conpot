@@ -33,6 +33,8 @@ from ConfigParser import ConfigParser
 import gevent
 from lxml import etree
 
+import oschameleon
+
 import conpot
 import conpot.core as conpot_core
 
@@ -70,6 +72,7 @@ def on_unhandled_greenlet_exception(dead_greenlet):
     logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
     sys.exit(1)
 
+
 def setup_logging(log_file, verbose):
     if verbose:
         log_level = logging.DEBUG
@@ -106,6 +109,10 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     new_gid_name = grp.getgrgid(os.getgid())[0]
 
     logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
+
+
+def root_process():
+    oschameleon.osfuscation.OSFuscation.run()
 
 
 def validate_template(xml_file, xsd_file):
@@ -313,18 +320,33 @@ def main():
     else:
             logger.info('No proxy template found. Service will remain unconfigured/stopped.')
 
-    # Wait for the services to bind ports before dropping privileges
-    gevent.sleep(5)
     # Only drop if running as root
     if os.getuid() == 0:
-        drop_privileges()
-    try:
-        if len(servers) > 0:
-            gevent.wait()
-    except KeyboardInterrupt:
-        logging.info('Stopping Conpot')
-        for server in servers:
-            server.stop()
+        pid = gevent.fork()
+        if pid == 0:
+            # Parent process, main Conpot execution.
+            # Wait for the services to bind ports before dropping privileges
+            gevent.sleep(5)
+            # Dropping root privileges of the parent process
+            drop_privileges()
+            try:
+                if len(servers) > 0:
+                    gevent.wait()
+            except KeyboardInterrupt:
+                logging.info('Stopping Conpot')
+                for server in servers:
+                    server.stop()
+        else:
+            # Child process, keeps running with root privileges (in order to clean up on shutdown)
+            root_greenlet = gevent.spawn(root_process)
+            # Wait for the child process to return (hopefully never)
+            try:
+                gevent.joinall([root_greenlet, ])
+            except KeyboardInterrupt:
+                # The parent process takes down the child process.
+                pass
+    else:
+        print('Conpot has to be executed as root.')
 
 if __name__ == "__main__":
     fix_sslwrap()

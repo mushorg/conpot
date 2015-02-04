@@ -16,3 +16,4 @@ enum
 hpfeeds
 modbus-tk
 scapy
+oschameleon
