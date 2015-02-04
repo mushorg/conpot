@@ -33,7 +33,7 @@ from ConfigParser import ConfigParser
 import gevent
 from lxml import etree
 
-import oschameleon
+import oschameleon.osfuscation
 
 import conpot
 import conpot.core as conpot_core
@@ -116,7 +116,7 @@ def root_process():
 
 
 def validate_template(xml_file, xsd_file):
-    xml_schema = etree.parse(xsd_file);
+    xml_schema = etree.parse(xsd_file)
     xsd = etree.XMLSchema(xml_schema)
     xml = etree.parse(xml_file)
     xsd.validate(xml)
