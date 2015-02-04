@@ -2,7 +2,7 @@ language: python
 python:
 - '2.7'
 virtualenv:
-  system_site_packages: false
+  system_site_packages: true
 before_install:
 - export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
 - REPO=`pwd`
@@ -25,7 +25,10 @@ script:
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 notifications:
   irc:
-  - irc.freenode.org#conpot-dev
+    channels:
+      - irc.freenode.org#conpot-dev
+    use_notice: true
+    skip_join: true
 deploy:
   provider: pypi
   user: Johnny.Vestergaard
