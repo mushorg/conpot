@@ -324,6 +324,15 @@ def main():
     if os.getuid() == 0:
         pid = gevent.fork()
         if pid == 0:
+            # Child process, keeps running with root privileges (in order to clean up on shutdown)
+            root_greenlet = gevent.spawn(root_process)
+            # Wait for the child process to return (hopefully never)
+            try:
+                gevent.joinall([root_greenlet, ])
+            except KeyboardInterrupt:
+                # The parent process takes down the child process.
+                pass
+        else:
             # Parent process, main Conpot execution.
             # Wait for the services to bind ports before dropping privileges
             gevent.sleep(5)
@@ -336,15 +345,6 @@ def main():
                 logging.info('Stopping Conpot')
                 for server in servers:
                     server.stop()
-        else:
-            # Child process, keeps running with root privileges (in order to clean up on shutdown)
-            root_greenlet = gevent.spawn(root_process)
-            # Wait for the child process to return (hopefully never)
-            try:
-                gevent.joinall([root_greenlet, ])
-            except KeyboardInterrupt:
-                # The parent process takes down the child process.
-                pass
     else:
         print('Conpot has to be executed as root.')
 
