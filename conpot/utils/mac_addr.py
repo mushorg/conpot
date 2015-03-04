@@ -36,14 +36,17 @@ def check_mac(iface, addr):
 
 
 def change_mac(config=None, iface=None, mac=None):
-    iface = config.get('mac', 'iface')
-    mac = config.get('mac', 'addr')
+    if config:
+        iface = config.get('mac', 'iface')
+        mac = config.get('mac', 'addr')
     subprocess.check_call(["spoof-mac.py", "set", "%s" % mac, "%s" % iface])
     if check_mac(iface, mac):
         logger.info('MAC address of interface {0} changed'
                     ' : {1}.'.format(iface, mac))
+        return True
     else:
         logger.warning('Could not change MAC address.')
+        return False
 
 if __name__ == "__main__":
     pass

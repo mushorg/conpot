@@ -31,13 +31,14 @@ class TestMacAddrUtil(unittest.TestCase):
         pass
 
     def test_mac(self):
-        randmac = ":".join(
-            ["%02x" % (random.randint(1, 255)) for i in range(6)])
-        s = subprocess.Popen(["spoof-mac.py", "list"], stdout=subprocess.PIPE)
-        line = re.findall(r'"[a-z]*[0-9]*"', s.stdout.readlines()[0])
-        iface = re.findall('"[0-z]*"', line)[1].replace('"', '')
-        mac_addr.change_mac(iface=iface, mac=randmac)
-        self.assertTrue(check_mac(iface, randmac) is True)
+        for i in range(5):
+                randmac = ":".join(
+                    ["%02x" % (random.randint(1, 255)) for i in range(6)])
+                s = subprocess.Popen(["spoof-mac.py", "list"], stdout=subprocess.PIPE)
+                iface = re.findall(r'"([A-Za-z0-9]*)"', s.stdout.readlines()[0])[1]
+                if mac_addr.change_mac(iface=iface, mac=randmac) is True:
+                    break
+        self.assertTrue(mac_addr.check_mac(iface, randmac) is True)
 
 if __name__ == '__main__':
     unittest.main()
