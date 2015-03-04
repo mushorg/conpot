@@ -34,7 +34,7 @@ class TestMacAddrUtil(unittest.TestCase):
         randmac = ":".join(
             ["%02x" % (random.randint(1, 255)) for i in range(6)])
         s = subprocess.Popen(["spoof-mac.py", "list"], stdout=subprocess.PIPE)
-        line = re.findall(r'"[a-z]*[0-9]*"', s.readlines()[0])
+        line = re.findall(r'"[a-z]*[0-9]*"', s.stdout.readlines()[0])
         iface = re.findall('"[0-z]*"', line)[1].replace('"', '')
         mac_addr.change_mac(iface=iface, mac=randmac)
         self.assertTrue(check_mac(iface, randmac) is True)
