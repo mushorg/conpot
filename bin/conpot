@@ -47,6 +47,7 @@ from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server im
 
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
+from conpot.utils import mac_addr
 
 
 logger = logging.getLogger()
@@ -236,7 +237,8 @@ def main():
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
-
+    if config.getboolean('change_mac_addr', 'enabled'):
+        mac_addr.change_mac(config=config)
     protocol_instance_mapping = (
         ('modbus', ModbusServer),
         ('s7comm', S7Server),
