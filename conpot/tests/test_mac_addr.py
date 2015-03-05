@@ -1,4 +1,4 @@
-# Copyright (C) 2014  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2014  Adarsh Dinesh <adarshdinesh@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,10 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-import random
 import conpot.utils.mac_addr
 import subprocess
-import re
 
 
 class TestMacAddrUtil(unittest.TestCase):
@@ -31,14 +29,16 @@ class TestMacAddrUtil(unittest.TestCase):
         pass
 
     def test_mac(self):
-        for i in range(5):
-                randmac = ":".join(
-                    ["%02x" % (random.randint(1, 255)) for i in range(6)])
-                s = subprocess.Popen(["spoof-mac.py", "list"], stdout=subprocess.PIPE)
-                iface = re.findall(r'"([A-Za-z0-9]*)"', s.stdout.readlines()[0])[1]
-                if mac_addr.change_mac(iface=iface, mac=randmac) is True:
-                    break
-        self.assertTrue(mac_addr.check_mac(iface, randmac) is True)
+        testmac = "00:de:ad:be:ef:00"
+        s = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
+        data = s.stdout.readlines()
+        for line in data:
+            if "Ethernet" in line:
+                break
+        iface = line.split()[0]
+
+        mac_addr.change_mac(iface=iface, mac=testmac)    
+        self.assertTrue(mac_addr.check_mac(iface, testmac) is True)
 
 if __name__ == '__main__':
     unittest.main()

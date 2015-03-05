@@ -1,4 +1,4 @@
-# Copyright (C) 2014  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2014  Adarsh Dinesh <adarshdinesh@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,19 +17,14 @@
 
 import logging
 import subprocess
-import re
 
 logger = logging.getLogger(__name__)
 
 
 def check_mac(iface, addr):
-    s = subprocess.Popen(["spoof-mac.py", "list"], stdout=subprocess.PIPE)
-    data = s.stdout.readlines()
-    for line in data:
-        if iface in line:
-            break
-    mac = re.search(r'([0-9a-f]{2}[:]){5}([0-9a-f]{2})', line, re.I).group()
-    if mac == addr:
+    s = subprocess.Popen(["ifconfig", iface], stdout=subprocess.PIPE)
+    data = s.stdout.read()
+    if addr in data:
         return True
     else:
         return False
@@ -37,16 +32,15 @@ def check_mac(iface, addr):
 
 def change_mac(config=None, iface=None, mac=None):
     if config:
-        iface = config.get('mac', 'iface')
-        mac = config.get('mac', 'addr')
-    subprocess.check_call(["spoof-mac.py", "set", "%s" % mac, "%s" % iface])
+        iface = config.get('change_mac_addr', 'iface')
+        mac = config.get('change_mac_addr', 'addr')
+
+    subprocess.Popen(["/etc/init.d/networking", "stop"])
+    subprocess.Popen(["ifconfig", iface, "hw", "ether", mac])
+    subprocess.Popen(["/etc/init.d/networking", "start"])
+
     if check_mac(iface, mac):
-        logger.info('MAC address of interface {0} changed'
-                    ' : {1}.'.format(iface, mac))
-        return True
+        logger.info('MAC address of'
+            ' interface {0} changed : {1}.'.format(iface, mac))
     else:
         logger.warning('Could not change MAC address.')
-        return False
-
-if __name__ == "__main__":
-    pass
