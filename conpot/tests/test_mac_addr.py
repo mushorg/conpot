@@ -35,7 +35,7 @@ class TestMacAddrUtil(unittest.TestCase):
         for line in data:
             if "Ethernet" in line:
                 break
-        if line:
+        if isinstance(line, basestring) and line:
             iface = line.split()[0]
             mac_addr.change_mac(iface=iface, mac=testmac)
             self.assertTrue(mac_addr.check_mac(iface, testmac) is True)
