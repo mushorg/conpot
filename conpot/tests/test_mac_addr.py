@@ -36,10 +36,12 @@ class TestMacAddrUtil(unittest.TestCase):
             if "Ethernet" in line:
                 break
         line = line.strip()
+        flag = False
         if line:
             iface = line.split()[0]
             mac_addr.change_mac(iface, testmac)
-            self.assertTrue(mac_addr.check_mac(iface, testmac) is True)
+            flag = mac_addr.check_mac(iface, testmac)
+        self.assertTrue(flag is True)
 
 if __name__ == '__main__':
     unittest.main()
