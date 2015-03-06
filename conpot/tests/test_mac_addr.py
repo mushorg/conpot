@@ -30,15 +30,15 @@ class TestMacAddrUtil(unittest.TestCase):
 
     def test_mac(self):
         testmac = "00:de:ad:be:ef:00"
-        s = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
+        s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.readlines()
         for line in data:
-            if "Ethernet" in line:
+            if "MULTICAST" in line:
                 break
         line = line.strip()
         flag = False
         if line:
-            iface = line.split()[0]
+            iface = line.split(":")[1].split(":")[0].strip()
             mac_addr.change_mac(iface, testmac)
             flag = mac_addr.check_mac(iface, testmac)
         self.assertTrue(flag is True)

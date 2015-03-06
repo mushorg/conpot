@@ -40,7 +40,6 @@ def change_mac(iface=None, mac=None, config=None):
     subprocess.Popen(["/etc/init.d/networking", "start"])
 
     if check_mac(iface, mac):
-        logger.info('MAC address of'
-                    ' interface {0} changed : {1}.'.format(iface, mac))
+        logger.info('MAC address of interface %s changed : %s.' % (iface, mac))
     else:
         logger.warning('Could not change MAC address.')
