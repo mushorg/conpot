@@ -32,15 +32,19 @@ class TestMacAddrUtil(unittest.TestCase):
         testmac = "00:de:ad:be:ef:00"
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.readlines()
+        flag = False
         for line in data:
             if "MULTICAST" in line:
-                break
-        line = line.strip()
-        flag = False
-        if line:
-            iface = line.split(":")[1].split(":")[0].strip()
-            mac_addr.change_mac(iface, testmac)
-            flag = mac_addr.check_mac(iface, testmac)
+                line = line.strip()
+                if line:
+                    try:
+                        iface = line.split(":")[1].split(":")[0].strip()
+                        mac_addr.change_mac(iface, testmac)
+                        flag = mac_addr.check_mac(iface, testmac)
+                    except:
+                        continue
+                if flag:
+                    break
         self.assertTrue(flag is True)
 
 if __name__ == '__main__':
