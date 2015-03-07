@@ -34,17 +34,16 @@ class TestMacAddrUtil(unittest.TestCase):
         data = s.stdout.readlines()
         flag = False
         for line in data:
-            if "MULTICAST" in line:
-                line = line.strip()
-                if line:
-                    try:
-                        iface = line.split(":")[1].split(":")[0].strip()
-                        mac_addr.change_mac(iface, testmac)
-                        flag = mac_addr.check_mac(iface, testmac)
-                    except:
-                        continue
-                if flag:
-                    break
+            line = line.strip()
+            if line:
+                try:
+                    iface = line.split(": ")[1].split(": ")[0].strip()
+                    mac_addr.change_mac(iface, testmac)
+                    flag = mac_addr.check_mac(iface, testmac)
+                except:
+                    continue
+            if flag:
+                break
         self.assertTrue(flag is True)
 
 if __name__ == '__main__':
