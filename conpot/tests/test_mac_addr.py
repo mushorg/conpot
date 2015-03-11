@@ -30,23 +30,14 @@ class TestMacAddrUtil(unittest.TestCase):
 
     def test_mac(self):
         testmac = "00:de:ad:be:ef:00"
+        
+        iface = "venet0"
+        mac_addr.change_mac(iface, testmac)
+        flag = mac_addr.check_mac(iface, testmac)
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.readlines()
-        flag = False
-        #just to test what it returns 
         raise Exception(data)
-        #should be removed
-        for line in data:
-            line = line.strip()
-            if line:
-                try:
-                    iface = line.split(": ")[1].split(": ")[0].strip()
-                    mac_addr.change_mac(iface, testmac)
-                    flag = mac_addr.check_mac(iface, testmac)
-                except:
-                    continue
-            if flag:
-                break
+        
         self.assertTrue(flag is True)
 
 if __name__ == '__main__':
