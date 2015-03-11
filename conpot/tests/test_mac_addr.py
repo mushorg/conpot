@@ -33,6 +33,9 @@ class TestMacAddrUtil(unittest.TestCase):
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.readlines()
         flag = False
+        #just to test what it returns 
+        raise Exception(data)
+        #should be removed
         for line in data:
             line = line.strip()
             if line:
