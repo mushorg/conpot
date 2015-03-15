@@ -4,10 +4,18 @@ Ubuntu 12.04 LTS
 Installation
 ------------
 
+You need to add multiverse to the source, like;
+::
+
+$ sudo vim /etc/apt/sources.list
+
+deb http://dk.archive.ubuntu.com/ubuntu precise main multiverse
+
+
 Install dependencies:
 ::
 
-    sudo apt-get install libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev
+    sudo apt-get install libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev python-pip python-mysqldb
 
 
 The stable version of ConPot can be downloaded from PyPI:
