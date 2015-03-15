@@ -47,14 +47,10 @@ import conpot
 
 class StixTransformer(object):
     def __init__(self, config, dom):
-        self.config = config._sections['taxii']
+        self.config = config._sections['stix']
         # This should not be hardcoded
-        port_path_list = [
-            '//conpot_template/protocols/modbus/@port',
-            '//conpot_template/protocols/snmp/@port',
-            '//conpot_template/protocols/http/@port',
-            '//conpot_template/protocols/s7comm/@port'
-        ]
+		# Pushed to config file
+        port_path_list = self.config['port_path_list']
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
