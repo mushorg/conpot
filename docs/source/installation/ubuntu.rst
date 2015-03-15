@@ -9,8 +9,9 @@ You need to add multiverse to the source, like;
 
 $ sudo vim /etc/apt/sources.list
 
+Add the following line
+::
 deb http://dk.archive.ubuntu.com/ubuntu precise main multiverse
-
 
 Install dependencies:
 ::
