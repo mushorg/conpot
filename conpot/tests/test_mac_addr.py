@@ -33,14 +33,15 @@ class TestMacAddrUtil(unittest.TestCase):
         iface = "dummy"
         subprocess.Popen(["modprobe", "dummy"])
         subprocess.Popen(["ip", "li", "add", "dummy", "type", "dummy"])
-        mac_addr.change_mac(iface, testmac)
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.read()
-        raise Exception(data)
-
-        flag = mac_addr.check_mac(iface, testmac)
-        subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"])
-        self.assertTrue(flag is True)
+        if "dummy" in data:
+            mac_addr.change_mac(iface, testmac)
+            flag = mac_addr.check_mac(iface, testmac)
+            subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"])
+            self.assertTrue(flag is True)
+        else:
+            self.skipTest("Can't change mac address")
 
 if __name__ == '__main__':
     unittest.main()
