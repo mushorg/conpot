@@ -40,9 +40,9 @@ class TestLoggers(unittest.TestCase):
         config.read(config_file)
         config.set('taxii', 'enabled', True)
         config.set('taxii', 'use_contact_info', True)
-        config.set('taxii', 'contact_name', 'conpot')
+        config.set('stix', 'contact_name', 'conpot')
         config.set('taxii', 'contact_mail', 'a@b.c')
-        config.set('taxii', 'contact_domain', 'http://conpot.org/stix-1')
+        config.set('stix', 'contact_domain', 'http://conpot.org/stix-1')
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'public_ip': '111.222.111.222',
