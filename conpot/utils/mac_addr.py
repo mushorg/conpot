@@ -35,9 +35,10 @@ def change_mac(iface=None, mac=None, config=None):
         iface = config.get('change_mac_addr', 'iface')
         mac = config.get('change_mac_addr', 'addr')
 
-    subprocess.Popen(["/etc/init.d/networking", "stop"])
-    subprocess.Popen(["ifconfig", iface, "hw", "ether", mac])
-    subprocess.Popen(["/etc/init.d/networking", "start"])
+    # Changing MAC address and restarting network
+    subprocess.Popen(["/etc/init.d/networking", "stop"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    subprocess.Popen(["ifconfig", iface, "hw", "ether", mac], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    subprocess.Popen(["/etc/init.d/networking", "start"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
     if check_mac(iface, mac):
         logger.info('MAC address of interface %s changed : %s.' % (iface, mac))

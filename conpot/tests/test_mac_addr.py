@@ -29,19 +29,26 @@ class TestMacAddrUtil(unittest.TestCase):
         pass
 
     def test_mac(self):
+        """
+        Objective: Test if the spoofer is able to change MAC address
+        """
         testmac = "00:de:ad:be:ef:00"
         iface = "dummy"
-        subprocess.Popen(["modprobe", "dummy"])
-        subprocess.Popen(["ip", "li", "add", "dummy", "type", "dummy"])
+        # Load dummy module
+        subprocess.Popen(["modprobe", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        # Create a dummy network interface
+        subprocess.Popen(["ip", "li", "add", "dummy", "type", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.read()
         if "dummy" in data:
+            # Change mac address of dummy interface and test it
             mac_addr.change_mac(iface, testmac)
             flag = mac_addr.check_mac(iface, testmac)
-            subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"])
+            # Remove the dummy interface
+            subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
             self.assertTrue(flag is True)
         else:
-            self.skipTest("Can't change mac address")
+            self.skipTest("Can't change MAC address")
 
 if __name__ == '__main__':
     unittest.main()
