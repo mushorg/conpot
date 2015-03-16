@@ -35,7 +35,11 @@ class TestMacAddrUtil(unittest.TestCase):
         testmac = "00:de:ad:be:ef:00"
         iface = "dummy"
         # Load dummy module
-        subprocess.Popen(["modprobe", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        s = subprocess.Popen(["modprobe", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        # Check if dummy is loaded 
+        data = s.stdout.read()        
+        if data:
+            self.skipTest("Can't create dummy device")            
         # Create a dummy network interface
         subprocess.Popen(["ip", "li", "add", "dummy", "type", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
