@@ -21,6 +21,12 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
+def revert(iface):
+    s = subprocess.Popen(["ethtool", "-P", iface], stdout=subprocess.PIPE)
+    mac = s.stdout.read().split(" ")[2].strip()
+    change_mac(iface, mac)
+
+
 def check_mac(iface, addr):
     s = subprocess.Popen(["ifconfig", iface], stdout=subprocess.PIPE)
     data = s.stdout.read()
