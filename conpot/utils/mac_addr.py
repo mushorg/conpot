@@ -21,12 +21,6 @@ import subprocess
 logger = logging.getLogger(__name__)
 
 
-def revert(iface):
-    s = subprocess.Popen(["ethtool", "-P", iface], stdout=subprocess.PIPE)
-    mac = s.stdout.read().split(" ")[2].strip()
-    change_mac(iface, mac)
-
-
 def check_mac(iface, addr):
     s = subprocess.Popen(["ifconfig", iface], stdout=subprocess.PIPE)
     data = s.stdout.read()
@@ -36,7 +30,7 @@ def check_mac(iface, addr):
         return False
 
 
-def change_mac(iface=None, mac=None, config=None):
+def change_mac(iface=None, mac=None, config=None, flag=None):
     if config:
         iface = config.get('change_mac_addr', 'iface')
         mac = config.get('change_mac_addr', 'addr')
@@ -47,6 +41,15 @@ def change_mac(iface=None, mac=None, config=None):
     subprocess.Popen(["/etc/init.d/networking", "start"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
     if check_mac(iface, mac):
-        logger.info('MAC address of interface %s changed : %s.' % (iface, mac))
+        if flag:
+            logger.info('MAC address reverted to original %s' % (mac))
+        else:
+            logger.info('MAC address of interface %s changed %s' % (iface, mac))
     else:
         logger.warning('Could not change MAC address.')
+
+
+def revert_mac(iface):
+    s = subprocess.Popen(["ethtool", "-P", iface], stdout=subprocess.PIPE)
+    mac = s.stdout.read().split(" ")[2].strip()
+    change_mac(iface, mac, flag=True)

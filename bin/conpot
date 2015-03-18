@@ -338,7 +338,7 @@ def main():
                 if config.getboolean('change_mac_addr', 'enabled'):
                     # Revert MAC address
                     iface = iface = config.get('change_mac_addr', 'iface')
-                    mac_addr.revert(iface)
+                    mac_addr.revert_mac(iface)
     else:
         logging.info('Conpot has to be executed as root.')
 
