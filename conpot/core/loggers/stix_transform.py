@@ -48,9 +48,7 @@ import conpot
 class StixTransformer(object):
     def __init__(self, config, dom):
         self.config = config._sections['stix']
-        # This should not be hardcoded
-        # Pushed to config file
-        port_path_list = eval(self.config['port_path_list'])
+        port_path_list = self.config['port_path_list']
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
