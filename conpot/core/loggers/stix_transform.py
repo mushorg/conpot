@@ -55,10 +55,10 @@ class StixTransformer(object):
             http=80,
             s7comm=102,
         )
-        for port_path in port_path_list:
+        for port_path in port_path_list[1:-1].split(','):
             try:
-                protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
-                protocol_name = port_path.rsplit("/", 2)[1]
+                protocol_port = ast.literal_eval(dom.xpath(port_path[1:-1])[0])
+                protocol_name = port_path[1:-1].rsplit("/", 2)[1]
                 self.protocol_to_port_mapping[protocol_name] = protocol_port
             except IndexError:
                 continue
