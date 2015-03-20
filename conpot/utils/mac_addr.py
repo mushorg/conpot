@@ -42,7 +42,7 @@ def change_mac(iface=None, mac=None, config=None, flag=None):
 
     if check_mac(iface, mac):
         if flag:
-            logger.info('MAC address reverted for interface %s' % (mac))
+            logger.info('MAC address reverted for interface %s' % (iface))
         else:
             logger.info('MAC address of interface %s changed %s' % (iface, mac))
     else:
