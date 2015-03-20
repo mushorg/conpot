@@ -48,17 +48,17 @@ import conpot
 class StixTransformer(object):
     def __init__(self, config, dom):
         self.config = config._sections['stix']
-        port_path_list = self.config['port_path_list']
+        port_path_list = json.loads(self.config.get('stix','port_path_list'))
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
             http=80,
             s7comm=102,
         )
-        for port_path in port_path_list[1:-1].split(','):
+        for port_path in port_path_list:
             try:
-                protocol_port = ast.literal_eval(dom.xpath(port_path[1:-1])[0])
-                protocol_name = port_path[1:-1].rsplit("/", 2)[1]
+                protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
+                protocol_name = port_path.rsplit("/", 2)[1]
                 self.protocol_to_port_mapping[protocol_name] = protocol_port
             except IndexError:
                 continue
