@@ -30,7 +30,7 @@ def check_mac(iface, addr):
         return False
 
 
-def change_mac(iface=None, mac=None, config=None, flag=None):
+def change_mac(iface=None, mac=None, config=None, revert=None):
     if config:
         iface = config.get('change_mac_addr', 'iface')
         mac = config.get('change_mac_addr', 'addr')
@@ -41,10 +41,10 @@ def change_mac(iface=None, mac=None, config=None, flag=None):
     subprocess.Popen(["/etc/init.d/networking", "start"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
 
     if check_mac(iface, mac):
-        if flag:
-            logger.info('MAC address reverted for interface %s' % (iface))
+        if revert:
+            logger.info('MAC address reverted for interface {0}'.format(iface))
         else:
-            logger.info('MAC address of interface %s changed %s' % (iface, mac))
+            logger.info('MAC address of interface {0} changed {1}'.format(iface, mac))
     else:
         logger.warning('Could not change MAC address.')
 
@@ -52,4 +52,4 @@ def change_mac(iface=None, mac=None, config=None, flag=None):
 def revert_mac(iface):
     s = subprocess.Popen(["ethtool", "-P", iface], stdout=subprocess.PIPE)
     mac = s.stdout.read().split(" ")[2].strip()
-    change_mac(iface, mac, flag=True)
+    change_mac(iface, mac, revert=True)

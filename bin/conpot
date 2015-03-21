@@ -315,12 +315,11 @@ def main():
                 logger.info('Proxy available but disabled by template.')
     else:
             logger.info('No proxy template found. Service will remain unconfigured/stopped.')
-
+    # Wait for the services to bind ports before forking
+    gevent.sleep(5)
     if os.getuid() == 0:
         pid = gevent.fork()
         if pid == 0:
-            # Wait for the services to bind ports before dropping privileges
-            gevent.sleep(5)
             # Only drop if running as root
             drop_privileges()
             try:
@@ -337,7 +336,7 @@ def main():
             except:
                 if config.getboolean('change_mac_addr', 'enabled'):
                     # Revert MAC address
-                    iface = iface = config.get('change_mac_addr', 'iface')
+                    iface = config.get('change_mac_addr', 'iface')
                     mac_addr.revert_mac(iface)
     else:
         logging.info('Conpot has to be executed as root.')
