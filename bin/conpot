@@ -248,78 +248,77 @@ def main():
         ('http', HTTPServer),
         ('snmp', SNMPServer)
     )
-
-    for protocol in protocol_instance_mapping:
-        protocol_name, server_class = protocol
-        protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
-        if os.path.isfile(protocol_template):
-            xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
-            validate_template(protocol_template, xsd_file)
-            dom_protocol = etree.parse(protocol_template)
-            if dom_protocol.xpath('//{0}'.format(protocol_name)):
-                if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
-                    host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
-                    port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
-                    server = server_class(protocol_template, root_template_directory, args)
-                    greenlet = gevent.spawn(server.start, host, port)
-                    greenlet.link_exception(on_unhandled_greenlet_exception)
-                    servers.append(server)
-                    logger.info('Found and enabled {0} protocol.'.format(protocol))
+    pid = gevent.fork()
+    if pid == 0:
+        for protocol in protocol_instance_mapping:
+            protocol_name, server_class = protocol
+            protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
+            if os.path.isfile(protocol_template):
+                xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
+                validate_template(protocol_template, xsd_file)
+                dom_protocol = etree.parse(protocol_template)
+                if dom_protocol.xpath('//{0}'.format(protocol_name)):
+                    if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
+                        host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
+                        port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
+                        server = server_class(protocol_template, root_template_directory, args)
+                        greenlet = gevent.spawn(server.start, host, port)
+                        greenlet.link_exception(on_unhandled_greenlet_exception)
+                        servers.append(server)
+                        logger.info('Found and enabled {0} protocol.'.format(protocol))
+                else:
+                    logger.info('{0} available but disabled by configuration.'.format(protocol_name))
             else:
-                logger.info('{0} available but disabled by configuration.'.format(protocol_name))
+                logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
+
+        log_worker = LogWorker(config, dom_base, session_manager, public_ip)
+        greenlet = gevent.spawn(log_worker.start)
+        greenlet.link_exception(on_unhandled_greenlet_exception)
+
+        # TODO: Make proxy fit into protocol_instance_mapping
+        template_proxy = os.path.join(root_template_directory, 'proxy', 'proxy.xml')
+        if os.path.isfile(template_proxy):
+            xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
+            validate_template(template_proxy, xsd_file)
+            dom_proxy = etree.parse(template_proxy)
+            if dom_proxy.xpath('//proxies'):
+                if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
+                    proxies = dom_proxy.xpath('//proxies/*')
+                    for p in proxies:
+                        name = p.attrib['name']
+                        host = p.attrib['host']
+                        keyfile = None
+                        certfile = None
+                        if 'keyfile' in p.attrib and 'certfile' in p.attrib:
+                            keyfile = p.attrib['keyfile']
+                            certfile = p.attrib['certfile']
+
+                            # if path is absolute we assert that the cert and key is located in
+                            # the templates ssl standard location
+
+                            if not os.path.isabs(keyfile):
+                                keyfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', keyfile)
+                                certfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', certfile)
+                        port = ast.literal_eval(p.attrib['port'])
+                        proxy_host = p.xpath('./proxy_host/text()')[0]
+                        proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
+                        decoder = p.xpath('./decoder/text()')
+                        if len(decoder) > 0:
+                            decoder = decoder[0]
+                        else:
+                            decoder = None
+                        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
+                        proxy_server = proxy_instance.get_server(host, port)
+                        servers.append(proxy_instance)
+                        proxy_greenlet = gevent.spawn(proxy_server.start)
+                        proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
+                else:
+                    logger.info('Proxy available but disabled by template.')
         else:
-            logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
-
-    log_worker = LogWorker(config, dom_base, session_manager, public_ip)
-    greenlet = gevent.spawn(log_worker.start)
-    greenlet.link_exception(on_unhandled_greenlet_exception)
-
-    # TODO: Make proxy fit into protocol_instance_mapping
-    template_proxy = os.path.join(root_template_directory, 'proxy', 'proxy.xml')
-    if os.path.isfile(template_proxy):
-        xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
-        validate_template(template_proxy, xsd_file)
-        dom_proxy = etree.parse(template_proxy)
-        if dom_proxy.xpath('//proxies'):
-            if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
-                proxies = dom_proxy.xpath('//proxies/*')
-                for p in proxies:
-                    name = p.attrib['name']
-                    host = p.attrib['host']
-                    keyfile = None
-                    certfile = None
-                    if 'keyfile' in p.attrib and 'certfile' in p.attrib:
-                        keyfile = p.attrib['keyfile']
-                        certfile = p.attrib['certfile']
-
-                        # if path is absolute we assert that the cert and key is located in
-                        # the templates ssl standard location
-
-                        if not os.path.isabs(keyfile):
-                            keyfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', keyfile)
-                            certfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', certfile)
-                    port = ast.literal_eval(p.attrib['port'])
-                    proxy_host = p.xpath('./proxy_host/text()')[0]
-                    proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
-                    decoder = p.xpath('./decoder/text()')
-                    if len(decoder) > 0:
-                        decoder = decoder[0]
-                    else:
-                        decoder = None
-                    proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
-                    proxy_server = proxy_instance.get_server(host, port)
-                    servers.append(proxy_instance)
-                    proxy_greenlet = gevent.spawn(proxy_server.start)
-                    proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
-            else:
-                logger.info('Proxy available but disabled by template.')
-    else:
-            logger.info('No proxy template found. Service will remain unconfigured/stopped.')
-    # Wait for the services to bind ports before forking
-    gevent.sleep(5)
-    if os.getuid() == 0:
-        pid = gevent.fork()
-        if pid == 0:
+                logger.info('No proxy template found. Service will remain unconfigured/stopped.')
+        # Wait for the services to bind ports before forking
+        gevent.sleep(5)
+        if os.getuid() == 0:
             # Only drop if running as root
             drop_privileges()
             try:
@@ -330,16 +329,17 @@ def main():
                 for server in servers:
                     server.stop()
         else:
-            # wait for the child to end
-            try:
-                os.waitpid(pid, 0)
-            except:
-                if config.getboolean('change_mac_addr', 'enabled'):
-                    # Revert MAC address
-                    iface = config.get('change_mac_addr', 'iface')
-                    mac_addr.revert_mac(iface)
+            logging.info('Conpot has to be executed as root.')
+
     else:
-        logging.info('Conpot has to be executed as root.')
+        # wait for the child to end
+        try:
+            os.waitpid(pid, 0)
+        except:
+            if config.getboolean('change_mac_addr', 'enabled'):
+                # Revert MAC address
+                iface = config.get('change_mac_addr', 'iface')
+                mac_addr.revert_mac(iface)
 
 
 if __name__ == "__main__":
