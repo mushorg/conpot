@@ -335,11 +335,12 @@ def main():
         # wait for the child to end
         try:
             os.waitpid(pid, 0)
-        except:
-            if config.getboolean('change_mac_addr', 'enabled'):
-                # Revert MAC address
-                iface = config.get('change_mac_addr', 'iface')
-                mac_addr.revert_mac(iface)
+        except KeyboardInterrupt:
+            pass
+        if config.getboolean('change_mac_addr', 'enabled'):
+            # Revert MAC address
+            iface = config.get('change_mac_addr', 'iface')
+            mac_addr.revert_mac(iface)
 
 
 if __name__ == "__main__":
