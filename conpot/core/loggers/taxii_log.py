@@ -52,7 +52,7 @@ class TaxiiLogger(object):
         response_message = libtaxii.get_message_from_http_response(response, '0')
 
         if response_message.status_type != libtaxii.messages.ST_SUCCESS:
-            logger.error('Error while transmitting message to TAXII server: %s', response_message.message)
+            logger.error('Error while transmitting message to TAXII server: {0}'.format(response_message.message))
             return False
         else:
             return True

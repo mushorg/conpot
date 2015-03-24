@@ -48,10 +48,10 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     'dst_port': self.server.server_port,
                     'data': {0: {'request': '{0} {1}: {2}'.format(version, request_type, request)}}}
 
-        logger.info('%s %s request from %s: %s. %s', version, request_type, addr, request, session.id)
+        logger.info('{0} {1} request from {2}: {3}. {4}'.format(version, request_type, addr, request, session.id))
 
         if response:
-            logger.info('%s response to %s: %s. %s', version, addr, response, session.id)
+            logger.info('{0} response to {1}: {2}. {3}'.format(version, addr, response, session.id))
             log_dict['data'][0]['response'] = '{0} response: {1}'.format(version, response)
             session.add_event({'request': str(request), 'response': str(response)})
         else:
@@ -230,7 +230,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                     payload = f.read()
 
             except IOError, e:
-                logger.error('%s', e)
+                logger.error('{0}'.format(e))
                 payload = ''
 
             # there might be template data that can be substituted within the
@@ -399,7 +399,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
             except IOError as e:
                 if not os.path.isdir(os.path.join(docpath, 'htdocs', relrqfilename)):
-                    logger.error('Failed to get template content: %s', e)
+                    logger.error('Failed to get template content: {0}'.format(e))
                 payload = ''
 
             # there might be template data that can be substituted within the
@@ -1043,7 +1043,7 @@ class SubHTTPServer(ThreadedHTTPServer):
                 _ = float(x)
             except ValueError:
                 # first value is invalid, ignore the whole setting.
-                logger.error("Invalid tarpit value: '%s'. Assuming no latency.", value)
+                logger.error("Invalid tarpit value: '{0}'. Assuming no latency.".format(value))
                 return '0;0'
 
             try:

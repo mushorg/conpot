@@ -28,7 +28,7 @@ class AttackSession(object):
     def __init__(self, protocol, source_ip, source_port, databus, log_queue):
         self.log_queue = log_queue
         self.id = uuid.uuid4()
-        logger.info('New %s session from %s (%s)', protocol, source_ip, self.id)
+        logger.info('New {0} session from {1} ({2})'.format(protocol, source_ip, self.id))
         self.protocol = protocol
         self.source_ip = source_ip
         self.source_port = source_port

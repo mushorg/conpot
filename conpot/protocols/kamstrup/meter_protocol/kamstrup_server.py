@@ -52,7 +52,7 @@ class KamstrupServer(object):
 
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_protocol', address[0], address[1])
-        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
+        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
         session.add_event({'type': 'NEW_CONNECTION'})
 
         server_active = True
@@ -63,7 +63,7 @@ class KamstrupServer(object):
                 raw_request = sock.recv(1024)
 
                 if not raw_request:
-                    logger.info('Client disconnected. (%s)', session.id)
+                    logger.info('Client disconnected. ({0})'.format(session.id))
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
@@ -83,7 +83,7 @@ class KamstrupServer(object):
                         if response:
                             serialized_response = response.serialize()
                             logdata['response'] = binascii.hexlify(serialized_response)
-                            logger.debug('Kamstrup traffic from %s: %s (%s)', address[0], logdata, session.id)
+                            logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
                             sock.send(serialized_response)
                             session.add_event(logdata)
                         else:
@@ -91,7 +91,7 @@ class KamstrupServer(object):
                             break
 
         except socket.timeout:
-            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
+            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
             session.add_event({'type': 'CONNECTION_LOST'})
 
         sock.close()
@@ -99,7 +99,7 @@ class KamstrupServer(object):
     def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
-        logger.info('Kamstrup protocol server started on: %s', connection)
+        logger.info('Kamstrup protocol server started on: {0}'.format(connection))
         server.start()
 
 
