@@ -49,7 +49,7 @@ def _fetch_data(urls):
             else:
                 raise ConnectionError
         except (Timeout, ConnectionError) as e:
-            logger.warning('Could not fetch public ip from %s', url)
+            logger.warning('Could not fetch public ip from {0}'.format(url))
     return None
 
 
@@ -58,9 +58,9 @@ def get_ext_ip(config=None, urls=None):
         urls = json.loads(config.get('fetch_public_ip', 'urls'))
     public_ip = _fetch_data(urls)
     if public_ip:
-        logger.info('Fetched %s as external ip.', public_ip)
+        logger.info('Fetched {0} as external ip.'.format(public_ip))
     else:
-        logger.warning('Could not fetch public ip: %s', public_ip)
+        logger.warning('Could not fetch public ip: {0}'.format(public_ip))
     return public_ip
 
 

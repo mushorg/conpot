@@ -75,7 +75,7 @@ class Decoder382(object):
         for d in data:
             d = ord(d)
             if not self.in_parsing and d != kamstrup_constants.REQUEST_MAGIC:
-                logger.debug('No kamstrup_meter request magic received, got: %s', d.encode('hex-codec'))
+                logger.debug('No kamstrup_meter request magic received, got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.in_parsing = True
 
@@ -113,7 +113,7 @@ class Decoder382(object):
         for d in data:
             d = ord(d)
             if not self.out_parsing and d != kamstrup_constants.RESPONSE_MAGIC:
-                logger.debug('Expected response magic but got got: %s', d.encode('hex-codec'))
+                logger.debug('Expected response magic but got got: {0}'.format(d.encode('hex-codec')))
             else:
                 self.out_parsing = True
 

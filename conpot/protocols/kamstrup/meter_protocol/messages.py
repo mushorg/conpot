@@ -37,7 +37,7 @@ class KamstrupRequestBase(KamstrupProtocolBase):
         super(KamstrupRequestBase, self).__init__(communication_address)
         self.command = command
         self.message_bytes = message_bytes
-        logger.debug('Request package created with bytes: %s', self.message_bytes)
+        logger.debug('Request package created with bytes: {0}'.format(self.message_bytes))
 
     def __str__(self):
         return 'Comm address: {0}, Command: {1}, Message: {2}'.format(hex(self.communication_address),
@@ -50,7 +50,7 @@ class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
         super(KamstrupRequestUnknown, self).__init__(communication_address,
                                                      command_byte, message_bytes)
-        logger.warning('Unknown Kamstrup request: %s', self)
+        logger.warning('Unknown Kamstrup request: {0}'.format(self))
 
 
 class KamstrupRequestGetRegisters(KamstrupRequestBase):
@@ -62,7 +62,7 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
                                                           KamstrupRequestGetRegisters.command_byte, message_bytes)
         self.registers = []
         self._parse_register_bytes()
-        logger.debug('Request for registers: %s', str(self.registers).strip('[]'))
+        logger.debug('Request for registers: {0}'.format(str(self.registers).strip('[]')))
 
     def _parse_register_bytes(self):
         register_count = self.message_bytes[0]
