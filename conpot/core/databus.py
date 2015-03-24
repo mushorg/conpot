@@ -40,7 +40,7 @@ class Databus(object):
     # functions could be used if a profile wants to simulate a sensor, or the function
     # could interface with a real sensor
     def get_value(self, key):
-        logger.debug('DataBus: Get value from key: [{0}]'.format(key))
+        logger.debug('DataBus: Get value from key: [%s]', key)
         assert key in self._data
         item = self._data[key]
         if getattr(item, "get_value", None):
@@ -54,7 +54,7 @@ class Databus(object):
             return item
 
     def set_value(self, key, value):
-        logger.debug('DataBus: Storing key: [{0}] value: [{1}]'.format(key, value))
+        logger.debug('DataBus: Storing key: [%s] value: [%s]', key, value)
         self._data[key] = value
         # notify observers
         if key in self._observer_map:
@@ -73,7 +73,7 @@ class Databus(object):
 
     def initialize(self, config_file):
         self._reset()
-        logger.debug('Initializing databus using {0}.'.format(config_file))
+        logger.debug('Initializing databus using %s.', config_file)
         dom = etree.parse(config_file)
         entries = dom.xpath('//core/databus/key_value_mappings/*')
         for entry in entries:
@@ -81,7 +81,7 @@ class Databus(object):
             value = entry.xpath('./value/text()')[0].strip()
             value_type = str(entry.xpath('./value/@type')[0])
             assert key not in self._data
-            logging.debug('Initializing {0} with {1} as a {2}.'.format(key, value, value_type))
+            logging.debug('Initializing %s with %s as a %s.', key, value, value_type)
             if value_type == 'value':
                 self.set_value(key, eval(value))
             elif value_type == 'function':

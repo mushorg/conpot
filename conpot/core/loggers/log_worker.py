@@ -110,7 +110,7 @@ class LogWorker(object):
             sec_now = time.mktime(datetime.utcnow().timetuple())
             if (sec_now - (sec_session_start + sec_last_event)) >= session_timeout:
                 # TODO: We need to close sockets in this case
-                logger.info("Session timed out: {0}".format(session.id))
+                logger.info('Session timed out: %s', session.id)
                 session.set_ended()
                 sessions.remove(session)
 
