@@ -1043,7 +1043,7 @@ class SubHTTPServer(ThreadedHTTPServer):
                 _ = float(x)
             except ValueError:
                 # first value is invalid, ignore the whole setting.
-                logger.error("Invalid tarpit value: '{0}'. Assuming no latency.".format(value))
+                logger.error("Invalid tarpit value: '%s'. Assuming no latency.", value)
                 return '0;0'
 
             try:

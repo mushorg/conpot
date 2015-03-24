@@ -75,18 +75,18 @@ class conpot_extension(object):
 
         if int(threshold_individual) > 0:
             if int(state_individual) > int(threshold_individual):
-                logger.warning('SNMPv{0}: DoS threshold for {1} exceeded ({2}/{3}).'.format(cmd,
-                                                                                            addr,
-                                                                                            state_individual,
-                                                                                            threshold_individual))
+                logger.warning('SNMPv%s: DoS threshold for %s exceeded (%s/%s).', cmd,
+                                                                                  addr,
+                                                                                  state_individual,
+                                                                                  threshold_individual)
                 # DoS threshold exceeded.
                 return True
 
         if int(threshold_overall) > 0:
             if int(state_overall) > int(threshold_overall):
-                logger.warning('SNMPv{0}: DDoS threshold exceeded ({1}/{2}).'.format(cmd,
-                                                                                     state_individual,
-                                                                                     threshold_overall))
+                logger.warning('SNMPv%s: DDoS threshold exceeded (%s/%s).', cmd,
+                                                                            state_individual,
+                                                                            threshold_overall)
                 # DDoS threshold exceeded
                 return True
 

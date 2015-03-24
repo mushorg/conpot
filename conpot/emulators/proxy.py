@@ -56,14 +56,14 @@ class Proxy(object):
         else:
             server = StreamServer(connection, self.handle)
         self.port = server.server_port
-        logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {4} decoder.'
-                    .format(self.name, connection, self.proxy_host, self.proxy_port, self.decoder))
+        logger.info('%s proxy server started, listening on %s, proxy for: (%s, %s) using %s decoder.',
+                    self.name, connection, self.proxy_host, self.proxy_port, self.decoder)
         return server
 
     def handle(self, sock, address):
         session = conpot_core.get_session(self.proxy_id, address[0], address[1])
-        logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
-                                                                             self.proxy_id, session.id))
+        logger.info('New connection from {%s}:{%s} on {%s} proxy. (%s)', address[0], address[1],
+                                                                             self.proxy_id, session.id)
         proxy_socket = socket()
 
         if self.keyfile and self.certfile:
@@ -72,8 +72,8 @@ class Proxy(object):
         try:
             proxy_socket.connect((self.proxy_host, self.proxy_port))
         except _socket.error as ex:
-            logger.error('Error while connecting to proxied service at ({0}, {1}): {2}'
-                         .format(self.proxy_host, self.proxy_port, ex))
+            logger.error('Error while connecting to proxied service at (%s, %s): %s',
+                         self.proxy_host, self.proxy_port, ex)
             self._close([proxy_socket, sock])
             return
 
@@ -96,13 +96,13 @@ class Proxy(object):
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
-                        logging.warning('Closing proxied socket while receiving ({0}, {1}): {2}.'
-                                        .format(self.proxy_host, self.proxy_port, socket_close_reason))
+                        logging.warning('Closing proxied socket while receiving (%s, %s): %s.',
+                                        self.proxy_host, self.proxy_port, socket_close_reason)
                         sockets = []
                         break
                     elif s is sock:
-                        logging.warning('Closing connection to remote while receiving from remote ({0}, {1}): {2}'
-                                        .format(socket_close_reason, address[0], address[1]))
+                        logging.warning('Closing connection to remote while receiving from remote (%s, %s): %s',
+                                        socket_close_reason, address[0], address[1])
                         sockets = []
                         break
                     else:

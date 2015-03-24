@@ -46,9 +46,8 @@ class ModbusServer(modbus.Server):
                 start_addr = int(b.xpath('./starting_address/text()')[0])
                 size = int(b.xpath('./size/text()')[0])
                 slave.add_block(name, request_type, start_addr, size)
-                logger.debug('Added block {0} to slave {1}. (type={2}, start={3}, size={4})'.format(
-                    name, slave_id, request_type, start_addr, size
-                ))
+                logger.debug('Added block %s to slave %s. (type=%s, start=%s, size=%s)',
+                    name, slave_id, request_type, start_addr, size)
 
         logger.info('Conpot modbus initialized')
 
