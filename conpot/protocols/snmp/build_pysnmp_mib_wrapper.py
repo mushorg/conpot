@@ -38,7 +38,7 @@ def mib2pysnmp(mib_file):
     :param mib_file: Path to the MIB file.
     :return: A string representation of the compiled MIB file (string).
     """
-    logger.debug('Compiling mib file: {0}'.format(mib_file))
+    logger.debug('Compiling mib file: %s', mib_file)
     try:
         proc = subprocess.Popen([BUILD_SCRIPT, mib_file], stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
@@ -56,7 +56,7 @@ def mib2pysnmp(mib_file):
                         .format(BUILD_SCRIPT, stderr, stdout))
         raise Exception(stderr)
     else:
-        logger.debug('Successfully compiled MIB file: {0}'.format(mib_file))
+        logger.debug('Successfully compiled MIB file: %s', mib_file)
         return stdout
 
 
