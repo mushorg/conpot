@@ -50,7 +50,7 @@ class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
         super(KamstrupRequestUnknown, self).__init__(communication_address,
                                                      command_byte, message_bytes)
-        logger.warning('Unknown Kamstrup request: {0}'.format(self))
+        logger.warning('Unknown Kamstrup request: %s', self)
 
 
 class KamstrupRequestGetRegisters(KamstrupRequestBase):

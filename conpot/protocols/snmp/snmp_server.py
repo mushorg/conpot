@@ -181,7 +181,7 @@ class SNMPServer(object):
         self.xml_general_config(self.dom)
         self.xml_mib_config(self.dom, self.compiled_mibs, self.raw_mibs)
 
-        logger.info('SNMP server started on: {0}'.format((host, self.get_port())))
+        logger.info('SNMP server started on: %s', (host, self.get_port()))
         self.cmd_responder.serve_forever()
 
     def stop(self):

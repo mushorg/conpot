@@ -39,7 +39,7 @@ class ModbusServer(modbus.Server):
         for s in slaves:
             slave_id = int(s.attrib['id'])
             slave = self.add_slave(slave_id)
-            logger.debug('Added slave with id {0}.'.format(slave_id))
+            logger.debug('Added slave with id %s.', slave_id)
             for b in s.xpath('./blocks/*'):
                 name = b.attrib['name']
                 request_type = eval('mdef.' + b.xpath('./type/text()')[0])
@@ -58,18 +58,18 @@ class ModbusServer(modbus.Server):
         session = conpot_core.get_session('modbus', address[0], address[1])
 
         self.start_time = time.time()
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
             while True:
                 request = sock.recv(7)
                 if not request:
-                    logger.info('Client disconnected. ({0})'.format(session.id))
+                    logger.info('Client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
                 if request.strip().lower() == 'quit.':
-                    logger.info('Client quit. ({0})'.format(session.id))
+                    logger.info('Client quit. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_QUIT'})
                     break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
@@ -83,16 +83,16 @@ class ModbusServer(modbus.Server):
                 logdata['request'] = request.encode('hex')
                 session.add_event(logdata)
 
-                logger.debug('Modbus traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
+                logger.debug('Modbus traffic from %s: %s (%s)', address[0], logdata, session.id)
 
                 if response:
                     sock.sendall(response)
         except socket.timeout:
-            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
             session.add_event({'type': 'CONNECTION_LOST'})
 
     def start(self, host, port):
         connection = (host, port)
         server = StreamServer(connection, self.handle)
-        logger.info('Modbus server started on: {0}'.format(connection))
+        logger.info('Modbus server started on: %s', connection)
         server.start()

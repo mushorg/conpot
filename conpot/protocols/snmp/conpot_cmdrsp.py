@@ -39,12 +39,12 @@ class conpot_extension(object):
                     'data_type': 'snmp',
                     'data': {0: {'request': 'SNMPv{0} {1}: {2} {3}'.format(version, msg_type, req_oid, req_val)}}}
 
-        logger.info('SNMPv{0} {1} request from {2}: {3} {4}'.format(version, msg_type, addr, req_oid, req_val))
+        logger.info('SNMPv%s %s request from %s: %s %s', version, msg_type, addr, req_oid, req_val)
 
         if res_varBinds:
             res_oid = ".".join(map(str, res_varBinds[0][0]))
             res_val = res_varBinds[0][1]
-            logger.info('SNMPv{0} response to {1}: {2} {3}'.format(version, addr, res_oid, res_val))
+            logger.info('SNMPv%s response to %s: %s %s', version, addr, res_oid, res_val)
             log_dict['data'][0]['response'] = 'SNMPv{0} response: {1} {2}'.format(version, res_oid, res_val)
         # log here...
 

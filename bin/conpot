@@ -68,7 +68,7 @@ def logo():
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.error('Stopping because {0} died: {1}'.format(dead_greenlet, dead_greenlet.exception))
+    logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
     sys.exit(1)
 
 
@@ -107,7 +107,7 @@ def drop_privileges(uid_name='nobody', gid_name='nogroup'):
     new_uid_name = pwd.getpwuid(os.getuid())[0]
     new_gid_name = grp.getgrgid(os.getgid())[0]
 
-    logger.info("Privileges dropped, running as {0}/{1}.".format(new_uid_name, new_gid_name))
+    logger.info('Privileges dropped, running as %s/%s.', new_uid_name, new_gid_name)
 
 
 def validate_template(xml_file, xsd_file):
@@ -116,7 +116,7 @@ def validate_template(xml_file, xsd_file):
     xml = etree.parse(xml_file)
     xsd.validate(xml)
     if xsd.error_log:
-        logger.error('Error parsing XML template: {0}'.format(xsd.error_log))
+        logger.error('Error parsing XML template: %s', xsd.error_log)
         sys.exit(1)
 
 
@@ -158,7 +158,7 @@ def main():
     config = ConfigParser()
     if not os.path.isfile(args.config):
         args.config = os.path.join(package_directory, 'conpot.cfg')
-        logger.info('No conpot.cfg found in current directory, using default configuration: {0}'.format(args.config))
+        logger.info('No conpot.cfg found in current directory, using default configuration: %s', args.config)
     config.read(args.config)
 
     # No template specified
@@ -211,16 +211,16 @@ def main():
     elif os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
         root_template_directory = os.path.join(package_directory, 'templates', args.template)
     else:
-            logger.error('Template not found: {0}'.format(args.template))
+            logger.error('Template not found: %s', args.template)
             sys.exit(1)
 
     # Check if the configuration file exists..
     if not os.path.isfile(args.config):
-        logger.error('Config not found: {0}'.format(args.config))
+        logger.error('Config not found: %s', args.config)
         sys.exit(1)
 
-    logger.info('Starting Conpot using template: {0}'.format(root_template_directory))
-    logger.info('Starting Conpot using configuration found in: {0}'.format(args.config))
+    logger.info('Starting Conpot using template: %s', root_template_directory)
+    logger.info('Starting Conpot using configuration found in: %s', args.config)
 
     servers = list()
 
@@ -265,11 +265,11 @@ def main():
                         greenlet = gevent.spawn(server.start, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
                         servers.append(server)
-                        logger.info('Found and enabled {0} protocol.'.format(protocol))
+                        logger.info('Found and enabled %s protocol.', protocol)
                 else:
-                    logger.info('{0} available but disabled by configuration.'.format(protocol_name))
+                    logger.info('%s available but disabled by configuration.', protocol_name)
             else:
-                logger.debug('No {0} template found. Service will remain unconfigured/stopped.'.format(protocol_name))
+                logger.debug('No %s template found. Service will remain unconfigured/stopped.', protocol_name)
 
         log_worker = LogWorker(config, dom_base, session_manager, public_ip)
         greenlet = gevent.spawn(log_worker.start)

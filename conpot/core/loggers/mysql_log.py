@@ -94,7 +94,7 @@ class MySQLlogger(object):
                 logger.error('Logging failed. Database connection not available.')
                 return False
             else:
-                logger.debug("Logging failed: Database connection lost. Retrying ({0} tries left)...".format(retry))
+                logger.debug('Logging failed: Database connection lost. Retrying (%s tries left)...', retry)
                 retry -= 1
                 gevent.sleep(float(0.5))
                 return self.log(event, retry)

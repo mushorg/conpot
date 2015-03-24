@@ -120,7 +120,7 @@ class Proxy(object):
                         destination = 'proxied socket'
                     else:
                         destination = 'remote connection'
-                    logger.warning('Error while sending data to {0}: {1}.'.format(destination, str(socket_err)))
+                    logger.warning('Error while sending data to %s: %s.', destination, str(socket_err))
                     sockets = []
                     break
 
@@ -131,22 +131,22 @@ class Proxy(object):
     def handle_in_data(self, data, sock, session):
         hex_data = data.encode('hex_codec')
         session.add_event({'raw_request': hex_data, 'raw_response': ''})
-        logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
+        logger.debug('Received %s bytes from outside to proxied service: %s', len(data), hex_data)
         if self.decoder:
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_in(data)
-            logger.debug('Decoded request: {0}'.format(decoded))
+            logger.debug('Decoded request: %s', decoded)
             session.add_event({'request': decoded, 'raw_response': ''})
         sock.send(data)
 
     def handle_out_data(self, data, sock, session):
         hex_data = data.encode('hex_codec')
         session.add_event({'raw_request': '', 'raw_response': hex_data})
-        logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
+        logger.debug('Received %s bytes from proxied service: %s', len(data), hex_data)
         if self.decoder:
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_out(data)
-            logger.debug('Decoded response: {0}'.format(decoded))
+            logger.debug('Decoded response: %s', decoded)
             session.add_event({'request': '', 'raw_response': decoded})
         sock.send(data)
 
