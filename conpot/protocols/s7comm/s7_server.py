@@ -113,7 +113,7 @@ class S7Server(object):
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                        logger.debug('Received S7 packet: magic:%s pdu_type:%s reserved:%s req_id:%s param_len:%s '
+                        logger.debug('Received S7 packet:%s magic:%s pdu_type:%s reserved:%s req_id:%s param_len:%s '
                                      'data_len:%s result_inf:%s', S7_packet.magic, S7_packet.pdu_type, S7_packet.reserved, 
                                      S7_packet.request_id, S7_packet.param_length, S7_packet.data_length, S7_packet.result_info, 
                                      session.id)
