@@ -16,7 +16,7 @@ deb http://dk.archive.ubuntu.com/ubuntu precise main multiverse
 Install dependencies:
 ::
 
-    sudo apt-get install libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev python-pip python-mysqldb
+    sudo apt-get install libmysqlclient-dev libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev python-pip python-mysqldb
 
 
 The stable version of ConPot can be downloaded from PyPI:
