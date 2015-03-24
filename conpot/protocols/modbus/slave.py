@@ -93,7 +93,7 @@ class MBSlave(Slave):
                 raise Exception("No response for function %d" % self.function_code)
 
             except ModbusError as e:
-                logger.error('Exception caught: {0}. (A proper response will be sent to the peer)'.format(e))
+                logger.error('Exception caught: %s. (A proper response will be sent to the peer)', e)
                 return struct.pack(">BB", self.function_code + 128, e.get_exception_code())
 
     def add_block(self, block_name, block_type, starting_address, size):

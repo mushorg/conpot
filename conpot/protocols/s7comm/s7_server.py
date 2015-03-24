@@ -55,7 +55,7 @@ class S7Server(object):
                 databus_key = item.xpath('./text()')[0] if len(item.xpath('./text()')) else ''
                 ssl_dict[item_id] = databus_key
 
-        logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
+        logger.debug('Conpot debug info: S7 SSL/SZL: %s', self.ssl_lists)
         logger.info('Conpot S7Comm initialized')
 
     def handle(self, sock, address):
@@ -63,7 +63,7 @@ class S7Server(object):
         session = conpot_core.get_session('s7comm', address[0], address[1])
 
         self.start_time = time.time()
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
@@ -107,14 +107,15 @@ class S7Server(object):
                     cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
 
                     if cotp_base_packet.tpdu_type == 0xf0:
-                        logger.debug('Received known COTP TPDU: {0}. ({1})'.format(cotp_base_packet.tpdu_type,
-                                                                                   session.id))
+                        logger.debug(
+                            'Received known COTP TPDU: %s. (%s)', cotp_base_packet.tpdu_type,
+                            session.id)
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
                         S7_packet = S7().parse(cotp_base_packet.trailer)
                         logger.debug(
                             'Received S7 packet: magic:%s pdu_type:%s reserved:%s req_id:%s param_len:%s '
-                            'data_len:%s result_inf:%s session_id:%',
+                            'data_len:%s result_inf:%s session_id:%s',
                             S7_packet.magic, S7_packet.pdu_type,
                             S7_packet.reserved, S7_packet.request_id,
                             S7_packet.param_length, S7_packet.data_length,
@@ -147,13 +148,12 @@ class S7Server(object):
 
                                     if cotp_base_packet.tpdu_type == 0xf0:
                                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                                        logger.debug(
-                                            'Received S7 packet: magic:%s pdu_type:%s reserved:%s '
-                                            'req_id:%s param_len:%s data_len:%s result_inf:%s session_id:%s',
+                                        logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} '
+                                                     'req_id:{3} param_len:{4} data_len:{5} result_inf:{6}'.format(
                                             S7_packet.magic, S7_packet.pdu_type,
                                             S7_packet.reserved, S7_packet.request_id,
                                             S7_packet.param_length, S7_packet.data_length,
-                                            S7_packet.result_info, session.id)
+                                            S7_packet.result_info, session.id))
 
                                         response_param, response_data = S7_packet.handle()
                                         s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
@@ -170,17 +170,17 @@ class S7Server(object):
                             'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type))
                         session.add_event({'error': 'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type)})
                 else:
-                    logger.debug('Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type))
+                    logger.debug('Received unknown COTP TPDU before handshake: %s', cotp_base_packet.tpdu_type)
                     session.add_event({'error': 'Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type)})
 
         except socket.timeout:
             session.add_event({'type': 'CONNECTION_LOST'})
-            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
 
     def start(self, host, port):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
-        logger.info('S7Comm server started on: {0}'.format(connection))
+        logger.info('S7Comm server started on: %s', connection)
         self.server.start()
 
     def stop(self):
