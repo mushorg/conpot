@@ -58,7 +58,6 @@ class S7Server(object):
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
         logger.info('Conpot S7Comm initialized')
 
-
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
         session = conpot_core.get_session('s7comm', address[0], address[1])
@@ -113,12 +112,13 @@ class S7Server(object):
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                        logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} req_id:{3} param_len:{4} '
-                                     'data_len:{5} result_inf:{6}'.format(
+                        logger.debug(
+                            'Received S7 packet: magic:%s pdu_type:%s reserved:%s req_id:%s param_len:%s '
+                            'data_len:%s result_inf:%s session_id:%s',
                             S7_packet.magic, S7_packet.pdu_type,
                             S7_packet.reserved, S7_packet.request_id,
                             S7_packet.param_length, S7_packet.data_length,
-                            S7_packet.result_info, session.id))
+                            S7_packet.result_info, session.id)
 
                         # request pdu
                         if S7_packet.pdu_type == 1:
@@ -147,12 +147,13 @@ class S7Server(object):
 
                                     if cotp_base_packet.tpdu_type == 0xf0:
                                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                                        logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} '
-                                                     'req_id:{3} param_len:{4} data_len:{5} result_inf:{6}'.format(
+                                        logger.debug(
+                                            'Received S7 packet: magic:%s pdu_type:%s reserved:%s '
+                                            'req_id:%s param_len:%s data_len:%s result_inf:%s session_id:%s',
                                             S7_packet.magic, S7_packet.pdu_type,
                                             S7_packet.reserved, S7_packet.request_id,
                                             S7_packet.param_length, S7_packet.data_length,
-                                            S7_packet.result_info, session.id))
+                                            S7_packet.result_info, session.id)
 
                                         response_param, response_data = S7_packet.handle()
                                         s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
