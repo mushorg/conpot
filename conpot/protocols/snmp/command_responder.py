@@ -132,10 +132,10 @@ class CommandResponder(object):
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
 
-            logger.debug('Registered: OID {0} Instance {1} ASN.1 ({2} @ {3}) value {4} dynrsp.'.format(s.name, instance, s.label, mibname, value))
+            logger.debug('Registered: OID %s Instance %s ASN.1 (%s @ %s) value %s dynrsp.', s.name, instance, s.label, mibname, value)
 
         else:
-            logger.debug('Skipped: OID for symbol {0} not found in MIB {1}'.format(symbolname, mibname))
+            logger.debug('Skipped: OID for symbol %s not found in MIB %s', symbolname, mibname)
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
