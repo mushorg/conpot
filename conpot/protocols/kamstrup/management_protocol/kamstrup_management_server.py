@@ -32,7 +32,7 @@ class KamstrupManagementServer(object):
         self.command_responder = CommandResponder(template)
         self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n"
         logger.info('Kamstrup management protocol server initialized.')
-	self.server = None
+        self.server = None
 
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1])
