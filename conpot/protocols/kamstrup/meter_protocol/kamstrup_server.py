@@ -19,6 +19,7 @@ import logging
 import socket
 import binascii
 import random
+
 from gevent.server import StreamServer
 import gevent
 
@@ -35,7 +36,6 @@ class KamstrupServer(object):
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
         self.server_active = True
-	self.server = None
         conpot_core.get_databus().observe_value('reboot_signal', self.reboot)
         logger.info('Kamstrup protocol server initialized.')
 
@@ -55,11 +55,11 @@ class KamstrupServer(object):
         logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
-        self.server_active = True
+        server_active = True
 
         parser = request_parser.KamstrupRequestParser()
         try:
-            while self.server_active:
+            while server_active:
                 raw_request = sock.recv(1024)
 
                 if not raw_request:
@@ -98,17 +98,15 @@ class KamstrupServer(object):
 
     def start(self, host, port):
         connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
+        server = StreamServer(connection, self.handle)
         logger.info('Kamstrup protocol server started on: %s', connection)
-        self.server.start()
+        server.start()
 
-    def stop(self):
-        self.server.stop()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     print 'Starting kamstrup_meter protocol server'
     kamstrup_server = KamstrupServer(None)
-    self.server = kamstrup_server.get_server('0.0.0.0', 6666)
-    server_greenlet = gevent.spawn(self.server.start)
+    server = kamstrup_server.get_server('0.0.0.0', 6666)
+    server_greenlet = gevent.spawn(server.start)
     gevent.sleep(10000)
