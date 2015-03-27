@@ -35,7 +35,7 @@ class KamstrupServer(object):
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
         self.server_active = True
-	self.server = None
+        self.server = None
         conpot_core.get_databus().observe_value('reboot_signal', self.reboot)
         logger.info('Kamstrup protocol server initialized.')
 
