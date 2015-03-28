@@ -75,4 +75,4 @@ class KamstrupManagementServer(object):
         self.server.start()
 
     def stop(self):
-	self.server.stop()
+        self.server.stop()
