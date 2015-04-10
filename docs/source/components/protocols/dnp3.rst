@@ -5,22 +5,18 @@ DNP3
 Installation
 ------------
 
-1) Fetch DNP3 2.0.x branch from https://github.com/automatak/dnp3
-::
-git clone https://github.com/automatak/dnp3.git
-2) Install the prerequisites: 
-::
-http://dnp3.github.io/doc/2.0.x/building/prerequisites.html
-Get ASIO from here: http://think-async.com/ and install it (./configure/make/make install)
-3) Before building dnp3 change the following file: 
+1) Fetch DNP3 2.0.x branch from https://github.com/automatak/dnp3 i.e. git clone https://github.com/automatak/dnp3.git
+2) Install the prerequisites: http://dnp3.github.io/doc/2.0.x/building/prerequisites.html
+3) Get ASIO from here: http://think-async.com/ and install it (./configure/make/make install)
+4) Before building dnp3 change the following file: 
 dnp3/cpp/examples/master/DemoMain.cpp
 
 Change the port on line 54 from 20000 to 20001, so that it becomes:
 	auto pChannel = manager.AddTCPClient("tcpclient", FILTERS, TimeDuration::Seconds(2), TimeDuration::Seconds(5), "127.0.0.1", "0.0.0.0", 20001);
 
-4) Follow the build instructions: http://dnp3.github.io/doc/2.0.x/building/building-linux.html
-5) Run conpot with the proxy i.e. conpot -t dnp3_proxy.xml
-6) Run ``outstationdemo`` and ``masterdemo``. 
+5) Follow the build instructions: http://dnp3.github.io/doc/2.0.x/building/building-linux.html
+6) Run conpot with the proxy i.e. conpot -t dnp3_proxy.xml
+7) Run ``outstationdemo`` and ``masterdemo``. 
 
 Note: If you build before the modification (step 3) proceed with the following:
 
