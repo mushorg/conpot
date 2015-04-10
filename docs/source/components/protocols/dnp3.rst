@@ -6,8 +6,10 @@ Installation
 ------------
 
 1) Fetch DNP3 2.0.x branch from https://github.com/automatak/dnp3
+::
 git clone https://github.com/automatak/dnp3.git
 2) Install the prerequisites: 
+::
 http://dnp3.github.io/doc/2.0.x/building/prerequisites.html
 Get ASIO from here: http://think-async.com/ and install it (./configure/make/make install)
 3) Before building dnp3 change the following file: 
