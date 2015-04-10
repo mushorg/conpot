@@ -21,6 +21,6 @@ Note: If you build before the modification (step 3) proceed with the following:
 
 1) Run: find /your/dir -type f -exec touch {} +
 2) Run: make clean
-3) Continue with steps 4 to 6 above.
+3) Continue with steps 5 to 7 above.
 
 If you get a warning concerning a clock skew while running these additional steps, you may ignore it since you're running a clean build.
