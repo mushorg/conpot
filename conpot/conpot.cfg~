@@ -41,7 +41,12 @@ inbox_path = /services/inbox/default/
 use_https = False
 
 [stix]
-protocols = ['modbus', 'snmp', 'http', 's7comm']
+port_path_list = [
+    "//conpot_template/protocols/modbus/@port",
+    "//conpot_template/protocols/snmp/@port",
+    "//conpot_template/protocols/http/@port",
+    "//conpot_template/protocols/s7comm/@port"
+    ]
 contact_name = conpot
 contact_domain = http://conpot.org/stix-1
 
