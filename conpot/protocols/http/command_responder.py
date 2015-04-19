@@ -648,7 +648,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # try to find a configuration item for this GET request
             entity_xml = configuration.xpath(
                 '//http/htdocs/node[@name="'
-                + self.path.partition('?')[0].decode('utf8') + '"]')
+                + self.path.partition('?')[0].decode('utf8') + '"]'
+            )
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
