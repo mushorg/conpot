@@ -54,7 +54,7 @@ class StixTransformer(object):
             http=80,
             s7comm=102,
         )
-        port_path_list = map(lambda x: '//conpot_template/protocols/'+x+'/@port', self.protocol_to_port_mapping.values())
+        port_path_list = map(lambda x: '//conpot_template/protocols/'+str(x)+'/@port', self.protocol_to_port_mapping.values())
         for port_path in port_path_list:
             try:
                 protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
