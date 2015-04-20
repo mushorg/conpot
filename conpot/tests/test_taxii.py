@@ -39,9 +39,7 @@ class TestLoggers(unittest.TestCase):
         config_file = os.path.join(os.path.dirname(__file__), '../conpot.cfg')
         config.read(config_file)
         config.set('taxii', 'enabled', True)
-        config.set('taxii', 'use_contact_info', True)
         config.set('stix', 'contact_name', 'conpot')
-        config.set('taxii', 'contact_mail', 'a@b.c')
         config.set('stix', 'contact_domain', 'http://conpot.org/stix-1')
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
