@@ -109,6 +109,7 @@
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element type="xs:byte" name="tarpit"/>
+                                        <xs:element type="xs:string" name="proxy" minOccurs="0" maxOccurs="1"/>
                                         <xs:element name="entity">
                                             <xs:complexType>
                                                 <xs:simpleContent>
