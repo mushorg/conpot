@@ -267,6 +267,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # platform independent way to check file accessibility.
 
             trailers = []
+            chunks = '0'
 
             try:
 
@@ -286,7 +287,6 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     if header[0].lower() == 'transfer-encoding' and header[1].lower() == 'chunked':
                         del headers[i]
-                        chunks = '0'
                         break
 
             except:
