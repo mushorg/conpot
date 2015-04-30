@@ -126,7 +126,8 @@ class LogWorker(object):
                     event["public_ip"] = self.public_ip
 
                 if self.friends_feeder:
-                    self.friends_feeder.log(json.dumps(event, default=self._json_default))
+                    self.friends_feeder.log(json.dumps(
+                        event, ensure_ascii=False, default=self._json_default))
 
                 if self.sqlite_logger:
                     self.sqlite_logger.log(event)
