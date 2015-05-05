@@ -1,7 +1,10 @@
+# modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
+# Brno University of Technology, Faculty of Information Technology
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
 from conpot.tests.helpers import snmp_client
+from pysnmp.proto.rfc1905 import EndOfMibView
 
 import gevent
 from gevent.pool import Pool
@@ -85,19 +88,45 @@ class ConpotCloner(object):
             '1.3.6.1.4.1.311.1.7.3.1.22.0': "NotFoundErrors"
         }
 
-    def mock_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
-        self.result = None
+    def mock_callback(self, sendRequestHandle, errorIndication,
+                      errorStatus, errorIndex, varBindTable, cbCtx):
+        # return values are used for signaling the I/O dispatcher
+        # (0=stop; 1=continue)
+        if not hasattr(self, 'result'):
+            self.result = ""
         if errorIndication:
-            self.result = errorIndication
-        elif errorStatus:
-            self.result = errorStatus.prettyPrint()
-        else:
-            for oid, val in varBindTable:
-                self.result = val.prettyPrint()
+            print(errorIndication)
+            return
+        if errorStatus and errorStatus != 2:
+            print('%s at %s' % (
+                errorStatus.prettyPrint(),
+                errorIndex and varBindTable[-1][int(errorIndex) - 1] or '?'
+            )
+            )
+            return
+        for varBindRow in varBindTable:
+            # walk command
+            if type(varBindRow) is list:
+                for oid, val in varBindRow:
+                    if isinstance(val, EndOfMibView):
+                        self.result += '%s\n' % (val.prettyPrint())
+                        return 0
+                    self.result += '%s = %s\n' % \
+                        (oid.prettyPrint(), val.prettyPrint())
+            # get command
+            elif type(varBindRow) is tuple:
+                oid, val = varBindRow
+                if isinstance(val, EndOfMibView):
+                    self.result += '%s\n' % (val.prettyPrint())
+                    return 0
+                self.result += '%s = %s\n' % \
+                    (oid.prettyPrint(), val.prettyPrint())
+        return 1
 
     def modbus_read_coils(self, master, slave=1):
         try:
-            actual_bits = master.execute(slave=slave, function_code=cst.READ_COILS,
+            actual_bits = master.execute(slave=slave,
+                                         function_code=cst.READ_COILS,
                                          starting_address=1, quantity_of_x=128)
         except:
             pass
@@ -121,12 +150,14 @@ class ConpotCloner(object):
 
     def snmp_walk(self):
         client = snmp_client.SNMPClient(host='127.0.0.1', port=161)
-        OID = ((1, 3, 6, 1, 2, 1, 25, 2, 3, 1, 1), None)
+        OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.walk_command(OID, callback=self.mock_callback)
+        client.snmpEngine.transportDispatcher.runDispatcher()
         print self.result
+        client.snmpEngine.transportDispatcher.closeDispatcher()
 
 
 if __name__ == "__main__":
     cloner = ConpotCloner()
-    #cloner.modbus_worker()
+    # cloner.modbus_worker()
     cloner.snmp_walk()
