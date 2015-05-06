@@ -176,7 +176,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # retrieve and return (substituted) payload
         return parser.payload
 
-    def load_status(self, status, requeststring, headers, configuration, docpath):
+    def load_status(self, status, requeststring, headers, configuration, docpath, method='GET', body=None):
         """Retrieves headers and payload for a given status code.
            Certain status codes can be configured to forward the
            request to a remote system. If not available, generate
@@ -272,7 +272,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             try:
 
                 conn = httplib.HTTPConnection(target)
-                conn.request("GET", requeststring)
+                conn.request(method, requeststring, body)
                 response = conn.getresponse()
 
                 status = int(response.status)
@@ -797,7 +797,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                                                                             self.path,
                                                                             headers,
                                                                             configuration,
-                                                                            docpath)
+                                                                            docpath,
+                                                                            'GET')
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -858,7 +859,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                                                                             self.path,
                                                                             headers,
                                                                             configuration,
-                                                                            docpath)
+                                                                            docpath,
+                                                                            'POST',
+                                                                            post_data)
 
         # send initial HTTP status line to client
         self.send_response(status)
