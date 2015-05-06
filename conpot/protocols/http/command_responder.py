@@ -275,8 +275,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 # that we're proxying while being unaware of any session foo..
                 requestheaders['Host'] = target
                 requestheaders['Connection'] = 'close'
-
-		remotestatus = 0
+                
                 conn = httplib.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
@@ -295,7 +294,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                         del headers[i]
                         break
 
-		status = remotestatus
+                status = remotestatus
 
             except:
 
@@ -306,7 +305,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, trailers, payload, chunks) = self.load_status(503,
+                    (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                                     requeststring,
                                                                                     self.headers,
                                                                                     headers,
