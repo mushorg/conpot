@@ -47,7 +47,7 @@ class TestMacAddrUtil(unittest.TestCase):
         if "dummy" in data:
             # Change mac address of dummy interface and test it
             mac_addr.change_mac(iface, testmac)
-            flag = mac_addr.check_mac(iface, testmac)
+            flag = mac_addr._check_mac(iface, testmac)
             # Remove the dummy interface
             subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
             self.assertTrue(flag is True)
