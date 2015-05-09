@@ -9,10 +9,10 @@ sphinx
 libtaxii>=1.1.0
 MySQL-python
 xlrd
-stix
-cybox
 crc16
 enum
 hpfeeds
 modbus-tk
 stix-validator
+stix
+cybox
