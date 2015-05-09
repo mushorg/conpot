@@ -72,7 +72,8 @@ class Databus(object):
         self._observer_map[key].append(callback)
 
     def initialize(self, config_file):
-        self._reset()
+        self.reset()
+        assert self.initialized.isSet() is False
         logger.debug('Initializing databus using %s.', config_file)
         dom = etree.parse(config_file)
         entries = dom.xpath('//core/databus/key_value_mappings/*')
@@ -106,7 +107,14 @@ class Databus(object):
             snapsnot[key] = self.get_value(key)
         return json.dumps(snapsnot)
 
-    def _reset(self):
+    def reset(self):
         logger.debug('Resetting databus.')
+
+        # if the class has a stop method call it.
+        for value in self._data.values():
+            if getattr(value, "stop", None):
+                value.stop()
+
         self._data.clear()
         self._observer_map.clear()
+        self.initialized.clear()
