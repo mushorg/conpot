@@ -26,7 +26,8 @@ from lxml import etree
 
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
-from conpot.tests.helpers.mitre_stix_validator import STIXValidator
+import sdv.validators as validators
+#from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 
 
 class TestLoggers(unittest.TestCase):
@@ -53,12 +54,17 @@ class TestLoggers(unittest.TestCase):
         dom = etree.parse('conpot/templates/default/template.xml')
         stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
-        xmlValidator = STIXValidator(None, True, False)
-        result_dict = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
-        errors = ''
-        if 'errors' in result_dict:
-            errors = ', '.join(result_dict['errors'])
-        self.assertTrue(result_dict['result'], 'Error while validations STIX xml: {0}'. format(errors))
+
+        validator = validators.STIXSchemaValidator()
+        result = validator.validate(StringIO(stix_package_xml.encode('utf-8'))).as_dict()
+
+        has_errors = False
+        error_string = ''
+        if 'errors' in result:
+            has_errors = True
+            for error in result['errors']:
+                error_string += error
+        self.assertFalse(has_errors, 'Error while validations STIX xml: {0}'. format(error_string))
 
     def test_taxii(self):
         """
