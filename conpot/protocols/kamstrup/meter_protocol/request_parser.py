@@ -82,7 +82,8 @@ class KamstrupRequestParser(object):
                     return result
                 position += 1
 
-    def valid_crc(self, message):
+    @classmethod
+    def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
         calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc

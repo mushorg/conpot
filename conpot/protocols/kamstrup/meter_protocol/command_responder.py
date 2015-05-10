@@ -58,5 +58,3 @@ class CommandResponder(object):
             return response
         else:
             assert False
-
-

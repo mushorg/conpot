@@ -203,10 +203,12 @@ class Decoder382(object):
         return 'Login command with pin_code: {0}'.format(pin_code)
 
     # supplied message should be stripped of leading and trailing magic
-    def valid_crc(self, message):
+    @classmethod
+    def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
         calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc
 
-    def _decode_response(self):
+    @classmethod
+    def _decode_response(cls):
         return 'Decoding of this response has not been implemented yet.'
