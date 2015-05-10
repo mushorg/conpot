@@ -36,7 +36,7 @@ class ModbusServer(modbus.Server):
             self, databank if databank else modbus.Databank())
 
         # retrieve mode of connection and turnaround delay from the template
-        self._setup(template)
+        self._get_mode_and_delay(template)
 
         # not sure how this class remember slave configuration across
         # instance creation, i guess there are some
@@ -44,11 +44,10 @@ class ModbusServer(modbus.Server):
         self.remove_all_slaves()
         self._configure_slaves(template)
 
-    def _setup(self, template):
+    def _get_mode_and_delay(self, template):
         dom = etree.parse(template)
         self.mode = dom.xpath('//modbus/mode/text()')[0].lower()
-        if (self.mode != 'tcp' and
-                self.mode != 'serial'):
+        if self.mode not in ['tcp', 'serial']:
             logger.error('Conpot modbus initialization failed due to incorrect'
                          ' settings. Check the modbus template file')
             sys.exit(3)
@@ -79,7 +78,7 @@ class ModbusServer(modbus.Server):
                         name, slave_id, request_type, start_addr, size)
 
             logger.info('Conpot modbus initialized')
-        except (Exception, DuplicatedKeyError) as e:
+        except (Exception) as e:
             logger.info(e)
 
     def handle(self, sock, address):
