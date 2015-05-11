@@ -1,7 +1,10 @@
+# modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
+# Brno University of Technology, Faculty of Information Technology
 import struct
 import socket
 import time
 import logging
+import sys
 
 from lxml import etree
 from gevent.server import StreamServer
@@ -11,6 +14,7 @@ from modbus_tk import modbus
 # Following imports are required for modbus template evaluation
 import modbus_tk.defines as mdef
 import random
+from modbus_tk.modbus import DuplicatedKeyError
 
 from conpot.protocols.modbus import slave_db
 import conpot.core as conpot_core
@@ -23,34 +27,59 @@ class ModbusServer(modbus.Server):
     def __init__(self, template, template_directory, args, timeout=5):
 
         self.timeout = timeout
+        self.delay = None
+        self.mode = None
         databank = slave_db.SlaveBase(template)
 
         # Constructor: initializes the server settings
-        modbus.Server.__init__(self, databank if databank else modbus.Databank())
+        modbus.Server.__init__(
+            self, databank if databank else modbus.Databank())
 
-        # not sure how this class remember slave configuration across instance creation, i guess there are some
+        # retrieve mode of connection and turnaround delay from the template
+        self._get_mode_and_delay(template)
+
+        # not sure how this class remember slave configuration across
+        # instance creation, i guess there are some
         # well hidden away class variables somewhere.
         self.remove_all_slaves()
         self._configure_slaves(template)
 
+    def _get_mode_and_delay(self, template):
+        dom = etree.parse(template)
+        self.mode = dom.xpath('//modbus/mode/text()')[0].lower()
+        if self.mode not in ['tcp', 'serial']:
+            logger.error('Conpot modbus initialization failed due to incorrect'
+                         ' settings. Check the modbus template file')
+            sys.exit(3)
+        try:
+            self.delay = int(dom.xpath('//modbus/delay/text()')[0])
+        except ValueError:
+            logger.error('Conpot modbus initialization failed due to incorrect'
+                         ' settings. Check the modbus template file')
+            sys.exit(3)
+
     def _configure_slaves(self, template):
         dom = etree.parse(template)
         slaves = dom.xpath('//modbus/slaves/*')
-        for s in slaves:
-            slave_id = int(s.attrib['id'])
-            slave = self.add_slave(slave_id)
-            logger.debug('Added slave with id %s.', slave_id)
-            for b in s.xpath('./blocks/*'):
-                name = b.attrib['name']
-                request_type = eval('mdef.' + b.xpath('./type/text()')[0])
-                start_addr = int(b.xpath('./starting_address/text()')[0])
-                size = int(b.xpath('./size/text()')[0])
-                slave.add_block(name, request_type, start_addr, size)
-                logger.debug(
-                    'Added block %s to slave %s. (type=%s, start=%s, size=%s)',
-                    name, slave_id, request_type, start_addr, size)
+        try:
+            for s in slaves:
+                slave_id = int(s.attrib['id'])
+                slave = self.add_slave(slave_id)
+                logger.debug('Added slave with id %s.', slave_id)
+                for b in s.xpath('./blocks/*'):
+                    name = b.attrib['name']
+                    request_type = eval('mdef.' + b.xpath('./type/text()')[0])
+                    start_addr = int(b.xpath('./starting_address/text()')[0])
+                    size = int(b.xpath('./size/text()')[0])
+                    slave.add_block(name, request_type, start_addr, size)
+                    logger.debug(
+                        'Added block %s to slave %s. '
+                        '(type=%s, start=%s, size=%s)',
+                        name, slave_id, request_type, start_addr, size)
 
-        logger.info('Conpot modbus initialized')
+            logger.info('Conpot modbus initialized')
+        except (Exception) as e:
+            logger.info(e)
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
@@ -58,7 +87,9 @@ class ModbusServer(modbus.Server):
         session = conpot_core.get_session('modbus', address[0], address[1])
 
         self.start_time = time.time()
-        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
+        logger.info(
+            'New connection from %s:%s. (%s)',
+            address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
@@ -78,17 +109,44 @@ class ModbusServer(modbus.Server):
                     request += new_byte
                 query = modbus_tcp.TcpQuery()
 
-                # logdata is a dictionary containing request, slave_id, function_code and response
-                response, logdata = self._databank.handle_request(query, request)
+                # logdata is a dictionary containing request, slave_id,
+                # function_code and response
+                response, logdata = self._databank.handle_request(
+                    query, request, self.mode)
                 logdata['request'] = request.encode('hex')
                 session.add_event(logdata)
 
-                logger.debug('Modbus traffic from %s: %s (%s)', address[0], logdata, session.id)
+                logger.debug(
+                    'Modbus traffic from %s: %s (%s)',
+                    address[0], logdata, session.id)
 
                 if response:
                     sock.sendall(response)
+                    logger.info('Modbus response sent to %s', address[0])
+                else:
+                    # MB serial connection addressing UID=0
+                    if (self.mode == 'serial' and logdata['slave_id'] == 0):
+                        # delay is in milliseconds
+                        time.sleep(self.delay / 1000)
+                        logger.debug(
+                            'Modbus server\'s turnaround delay expired.')
+                        logger.info('Connection terminated with client %s.',
+                                    address[0])
+                        session.add_event({'type': 'CONNECTION_TERMINATED'})
+                        sock.shutdown(socket.SHUT_RDWR)
+                        sock.close()
+                        break
+                    # Invalid addressing
+                    else:
+                        logger.info('Client ignored due to invalid addressing.'
+                                    ' (%s)', session.id)
+                        session.add_event({'type': 'CONNECTION_TERMINATED'})
+                        sock.shutdown(socket.SHUT_RDWR)
+                        sock.close()
+                        break
         except socket.timeout:
-            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
+            logger.debug(
+                'Socket timeout, remote: %s. (%s)', address[0], session.id)
             session.add_event({'type': 'CONNECTION_LOST'})
 
     def start(self, host, port):
@@ -96,3 +154,4 @@ class ModbusServer(modbus.Server):
         server = StreamServer(connection, self.handle)
         logger.info('Modbus server started on: %s', connection)
         server.start()
+
