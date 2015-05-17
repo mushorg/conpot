@@ -33,10 +33,10 @@ import bacpypes.object
 from bacpypes.app import LocalDeviceObject, BIPSimpleApplication
 from bacpypes.pdu import GlobalBroadcast
 
-from bacpypes.apdu import APDU, apdu_types, confirmed_request_types, complex_ack_types, unconfirmed_request_types, error_types, ConfirmedRequestPDU, UnconfirmedRequestPDU, SimpleAckPDU, ComplexAckPDU, ErrorPDU, RejectPDU, IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
+from bacpypes.apdu import PDU, APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
+    error_types, ConfirmedRequestPDU, UnconfirmedRequestPDU, SimpleAckPDU, ComplexAckPDU, ErrorPDU, RejectPDU, \
+    IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
 
-from bacpypes.basetypes import *
-from bacpypes.primitivedata import *
 from bacpypes.constructeddata import Any
 
 import conpot.core as conpot_core
@@ -44,8 +44,6 @@ import conpot.core as conpot_core
 import ast
 
 logger = logging.getLogger(__name__)
-
-# TODO: fix imports
 
 
 class BACnetApp(BIPSimpleApplication):
@@ -59,7 +57,7 @@ class BACnetApp(BIPSimpleApplication):
         self.objectIdentifier = {device.objectIdentifier: device}
         self.sock = sock
 
-    def _get_objects_and_properties(self, dom):
+    def get_objects_and_properties(self, dom):
         # parse the bacnet template for objects and their properties
         device_property_list = dom.xpath('//bacnet/device_info/*')
         for prop in device_property_list:
@@ -67,16 +65,16 @@ class BACnetApp(BIPSimpleApplication):
             prop_key = re.sub("['_','-']", "", prop_key)
             prop_key = prop_key[0].lower() + prop_key[1:]
             if prop_key not in self.localDevice.propertyList.value and \
-                prop_key not in ['deviceIdentifier', 'deviceName']:
+                    prop_key not in ['deviceIdentifier', 'deviceName']:
                 self.add_property(prop_key, prop.text)
 
         object_list = dom.xpath('//bacnet/object_list/object/@name')
         for obj in object_list:
-            property_list = dom.xpath('//bacnet/object_list/object[@name="{0}"]/properties/*'.format(obj))
+            property_list = dom.xpath('//bacnet/object_list/object[@name="%s"]/properties/*' % obj)
             for prop in property_list:
                 if prop.tag == 'object_type':
-                    object_type = re.sub('-',' ',prop.text).lower().title()
-                    object_type = re.sub(' ','',object_type)+'Object'
+                    object_type = re.sub('-', ' ', prop.text).lower().title()
+                    object_type = re.sub(' ', '', object_type) + 'Object'
             try:
                 device_object = getattr(bacpypes.object, object_type)()
             except NameError:
@@ -105,14 +103,14 @@ class BACnetApp(BIPSimpleApplication):
     def add_object(self, obj):
         object_name = obj.objectName
         if not object_name:
-            raise RuntimeError, "object name required"
+            raise RuntimeError("object name required")
         object_identifier = obj.objectIdentifier
         if not object_identifier:
-            raise RuntimeError, "object identifier required"
+            raise RuntimeError("object identifier required")
         if object_name in self.objectName:
-            raise RuntimeError, "object already added with the same name"
+            raise RuntimeError("object already added with the same name")
         if object_identifier in self.objectIdentifier:
-            raise RuntimeError, "object already added with the same identifier"
+            raise RuntimeError("object already added with the same identifier")
 
         self.objectName[object_name] = obj
         self.objectIdentifier[object_identifier] = obj
@@ -120,18 +118,18 @@ class BACnetApp(BIPSimpleApplication):
 
     def add_property(self, prop_name, prop_value):
         if not prop_name:
-            raise RuntimeError, "property name required"
+            raise RuntimeError("property name required")
         if not prop_value:
-            raise RuntimeError, "property value required"
+            raise RuntimeError("property value required")
 
         setattr(self.localDevice, prop_name, prop_value)
         self.localDevice.propertyList.append(prop_name)
 
-    def iAm(self, request, address, invoke_key, device):
+    def iAm(self, *args):
         self._response = None
         return
 
-    def iHave(self, request, address, invoke_key, device):
+    def iHave(self, *args):
         self._response = None
         return
 
@@ -140,7 +138,7 @@ class BACnetApp(BIPSimpleApplication):
         execute = False
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
-                (request.deviceInstanceRangeHighLimit is not None):
+                    (request.deviceInstanceRangeHighLimit is not None):
                 if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1] > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
@@ -150,11 +148,11 @@ class BACnetApp(BIPSimpleApplication):
         except AttributeError:
             execute = True
 
-        if (execute):
+        if execute:
             self._response_service = 'IAmRequest'
             self._response = IAmRequest()
             self._response.pduDestination = GlobalBroadcast()
-            self._response.iAmDeviceIdentifier = self.objectIdentifier.keys()[0]
+            self._response.iAmDeviceIdentifier = self.objectIdentifier.keys()[0][1]
             self._response.maxAPDULengthAccepted = int(getattr(self.localDevice, 'maxApduLengthAccepted'))
             self._response.segmentationSupported = getattr(self.localDevice, 'segmentationSupported')
             self._response.vendorID = int(getattr(self.localDevice, 'vendorIdentifier'))
@@ -163,7 +161,7 @@ class BACnetApp(BIPSimpleApplication):
         execute = False
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
-                (request.deviceInstanceRangeHighLimit is not None):
+                    (request.deviceInstanceRangeHighLimit is not None):
                 if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1] > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
@@ -173,15 +171,15 @@ class BACnetApp(BIPSimpleApplication):
         except AttributeError:
             execute = True
 
-        if (execute):
+        if execute:
             for obj in device.objectList.value[2:]:
                 if int(request.object.objectIdentifier[1]) == obj[1] and \
-                    request.object.objectIdentifier[0] == obj[0]:
+                        request.object.objectIdentifier[0] == obj[0]:
                     objName = self.objectIdentifier[obj].objectName
                     self._response_service = 'IHaveRequest'
                     self._response = IHaveRequest()
                     self._response.pduDestination = GlobalBroadcast()
-                    self._response.deviceIdentifier = self.objectIdentifier.keys()[0]
+                    self._response.deviceIdentifier = self.objectIdentifier.keys()[0][1]
                     self._response.objectIdentifier = obj[1]
                     self._response.objectName = objName
                     break
@@ -193,12 +191,13 @@ class BACnetApp(BIPSimpleApplication):
         # TODO: add support for PropertyArrayIndex handling;
         for obj in device.objectList.value[2:]:
             if int(request.objectIdentifier[1]) == obj[1] and \
-                request.objectIdentifier[0] == obj[0]:
+                    request.objectIdentifier[0] == obj[0]:
                 objName = self.objectIdentifier[obj].objectName
                 for prop in self.objectIdentifier[obj].properties:
                     if request.propertyIdentifier == prop.identifier:
                         propName = prop.identifier
-                        propValue = prop.ReadProperty(self.objectIdentifier[obj])
+                        propValue = prop.ReadProperty(
+                            self.objectIdentifier[obj])
                         propType = prop.datatype()
                         self._response_service = 'ComplexAckPDU'
                         self._response = ReadPropertyACK()
@@ -222,8 +221,7 @@ class BACnetApp(BIPSimpleApplication):
                         # self._response.debug_contents()
                         break
                 else:
-                    logger.info('Bacnet ReadProperty: object has no property {0}'.format(
-                        request.propertyIdentifier))
+                    logger.info('Bacnet ReadProperty: object has no property %s', request.propertyIdentifier)
                     self._response = ErrorPDU()
                     self._response.pduDestination = address
                     self._response.apduInvokeID = invoke_key
@@ -236,20 +234,18 @@ class BACnetApp(BIPSimpleApplication):
         request = None
         apdu_type = apdu_types.get(apdu.apduType)
         invoke_key = apdu.apduInvokeID
-        logger.info('Bacnet PDU received from {0}:{1}. ({2})'.format(
-            address[0], address[1], apdu_type.__name__))
-        if (apdu_type.pduType == 0x0):
+        logger.info('Bacnet PDU received from %s:%d. (%s)', address[0], address[1], apdu_type.__name__)
+        if apdu_type.pduType == 0x0:
             # Confirmed request handling
             apdu_service = confirmed_request_types.get(apdu.apduService)
-            logger.info('Bacnet indication from {0}:{1}. ({2})'.format(
-                address[0], address[1], apdu_service.__name__))
+            logger.info('Bacnet indication from %s:%d. (%s)', address[0], address[1], apdu_service.__name__)
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except AttributeError, RuntimeError:
+            except (AttributeError, RuntimeError):
                 logger.debug('Bacnet indication: Invalid service.')
                 return
-            except DecodingError:
+            except bacpypes.errors.DecodingError:
                 pass
 
             for key, value in ConfirmedServiceChoice.enumerations.items():
@@ -263,24 +259,22 @@ class BACnetApp(BIPSimpleApplication):
                         self._response = None
                         return
             else:
-                logger.debug('Bacnet indication: Invalid confirmed service choice ({0})'.format(
-                    apdu_service.__name__))
+                logger.debug('Bacnet indication: Invalid confirmed service choice (%s)', apdu_service.__name__)
                 self._response = None
                 return
 
         # Unconfirmed request handling
-        elif (apdu_type.pduType == 0x1):
+        elif apdu_type.pduType == 0x1:
             apdu_service = unconfirmed_request_types.get(apdu.apduService)
-            logger.info('Bacnet indication from {0}:{1}. ({2})'.format(
-                address[0], address[1], apdu_service.__name__))
+            logger.info('Bacnet indication from %s:%d. (%s)', address[0], address[1], apdu_service.__name__)
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except AttributeError, RuntimeError:
+            except (AttributeError, RuntimeError):
                 logger.debug('Bacnet indication: Invalid service.')
                 self._response = None
                 return
-            except DecodingError:
+            except bacpypes.errors.DecodingError:
                 pass
 
             for key, value in UnconfirmedServiceChoice.enumerations.items():
@@ -296,37 +290,37 @@ class BACnetApp(BIPSimpleApplication):
             else:
                 # Unrecognized services
                 logger.debug(
-                    'Bacnet indication: Invalid unconfirmed service choice ({0})'.format(apdu_service))
+                    'Bacnet indication: Invalid unconfirmed service choice (%s)', apdu_service)
                 self._response_service = 'ErrorPDU'
                 self._response = ErrorPDU()
                 self._response.pduDestination = address
                 return
         # ignore the following
-        elif (apdu_type.pduType == 0x2):
+        elif apdu_type.pduType == 0x2:
             # simple ack pdu
             self._response = None
             return
-        elif (apdu_type.pduType == 0x3):
+        elif apdu_type.pduType == 0x3:
             # complex ack pdu
             self._response = None
             return
-        elif (apdu_type.pduType == 0x4):
+        elif apdu_type.pduType == 0x4:
             # segment ack
             self._response = None
             return
-        elif (apdu_type.pduType == 0x5):
+        elif apdu_type.pduType == 0x5:
             # error pdu
             self._response = None
             return
-        elif (apdu_type.pduType == 0x6):
+        elif apdu_type.pduType == 0x6:
             # reject pdu
             self._response = None
             return
-        elif (apdu_type.pduType == 0x7):
+        elif apdu_type.pduType == 0x7:
             # abort pdu
             self._response = None
             return
-        elif (0x8 <= apdu_type.pduType <= 0xf):
+        elif 0x8 <= apdu_type.pduType <= 0xf:
             # reserved
             self._response = None
             return
@@ -339,16 +333,14 @@ class BACnetApp(BIPSimpleApplication):
     def response(self, response_apdu, address):
         if response_apdu is None:
             return
+        apdu = APDU()
+        response_apdu.encode(apdu)
+        pdu = PDU()
+        apdu.encode(pdu)
         if isinstance(response_apdu, RejectPDU) or isinstance(response_apdu, ErrorPDU):
-            apdu = APDU()
-            response_apdu.encode(apdu)
-            pdu = PDU()
-            apdu.encode(pdu)
             self.sock.sendto(pdu.pduData, address)
         else:
             apdu_type = apdu_types.get(response_apdu.apduType)
-            pdu = PDU()
-            response_apdu.encode(pdu)
             if pdu.pduDestination == '*:*':
                 # broadcast
                 self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -357,8 +349,8 @@ class BACnetApp(BIPSimpleApplication):
                 # unicast
                 self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 0)
                 self.sock.sendto(pdu.pduData, address)
-            logger.info('Bacnet response sent to {0} ({1}:{2})'.format(
-                response_apdu.pduDestination, apdu_type.__name__, self._response_service))
+            logger.info('Bacnet response sent to %s (%s:%s)',
+                        response_apdu.pduDestination, apdu_type.__name__, self._response_service)
 
 
 class BacnetServer(object):
@@ -368,12 +360,15 @@ class BacnetServer(object):
         databus = conpot_core.get_databus()
         device_info_root = dom.xpath('//bacnet/device_info')[0]
 
-        name_key = device_info_root.xpath('./device_name/text()')[0]       
+        name_key = databus.get_value(device_info_root.xpath('./device_name/text()')[0])
         id_key = device_info_root.xpath('./device_identifier/text()')[0]
         vendor_name_key = device_info_root.xpath('./vendor_name/text()')[0]
-        vendor_identifier_key = device_info_root.xpath('./vendor_identifier/text()')[0]
-        apdu_length_key = device_info_root.xpath('./max_apdu_length_accepted/text()')[0]
-        segmentation_key = device_info_root.xpath('./segmentation_supported/text()')[0]
+        vendor_identifier_key = device_info_root.xpath(
+            './vendor_identifier/text()')[0]
+        apdu_length_key = device_info_root.xpath(
+            './max_apdu_length_accepted/text()')[0]
+        segmentation_key = device_info_root.xpath(
+            './segmentation_supported/text()')[0]
 
         #self.local_device_address = dom.xpath('./@*[name()="host" or name()="port"]')
 
@@ -395,15 +390,14 @@ class BacnetServer(object):
         # create application instance
         self.bacnet_app = BACnetApp(self.thisDevice, self.sock)
         # get object_list and properties
-        self.bacnet_app._get_objects_and_properties(dom)
+        self.bacnet_app.get_objects_and_properties(dom)
 
         logger.info(
-            'Conpot Bacnet initialized using the {0} template.'.format(template))
+            'Conpot Bacnet initialized using the %s template.', template)
 
     def handle(self, data, address):
         session = conpot_core.get_session('bacnet', address[0], address[1])
-        logger.info('New connection from {0}:{1}. ({2})'.format(
-            address[0], address[1], session.id))
+        logger.info('New connection from %s:%d. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         # I'm not sure if gevent DatagramServer handles issues where the
         # received data is over the MTU -> fragmentation
@@ -414,13 +408,12 @@ class BacnetServer(object):
             apdu.decode(pdu)
             self.bacnet_app.indication(apdu, address, self.thisDevice)
             self.bacnet_app.response(self.bacnet_app._response, address)
-        logger.info('Bacnet client disconnected {0}:{1}. ({2})'.format(
-            address[0], address[1], session.id))
+        logger.info('Bacnet client disconnected %s:%d. (%s)', address[0], address[1], session.id)
 
     def start(self, host, port):
         connection = (host, port)
         self.server = DatagramServer(connection, self.handle)
-        logger.info('Bacnet server started on: {0}'.format(connection))
+        logger.info('Bacnet server started on: %s', connection)
         self.server.serve_forever()
 
     def stop(self):
