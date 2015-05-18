@@ -13,6 +13,8 @@ crc16
 enum
 hpfeeds
 modbus-tk
+<<<<<<< HEAD
 stix-validator
 stix
 cybox
+bacpypes

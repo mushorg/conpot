@@ -44,6 +44,7 @@ from conpot.protocols.http.web_server import HTTPServer
 from conpot.helpers import fix_sslwrap
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
 from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
+from conpot.protocols.bacnet.bacnet_server import BacnetServer
 
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
@@ -246,7 +247,8 @@ def main():
         ('kamstrup_meter', KamstrupServer),
         ('kamstrup_management', KamstrupManagementServer),
         ('http', HTTPServer),
-        ('snmp', SNMPServer)
+        ('snmp', SNMPServer),
+        ('bacnet', BacnetServer)
     )
     pid = gevent.fork()
     if pid == 0:
