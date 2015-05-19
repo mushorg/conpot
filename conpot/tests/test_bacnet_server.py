@@ -57,9 +57,9 @@ class TestBase(unittest.TestCase):
         conpot_core.get_sessionManager().purge_sessions()
 
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('../templates/default/template.xml')
+        self.databus.initialize('conpot/templates/default/template.xml')
         args = namedtuple('FakeArgs', '')
-        bacnet = bacnet_server.BacnetServer('../templates/default/bacnet/bacnet.xml', 'none', args)
+        bacnet = bacnet_server.BacnetServer('conpot/templates/default/bacnet/bacnet.xml', 'none', args)
         self.bacnet_server = DatagramServer(('127.0.0.1', 47808), bacnet.handle)
         gevent.spawn(self.bacnet_server.start)
         gevent.sleep(1)
