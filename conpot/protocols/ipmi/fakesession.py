@@ -18,7 +18,7 @@
 
 import struct
 import os, sys
-
+import socket
 import logging
 
 import pyghmi
@@ -61,8 +61,14 @@ class FakeSession(Session):
         self._initsession()
         self.sockaddr = (bmc, port) 
         self.server = None
-        self.ipmicallback = None
+        self.ipmicallback = _generic_callback
         logger.debug('New IPMI session initialized for client (%s)', self.sockaddr)
+
+    def _generic_callback(self, response):
+        self.lastresponse = response
+
+    def _monotonic_time():
+        return os.times()[4]
 
     def _ipmi20(self, rawdata):
         data = list(struct.unpack("%dB" % len(rawdata), rawdata))
@@ -114,9 +120,10 @@ class FakeSession(Session):
                 self.server.close_server_session()
                 return
             remseqnumber = struct.unpack("<I", rawdata[10:14])[0]
-            if hasattr(self, 'remseqnumber') and remseqnumber < self.remseqnumber and self.remseqnumber != 0xffffffff:
-                self.server.close_server_session()
-                return
+            if hasattr(self, 'remseqnumber'):
+                if remseqnumber < self.remseqnumber and self.remseqnumber != 0xffffffff:
+                    self.server.close_server_session()
+                    return
             self.remseqnumber = remseqnumber
             psize = data[14] + (data[15] << 8)
             payload = data[16:16 + psize]
@@ -153,9 +160,10 @@ class FakeSession(Session):
         return
         
     def _parse_payload(self, payload):
-        if hasattr(self, 'hasretried') and self.hasretried:
-            self.hasretried = 0
-            self.tabooseq[(self.expectednetfn, self.expectedcmd, self.seqlun)] = 16
+        if hasattr(self, 'hasretried'):
+            if self.hasretried:
+                self.hasretried = 0
+                self.tabooseq[(self.expectednetfn, self.expectedcmd, self.seqlun)] = 16
         self.expectednetfn = 0x1ff 
         self.expectedcmd = 0x1ff
         self.waiting_sessions.pop(self, None)
@@ -172,8 +180,10 @@ class FakeSession(Session):
         self.timeout = 0.5 + (0.5 * random.random())
         self.ipmicallback(response)
 
-    def _send_ipmi_net_payload(self, netfn=None, command=None, data=[], code=0, bridge_request=None, \
+    def _send_ipmi_net_payload(self, netfn=None, command=None, data=None, code=0, bridge_request=None, \
                                retry=None, delay_xmit=None):
+        if data is None:
+            data = []
         if retry is None:
             retry = not self.servermode
         data = [code] + data
@@ -307,7 +317,9 @@ class FakeSession(Session):
         self.stage += 1
         self._xmit_packet(retry, delay_xmit=delay_xmit)
 
-    def send_ipmi_response(self, data=[], code=0):
+    def send_ipmi_response(self, data=None, code=0):
+        if data is None:
+            data = []
         self._send_ipmi_net_payload(data=data, code=code)
 
     def _xmit_packet(self, retry=True, delay_xmit=None):
