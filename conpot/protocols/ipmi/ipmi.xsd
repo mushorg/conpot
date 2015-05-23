@@ -1,0 +1,37 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="ipmi">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="device_info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="device_name"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element  name="user_list">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="user" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>                                   
+                                        <xs:element type="xs:string" name="user_name" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element type="xs:string" name="password" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element type="xs:byte" name="privilege" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element type="xs:boolean" name="active" minOccurs="1" maxOccurs="1"/>
+                                        <xs:element type="xs:boolean" name="fixed" minOccurs="1" maxOccurs="1"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:integer" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+ </xs:schema>
