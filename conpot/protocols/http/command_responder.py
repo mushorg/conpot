@@ -27,6 +27,7 @@ from SocketServer import ThreadingMixIn
 import BaseHTTPServer
 import httplib
 import os
+import sys
 from lxml import etree
 
 import conpot.core as conpot_core
@@ -176,7 +177,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # retrieve and return (substituted) payload
         return parser.payload
 
-    def load_status(self, status, requeststring, headers, configuration, docpath, method='GET', body=None):
+    def load_status(self, status, requeststring, requestheaders, headers, configuration, docpath, method='GET', body=None):
         """Retrieves headers and payload for a given status code.
            Certain status codes can be configured to forward the
            request to a remote system. If not available, generate
@@ -270,12 +271,17 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             chunks = '0'
 
             try:
+                # Modify a few headers to fit our new destination and the fact
+                # that we're proxying while being unaware of any session foo..
+                requestheaders['Host'] = target
+                requestheaders['Connection'] = 'close'
 
+		remotestatus = 0
                 conn = httplib.HTTPConnection(target)
-                conn.request(method, requeststring, body)
+                conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
 
-                status = int(response.status)
+                remotestatus = int(response.status)
                 headers = response.getheaders()   # We REPLACE the headers to avoid duplicates!
                 payload = response.read()
 
@@ -289,6 +295,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                         del headers[i]
                         break
 
+		status = remotestatus
+
             except:
 
                 # before falling back to 503, we check if we are ALREADY dealing with a 503
@@ -298,8 +306,9 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, trailers, payload, chunks) = self.load_status(status,
+                    (status, headers, trailers, payload, chunks) = self.load_status(503,
                                                                                     requeststring,
+                                                                                    self.headers,
                                                                                     headers,
                                                                                     configuration,
                                                                                     docpath)
@@ -455,6 +464,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 status = 503
                 (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                                 requeststring,
+                                                                                self.headers,
                                                                                 headers,
                                                                                 configuration,
                                                                                 docpath)
@@ -525,6 +535,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
         # generate the appropriate status code, header and payload
         (status, headers, trailers, payload, chunks) = self.load_status(code,
                                                                         requeststring.partition('?')[0],
+                                                                        self.headers,
                                                                         headers,
                                                                         configuration,
                                                                         docpath)
@@ -578,6 +589,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             status = 501
             (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                             self.path,
+                                                                            self.headers,
                                                                             headers,
                                                                             configuration,
                                                                             docpath)
@@ -639,6 +651,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             status = 501
             (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                             self.path,
+                                                                            self.headers,
                                                                             headers,
                                                                             configuration,
                                                                             docpath)
@@ -663,6 +676,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 status = 404
                 (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                                 self.path,
+                                                                                self.headers,
                                                                                 headers,
                                                                                 configuration,
                                                                                 docpath)
@@ -710,6 +724,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             status = 501
             (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                             self.path,
+                                                                            self.headers,
                                                                             headers,
                                                                             configuration,
                                                                             docpath)
@@ -795,6 +810,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             status = 404
             (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                             self.path,
+                                                                            self.headers,
                                                                             headers,
                                                                             configuration,
                                                                             docpath,
@@ -857,6 +873,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             status = 404
             (status, headers, trailers, payload, chunks) = self.load_status(status,
                                                                             self.path,
+                                                                            self.headers,
                                                                             headers,
                                                                             configuration,
                                                                             docpath,
