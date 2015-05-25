@@ -305,7 +305,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, trailers, payload, chunks) = self.load_status(status,
+                    (status, headers, trailers, payload, chunks) = self.load_status(503,
                                                                                     requeststring,
                                                                                     self.headers,
                                                                                     headers,
