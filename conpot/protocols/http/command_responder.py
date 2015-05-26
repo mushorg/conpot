@@ -27,7 +27,6 @@ from SocketServer import ThreadingMixIn
 import BaseHTTPServer
 import httplib
 import os
-import sys
 from lxml import etree
 
 import conpot.core as conpot_core
@@ -276,7 +275,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 requestheaders['Host'] = target
                 requestheaders['Connection'] = 'close'
 
-		remotestatus = 0
+                remotestatus = 0
                 conn = httplib.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
@@ -295,7 +294,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                         del headers[i]
                         break
 
-		status = remotestatus
+                status = remotestatus
 
             except:
 
