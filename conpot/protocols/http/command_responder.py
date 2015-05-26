@@ -27,7 +27,6 @@ from SocketServer import ThreadingMixIn
 import BaseHTTPServer
 import httplib
 import os
-import sys
 from lxml import etree
 
 import conpot.core as conpot_core
@@ -275,7 +274,8 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 # that we're proxying while being unaware of any session foo..
                 requestheaders['Host'] = target
                 requestheaders['Connection'] = 'close'
-                
+
+                remotestatus = 0
                 conn = httplib.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
