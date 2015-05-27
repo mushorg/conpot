@@ -44,7 +44,7 @@ SAMPLE OUTPUT
 
 .. code-block:: shell
 
-    # conpot 
+    # conpot --template default
     
                            _
        ___ ___ ___ ___ ___| |_
@@ -52,29 +52,31 @@ SAMPLE OUTPUT
       |___|___|_|_|  _|___|_|
                   |_|
     
-      Version 0.2.2
+      Version 0.4.0
       Glastopf Project
 
-    2013-06-23 23:39:56,593 Starting Conpot using template found in: /opt/conpot/conpot/templates/default.xml
-    2013-06-23 23:39:56,593 Starting Conpot using configuration found in: /opt/conpot/conpot/conpot.cfg
-    2013-06-23 23:39:56,593 Starting Conpot using www templates found in: /opt/conpot/conpot/www/
-    2013-06-23 23:39:56,594 Added slave with id 1.
-    2013-06-23 23:39:56,594 Added block a to slave 1. (type=1, start=1, size=128)
-    2013-06-23 23:39:56,595 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
-    2013-06-23 23:39:56,595 Added block b to slave 1. (type=2, start=10001, size=32)
-    2013-06-23 23:39:56,595 Setting value at addr 10001 to [random.randint(0,1) for b in range(0,32)].
-    2013-06-23 23:39:56,595 Added slave with id 2.
-    2013-06-23 23:39:56,595 Added block c to slave 2. (type=4, start=30001, size=8)
-    2013-06-23 23:39:56,595 Setting value at addr 30001 to [random.randint(0,1) for b in range(0,8)].
-    2013-06-23 23:39:56,596 Added block d to slave 2. (type=3, start=40001, size=8)
-    2013-06-23 23:39:56,596 Conpot initialized using the S7-200 template.
-    2013-06-23 23:39:56,596 Modbus server started on: ('0.0.0.0', 502)
-    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 1) instance (0,) (sysDescr, SNMPv2-MIB) : Siemens, SIMATIC, S7-200
-    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 2) instance (0,) (sysObjectID, SNMPv2-MIB) : 0.0
-    2013-06-23 23:39:56,683 Registered OID (1, 3, 6, 1, 2, 1, 1, 4) instance (0,) (sysContact, SNMPv2-MIB) : Siemens AG
-    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 5) instance (0,) (sysName, SNMPv2-MIB) : CP 443-1 EX40
-    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 6) instance (0,) (sysLocation, SNMPv2-MIB) :
-    2013-06-23 23:39:56,684 Registered OID (1, 3, 6, 1, 2, 1, 1, 7) instance (0,) (sysServices, SNMPv2-MIB) : 72
-    2013-06-23 23:39:56,685 SNMP server started on: ('0.0.0.0', 161)
-    2013-06-23 23:39:56,685 HTTP server started on: ('0.0.0.0', 80)
+    2015-05-27 16:05:08,355 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-py2.7.egg/conp
+    2015-05-27 16:05:08,366 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-
+    2015-05-27 16:05:08,428 Starting new HTTP connection (1): www.telize.com
+    2015-05-27 16:05:08,861 Fetched xxx.xxx.xxx.xxx as external ip.
+    2015-05-27 16:05:08,891 Conpot modbus initialized
+    2015-05-27 16:05:08,893 Found and enabled ('modbus', <class conpot.protocols.modbus.modbus_server.ModbusServer at 0xb4f1e3
+    2015-05-27 16:05:08,898 Conpot S7Comm initialized
+    2015-05-27 16:05:08,899 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+    2015-05-27 16:05:08,902 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+    2015-05-27 16:05:08,905 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+    2015-05-27 16:05:08,915 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-py2.7.egg/
+    2015-05-27 16:05:08,916 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protoco
+    2015-05-27 16:05:08,922 IPMI BMC initialized.
+    2015-05-27 16:05:08,923 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-py2.7.egg/conpot
+    2015-05-27 16:05:08,923 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+    2015-05-27 16:05:09,003 No proxy template found. Service will remain unconfigured/stopped.
+    2015-05-27 16:05:09,015 Modbus server started on: ('0.0.0.0', 502)
+    2015-05-27 16:05:09,017 S7Comm server started on: ('0.0.0.0', 102)
+    2015-05-27 16:05:09,018 HTTP server started on: ('0.0.0.0', 80)
+    2015-05-27 16:05:09,285 SNMP server started on: ('0.0.0.0', 161)
+    2015-05-27 16:05:09,286 Bacnet server started on: ('0.0.0.0', 47808)
+    2015-05-27 16:05:09,286 IPMI server started on: ('0.0.0.0', 623)
+    2015-05-27 16:05:09,287 connecting to hpfriends.honeycloud.net:20000
+    2015-05-27 16:05:14,006 Privileges dropped, running as nobody/nogroup.
 
