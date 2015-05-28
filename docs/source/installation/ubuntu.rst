@@ -1,4 +1,4 @@
-Ubuntu 12.04 LTS
+Ubuntu 12.04 LTS  / 14.04 LTS
 ======================================
 
 Installation
@@ -16,7 +16,8 @@ deb http://dk.archive.ubuntu.com/ubuntu precise main multiverse
 Install dependencies:
 ::
 
-    sudo apt-get install libmysqlclient-dev libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev libxslt1-dev libxml2-dev python-pip python-mysqldb
+    sudo apt-get install libmysqlclient-dev libsmi2ldbl snmp-mibs-downloader python-dev libevent-dev \
+    libxslt1-dev libxml2-dev python-pip python-mysqldb pkg-config libvirt-dev
 
 
 The stable version of ConPot can be downloaded from PyPI:
@@ -74,7 +75,7 @@ Example usage
 
 ::
 
-    box$ conpot
+    box$ conpot --template default
     2013-04-12 16:09:25,620 Added slave with id 1.
     2013-04-12 16:09:25,621 Added block a to slave 1. (type=1, start=1, size=128)
     2013-04-12 16:09:25,622 Setting value at addr 1 to [random.randint(0,1) for b in range(0,128)].
