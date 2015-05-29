@@ -252,7 +252,12 @@ def main():
         ('bacnet', BacnetServer),
         ('ipmi', IpmiServer)
     )
-    pid = gevent.fork()
+
+    # no need to fork process when we don't want to change MAC address
+    pid = 0
+    if config.getboolean('change_mac_addr', 'enabled'):
+        pid = gevent.fork()
+
     if pid == 0:
         for protocol in protocol_instance_mapping:
             protocol_name, server_class = protocol
@@ -341,10 +346,9 @@ def main():
             os.waitpid(pid, 0)
         except KeyboardInterrupt:
             pass
-        if config.getboolean('change_mac_addr', 'enabled'):
-            # Revert MAC address
-            iface = config.get('change_mac_addr', 'iface')
-            mac_addr.revert_mac(iface)
+        # Revert MAC address
+        iface = config.get('change_mac_addr', 'iface')
+        mac_addr.revert_mac(iface)
 
 
 if __name__ == "__main__":
