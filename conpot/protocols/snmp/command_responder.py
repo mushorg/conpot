@@ -26,7 +26,10 @@ class SNMPDispatcher(DatagramServer):
         self.recvCbFun = recvCbFun
 
     def handle(self, msg, address):
-        self.recvCbFun(self, self.transportDomain, address, msg)
+        try:
+            self.recvCbFun(self, self.transportDomain, address, msg)
+        except Exception as e:
+            logger.info("SNMP Exception: %s", e)
 
     def registerTransport(self, tDomain, transport):
         DatagramServer.__init__(self, transport, self.handle)
