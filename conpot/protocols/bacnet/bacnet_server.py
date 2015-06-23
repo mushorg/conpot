@@ -35,9 +35,10 @@ from bacpypes.pdu import GlobalBroadcast
 
 from bacpypes.apdu import PDU, APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
     error_types, ConfirmedRequestPDU, UnconfirmedRequestPDU, SimpleAckPDU, ComplexAckPDU, ErrorPDU, RejectPDU, \
-    IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
+    IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice, APCI
 
 from bacpypes.constructeddata import Any
+from bacpypes.errors import DecodingError
 
 import conpot.core as conpot_core
 
@@ -405,7 +406,12 @@ class BacnetServer(object):
             pdu = PDU()
             pdu.pduData = data
             apdu = APDU()
-            apdu.decode(pdu)
+            try:
+                apdu.decode(pdu)
+            except DecodingError as e:
+                logger.error("DecodingError: %s", e)
+                logger.error("PDU: " + format(pdu))
+                return
             self.bacnet_app.indication(apdu, address, self.thisDevice)
             self.bacnet_app.response(self.bacnet_app._response, address)
         logger.info('Bacnet client disconnected %s:%d. (%s)', address[0], address[1], session.id)
