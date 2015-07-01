@@ -1,14 +1,14 @@
 Conpot |travis badge| |landscape badge| |downloads badge| |version badge|
 =======================
 
-.. |travis badge| image:: https://travis-ci.org/glastopf/conpot.png?branch=master
+.. |travis badge| image:: https://img.shields.io/travis/glastopf/conpot/master.svg
    :target: https://travis-ci.org/glastopf/conpot
 .. |landscape badge| image:: https://landscape.io/github/glastopf/conpot/master/landscape.png
    :target: https://landscape.io/github/glastopf/conpot/master
    :alt: Code Health
-.. |downloads badge| image:: https://pypip.in/v/Conpot/badge.png
+.. |downloads badge| image:: https://img.shields.io/pypi/dm/conpot.svg
    :target: https://pypi.python.org/pypi/Conpot/
-.. |version badge| image:: https://pypip.in/d/Conpot/badge.png
+.. |version badge| image:: https://img.shields.io/pypi/v/conpot.svg
    :target: https://pypi.python.org/pypi/Conpot/
 
 ABOUT
