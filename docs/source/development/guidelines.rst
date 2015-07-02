@@ -87,7 +87,7 @@ To avoid additional Merge commits, use cherry-pick:
 
   git checkout master
   git remote add user https://github.com/user/conpot.git
-  git fetch user/feature_branch
+  git fetch user
   (look at 'git log user/feature_branch')
   git cherry-pick commit_hash
   git push origin master
