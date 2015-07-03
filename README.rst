@@ -80,3 +80,8 @@ SAMPLE OUTPUT
     2015-05-27 16:05:09,287 connecting to hpfriends.honeycloud.net:20000
     2015-05-27 16:05:14,006 Privileges dropped, running as nobody/nogroup.
 
+
+
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/mushorg/conpot
+   :target: https://gitter.im/mushorg/conpot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
