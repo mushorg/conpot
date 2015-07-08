@@ -62,7 +62,7 @@ class FakeSession(Session):
         self.sockaddr = (bmc, port) 
         self.server = None
         self.ipmicallback = self._generic_callback
-        logger.debug('New IPMI session initialized for client (%s)', self.sockaddr)
+        logger.info('New IPMI session initialized for client (%s)', self.sockaddr)
 
     def _generic_callback(self, response):
         self.lastresponse = response
@@ -353,7 +353,7 @@ class FakeSession(Session):
             self.waiting_sessions[self]['timeout'] = self.timeout + _monotonic_time()
 
     def send_data(self, packet, address):
-        logger.debug('IPMI response sent to %s', address)
+        logger.info('IPMI response sent to %s', address)
         self.socket.sendto(packet, address)
 
 

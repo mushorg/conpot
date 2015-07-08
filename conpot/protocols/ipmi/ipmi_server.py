@@ -122,7 +122,7 @@ class IpmiServer(object):
             self.initiate_session(data, address, self.session)
         else:
             # session already exists
-            logger.debug('Incoming IPMI traffic from %s', address)
+            logger.info('Incoming IPMI traffic from %s', address)
             if self.session.stage == 0:
                 self.close_server_session()
             else:
@@ -244,7 +244,7 @@ class IpmiServer(object):
                         1, 0, 0, 8, 1, 0, 0, 0,  # integrity
                         2, 0, 0, 8, 1, 0, 0, 0,  # privacy
         ])
-        logger.debug('IPMI open session request')
+        logger.info('IPMI open session request')
         self.session.send_payload(response, constants.payload_types['rmcpplusopenresponse'], retry=False)
 
     def _got_rakp1(self, data):
@@ -275,7 +275,7 @@ class IpmiServer(object):
         authcode = hmac.new(self.kuid, hmacdata, hashlib.sha1).digest()
         authcode = list(struct.unpack('%dB' % len(authcode), authcode))
         newmessage = ([clienttag, 0, 0, 0] + self.clientsessionid + self.Rc + uuidbytes + authcode)
-        logger.debug('IPMI rakp1 request')
+        logger.info('IPMI rakp1 request')
         self.session.send_payload(newmessage, constants.payload_types['rakp2'], retry=False)
 
     def _got_rakp3(self, data):
@@ -299,7 +299,7 @@ class IpmiServer(object):
             return
         self.session.localsid = struct.unpack('<I', struct.pack('4B', *self.managedsessionid))[0]
 
-        logger.debug('IPMI rakp3 request')
+        logger.info('IPMI rakp3 request')
         self.session.ipmicallback = self.handle_client_request
         self._send_rakp4(clienttag, 0)
 
@@ -309,7 +309,7 @@ class IpmiServer(object):
         hmacdata = struct.pack('%dB' % len(hmacdata), *hmacdata)
         authdata = hmac.new(self.sik, hmacdata, hashlib.sha1).digest()[:12]
         payload += struct.unpack('%dB' % len(authdata), authdata)
-        logger.debug('IPMI rakp4 sent')
+        logger.info('IPMI rakp4 sent')
         self.session.send_payload(payload, constants.payload_types['rakp4'], retry=False)
         self.session.confalgo = 'aes'
         self.session.integrityalgo = 'sha1'
@@ -365,7 +365,7 @@ class IpmiServer(object):
                 # filler
                 data.append(0)
             self.session._send_ipmi_net_payload(code=returncode, data=data)
-            logger.debug('IPMI response sent (Get User Name) to %s', self.session.sockaddr)
+            logger.info('IPMI response sent (Get User Name) to %s', self.session.sockaddr)
         elif request['netfn'] == 6 and request['command'] == 0x45:
             # set user name
             # TODO: fix issue where users can be overwritten
@@ -394,7 +394,7 @@ class IpmiServer(object):
 
             returncode = 0
             self.session._send_ipmi_net_payload(code=returncode)
-            logger.debug('IPMI response sent (Set User Name) to %s', self.session.sockaddr)
+            logger.info('IPMI response sent (Set User Name) to %s', self.session.sockaddr)
         elif request['netfn'] == 6 and request['command'] == 0x47:
             # set user passwd
             passwd_length = request['data'][0] & 0b10000000
@@ -437,7 +437,7 @@ class IpmiServer(object):
             returncode = 0xc1
             self.session._send_ipmi_net_payload(code=returncode)
             logger.info('IPMI unrecognized command from %s', self.session.sockaddr)
-            logger.debug('IPMI response sent (Invalid Command) to %s', self.session.sockaddr)
+            logger.info('IPMI response sent (Invalid Command) to %s', self.session.sockaddr)
 
     def start(self, host, port):
         connection = (host, port)

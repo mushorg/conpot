@@ -88,7 +88,7 @@ class ModbusServer(modbus.Server):
 
         self.start_time = time.time()
         logger.info(
-            'New connection from %s:%s. (%s)',
+            'New Modbus connection from %s:%s. (%s)',
             address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
@@ -96,11 +96,11 @@ class ModbusServer(modbus.Server):
             while True:
                 request = sock.recv(7)
                 if not request:
-                    logger.info('Client disconnected. (%s)', session.id)
+                    logger.info('Modbus client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
                 if request.strip().lower() == 'quit.':
-                    logger.info('Client quit. (%s)', session.id)
+                    logger.info('Modbus client quit. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_QUIT'})
                     break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
@@ -116,7 +116,7 @@ class ModbusServer(modbus.Server):
                 logdata['request'] = request.encode('hex')
                 session.add_event(logdata)
 
-                logger.debug(
+                logger.info(
                     'Modbus traffic from %s: %s (%s)',
                     address[0], logdata, session.id)
 
@@ -130,7 +130,7 @@ class ModbusServer(modbus.Server):
                         time.sleep(self.delay / 1000)
                         logger.debug(
                             'Modbus server\'s turnaround delay expired.')
-                        logger.info('Connection terminated with client %s.',
+                        logger.info('Modbus connection terminated with client %s.',
                                     address[0])
                         session.add_event({'type': 'CONNECTION_TERMINATED'})
                         sock.shutdown(socket.SHUT_RDWR)
@@ -138,7 +138,7 @@ class ModbusServer(modbus.Server):
                         break
                     # Invalid addressing
                     else:
-                        logger.info('Client ignored due to invalid addressing.'
+                        logger.info('Modbus client ignored due to invalid addressing.'
                                     ' (%s)', session.id)
                         session.add_event({'type': 'CONNECTION_TERMINATED'})
                         sock.shutdown(socket.SHUT_RDWR)

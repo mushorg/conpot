@@ -36,7 +36,7 @@ class KamstrupManagementServer(object):
 
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1])
-        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
+        logger.info('New Kamstrup connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
@@ -46,14 +46,14 @@ class KamstrupManagementServer(object):
             while True:
                 request = sock.recv(1024)
                 if not request:
-                    logger.info('Client disconnected. (%s)', session.id)
+                    logger.info('Kamstrup client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
                 logdata = {'request': request}
                 response = self.command_responder.respond(request)
                 logdata['response'] = response
-                logger.debug('Kamstrup management traffic from %s: %s (%s)', address[0], logdata, session.id)
+                logger.info('Kamstrup management traffic from %s: %s (%s)', address[0], logdata, session.id)
                 session.add_event(logdata)
                 gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
