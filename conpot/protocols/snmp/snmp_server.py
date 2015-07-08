@@ -134,7 +134,7 @@ class SNMPServer(object):
             try:
                 _ = float(x)
             except ValueError:
-                logger.error("Invalid tarpit value: '%s'. Assuming no latency.", value)
+                logger.error("SNMP invalid tarpit value: '%s'. Assuming no latency.", value)
                 # first value is invalid, ignore the whole setting.
                 return '0;0'
 
@@ -161,7 +161,7 @@ class SNMPServer(object):
             try:
                 _ = int(x)
             except ValueError:
-                logger.error("Invalid evasion threshold: '%s'. Assuming no DoS evasion.", value)
+                logger.error("SNMP invalid evasion threshold: '%s'. Assuming no DoS evasion.", value)
                 # first value is invalid, ignore the whole setting.
                 return '0;0'
 

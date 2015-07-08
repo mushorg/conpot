@@ -243,8 +243,8 @@ class BACnetApp(BIPSimpleApplication):
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except (AttributeError, RuntimeError):
-                logger.debug('Bacnet indication: Invalid service.')
+            except (AttributeError, RuntimeError) as e:
+                logger.warning('Bacnet indication: Invalid service. Error: %s' % e)
                 return
             except bacpypes.errors.DecodingError:
                 pass
@@ -260,7 +260,7 @@ class BACnetApp(BIPSimpleApplication):
                         self._response = None
                         return
             else:
-                logger.debug('Bacnet indication: Invalid confirmed service choice (%s)', apdu_service.__name__)
+                logger.info('Bacnet indication: Invalid confirmed service choice (%s)', apdu_service.__name__)
                 self._response = None
                 return
 
@@ -271,8 +271,8 @@ class BACnetApp(BIPSimpleApplication):
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except (AttributeError, RuntimeError):
-                logger.debug('Bacnet indication: Invalid service.')
+            except (AttributeError, RuntimeError) as e:
+                logger.warning('Bacnet indication: Invalid service. Error: %s' % e)
                 self._response = None
                 return
             except bacpypes.errors.DecodingError:
@@ -290,7 +290,7 @@ class BACnetApp(BIPSimpleApplication):
                         return
             else:
                 # Unrecognized services
-                logger.debug(
+                logger.info(
                     'Bacnet indication: Invalid unconfirmed service choice (%s)', apdu_service)
                 self._response_service = 'ErrorPDU'
                 self._response = ErrorPDU()
@@ -398,7 +398,7 @@ class BacnetServer(object):
 
     def handle(self, data, address):
         session = conpot_core.get_session('bacnet', address[0], address[1])
-        logger.info('New connection from %s:%d. (%s)', address[0], address[1], session.id)
+        logger.info('New Bacnet connection from %s:%d. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         # I'm not sure if gevent DatagramServer handles issues where the
         # received data is over the MTU -> fragmentation

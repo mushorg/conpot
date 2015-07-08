@@ -43,16 +43,16 @@ class KamstrupServer(object):
     def reboot(self, key):
         assert(key == 'reboot_signal')
         self.server_active = False
-        logger.debug('Pretending server reboot')
+        logger.info('Pretending server reboot')
         gevent.spawn_later(2, self.set_reboot_done)
 
     def set_reboot_done(self):
-        logger.debug('Stopped pretending reboot')
+        logger.info('Stopped pretending reboot')
         self.server_active = True
 
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_protocol', address[0], address[1])
-        logger.info('New connection from %s:%s. (%s)', address[0], address[1], session.id)
+        logger.info('New Kamstrup connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
         self.server_active = True
@@ -63,7 +63,7 @@ class KamstrupServer(object):
                 raw_request = sock.recv(1024)
 
                 if not raw_request:
-                    logger.info('Client disconnected. (%s)', session.id)
+                    logger.info('Kamstrup client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
@@ -83,7 +83,7 @@ class KamstrupServer(object):
                         if response:
                             serialized_response = response.serialize()
                             logdata['response'] = binascii.hexlify(serialized_response)
-                            logger.debug('Kamstrup traffic from %s: %s (%s)', address[0], logdata, session.id)
+                            logger.info('Kamstrup traffic from %s: %s (%s)', address[0], logdata, session.id)
                             sock.send(serialized_response)
                             session.add_event(logdata)
                         else:
