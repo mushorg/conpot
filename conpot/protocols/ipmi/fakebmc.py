@@ -17,7 +17,6 @@
 
 import logging
 
-import pyghmi
 from pyghmi.ipmi.bmc import Bmc
 
 

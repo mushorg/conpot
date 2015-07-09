@@ -9,7 +9,6 @@ from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity import engine
 from pysnmp.smi import builder
 import gevent
-from gevent import socket
 
 from conpot.protocols.snmp import conpot_cmdrsp
 from conpot.protocols.snmp.databus_mediator import DatabusMediator

@@ -17,7 +17,6 @@
 
 import logging
 import json
-import os
 import inspect
 # this is needed because we use it in the xml.
 import random

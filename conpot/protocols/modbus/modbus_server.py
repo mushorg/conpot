@@ -14,7 +14,6 @@ from modbus_tk import modbus
 # Following imports are required for modbus template evaluation
 import modbus_tk.defines as mdef
 import random
-from modbus_tk.modbus import DuplicatedKeyError
 
 from conpot.protocols.modbus import slave_db
 import conpot.core as conpot_core

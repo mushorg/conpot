@@ -15,27 +15,21 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-import gevent
 from gevent import socket
 from gevent.server import DatagramServer
 
 import struct
 import os
-import sys
 
 import logging
-import time
 
-import pyghmi
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
 
-import traceback
 import random
 import uuid
 import hmac
 import hashlib
-from Crypto.Cipher import AES
 import collections
 
 from lxml import etree

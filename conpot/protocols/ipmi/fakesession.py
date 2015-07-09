@@ -17,20 +17,15 @@
 
 
 import struct
-import os, sys
+import os
 import socket
 import logging
 
-import pyghmi
 import pyghmi.exceptions as exc
 import pyghmi.ipmi.private.constants as constants
-
 from pyghmi.ipmi.private.session import Session
-from pyghmi.ipmi.bmc import Bmc
 
-import traceback
 import random
-import uuid
 import hmac
 import hashlib
 from Crypto.Cipher import AES
