@@ -37,6 +37,9 @@ from Crypto.Cipher import AES
 
 logger = logging.getLogger()
 
+def _monotonic_time():
+    return os.times()[4]
+
 class FakeSession(Session):
 
     def __init__(self, bmc, userid, password, port):
@@ -66,9 +69,6 @@ class FakeSession(Session):
 
     def _generic_callback(self, response):
         self.lastresponse = response
-
-    def _monotonic_time():
-        return os.times()[4]
 
     def _ipmi20(self, rawdata):
         data = list(struct.unpack("%dB" % len(rawdata), rawdata))
