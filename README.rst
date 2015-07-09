@@ -1,15 +1,18 @@
 Conpot |travis badge| |landscape badge| |downloads badge| |version badge|
 =======================
 
-.. |travis badge| image:: https://img.shields.io/travis/glastopf/conpot/master.svg
-   :target: https://travis-ci.org/glastopf/conpot
-.. |landscape badge| image:: https://landscape.io/github/glastopf/conpot/master/landscape.png
-   :target: https://landscape.io/github/glastopf/conpot/master
+.. |travis badge| image:: https://img.shields.io/travis/mushorg/conpot/master.svg
+   :target: https://travis-ci.org/mushorg/conpot
+.. |landscape badge| image:: https://landscape.io/github/mushorg/conpot/master/landscape.png
+   :target: https://landscape.io/github/mushorg/conpot/master
    :alt: Code Health
 .. |downloads badge| image:: https://img.shields.io/pypi/dm/conpot.svg
    :target: https://pypi.python.org/pypi/Conpot/
 .. |version badge| image:: https://img.shields.io/pypi/v/conpot.svg
    :target: https://pypi.python.org/pypi/Conpot/
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/mushorg/conpot
+   :target: https://gitter.im/mushorg/conpot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 ABOUT
 -----
@@ -20,10 +23,10 @@ methods of adversaries targeting industrial control systems
 DOCUMENTATION
 -------------
 
-The build of the documentations `source <https://github.com/glastopf/conpot/tree/master/docs/source>`_ can be 
-found `here <http://glastopf.github.io/conpot/>`_. There you will also find the instructions on how to 
-`install <http://glastopf.github.io/conpot/installation/ubuntu.html>`_ conpot and the 
-`FAQ <http://glastopf.github.io/conpot/faq.html>`_.
+The build of the documentations `source <https://github.com/mushorg/conpot/tree/master/docs/source>`_ can be 
+found `here <http://mushorg.github.io/conpot/>`_. There you will also find the instructions on how to 
+`install <http://mushorg.github.io/conpot/installation/ubuntu.html>`_ conpot and the 
+`FAQ <http://mushorg.github.io/conpot/faq.html>`_.
 
 HPFEEDS
 -------
