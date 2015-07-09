@@ -26,7 +26,6 @@ import logging
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
 
-import random
 import uuid
 import hmac
 import hashlib
