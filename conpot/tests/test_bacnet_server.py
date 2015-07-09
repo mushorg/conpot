@@ -60,9 +60,10 @@ class TestBase(unittest.TestCase):
         self.databus.initialize('conpot/templates/default/template.xml')
         args = namedtuple('FakeArgs', '')
         bacnet = bacnet_server.BacnetServer('conpot/templates/default/bacnet/bacnet.xml', 'none', args)
-        self.bacnet_server = DatagramServer(('127.0.0.1', 47808), bacnet.handle)
+        self.bacnet_server = DatagramServer(('127.0.0.1', 0), bacnet.handle)
         gevent.spawn(self.bacnet_server.start)
         gevent.sleep(1)
+        assert self.bacnet_server.server_port
 
     def tearDown(self):
         self.bacnet_server.stop()
@@ -78,7 +79,7 @@ class TestBase(unittest.TestCase):
         apdu.encode(pdu)
         buf_size = 1024
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(pdu.pduData, ('127.0.0.1', 47808))
+        s.sendto(pdu.pduData, ('127.0.0.1', self.bacnet_server.server_port))
         data = s.recvfrom(buf_size)
 
         received_data = data[0]
@@ -107,7 +108,7 @@ class TestBase(unittest.TestCase):
         apdu.encode(pdu)
         buf_size = 1024
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(pdu.pduData, ('127.0.0.1', 47808))
+        s.sendto(pdu.pduData, ('127.0.0.1', self.bacnet_server.server_port))
         data = s.recvfrom(buf_size)
 
         received_data = data[0]
@@ -136,7 +137,7 @@ class TestBase(unittest.TestCase):
         apdu.encode(pdu)
         buf_size = 1024
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.sendto(pdu.pduData, ('127.0.0.1', 47808))
+        s.sendto(pdu.pduData, ('127.0.0.1', self.bacnet_server.server_port))
         data = s.recvfrom(buf_size)
 
         received_data = data[0]
