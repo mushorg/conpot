@@ -64,6 +64,7 @@ class FakeSession(Session):
         self._initsession()
         self.sockaddr = (bmc, port) 
         self.server = None
+        self.sol_handler = None
         self.ipmicallback = self._generic_callback
         logger.info('New IPMI session initialized for client (%s)', self.sockaddr)
 
