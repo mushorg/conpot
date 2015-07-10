@@ -40,8 +40,6 @@ class TestLoggers(unittest.TestCase):
         config_file = os.path.join(os.path.dirname(__file__), '../conpot.cfg')
         config.read(config_file)
         config.set('taxii', 'enabled', True)
-        config.set('stix', 'contact_name', 'conpot')
-        config.set('stix', 'contact_domain', 'http://conpot.org/stix-1')
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'public_ip': '111.222.111.222',
@@ -61,7 +59,8 @@ class TestLoggers(unittest.TestCase):
         if 'errors' in result:
             has_errors = True
             for error in result['errors']:
-                error_string += error
+                error_string += error['message']
+                error_string += ', '
         self.assertFalse(has_errors, 'Error while validations STIX xml: {0}'. format(error_string))
 
     def test_taxii(self):

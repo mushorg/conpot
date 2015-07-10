@@ -19,8 +19,9 @@ import json
 import ast
 import textwrap
 
-import stix
-import stix.utils
+from mixbox import idgen
+from mixbox.namespaces import Namespace
+
 from stix.core import STIXHeader, STIXPackage
 from stix.common import InformationSource
 from stix.common.vocabs import VocabString
@@ -30,7 +31,6 @@ from stix.indicator import Indicator
 from stix.ttp import TTP, VictimTargeting
 from stix.extensions.identity.ciq_identity_3_0 import CIQIdentity3_0Instance, STIXCIQIdentity3_0, OrganisationInfo
 
-import cybox
 from cybox.core import Observable
 from cybox.objects.socket_address_object import SocketAddress
 from cybox.objects.address_object import Address
@@ -44,10 +44,12 @@ from datetime import datetime
 
 import conpot
 
+CONPOT_NAMESPACE = 'mushmush-conpot'
+CONPOT_NAMESPACE_URL = 'http://mushmush.org/conpot'
+
 
 class StixTransformer(object):
     def __init__(self, config, dom):
-        self.config = config._sections['stix']
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
@@ -62,13 +64,8 @@ class StixTransformer(object):
                 self.protocol_to_port_mapping[protocol_name] = protocol_port
             except IndexError:
                 continue
-        print self.protocol_to_port_mapping
-
-    def _set_namespace(self, domain, name):
-        stix_namespace = {domain: name}
-        cybox_namespace = cybox.utils.nsparser.Namespace(domain, name)
-        stix.utils.idgen.set_id_namespace(stix_namespace)
-        cybox.utils.idgen.set_id_namespace(cybox_namespace)
+        conpot_namespace = Namespace(CONPOT_NAMESPACE_URL, CONPOT_NAMESPACE, '')
+        idgen.set_id_namespace(conpot_namespace)
 
     def _add_header(self, stix_package, title, desc):
         stix_header = STIXHeader()
@@ -80,11 +77,10 @@ class StixTransformer(object):
         stix_package.stix_header = stix_header
 
     def transform(self, event):
-        self._set_namespace(self.config['contact_domain'], self.config['contact_name'])
         stix_package = STIXPackage()
         self._add_header(stix_package, "Unauthorized traffic to honeypot", "Describes one or more honeypot incidents")
 
-        incident = Incident(id_="%s:%s-%s" % (self.config['contact_name'], 'incident', event['session_id']))
+        incident = Incident(id_="%s:%s-%s" % (CONPOT_NAMESPACE, 'incident', event['session_id']))
         initial_time = StixTime()
         initial_time.initial_compromise = event['timestamp'].isoformat()
         incident.time = initial_time
