@@ -15,51 +15,36 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-import gevent
-from gevent import socket
-from gevent.server import DatagramServer
-
 import struct
 import os
-import sys
-
 import logging
-import time
-
-import pyghmi
-import pyghmi.ipmi.private.constants as constants
-import pyghmi.ipmi.private.serversession as serversession
-
-import traceback
-import random
 import uuid
 import hmac
 import hashlib
-from Crypto.Cipher import AES
 import collections
 
+from gevent import socket
+from gevent.server import DatagramServer
+import pyghmi.ipmi.private.constants as constants
+import pyghmi.ipmi.private.serversession as serversession
 from lxml import etree
-
 from fakebmc import FakeBmc
 from fakesession import FakeSession
-
 import conpot.core as conpot_core
 
 logger = logging.getLogger()
 
 
 class IpmiServer(object):
-
     def __init__(self, template, template_directory, args):
         dom = etree.parse(template)
         databus = conpot_core.get_databus()
         self.device_name = databus.get_value(dom.xpath('//ipmi/device_info/device_name/text()')[0])
-        self.host = ''
-        self.port = 623
         self.sessions = dict()
 
         self.uuid = uuid.uuid4()
         self.kg = None
+        self.sock = None
 
         self.authdata = collections.OrderedDict()
 
@@ -69,13 +54,8 @@ class IpmiServer(object):
         chancap = 0b00000010
         oemdata = (0, 0, 0, 0)
         self.authcap = struct.pack('BBBBBBBBB', 0, lanchannel, authtype, authstatus, chancap, *oemdata)
+        self._configure_users(dom)
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(1)
-        self.sock.bind(('', 623))
-        self.bmc = self._configure_users(dom)
         logger.info('Conpot IPMI initialized using %s template', template)
 
     def _configure_users(self, dom):
@@ -98,8 +78,6 @@ class IpmiServer(object):
 
         self.channelaccessdata = collections.OrderedDict(zip(authdata_name, activeusers))
 
-        return FakeBmc(self.authdata, self.port)
-
     def _checksum(self, *data):
         csum = sum(data)
         csum ^= 0xff
@@ -108,6 +86,7 @@ class IpmiServer(object):
         return csum
 
     def handle(self, data, address):
+        assert self.sock
         if not address[0] in self.sessions.keys():
             # new session for new source
             logger.info('New IPMI traffic from %s', address)
@@ -243,7 +222,7 @@ class IpmiServer(object):
                         0, 0, 0, 8, 1, 0, 0, 0,  # auth
                         1, 0, 0, 8, 1, 0, 0, 0,  # integrity
                         2, 0, 0, 8, 1, 0, 0, 0,  # privacy
-        ])
+                    ])
         logger.info('IPMI open session request')
         self.session.send_payload(response, constants.payload_types['rmcpplusopenresponse'], retry=False)
 
@@ -286,8 +265,8 @@ class IpmiServer(object):
         self.session.k2 = hmac.new(self.sik, '\x02' * 20, hashlib.sha1).digest()
         self.session.aeskey = self.session.k2[0:16]
 
-        hmacdata = struct.pack('B' * len(self.Rc), *self.Rc) + struct.pack("4B", *self.clientsessionid) +\
-            struct.pack("2B", self.rolem, len(self.username)) + self.username
+        hmacdata = struct.pack('B' * len(self.Rc), *self.Rc) + struct.pack("4B", *self.clientsessionid) + \
+                   struct.pack("2B", self.rolem, len(self.username)) + self.username
         expectedauthcode = hmac.new(self.kuid, hmacdata, hashlib.sha1).digest()
         authcode = struct.pack("%dB" % len(data[8:]), *data[8:])
         if expectedauthcode != authcode:
@@ -440,6 +419,16 @@ class IpmiServer(object):
             logger.info('IPMI response sent (Invalid Command) to %s', self.session.sockaddr)
 
     def start(self, host, port):
+        # start should not be calles twice
+        assert self.bmc == None
+        self.bmc = FakeBmc(self.authdata, self.port)
+
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setblocking(1)
+        self.sock.bind(('', port))
+
         connection = (host, port)
         self.server = DatagramServer(connection, self.handle)
         logger.info('IPMI server started on: %s', connection)
