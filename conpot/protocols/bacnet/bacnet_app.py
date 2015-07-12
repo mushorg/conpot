@@ -20,43 +20,29 @@
 
 import logging
 import re
-import random
 import sys
-import socket
-
-from lxml import etree
-
-from gevent.server import DatagramServer
-
-import bacpypes.object
-
-from bacpypes.app import LocalDeviceObject, BIPSimpleApplication
 from bacpypes.pdu import GlobalBroadcast
-
-from bacpypes.apdu import PDU, APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
-    error_types, ConfirmedRequestPDU, UnconfirmedRequestPDU, SimpleAckPDU, ComplexAckPDU, ErrorPDU, RejectPDU, \
-    IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice, APCI
-
-from bacpypes.constructeddata import Any
-from bacpypes.errors import DecodingError
-
-import conpot.core as conpot_core
-
-import ast
 
 logger = logging.getLogger(__name__)
 
+import bacpypes.object
+from bacpypes.app import BIPSimpleApplication
+
+from bacpypes.constructeddata import Any
+from bacpypes.apdu import PDU, APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
+    ErrorPDU, RejectPDU, IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
+import ast
+
 
 class BACnetApp(BIPSimpleApplication):
-
-    def __init__(self, device, sock):
+    def __init__(self, device, datagram_server):
         self._request = None
         self._response = None
         self._response_service = None
         self.localDevice = device
         self.objectName = {device.objectName: device}
         self.objectIdentifier = {device.objectIdentifier: device}
-        self.sock = sock
+        self.datagram_server = datagram_server
 
     def get_objects_and_properties(self, dom):
         # parse the bacnet template for objects and their properties
@@ -66,7 +52,7 @@ class BACnetApp(BIPSimpleApplication):
             prop_key = re.sub("['_','-']", "", prop_key)
             prop_key = prop_key[0].lower() + prop_key[1:]
             if prop_key not in self.localDevice.propertyList.value and \
-                    prop_key not in ['deviceIdentifier', 'deviceName']:
+                            prop_key not in ['deviceIdentifier', 'deviceName']:
                 self.add_property(prop_key, prop.text)
 
         object_list = dom.xpath('//bacnet/object_list/object/@name')
@@ -140,7 +126,8 @@ class BACnetApp(BIPSimpleApplication):
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
                     (request.deviceInstanceRangeHighLimit is not None):
-                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1] > request.deviceInstanceRangeHighLimit):
+                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1]
+                        > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
                     execute = True
@@ -163,7 +150,8 @@ class BACnetApp(BIPSimpleApplication):
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
                     (request.deviceInstanceRangeHighLimit is not None):
-                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1] > request.deviceInstanceRangeHighLimit):
+                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1]
+                        > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
                     execute = True
@@ -175,7 +163,7 @@ class BACnetApp(BIPSimpleApplication):
         if execute:
             for obj in device.objectList.value[2:]:
                 if int(request.object.objectIdentifier[1]) == obj[1] and \
-                        request.object.objectIdentifier[0] == obj[0]:
+                                request.object.objectIdentifier[0] == obj[0]:
                     objName = self.objectIdentifier[obj].objectName
                     self._response_service = 'IHaveRequest'
                     self._response = IHaveRequest()
@@ -192,7 +180,7 @@ class BACnetApp(BIPSimpleApplication):
         # TODO: add support for PropertyArrayIndex handling;
         for obj in device.objectList.value[2:]:
             if int(request.objectIdentifier[1]) == obj[1] and \
-                    request.objectIdentifier[0] == obj[0]:
+                            request.objectIdentifier[0] == obj[0]:
                 objName = self.objectIdentifier[obj].objectName
                 for prop in self.objectIdentifier[obj].properties:
                     if request.propertyIdentifier == prop.identifier:
@@ -331,6 +319,7 @@ class BACnetApp(BIPSimpleApplication):
             self._response = None
             return
 
+    # socket not actually socket, but DatagramServer with sendto method
     def response(self, response_apdu, address):
         if response_apdu is None:
             return
@@ -339,88 +328,15 @@ class BACnetApp(BIPSimpleApplication):
         pdu = PDU()
         apdu.encode(pdu)
         if isinstance(response_apdu, RejectPDU) or isinstance(response_apdu, ErrorPDU):
-            self.sock.sendto(pdu.pduData, address)
+            self.datagram_server.sendto(pdu.pduData, address)
         else:
             apdu_type = apdu_types.get(response_apdu.apduType)
             if pdu.pduDestination == '*:*':
                 # broadcast
-                self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                self.sock.sendto(pdu.pduData, ('', address[1]))
+                # sendto operates under lock
+                self.datagram_server.sendto(pdu.pduData, ('', address[1]))
             else:
-                # unicast
-                self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 0)
-                self.sock.sendto(pdu.pduData, address)
+                # sendto operates under lock
+                self.datagram_server.sendto(pdu.pduData, address)
             logger.info('Bacnet response sent to %s (%s:%s)',
                         response_apdu.pduDestination, apdu_type.__name__, self._response_service)
-
-
-class BacnetServer(object):
-
-    def __init__(self, template, template_directory, args):
-        dom = etree.parse(template)
-        databus = conpot_core.get_databus()
-        device_info_root = dom.xpath('//bacnet/device_info')[0]
-
-        name_key = databus.get_value(device_info_root.xpath('./device_name/text()')[0])
-        id_key = device_info_root.xpath('./device_identifier/text()')[0]
-        vendor_name_key = device_info_root.xpath('./vendor_name/text()')[0]
-        vendor_identifier_key = device_info_root.xpath(
-            './vendor_identifier/text()')[0]
-        apdu_length_key = device_info_root.xpath(
-            './max_apdu_length_accepted/text()')[0]
-        segmentation_key = device_info_root.xpath(
-            './segmentation_supported/text()')[0]
-
-        #self.local_device_address = dom.xpath('./@*[name()="host" or name()="port"]')
-
-        self.thisDevice = LocalDeviceObject(
-            objectName=name_key,
-            objectIdentifier=int(id_key),
-            maxApduLengthAccepted=int(apdu_length_key),
-            segmentationSupported=segmentation_key,
-            vendorName=vendor_name_key,
-            vendorIdentifier=int(vendor_identifier_key)
-        )
-
-        # socket initialization
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(1)
-        self.sock.bind(('', 47808))
-
-        # create application instance
-        self.bacnet_app = BACnetApp(self.thisDevice, self.sock)
-        # get object_list and properties
-        self.bacnet_app.get_objects_and_properties(dom)
-
-        logger.info(
-            'Conpot Bacnet initialized using the %s template.', template)
-
-    def handle(self, data, address):
-        session = conpot_core.get_session('bacnet', address[0], address[1])
-        logger.info('New Bacnet connection from %s:%d. (%s)', address[0], address[1], session.id)
-        session.add_event({'type': 'NEW_CONNECTION'})
-        # I'm not sure if gevent DatagramServer handles issues where the
-        # received data is over the MTU -> fragmentation
-        if data:
-            pdu = PDU()
-            pdu.pduData = data
-            apdu = APDU()
-            try:
-                apdu.decode(pdu)
-            except DecodingError as e:
-                logger.error("DecodingError: %s", e)
-                logger.error("PDU: " + format(pdu))
-                return
-            self.bacnet_app.indication(apdu, address, self.thisDevice)
-            self.bacnet_app.response(self.bacnet_app._response, address)
-        logger.info('Bacnet client disconnected %s:%d. (%s)', address[0], address[1], session.id)
-
-    def start(self, host, port):
-        connection = (host, port)
-        self.server = DatagramServer(connection, self.handle)
-        logger.info('Bacnet server started on: %s', connection)
-        self.server.serve_forever()
-
-    def stop(self):
-        self.server.stop()
