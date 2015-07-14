@@ -63,6 +63,7 @@ class TestLoggers(unittest.TestCase):
                 error_string += ', '
         self.assertFalse(has_errors, 'Error while validations STIX xml: {0}'. format(error_string))
 
+    @unittest.skip('disabled until taxii server is up and running again')
     def test_taxii(self):
         """
         Objective: Test if we can transmit data to MITRE's TAXII test server.
