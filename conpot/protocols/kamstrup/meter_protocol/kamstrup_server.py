@@ -19,7 +19,6 @@ import logging
 import socket
 import binascii
 import random
-
 from gevent.server import StreamServer
 import gevent
 
@@ -36,6 +35,7 @@ class KamstrupServer(object):
         self.timeout = timeout
         self.command_responder = CommandResponder(template)
         self.server_active = True
+        self.server = None
         conpot_core.get_databus().observe_value('reboot_signal', self.reboot)
         logger.info('Kamstrup protocol server initialized.')
 
@@ -43,27 +43,27 @@ class KamstrupServer(object):
     def reboot(self, key):
         assert(key == 'reboot_signal')
         self.server_active = False
-        logger.debug('Pretending server reboot')
+        logger.info('Pretending server reboot')
         gevent.spawn_later(2, self.set_reboot_done)
 
     def set_reboot_done(self):
-        logger.debug('Stopped pretending reboot')
+        logger.info('Stopped pretending reboot')
         self.server_active = True
 
     def handle(self, sock, address):
         session = conpot_core.get_session('kamstrup_protocol', address[0], address[1])
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        logger.info('New Kamstrup connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
-        server_active = True
+        self.server_active = True
 
         parser = request_parser.KamstrupRequestParser()
         try:
-            while server_active:
+            while self.server_active:
                 raw_request = sock.recv(1024)
 
                 if not raw_request:
-                    logger.info('Client disconnected. ({0})'.format(session.id))
+                    logger.info('Kamstrup client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
 
@@ -83,7 +83,7 @@ class KamstrupServer(object):
                         if response:
                             serialized_response = response.serialize()
                             logdata['response'] = binascii.hexlify(serialized_response)
-                            logger.debug('Kamstrup traffic from {0}: {1} ({2})'.format(address[0], logdata, session.id))
+                            logger.info('Kamstrup traffic from %s: %s (%s)', address[0], logdata, session.id)
                             sock.send(serialized_response)
                             session.add_event(logdata)
                         else:
@@ -91,23 +91,16 @@ class KamstrupServer(object):
                             break
 
         except socket.timeout:
-            logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
             session.add_event({'type': 'CONNECTION_LOST'})
 
         sock.close()
 
     def start(self, host, port):
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
-        logger.info('Kamstrup protocol server started on: {0}'.format(connection))
-        server.start()
+        self.server = StreamServer(connection, self.handle)
+        logger.info('Kamstrup protocol server started on: %s', connection)
+        self.server.start()
 
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    print 'Starting kamstrup_meter protocol server'
-    kamstrup_server = KamstrupServer(None)
-    server = kamstrup_server.get_server('0.0.0.0', 6666)
-    server_greenlet = gevent.spawn(server.start)
-    gevent.sleep(10000)
-
+    def stop(self):
+        self.server.stop()

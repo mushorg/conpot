@@ -86,14 +86,14 @@ class MBSlave(Slave):
                 if response_pdu:
                     if broadcast:
                         # not really sure whats going on here - better log it!
-                        logger.info("broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
+                        logger.info("Modbus broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
                         return ""
                     else:
                         return struct.pack(">B", self.function_code) + response_pdu
                 raise Exception("No response for function %d" % self.function_code)
 
             except ModbusError as e:
-                logger.error('Exception caught: {0}. (A proper response will be sent to the peer)'.format(e))
+                logger.error('Exception caught: %s. (A proper response will be sent to the peer)', e)
                 return struct.pack(">BB", self.function_code + 128, e.get_exception_code())
 
     def add_block(self, block_name, block_type, starting_address, size):

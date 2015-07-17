@@ -26,7 +26,8 @@ from lxml import etree
 
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
-from conpot.tests.helpers.mitre_stix_validator import STIXValidator
+import sdv.validators as validators
+#from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 
 
 class TestLoggers(unittest.TestCase):
@@ -39,10 +40,6 @@ class TestLoggers(unittest.TestCase):
         config_file = os.path.join(os.path.dirname(__file__), '../conpot.cfg')
         config.read(config_file)
         config.set('taxii', 'enabled', True)
-        config.set('taxii', 'use_contact_info', True)
-        config.set('taxii', 'contact_name', 'conpot')
-        config.set('taxii', 'contact_mail', 'a@b.c')
-        config.set('taxii', 'contact_domain', 'http://conpot.org/stix-1')
 
         test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
                       'public_ip': '111.222.111.222',
@@ -53,13 +50,20 @@ class TestLoggers(unittest.TestCase):
         dom = etree.parse('conpot/templates/default/template.xml')
         stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
-        xmlValidator = STIXValidator(None, True, False)
-        result_dict = xmlValidator.validate(StringIO(stix_package_xml.encode('utf-8')))
-        errors = ''
-        if 'errors' in result_dict:
-            errors = ', '.join(result_dict['errors'])
-        self.assertTrue(result_dict['result'], 'Error while validations STIX xml: {0}'. format(errors))
 
+        validator = validators.STIXSchemaValidator()
+        result = validator.validate(StringIO(stix_package_xml.encode('utf-8'))).as_dict()
+
+        has_errors = False
+        error_string = ''
+        if 'errors' in result:
+            has_errors = True
+            for error in result['errors']:
+                error_string += error['message']
+                error_string += ', '
+        self.assertFalse(has_errors, 'Error while validations STIX xml: {0}'. format(error_string))
+
+    @unittest.skip('disabled until taxii server is up and running again')
     def test_taxii(self):
         """
         Objective: Test if we can transmit data to MITRE's TAXII test server.

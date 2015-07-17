@@ -37,7 +37,7 @@ class KamstrupRequestBase(KamstrupProtocolBase):
         super(KamstrupRequestBase, self).__init__(communication_address)
         self.command = command
         self.message_bytes = message_bytes
-        logger.debug('Request package created with bytes: {0}'.format(self.message_bytes))
+        logger.info('Kamstrup request package created with bytes: %s', self.message_bytes)
 
     def __str__(self):
         return 'Comm address: {0}, Command: {1}, Message: {2}'.format(hex(self.communication_address),
@@ -50,7 +50,7 @@ class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
         super(KamstrupRequestUnknown, self).__init__(communication_address,
                                                      command_byte, message_bytes)
-        logger.warning('Unknown Kamstrup request: {0}'.format(self))
+        logger.warning('Unknown Kamstrup request: %s', self)
 
 
 class KamstrupRequestGetRegisters(KamstrupRequestBase):
@@ -62,11 +62,11 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
                                                           KamstrupRequestGetRegisters.command_byte, message_bytes)
         self.registers = []
         self._parse_register_bytes()
-        logger.debug('Request for registers: {0}'.format(str(self.registers).strip('[]')))
+        logger.debug('Kamstrup request for registers: %s', str(self.registers).strip('[]'))
 
     def _parse_register_bytes(self):
         register_count = self.message_bytes[0]
-        if len(self.message_bytes[1:] * 2) < register_count:
+        if len(self.message_bytes[1:]) * 2 < register_count:
             raise Exception('Invalid register count in register request')
         for count in xrange(register_count):
             register = self.message_bytes[1 + count * 2] * 256 + self.message_bytes[2 + count * 2]
@@ -79,7 +79,7 @@ class KamstrupResponseBase(KamstrupProtocolBase):
         super(KamstrupResponseBase, self).__init__(communication_address)
 
     def serialize(self, message):
-        final_message = []
+        final_message = list()
 
         # prefix message
         final_message.append(kamstrup_constants.RESPONSE_MAGIC)
@@ -101,8 +101,9 @@ class KamstrupResponseBase(KamstrupProtocolBase):
         return escaped_message
 
     # escape everything but leading and trailing magic
-    def escape(self, message):
-        escaped_list = []
+    @classmethod
+    def escape(cls, message):
+        escaped_list = list()
         escaped_list.append(message[0])
         for c in message[1:-1]:
             if c in kamstrup_constants.NEED_ESCAPE:
@@ -122,8 +123,9 @@ class KamstrupResponseRegister(KamstrupResponseBase):
     def add_register(self, register):
         self.registers.append(register)
 
-    def serialize(self):
-        message = []
+    def serialize(self, message=None):
+        if not message:
+            message = []
         message.append(0x10)
 
         for register in self.registers:

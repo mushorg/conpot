@@ -42,7 +42,7 @@ class KamstrupRequestParser(object):
         while position < bytes_len:
             d = self.bytes[position]
             if not self.parsing and d != kamstrup_constants.REQUEST_MAGIC:
-                logger.debug('Skipping byte, expected kamstrup_meter request magic but got: {0}'
+                logger.info('Kamstrup skipping byte, expected kamstrup_meter request magic but got: {0}'
                              .format(hex(d)))
                 del self.bytes[position]
                 bytes_len -= 1
@@ -68,7 +68,7 @@ class KamstrupRequestParser(object):
                     if not self.valid_crc(self.bytes[1:position]):
                         self.parsing = False
                         del self.bytes[0:position]
-                        logger.warning('CRC check failed for request.')
+                        logger.warning('Kamstrup CRC check failed for request.')
                     # now we expect (0x80, 0x3f, 0x10) =>
                     # (request magic, communication address, command byte)
                     comm_address = self.bytes[1]
@@ -82,7 +82,8 @@ class KamstrupRequestParser(object):
                     return result
                 position += 1
 
-    def valid_crc(self, message):
+    @classmethod
+    def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
         calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc

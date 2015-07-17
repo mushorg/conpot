@@ -56,14 +56,16 @@ class Proxy(object):
         else:
             server = StreamServer(connection, self.handle)
         self.port = server.server_port
-        logger.info('{0} proxy server started, listening on {1}, proxy for: ({2}, {3}) using {4} decoder.'
-                    .format(self.name, connection, self.proxy_host, self.proxy_port, self.decoder))
+        logger.info(
+            '%s proxy server started, listening on %s, proxy for: (%s, %s) using %s decoder.',
+            self.name, connection, self.proxy_host, self.proxy_port, self.decoder)
         return server
 
     def handle(self, sock, address):
         session = conpot_core.get_session(self.proxy_id, address[0], address[1])
-        logger.info('New connection from {0}:{1} on {2} proxy. ({3})'.format(address[0], address[1],
-                                                                             self.proxy_id, session.id))
+        logger.info(
+            'New connection from %s:%s on %s proxy. (%s)',
+            address[0], address[1], self.proxy_id, session.id)
         proxy_socket = socket()
 
         if self.keyfile and self.certfile:
@@ -72,8 +74,7 @@ class Proxy(object):
         try:
             proxy_socket.connect((self.proxy_host, self.proxy_port))
         except _socket.error as ex:
-            logger.error('Error while connecting to proxied service at ({0}, {1}): {2}'
-                         .format(self.proxy_host, self.proxy_port, ex))
+            logger.error('Error while connecting to proxied service at (%s, %s): %s', self.proxy_host, self.proxy_port, ex)
             self._close([proxy_socket, sock])
             return
 
@@ -96,13 +97,15 @@ class Proxy(object):
                 if len(data) is 0:
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
-                        logging.warning('Closing proxied socket while receiving ({0}, {1}): {2}.'
-                                        .format(self.proxy_host, self.proxy_port, socket_close_reason))
+                        logging.warning(
+                            'Closing proxied socket while receiving (%s, %s): %s.', 
+                            self.proxy_host, self.proxy_port, socket_close_reason)
                         sockets = []
                         break
                     elif s is sock:
-                        logging.warning('Closing connection to remote while receiving from remote ({0}, {1}): {2}'
-                                        .format(socket_close_reason, address[0], address[1]))
+                        logging.warning(
+                            'Closing connection to remote while receiving from remote (%s, %s): %s',
+                            socket_close_reason, address[0], address[1])
                         sockets = []
                         break
                     else:
@@ -120,7 +123,7 @@ class Proxy(object):
                         destination = 'proxied socket'
                     else:
                         destination = 'remote connection'
-                    logger.warning('Error while sending data to {0}: {1}.'.format(destination, str(socket_err)))
+                    logger.warning('Error while sending data to %s: %s.', destination, str(socket_err))
                     sockets = []
                     break
 
@@ -131,22 +134,22 @@ class Proxy(object):
     def handle_in_data(self, data, sock, session):
         hex_data = data.encode('hex_codec')
         session.add_event({'raw_request': hex_data, 'raw_response': ''})
-        logger.debug('Received {0} bytes from outside to proxied service: {1}'.format(len(data), hex_data))
+        logger.debug('Received %s bytes from outside to proxied service: %s', len(data), hex_data)
         if self.decoder:
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_in(data)
-            logger.debug('Decoded request: {0}'.format(decoded))
+            logger.debug('Decoded request: %s', decoded)
             session.add_event({'request': decoded, 'raw_response': ''})
         sock.send(data)
 
     def handle_out_data(self, data, sock, session):
         hex_data = data.encode('hex_codec')
         session.add_event({'raw_request': '', 'raw_response': hex_data})
-        logger.debug('Received {0} bytes from proxied service: {1}'.format(len(data), hex_data))
+        logger.debug('Received %s bytes from proxied service: %s', len(data), hex_data)
         if self.decoder:
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_out(data)
-            logger.debug('Decoded response: {0}'.format(decoded))
+            logger.debug('Decoded response: %s', decoded)
             session.add_event({'request': '', 'raw_response': decoded})
         sock.send(data)
 

@@ -33,6 +33,9 @@ class TestKamstrup(unittest.TestCase):
         self.request_parser = request_parser.KamstrupRequestParser()
         self.command_responder = CommandResponder('conpot/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
 
+    def tearDown(self):
+        self.databus.reset()
+
     def test_request_get_register(self):
         # requesting register 1033
         request_bytes = (0x80, 0x3f, 0x10, 0x01, 0x04, 0x09, 0x18, 0x6d, 0x0d)

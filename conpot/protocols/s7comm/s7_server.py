@@ -58,13 +58,12 @@ class S7Server(object):
         logger.debug('Conpot debug info: S7 SSL/SZL: {0}'.format(self.ssl_lists))
         logger.info('Conpot S7Comm initialized')
 
-
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
         session = conpot_core.get_session('s7comm', address[0], address[1])
 
         self.start_time = time.time()
-        logger.info('New connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
+        logger.info('New S7 connection from {0}:{1}. ({2})'.format(address[0], address[1], session.id))
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
@@ -84,7 +83,7 @@ class S7Server(object):
 
                     # connection request
                     cotp_cr_request = COTP_ConnectionRequest().dissect(cotp_base_packet.payload)
-                    logger.debug('Received COTP Connection Request: dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} '
+                    logger.info('Received COTP Connection Request: dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} '
                                  'tpdu-size:{4}. ({5})'.format(cotp_cr_request.dst_ref, cotp_cr_request.src_ref,
                                                                cotp_cr_request.dst_tsap, cotp_cr_request.src_tsap,
                                                                cotp_cr_request.tpdu_size, session.id))
@@ -108,17 +107,18 @@ class S7Server(object):
                     cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
 
                     if cotp_base_packet.tpdu_type == 0xf0:
-                        logger.debug('Received known COTP TPDU: {0}. ({1})'.format(cotp_base_packet.tpdu_type,
+                        logger.info('Received known COTP TPDU: {0}. ({1})'.format(cotp_base_packet.tpdu_type,
                                                                                    session.id))
 
                         # will throw exception if the packet does not contain the S7 magic number (0x32)
                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                        logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} req_id:{3} param_len:{4} '
-                                     'data_len:{5} result_inf:{6}'.format(
+                        logger.info(
+                            'Received S7 packet: magic:%s pdu_type:%s reserved:%s req_id:%s param_len:%s '
+                            'data_len:%s result_inf:%s session_id:%s',
                             S7_packet.magic, S7_packet.pdu_type,
                             S7_packet.reserved, S7_packet.request_id,
                             S7_packet.param_length, S7_packet.data_length,
-                            S7_packet.result_info, session.id))
+                            S7_packet.result_info, session.id)
 
                         # request pdu
                         if S7_packet.pdu_type == 1:
@@ -147,12 +147,13 @@ class S7Server(object):
 
                                     if cotp_base_packet.tpdu_type == 0xf0:
                                         S7_packet = S7().parse(cotp_base_packet.trailer)
-                                        logger.debug('Received S7 packet: magic:{0} pdu_type:{1} reserved:{2} '
-                                                     'req_id:{3} param_len:{4} data_len:{5} result_inf:{6}'.format(
+                                        logger.info(
+                                            'Received S7 packet: magic:%s pdu_type:%s reserved:%s '
+                                            'req_id:%s param_len:%s data_len:%s result_inf:%s session_id:%s',
                                             S7_packet.magic, S7_packet.pdu_type,
                                             S7_packet.reserved, S7_packet.request_id,
                                             S7_packet.param_length, S7_packet.data_length,
-                                            S7_packet.result_info, session.id))
+                                            S7_packet.result_info, session.id)
 
                                         response_param, response_data = S7_packet.handle()
                                         s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
@@ -165,11 +166,11 @@ class S7Server(object):
 
                                     data = sock.recv(1024)
                     else:
-                        logger.debug(
+                        logger.info(
                             'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type))
                         session.add_event({'error': 'Received unknown COTP TPDU after handshake: {0}'.format(cotp_base_packet.tpdu_type)})
                 else:
-                    logger.debug('Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type))
+                    logger.info('Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type))
                     session.add_event({'error': 'Received unknown COTP TPDU before handshake: {0}'.format(cotp_base_packet.tpdu_type)})
 
         except socket.timeout:
