@@ -1,0 +1,49 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="bacnet">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="device_info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="device_name"/>
+                            <xs:element type="xs:string" name="device_identifier"/>
+                            <xs:element type="xs:string" name="vendor_name"/>
+                            <xs:element type="xs:string" name="vendor_identifier"/>
+                            <xs:element type="xs:string" name="max_apdu_length_accepted"/>
+                            <xs:element type="xs:string" name="segmentation_supported"/>
+                            <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element  name="object_list">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="object" minOccurs="0" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="properties">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="object_identifier" minOccurs="1" maxOccurs="1"/>
+                                                    <xs:element type="xs:string" name="object_name" minOccurs="1" maxOccurs="1"/>
+                                                    <xs:element type="xs:string" name="object_type" minOccurs="1" maxOccurs="1"/>
+                                                    <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+ </xs:schema>

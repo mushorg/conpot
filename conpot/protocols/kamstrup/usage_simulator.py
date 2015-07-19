@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 # Simulates power usage for a Kamstrup 382 meter
 class UsageSimulator(object):
     def __init__(self, *args):
+        self._enabled = True
+        self.stopped = gevent.event.Event()
         # both highres, lowres will be calculated on the fly
         self.energy_in = 0
         self.energy_out = 0
@@ -37,12 +39,18 @@ class UsageSimulator(object):
         gevent.spawn(self.initialize)
 
     def usage_counter(self):
-        while True:
-            # since this is gevent, this is actually sleep for _at least_ 1 second
+        while self._enabled:
+            # since this is gevent, this actually sleep for _at least_ 1 second
             # TODO: measure last entry and figure it out
             gevent.sleep(1)
             for x in [0, 1, 2]:
                 self.energy_in += int(self.power[x] * 0.0036)
+        # ready for shutdown!
+        self.stopped.set()
+
+    def stop(self):
+        self._enabled = False
+        self.stopped.wait()
 
     def initialize(self):
         # we need the databus initialized before we can probe values
