@@ -4,15 +4,15 @@ Centos instalation 7.1
 Validated to work on Centos version 7.1-1503 & Conpot v4 (but may likely work on other centos versions/ rpm disto.
 
 1. login via ssh with a account with sufficient system privileges (e.g root)
-------------------------------
+----------------------------------------------------------------------------
 2. Upgrade the system
-----------------
+---------------------
 ::
 
 $ sudo yum -y update
 
 3. Install epel repository
--------------------------
+--------------------------
 
 ::
 
@@ -46,7 +46,7 @@ Sugestions to mysql secure instalation are to change the root password and accec
 $ sudo mysql_secure_installation
 
 6. CONPOT installation
----------------------
+----------------------
 ::
 
 $ cd /usr/local/src 
@@ -66,7 +66,7 @@ $ firewall-cmd --reload
 
 
 8. temp fix as conpot currently requires the "nogroup" for the moment - raised in issue #267
-------------------------------
+--------------------------------------------------------------------------------------------
 ::
 
 $ sudo groupadd nogroup
@@ -79,7 +79,7 @@ $ sudo groupadd nogroup
 $ conpot --template default
 
 10. check if its running and you can access it from remote (in browser)
------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 ::
 
