@@ -49,6 +49,8 @@ class IpmiServer(object):
         self.device_name = databus.get_value(dom.xpath('//ipmi/device_info/device_name/text()')[0])
         self.host = ''
         self.port = 623
+        if hasattr(args, 'port'):
+            self.port = args.port
         self.sessions = dict()
 
         self.uuid = uuid.uuid4()
@@ -67,7 +69,7 @@ class IpmiServer(object):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setblocking(1)
-        self.sock.bind(('', 623))
+        self.sock.bind(('', self.port))
         self.bmc = self._configure_users(dom)
         logger.info('Conpot IPMI initialized using %s template', template)
 

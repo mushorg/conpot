@@ -20,6 +20,7 @@ from conpot.protocols.ipmi.ipmi_server import IpmiServer
 import conpot.core as conpot_core
 
 import unittest
+from collections import namedtuple
 
 import gevent.monkey
 
@@ -35,10 +36,12 @@ class TestIPMI(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/ipmi/template.xml')
+	args = namedtuple('FakeArgs', 'port')
+	args.port = 0
         self.ipmi_server = IpmiServer(
             self.template_path,
             'conpot/templates/ipmi/',
-            {}
+            args
         )
         self.greenlet = gevent.spawn(self.ipmi_server.start, '127.0.0.1', 0)
 
