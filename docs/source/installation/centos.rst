@@ -83,4 +83,4 @@ $ conpot --template default
 
 ::
 
-http://YOUR_IP/
+$ lynx http://YOUR_IP/
