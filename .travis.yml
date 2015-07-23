@@ -3,16 +3,31 @@ python:
 - '2.7'
 virtualenv:
   system_site_packages: false
+sudo: false
+cache:
+- apt
+- pip
 before_install:
 - export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
 - REPO=`pwd`
 - echo $REPO
 - echo $TRAVIS_TAG
 - pwd
-- sudo apt-get -qq update
-- sudo apt-get -qq install python2.7 python-pip git unzip
-- sudo apt-get -qq install python-dev libevent-dev libsmi2ldbl snmp-mibs-downloader
-- sudo apt-get install libxml2 libxml2-dev libxml2-utils libmysqlclient-dev
+addons:
+  apt:
+    packages:
+    - python2.7
+    - python-pip
+    - git
+    - unzip
+    - python-dev
+    - libevent-dev
+    - libsmi2ldbl
+    - snmp-mibs-downloader
+    - libxml2
+    - libxml2-dev
+    - libxml2-utils
+    - libmysqlclient-dev
 install:
 - export PYTHONIOENCODING=UTF8
 - python setup.py install
@@ -22,7 +37,7 @@ before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 script:
 - coverage run --timid --source=conpot setup.py test
-- sudo -E /home/travis/virtualenv/python2.7.9/bin/conpot
+- /home/travis/virtualenv/python2.7.9/bin/conpot
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls
@@ -35,6 +50,6 @@ deploy:
   password:
     secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
   on:
-    repo: glastopf/conpot
+    repo: mushorg/conpot
     all_branches: true
     condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
