@@ -19,3 +19,4 @@ cybox
 bacpypes
 pyghmi
 mixbox
+pyshark
