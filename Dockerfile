@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
 
 # Clone git repo and build the honeypot
 RUN cd /opt/ && \
-    git clone https://github.com/glastopf/conpot.git && \
+    git clone https://github.com/mushorg/conpot.git && \
     cd conpot/ && \
     python setup.py install && \
     rm -rf /opt/conpot /tmp/* /var/tmp/*

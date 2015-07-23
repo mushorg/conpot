@@ -56,7 +56,7 @@ SAMPLE OUTPUT
                   |_|
     
       Version 0.4.0
-      Glastopf Project
+      MushMush Foundation
 
     2015-05-27 16:05:08,355 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-py2.7.egg/conp
     2015-05-27 16:05:08,366 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.4.0-

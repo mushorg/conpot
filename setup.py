@@ -11,7 +11,7 @@ setup(
     scripts=['bin/conpot'],
     url="http://conpot.org",
     license='GPL 2',
-    author="Glastopf Project",
+    author="MushMush Foundation",
     author_email="glastopf@public.honeynet.org",
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -35,7 +35,7 @@ setup(
     tests_require="nose",
     dependency_links=[
         "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
-        "https://github.com/glastopf/modbus-tk/archive/master.zip#egg=modbus-tk"
+        "https://github.com/mushorg/modbus-tk/archive/master.zip#egg=modbus-tk"
     ],
     install_requires=open('requirements.txt').read().splitlines(),
 )

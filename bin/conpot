@@ -65,7 +65,7 @@ def logo():
               |_|
 
   Version {0}
-  Glastopf Project
+  MushMush Foundation
 """.format(conpot.__version__)
 
 

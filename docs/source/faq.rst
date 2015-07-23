@@ -27,7 +27,7 @@ Raw data in JSON formatting.
 
 **How do I get the data?**
 
-There is a Python `client <https://github.com/glastopf/conpot/blob/master/bin/conpot_hpf_client>`_
+There is a Python `client <https://github.com/mushorg/conpot/blob/master/bin/conpot_hpf_client>`_
 which uses the HPFeeds library. About 40 lines of code. From there it's
 quite easy to write the data to a database.
 You can find an explanation on how it works

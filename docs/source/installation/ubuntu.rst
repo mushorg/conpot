@@ -30,7 +30,7 @@ The development version can be cloned from github:
 ::
 
     cd /opt
-    git clone git@github.com:glastopf/conpot.git
+    git clone git@github.com:mushorg/conpot.git
     cd conpot
     python setup.py install
 
