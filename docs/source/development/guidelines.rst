@@ -28,6 +28,23 @@ Recommended git workflow
 For contributors
 ~~~~~~~~~~~~~~~~
 
+0, You can do this step when you are on master, or feature_branch, anytime there are new commits in original project.
+
+Just one-time add of remote:
+
+::
+
+  git remote add mushorg https://github.com/mushorg/glastopf.git
+
+And rebase:
+
+::
+
+  git fetch mushorg
+  git rebase mushorg/master feature_branch
+
+This way, your feature_branch or master will be up-to-date.
+
 1, For every feature, create new branch:
 
 ::
