@@ -28,7 +28,7 @@ import grp
 import platform
 import ast
 import inspect
-from ConfigParser import ConfigParser
+from ConfigParser import ConfigParser, NoOptionError
 
 import gevent
 from lxml import etree
@@ -95,21 +95,40 @@ def setup_logging(log_file, verbose):
     root_logger.addHandler(file_log)
 
 
-def drop_privileges(uid_name='nobody', gid_name='nogroup'):
-    wanted_uid = pwd.getpwnam(uid_name)[2]
-    # special handling for os x. (getgrname has trouble with gid below 0)
-    if platform.mac_ver()[0] and platform.mac_ver()[0] < float('10.9'):
-        wanted_gid = -2
-    else:
-        wanted_gid = grp.getgrnam(gid_name)[2]
+def drop_privileges(uid_name=None, gid_name=None):
+    if uid_name is None:
+        uid_name = 'nobody'
 
-    os.setgid(wanted_gid)
-    os.setuid(wanted_uid)
+    try:
+        wanted_user = pwd.getpwnam(uid_name)
+    except KeyError:
+        logger.exception(
+            'Cannot drop privileges: user "%s" does not exist.',
+            uid_name)
+        sys.exit(1)
 
-    new_uid_name = pwd.getpwuid(os.getuid())[0]
-    new_gid_name = grp.getgrgid(os.getgid())[0]
+    if gid_name is None:
+        gid_name = grp.getgrgid(wanted_user.pw_gid).gr_name
 
-    logger.info('Privileges dropped, running as %s/%s.', new_uid_name, new_gid_name)
+    try:
+        wanted_group = grp.getgrnam(gid_name)
+    except KeyError:
+        logger.exception(
+            'Cannot drop privileges: group "%s" does not exist.',
+            gid_name)
+        sys.exit(1)
+
+    logger.debug('Attempting to drop privileges to "%s:%s"',
+                 wanted_user.pw_name, wanted_group.gr_name)
+
+    os.setgid(wanted_group.gr_gid)
+    os.setuid(wanted_user.pw_uid)
+
+    new_user = pwd.getpwuid(os.getuid())
+    new_group = grp.getgrgid(os.getgid())
+
+    logger.info('Privileges dropped, running as "%s:%s"',
+                new_user.pw_name, new_group.gr_name)
 
 
 def validate_template(xml_file, xsd_file):
@@ -327,9 +346,22 @@ def main():
                 logger.info('No proxy template found. Service will remain unconfigured/stopped.')
         # Wait for the services to bind ports before forking
         gevent.sleep(5)
+        # Only drop if running as root
         if os.getuid() == 0:
-            # Only drop if running as root
-            drop_privileges()
+            try:
+                # retrieve user to run as
+                conpot_user = config.get('daemon', 'user')
+            except NoOptionError:
+                conpot_user = None
+
+            try:
+                # retrieve group to run as
+                conpot_group = config.get('daemon', 'group')
+            except NoOptionError:
+                conpot_group = None
+
+            drop_privileges(conpot_user, conpot_group)
+
             try:
                 if len(servers) > 0:
                     gevent.wait()
