@@ -22,8 +22,8 @@ $ sudo rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-
 -----------------------------------
 ::
 
-$ sudo yum -y install libxslt-devel libxml2-devel python-pip python-2.7.5-16.el7.x86_64 
-$ sudo yum -y install mariadb-server mysql-connector-python.noarch mariadb-devel-5.5.41-2.el7_0.x86_64 
+$ sudo yum -y install libxslt-devel libxml2-devel python-pip python-2.7.5-16.el7.x86_64
+$ sudo yum -y install mariadb-server mysql-connector-python.noarch mariadb-devel-5.5.41-2.el7_0.x86_64
 $ sudo yum -y install git python-lxml.x86_64 python-devel
 $ sudo yum -y groupinstall "Development tools"
 $ sudo easy_install -U setuptools
@@ -49,7 +49,7 @@ $ sudo mysql_secure_installation
 ----------------------
 ::
 
-$ cd /usr/local/src 
+$ cd /usr/local/src
 $ sudo git clone https://github.com/glastopf/conpot
 $ cd conpot/
 $ sudo python setup.py install
