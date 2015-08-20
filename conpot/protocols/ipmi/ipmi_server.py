@@ -125,7 +125,7 @@ class IpmiServer(object):
 
     def initiate_session(self, data, address, session):
         if len(data) < 22:
-            self.ipmiserver.close_server_session()
+            self.close_server_session()
             return
         if not (data[0] == '\x06' and data[2:4] == '\xff\x07'):
             # check rmcp version, sequencenumber and class;
