@@ -28,6 +28,7 @@ import grp
 import platform
 import ast
 import inspect
+
 from ConfigParser import ConfigParser
 
 import gevent
@@ -153,13 +154,15 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
-    setup_logging(args.logfile, args.verbose)
+    core_interface = conpot_core.get_interface()
 
-    config = ConfigParser()
+    core_interface.config = ConfigParser()
     if not os.path.isfile(args.config):
         args.config = os.path.join(package_directory, 'conpot.cfg')
         logger.info('No conpot.cfg found in current directory, using default configuration: %s', args.config)
-    config.read(args.config)
+    core_interface.config.read(args.config)
+
+    setup_logging(args.logfile, args.verbose)
 
     # No template specified
     if not args.template:
@@ -236,10 +239,11 @@ def main():
     session_manager.initialize_databus(template_base)
 
     public_ip = None
-    if config.getboolean('fetch_public_ip', 'enabled'):
-        public_ip = ext_ip.get_ext_ip(config)
-    if config.getboolean('change_mac_addr', 'enabled'):
-        mac_addr.change_mac(config=config)
+    if core_interface.config.getboolean('fetch_public_ip', 'enabled'):
+        public_ip = ext_ip.get_ext_ip(core_interface.config)
+        core_interface.network.public_ip = public_ip
+    if core_interface.config.getboolean('change_mac_addr', 'enabled'):
+        core_interface.network.hw_address = mac_addr.change_mac(core_interface=core_interface)
     protocol_instance_mapping = (
         ('modbus', ModbusServer),
         ('s7comm', S7Server),
@@ -262,6 +266,7 @@ def main():
                         host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
                         port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
                         server = server_class(protocol_template, root_template_directory, args)
+                        core_interface.enabled_protocols.append(protocol_name)
                         greenlet = gevent.spawn(server.start, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
                         servers.append(server)
@@ -271,7 +276,7 @@ def main():
             else:
                 logger.debug('No %s template found. Service will remain unconfigured/stopped.', protocol_name)
 
-        log_worker = LogWorker(config, dom_base, session_manager, public_ip)
+        log_worker = LogWorker(core_interface.config, dom_base, session_manager, public_ip)
         greenlet = gevent.spawn(log_worker.start)
         greenlet.link_exception(on_unhandled_greenlet_exception)
 
@@ -309,6 +314,7 @@ def main():
                             decoder = None
                         proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
                         proxy_server = proxy_instance.get_server(host, port)
+                        core_interface.enabled_protocols.append(name)
                         servers.append(proxy_instance)
                         proxy_greenlet = gevent.spawn(proxy_server.start)
                         proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
@@ -337,9 +343,9 @@ def main():
             os.waitpid(pid, 0)
         except KeyboardInterrupt:
             pass
-        if config.getboolean('change_mac_addr', 'enabled'):
+        if core_interface.config.getboolean('change_mac_addr', 'enabled'):
             # Revert MAC address
-            iface = config.get('change_mac_addr', 'iface')
+            iface = core_interface.config.get('change_mac_addr', 'iface')
             mac_addr.revert_mac(iface)
 
 

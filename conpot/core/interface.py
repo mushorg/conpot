@@ -1,4 +1,4 @@
-# Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2015 Lukas Rist <glaslos@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,24 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from session_manager import SessionManager
-from interface import Interface
 
-sessionManager = SessionManager()
-core_interface = Interface()
+class Interface(object):
 
+    class Network(object):
+        def __init__(self):
+            self.public_ip = None
+            self.hw_address = None
 
-def get_sessionManager():
-    return sessionManager
-
-
-def get_databus():
-    return sessionManager._databus
-
-
-def get_session(*args, **kwargs):
-    return sessionManager.get_session(*args, **kwargs)
-
-
-def get_interface():
-    return core_interface
+    def __init__(self):
+        self.enabled_protocols = list()
+        self.network = self.Network()
+        self.config = None
