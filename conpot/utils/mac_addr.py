@@ -44,10 +44,10 @@ def _renew_lease(iface):
     subprocess.Popen(['dhclient', iface], stdout=subprocess.PIPE)
 
 
-def change_mac(iface=None, mac=None, config=None, revert=None):
-    if config:
-        iface = config.get('change_mac_addr', 'iface')
-        mac = config.get('change_mac_addr', 'addr')
+def change_mac(iface=None, mac=None, core_interface=None, revert=None):
+    if core_interface.config:
+        iface = core_interface.config.get('change_mac_addr', 'iface')
+        mac = core_interface.config.get('change_mac_addr', 'addr')
 
     # Changing MAC address and restarting network
     subprocess.Popen(['ip', 'link', 'set', iface, 'down'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
@@ -62,8 +62,10 @@ def change_mac(iface=None, mac=None, config=None, revert=None):
         if _is_dhcp(iface):
             _renew_lease(iface)
             logger.info('Interface has a DHCP lease, refreshed.')
+        return mac
     else:
         logger.warning('Could not change MAC address.')
+        return None
 
 
 def revert_mac(iface):
