@@ -46,6 +46,7 @@ from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupSer
 from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
 from conpot.protocols.bacnet.bacnet_server import BacnetServer
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
+from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
@@ -268,7 +269,8 @@ def main():
         ('http', HTTPServer),
         ('snmp', SNMPServer),
         ('bacnet', BacnetServer),
-        ('ipmi', IpmiServer)
+        ('ipmi', IpmiServer),
+        ('guardian_ast', GuardianASTServer)
     )
 
     # no need to fork process when we don't want to change MAC address

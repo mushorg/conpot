@@ -1,0 +1,21 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="guardian_ast">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="device_info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="vendor_name"/>
+                            <xs:element type="xs:string" name="product_code"/>
+                            <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+ </xs:schema>
