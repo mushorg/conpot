@@ -21,15 +21,11 @@ gevent.monkey.patch_all()
 import unittest
 from collections import namedtuple
 
-
-from gevent.server import DatagramServer
 from gevent import monkey
-import bacpypes.object
 
-from bacpypes.app import LocalDeviceObject, BIPSimpleApplication
-from bacpypes.pdu import GlobalBroadcast, LocalBroadcast
+from bacpypes.pdu import GlobalBroadcast, PDU
 
-from bacpypes.apdu import PDU, APDU, WhoIsRequest, IAmRequest, IHaveRequest,  WhoHasObject,  WhoHasRequest, \
+from bacpypes.apdu import APDU, WhoIsRequest, IAmRequest, IHaveRequest,  WhoHasObject,  WhoHasRequest, \
     ReadPropertyRequest, ReadPropertyACK
 
 from conpot.protocols.bacnet import bacnet_server
