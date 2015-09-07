@@ -29,8 +29,9 @@ import bacpypes.object
 from bacpypes.app import BIPSimpleApplication
 
 from bacpypes.constructeddata import Any
-from bacpypes.apdu import PDU, APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
+from bacpypes.apdu import APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
     ErrorPDU, RejectPDU, IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
+from bacpypes.pdu import PDU
 import ast
 
 

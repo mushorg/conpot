@@ -24,7 +24,8 @@ from lxml import etree
 
 from gevent.server import DatagramServer
 from bacpypes.app import LocalDeviceObject
-from bacpypes.apdu import PDU, APDU
+from bacpypes.apdu import APDU
+from bacpypes.pdu import PDU
 from bacpypes.errors import DecodingError
 
 import conpot.core as conpot_core
