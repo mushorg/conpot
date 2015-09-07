@@ -39,7 +39,7 @@ def _fetch_data(urls):
     logging.getLogger("requests").setLevel(logging.WARNING)
     for url in urls:
         try:
-            req = requests.get(url)
+            req = requests.get(url, timeout=3)
             if req.status_code == 200:
                 data = req.text.strip()
                 if data is None or not _verify_address(data):
