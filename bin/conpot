@@ -17,6 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 
 import logging
@@ -25,7 +26,6 @@ import argparse
 import sys
 import pwd
 import grp
-import platform
 import ast
 import inspect
 from ConfigParser import ConfigParser, NoOptionError
@@ -50,7 +50,6 @@ from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
 from conpot.utils import mac_addr
-
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -225,15 +224,15 @@ def main():
 
         sys.exit(0)
 
-    #  Custom template supplied
+    # Custom template supplied
     if os.path.exists(os.path.join(args.template, 'template.xml')):
         root_template_directory = args.template
     # Check if the template name can be in the default templates directory
     elif os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
         root_template_directory = os.path.join(package_directory, 'templates', args.template)
     else:
-            logger.error('Template not found: %s', args.template)
-            sys.exit(1)
+        logger.error('Template not found: %s', args.template)
+        sys.exit(1)
 
     # Check if the configuration file exists..
     if not os.path.isfile(args.config):
@@ -343,7 +342,7 @@ def main():
                 else:
                     logger.info('Proxy available but disabled by template.')
         else:
-                logger.info('No proxy template found. Service will remain unconfigured/stopped.')
+            logger.info('No proxy template found. Service will remain unconfigured/stopped.')
         # Wait for the services to bind ports before forking
         gevent.sleep(5)
         # Only drop if running as root

@@ -30,7 +30,7 @@ class CommandResponder(object):
         "Send 'H' for help.\r\n"
     )
 
-    def __init__(self, template):
+    def __init__(self):
         self.commands = {
             "!AC": commands.AccessControlCommand(),
             "!AS": commands.AlarmServerCommand(),

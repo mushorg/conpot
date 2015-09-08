@@ -18,9 +18,9 @@
 import logging
 
 import crc16
+
 import kamstrup_constants
 from messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class KamstrupRequestParser(object):
             d = self.bytes[position]
             if not self.parsing and d != kamstrup_constants.REQUEST_MAGIC:
                 logger.info('Kamstrup skipping byte, expected kamstrup_meter request magic but got: {0}'
-                             .format(hex(d)))
+                            .format(hex(d)))
                 del self.bytes[position]
                 bytes_len -= 1
                 continue

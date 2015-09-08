@@ -104,7 +104,7 @@ UNITS = {
 }
 
 
-class METER_TYPES(Enum):
+class MeterTypes(Enum):
     Unknown = 0,
     K382M = 1,
     K162M = 2,

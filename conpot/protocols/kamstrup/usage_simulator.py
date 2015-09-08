@@ -41,7 +41,7 @@ class UsageSimulator(object):
     def usage_counter(self):
         while self._enabled:
             # since this is gevent, this actually sleep for _at least_ 1 second
-            # TODO: measure last entry and figure it out
+            # TODO: measure last entry and figure it out < jkv: Figure what out?!?
             gevent.sleep(1)
             for x in [0, 1, 2]:
                 self.energy_in += int(self.power[x] * 0.0036)

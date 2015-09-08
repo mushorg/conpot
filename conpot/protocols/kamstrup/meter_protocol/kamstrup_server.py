@@ -19,13 +19,13 @@ import logging
 import socket
 import binascii
 import random
+
 from gevent.server import StreamServer
 import gevent
 
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from command_responder import CommandResponder
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class KamstrupServer(object):
 
     # pretending reboot... really just closing connecting while "rebooting"
     def reboot(self, key):
-        assert(key == 'reboot_signal')
+        assert (key == 'reboot_signal')
         self.server_active = False
         logger.info('Pretending server reboot')
         gevent.spawn_later(2, self.set_reboot_done)

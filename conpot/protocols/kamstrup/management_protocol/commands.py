@@ -734,8 +734,6 @@ class RequestConnectCommand(BaseCommand):
         return output
 
 
-
-
 class RequestRestartCommand(BaseCommand):
     HELP_MESSAGE = (
         "!RR: Request restart (*1).\r\n"
