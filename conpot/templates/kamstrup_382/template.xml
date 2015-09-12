@@ -490,7 +490,7 @@
             <key name="kap_server_lookup">
                 <value type="value">'0 - none'</value>
             </key>
-            <key name="software_watchdong">
+            <key name="software_watchdog">
                 <value type="value">'3600'</value>
             </key>
             <key name="kap_missing_warning">
