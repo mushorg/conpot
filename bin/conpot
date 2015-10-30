@@ -28,7 +28,7 @@ import pwd
 import grp
 import ast
 import inspect
-from ConfigParser import ConfigParser, NoOptionError
+from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 
 import gevent
 from lxml import etree
@@ -352,13 +352,13 @@ def main():
             try:
                 # retrieve user to run as
                 conpot_user = config.get('daemon', 'user')
-            except NoOptionError:
+            except (NoSectionError, NoOptionError):
                 conpot_user = None
 
             try:
                 # retrieve group to run as
                 conpot_group = config.get('daemon', 'group')
-            except NoOptionError:
+            except (NoSectionError, NoOptionError):
                 conpot_group = None
 
             drop_privileges(conpot_user, conpot_group)
