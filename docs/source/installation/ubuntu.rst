@@ -78,7 +78,7 @@ Simple init script that use start-stop-daemon.
       #!/bin/sh
       #
       # /etc/init.d/conpot -- startup script for conpot honeypot
-      # Author: Danilo Massa <danilo.massa@tin.it> - converted to Ubuntu
+      # Author: Danilo Massa 
       # Conpot Honeypot Web: https://github.com/danilo-massa/conpot
       #
       ### BEGIN INIT INFO
