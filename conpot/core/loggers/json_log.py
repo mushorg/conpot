@@ -33,7 +33,7 @@ class JsonLogger(object):
 
     def log(self, event, retry=1):
 	data = {}
-	data['sensorid'] = str(self.sensorid)
+	data['sensor'] = str(self.sensorid)
 	data['id'] = str(event["id"])
 	data['src_ip'] = event["remote"][0]
 	data['src_port'] = event["remote"][1]
