@@ -33,6 +33,7 @@ class JsonLogger(object):
 
     def log(self, event, retry=1):
 	data = {}
+	data['timestamp'] = event['timestamp'].isoformat()
 	data['sensor'] = str(self.sensorid)
 	data['id'] = str(event["id"])
 	data['src_ip'] = event["remote"][0]
@@ -43,6 +44,7 @@ class JsonLogger(object):
 	data['response']  = event["data"].get('response')
 	 
         json.dump(data, self.outfile)
+	self.outfile.write("\n")
 
         return 1
 
