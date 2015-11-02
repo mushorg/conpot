@@ -74,7 +74,6 @@ Init script
 --------------
 
 Simple init script that use start-stop-daemon.
-
 ::
       #!/bin/sh
       #
