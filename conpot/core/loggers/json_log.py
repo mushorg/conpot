@@ -42,6 +42,7 @@ class JsonLogger(object):
 	data['data_type'] = event["data_type"]
 	data['request'] = event["data"].get('request')
 	data['response']  = event["data"].get('response')
+	data['eventid']  = event["data"].get('type')
 	 
         json.dump(data, self.outfile)
 	self.outfile.write("\n")
