@@ -62,7 +62,7 @@ class LogWorker(object):
             sensorid = config.get('common', 'sensorid')
             self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
-	if config.getboolean('json', 'enabled'):
+        if config.getboolean('json', 'enabled'):
             file = config.get('json', 'file')
             sensorid = config.get('common', 'sensorid')
             self.json_logger = JsonLogger(file, sensorid, public_ip)

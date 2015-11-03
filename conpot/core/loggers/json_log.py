@@ -29,23 +29,23 @@ class JsonLogger(object):
         self.file = file
         self.sensorid = sensorid
         self.public_ip = public_ip
-	self.outfile = open(file, 'a',0) 
+        self.outfile = open(file, 'a',0) 
 
     def log(self, event, retry=1):
-	data = {}
-	data['timestamp'] = event['timestamp'].isoformat()
-	data['sensor'] = str(self.sensorid)
-	data['id'] = str(event["id"])
-	data['src_ip'] = event["remote"][0]
-	data['src_port'] = event["remote"][1]
-	data['dst_ip'] = self.public_ip
-	data['data_type'] = event["data_type"]
-	data['request'] = event["data"].get('request')
-	data['response']  = event["data"].get('response')
-	data['eventid']  = event["data"].get('type')
-	 
+        data = {}
+        data['timestamp'] = event['timestamp'].isoformat()
+        data['sensorid'] = str(self.sensorid)
+        data['id'] = str(event["id"])
+        data['src_ip'] = event["remote"][0]
+        data['src_port'] = event["remote"][1]
+        data['dst_ip'] = self.public_ip
+        data['data_type'] = event["data_type"]
+        data['request'] = event["data"].get('request')
+        data['response']  = event["data"].get('response')
+        data['event_type']  = event["data"].get('type')
+ 
         json.dump(data, self.outfile)
-	self.outfile.write("\n")
+        self.outfile.write("\n")
 
         return 1
 
