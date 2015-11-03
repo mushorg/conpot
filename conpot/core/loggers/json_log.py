@@ -1,4 +1,4 @@
-# Copyright (C) 2014  Daniel creo Haslinger <creo-conpot@blackmesa.at>
+# Copyright (C) 2015  Danilo Massa 
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
