@@ -55,13 +55,12 @@ SAMPLE OUTPUT
       |___|___|_|_|  _|___|_|
                   |_|
 
-      Version 0.5.0
+      Version 0.5.1
       MushMush Foundation
 
     2015-11-08 11:24:02,150 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/templates/default
     2015-11-08 11:24:02,150 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/conpot.cfg
     2015-11-08 11:24:02,291 Fetched xxx.xxx.xxx.xxx as external ip.
-    2015-11-08 11:24:02,295 'module' object has no attribute 'DEVICE_INFO'
     2015-11-08 11:24:02,295 Found and enabled ('modbus', <class conpot.protocols.modbus.modbus_server.ModbusServer at 0x7fe0d70a27a0>) protocol.
     2015-11-08 11:24:02,299 Conpot S7Comm initialized
     2015-11-08 11:24:02,299 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
