@@ -1,3 +1,13 @@
+Conpot 0.5.0 (release 2015-11-08)
+    * Added Dockerfile to run Conpot in a container.
+    * Added feature to change MAC address.
+    * Support for BACnet protocol
+    * Support for IPMI protocol
+    * Support for Guardian AST devices
+    * Various bug fixes
+    * Improved test coverage
+    * Added documentation for CentOS
+
 Conpot 0.4.0 (release 2015-01-03)
     * Rework of template engine, templates are now specified as directories.
     * Numerous bugfixes and minor enhancements.
