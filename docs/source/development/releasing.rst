@@ -7,6 +7,18 @@ Update Readme
 Update the README with the sample output and the new version.
 
 
+Update Changelog
+----------------
+
+Update the Changelog.txt in the root folder with the changes since the last release.
+
+
+Update Conpot version
+---------------------
+
+Update conpot/__init__.py so it contains the new version string.
+
+
 Check Tests
 -----------
 
@@ -21,7 +33,14 @@ Tagging and Pushing
 -------------------
 
 Commit all the changes you want to have in the tag.
-Travis CI has been configured to deploy when it encounters a tag matching the regex 
+
+::
+
+    git tag -a Release_x.y.z -m 'release x.y.z'
+    git push origin --tags
+
+
+Travis CI has been configured to deploy when it encounters a tag matching the regex:
 
 ::
 
