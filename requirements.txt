@@ -1,5 +1,5 @@
 gevent>=1.0
-pysnmp>=4.2.4
+pysnmp=4.2.5
 lxml
 bottle
 jinja2
