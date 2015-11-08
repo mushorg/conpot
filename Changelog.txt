@@ -1,3 +1,6 @@
+Conpot 0.5.1 (release 2015-11-08)
+    * Maintenance release
+
 Conpot 0.5.0 (release 2015-11-08)
     * Added Dockerfile to run Conpot in a container.
     * Added feature to change MAC address.
