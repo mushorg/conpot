@@ -103,7 +103,8 @@ class IpmiServer(object):
         return csum
 
     def handle(self, data, address):
-        if not address[0] in self.sessions.keys():
+        # make sure self.session exists
+        if not address[0] in self.sessions.keys() or not hasattr(self, 'session'):
             # new session for new source
             logger.info('New IPMI traffic from %s', address)
             self.session = FakeSession(address[0], "", "", address[1])
@@ -179,7 +180,7 @@ class IpmiServer(object):
         self.session.send_data(header, sockaddr)
 
     def close_server_session(self):
-        logger.info('IPMI Session closed %s', self.session.sessionid)
+        logger.info('IPMI Session closed %s', self.session.sockaddr[0])
         # cleanup session
         del self.sessions[self.session.sockaddr[0]]
         del self.session
