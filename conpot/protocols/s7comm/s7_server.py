@@ -75,6 +75,11 @@ class S7Server(object):
                     break
 
                 _, _, length = unpack('!BBH', data[:4])
+                # check for length
+                if length <= 4:
+                    logger.info('S7 error: Invalid length')
+                    session.add_event({'error': 'S7 error: Invalid length'})
+                    break
                 data += sock.recv(length - 4, socket.MSG_WAITALL)
 
                 tpkt_packet = TPKT().parse(data)
