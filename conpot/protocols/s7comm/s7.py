@@ -21,7 +21,8 @@ class S7(object):
         self.pdu_type = pdu_type
         self.reserved = reserved
         self.request_id = request_id
-        self.param_length = len(parameters)
+        # sometimes "parameters" happen to be of type int, not str
+        self.param_length = len(str(parameters))
         self.data_length = len(data)
         self.result_info = result_info
         self.parameters = parameters
