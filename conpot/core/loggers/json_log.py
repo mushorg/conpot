@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Danilo Massa 
+# Copyright (C) 2015  Danilo Massa
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,38 +17,32 @@
 
 
 import json
-import logging
-import gevent
-
-logger = logging.getLogger(__name__)
 
 
 class JsonLogger(object):
 
-    def __init__(self, file, sensorid, public_ip):
-        self.file = file
+    def __init__(self, filename, sensorid, public_ip):
+        self.filename = filename
         self.sensorid = sensorid
         self.public_ip = public_ip
-        self.outfile = open(file, 'a',0) 
 
-    def log(self, event, retry=1):
-        data = {}
-        data['timestamp'] = event['timestamp'].isoformat()
-        data['sensorid'] = str(self.sensorid)
-        data['id'] = str(event["id"])
-        data['src_ip'] = event["remote"][0]
-        data['src_port'] = event["remote"][1]
-        data['dst_ip'] = self.public_ip
-        data['data_type'] = event["data_type"]
-        data['request'] = event["data"].get('request')
-        data['response']  = event["data"].get('response')
-        data['event_type']  = event["data"].get('type')
- 
-        json.dump(data, self.outfile)
-        self.outfile.write("\n")
+    def log(self, event):
+        data = {
+            'timestamp': event['timestamp'].isoformat(),
+            'sensorid': self.sensorid,
+            'id': event["id"],
+            'src_ip': event["remote"][0],
+            'src_port': event["remote"][1],
+            'dst_ip': self.public_ip,
+            'data_type': event["data_type"],
+            'request': event["data"].get('request'),
+            'response': event["data"].get('response'),
+            'event_type': event["data"].get('type'),
+        }
 
-        return 1
+        with open(self.filename, 'a') as logfile:
+            json.dump(data, logfile)
+            logfile.write("\n")
 
     def log_session(self, session):
         pass
-

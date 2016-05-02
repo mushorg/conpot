@@ -43,6 +43,7 @@ class LogWorker(object):
         self.session_manager = session_manager
         self.sqlite_logger = None
         self.mysql_logger = None
+        self.json_logger = None
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
@@ -63,9 +64,9 @@ class LogWorker(object):
             self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
         if config.getboolean('json', 'enabled'):
-            file = config.get('json', 'file')
+            filename = config.get('json', 'filename')
             sensorid = config.get('common', 'sensorid')
-            self.json_logger = JsonLogger(file, sensorid, public_ip)
+            self.json_logger = JsonLogger(filename, sensorid, public_ip)
 
         if config.getboolean('hpfriends', 'enabled'):
             host = config.get('hpfriends', 'host')
