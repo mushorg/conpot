@@ -31,6 +31,7 @@ from conpot.core.loggers.mysql_log import MySQLlogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
 from conpot.core.loggers.taxii_log import TaxiiLogger
+from conpot.core.loggers.json_log import JsonLogger
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class LogWorker(object):
         self.session_manager = session_manager
         self.sqlite_logger = None
         self.mysql_logger = None
+        self.json_logger = None
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
@@ -60,6 +62,11 @@ class LogWorker(object):
             logsocket = config.get('mysql', 'socket')
             sensorid = config.get('common', 'sensorid')
             self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
+
+        if config.getboolean('json', 'enabled'):
+            filename = config.get('json', 'filename')
+            sensorid = config.get('common', 'sensorid')
+            self.json_logger = JsonLogger(filename, sensorid, public_ip)
 
         if config.getboolean('hpfriends', 'enabled'):
             host = config.get('hpfriends', 'host')
@@ -139,6 +146,9 @@ class LogWorker(object):
 
                 if self.taxii_logger:
                     self.taxii_logger.log(event)
+
+                if self.json_logger:
+                    self.json_logger.log(event)
 
     def stop(self):
         self.enabled = False
