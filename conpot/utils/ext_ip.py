@@ -65,4 +65,4 @@ def get_ext_ip(config=None, urls=None):
 
 
 if __name__ == "__main__":
-    print get_ext_ip(urls=["http://www.telize.com/ip", "http://queryip.net/ip/", "http://ifconfig.me/ip"])
+    print get_ext_ip(urls=["http://queryip.net/ip/", "http://ifconfig.me/ip"])
