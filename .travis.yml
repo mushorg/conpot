@@ -27,6 +27,7 @@ addons:
     - libxml2
     - libxml2-dev
     - libxml2-utils
+    - python-mysql
     - libmysqlclient-dev
 install:
 - export PYTHONIOENCODING=UTF8
