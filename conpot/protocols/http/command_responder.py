@@ -226,7 +226,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(os.path.join(docpath, 'statuscodes', str(status) + '.status'), 'rb') as f:
+                with open(os.path.join(docpath, 'http', 'statuscodes', str(status) + '.status'), 'rb') as f:
                     payload = f.read()
 
             except IOError, e:
