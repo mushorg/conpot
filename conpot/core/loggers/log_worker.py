@@ -32,6 +32,7 @@ from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.json_log import JsonLogger
+from helpers import json_default
 
 logger = logging.getLogger(__name__)
 
@@ -94,14 +95,6 @@ class LogWorker(object):
 
         self.enabled = True
 
-    def _json_default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, uuid.UUID):
-            return str(obj)
-        else:
-            return None
-
     def _process_sessions(self):
         sessions = self.session_manager._sessions
         try:
@@ -133,7 +126,7 @@ class LogWorker(object):
                     event["public_ip"] = self.public_ip
 
                 if self.friends_feeder:
-                    self.friends_feeder.log(json.dumps(event, default=self._json_default))
+                    self.friends_feeder.log(json.dumps(event, default=json_default))
 
                 if self.sqlite_logger:
                     self.sqlite_logger.log(event)

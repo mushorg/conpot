@@ -17,6 +17,7 @@
 
 
 import json
+from helpers import json_default
 
 
 class JsonLogger(object):
@@ -41,7 +42,7 @@ class JsonLogger(object):
         }
 
         with open(self.filename, 'a') as logfile:
-            json.dump(data, logfile)
+            json.dump(data, logfile, default=json_default)
             logfile.write("\n")
 
     def log_session(self, session):
