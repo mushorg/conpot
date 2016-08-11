@@ -23,7 +23,7 @@ from helpers import json_default
 class JsonLogger(object):
 
     def __init__(self, filename, sensorid, public_ip):
-        self.filename = filename
+        self.fileHandle = open(filename, 'a')
         self.sensorid = sensorid
         self.public_ip = public_ip
 
@@ -41,9 +41,8 @@ class JsonLogger(object):
             'event_type': event["data"].get('type'),
         }
 
-        with open(self.filename, 'a') as logfile:
-            json.dump(data, logfile, default=json_default)
-            logfile.write("\n")
+        json.dump(data, self.fileHandle, default=json_default)
+        self.fileHandle.write("\n")
 
     def log_session(self, session):
         pass
