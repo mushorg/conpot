@@ -43,6 +43,7 @@ class JsonLogger(object):
 
         json.dump(data, self.fileHandle, default=json_default)
         self.fileHandle.write("\n")
+        self.fileHandle.flush()
 
     def log_session(self, session):
         pass
