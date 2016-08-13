@@ -23,10 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCommand(object):
-    def __init__(self):
-        self.HELP_MESSAGE = ''
-        self.CMD_OUTPUT = ''
-
+    HELP_MESSAGE = ''
+    CMD_OUTPUT = ''
     INVALID_PARAMETER = (
         "\r\n"
         "? Invalid parameter.\r\n"
