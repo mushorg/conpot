@@ -73,7 +73,7 @@ class StixTransformer(object):
         stix_header.description = desc
         stix_header.information_source = InformationSource()
         stix_header.information_source.time = CyboxTime()
-        stix_header.information_source.time.produced_time = datetime.now()
+        stix_header.information_source.time.produced_time = datetime.now().isoformat()
         stix_package.stix_header = stix_header
 
     def transform(self, event):
