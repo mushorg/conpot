@@ -32,6 +32,7 @@ import sdv.validators as validators
 
 class TestLoggers(unittest.TestCase):
 
+    @unittest.skip('disabled until STIX 2.0')
     def test_stix_transform(self):
         """
         Objective: Test if our STIX xml can be validated.
