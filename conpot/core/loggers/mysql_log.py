@@ -79,7 +79,7 @@ class MySQLlogger(object):
         cursor = self.conn.cursor()
 
         try:
-            if "function_code" in event["data"].keys():
+            if len(event["data"].keys()) > 1:
                 cursor.execute("""INSERT INTO
                                     events (sensorid, session, remote, protocol, request, response)
                                   VALUES
