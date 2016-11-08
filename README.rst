@@ -10,9 +10,6 @@ Conpot |travis badge| |landscape badge| |downloads badge| |version badge|
    :target: https://pypi.python.org/pypi/Conpot/
 .. |version badge| image:: https://img.shields.io/pypi/v/conpot.svg
    :target: https://pypi.python.org/pypi/Conpot/
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :alt: Join the chat at https://gitter.im/mushorg/conpot
-   :target: https://gitter.im/mushorg/conpot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 ABOUT
 -----
