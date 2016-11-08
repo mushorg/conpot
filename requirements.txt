@@ -16,6 +16,6 @@ modbus-tk
 stix-validator
 stix
 cybox
-bacpypes
+bacpypes==0.13.8
 pyghmi
 mixbox
