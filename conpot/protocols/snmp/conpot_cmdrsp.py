@@ -34,19 +34,19 @@ class conpot_extension(object):
         session = conpot_core.get_session('snmp', addr[0], addr[1])
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
-        log_dict = {'remote': addr,
-                    'timestamp': datetime.utcnow(),
-                    'data_type': 'snmp',
-                    'data': {0: {'request': 'SNMPv{0} {1}: {2} {3}'.format(version, msg_type, req_oid, req_val)}}}
+        event_type = 'SNMPv{0} {1}'.format(version, msg_type)
+        request = {'oid': str(req_oid), 'val': str(req_val) }
+        response = None
 
-        logger.info('SNMPv%s %s request from %s: %s %s', version, msg_type, addr, req_oid, req_val)
+        logger.info('%s request from %s: %s %s', event_type, addr, req_oid, req_val)
 
         if res_varBinds:
             res_oid = ".".join(map(str, res_varBinds[0][0]))
             res_val = res_varBinds[0][1]
-            logger.info('SNMPv%s response to %s: %s %s', version, addr, res_oid, res_val)
-            log_dict['data'][0]['response'] = 'SNMPv{0} response: {1} {2}'.format(version, res_oid, res_val)
-        # log here...
+            logger.info('%s response to %s: %s %s', event_type, addr, res_oid, res_val)
+            response = {'oid': str(res_oid), 'val': str(res_val)}
+
+        session.add_event({'type': event_type, 'request': request, 'response': response})
 
     def do_tarpit(self, delay):
 
@@ -124,7 +124,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             if response:
                 rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                 rspVarBinds = rspModBinds
-        
+
         finally:
             self.log(snmp_version, 'Get', addr, varBinds, rspVarBinds)
 
