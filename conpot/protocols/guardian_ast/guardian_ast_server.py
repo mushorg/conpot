@@ -187,6 +187,7 @@ class GuardianASTServer(object):
 
                 cmds = {"I20100": I20100, "I20200": I20200, "I20300": I20300, "I20400": I20400, "I20500": I20500}
                 cmd = request[1:7]  # strip ^A and \n out
+                response = None
                 if cmd in cmds:
                     logger.info('%s command attempt %s:%d. (%s)', cmd, addr[0], addr[1], session.id)
                     response = cmds[cmd]()
@@ -284,8 +285,8 @@ class GuardianASTServer(object):
                     response = AST_ERROR
                     # log what was entered
                     logger.info('%s command attempt %s:%d. (%s)', request, addr[0], addr[1], session.id)
-
-                sock.send(response)
+                if response:
+                    sock.send(response)
                 session.add_event({"type": "AST {0}".format(cmd), "request": request, "response": response})
             except Exception, e:
                 print 'Unknown Error: {}'.format(str(e))
