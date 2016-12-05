@@ -30,6 +30,9 @@ import logging as logger
 
 import conpot.core as conpot_core
 
+# 9999 indicates that the command was not understood and
+# FF1B is the checksum for the 9999
+AST_ERROR = "9999FF1B\n"
 
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
@@ -165,37 +168,37 @@ class GuardianASTServer(object):
         while True:
             try:
                 # Get the initial data
-                response = sock.recv(4096)
+                request = sock.recv(4096)
                 # The connection has been closed
-                if not response:
+                if not request:
                     break
 
-                while not ('\n' in response or '00' in response):
-                    response += sock.recv(4096)
+                while not ('\n' in request or '00' in request):
+                    request += sock.recv(4096)
                 # if first value is not ^A then do nothing
                 # thanks John(achillean) for the help
-                if response[0] != '\x01':
+                if request[0] != '\x01':
                     logger.info('Non ^A command attempt %s:%d. (%s)', addr[0], addr[1], session.id)
                     break
-                # if response is less than 6, than do nothing
-                if len(response) < 6:
+                # if request is less than 6, than do nothing
+                if len(request) < 6:
                     logger.info('Invalid command attempt %s:%d. (%s)', addr[0], addr[1], session.id)
                     break
 
                 cmds = {"I20100": I20100, "I20200": I20200, "I20300": I20300, "I20400": I20400, "I20500": I20500}
-                cmd = response[1:7]  # strip ^A and \n out
-                session.add_event({'command': cmd})
+                cmd = request[1:7]  # strip ^A and \n out
+                response = None
                 if cmd in cmds:
                     logger.info('%s command attempt %s:%d. (%s)', cmd, addr[0], addr[1], session.id)
-                    sock.send(cmds[cmd]())
+                    response = cmds[cmd]()
                 elif cmd.startswith("S6020"):
                     # change the tank name
                     if cmd.startswith("S60201"):
                         # split string into two, the command, and the data
-                        TEMP = response.split('S60201')
+                        TEMP = request.split('S60201')
                         # if length is less than two, print error
                         if len(TEMP) < 2:
-                            sock.send("9999FF1B\n")
+                            response = AST_ERROR
                         # Else the command was entered correctly and continue
                         else:
                             # Strip off the carrage returns and new lines
@@ -213,9 +216,9 @@ class GuardianASTServer(object):
                         logger.info('S60201: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60202"):
-                        TEMP = response.split('S60202')
+                        TEMP = request.split('S60202')
                         if len(TEMP) < 2:
-                            sock.send("9999FF1B\n")
+                            response = AST_ERROR
                         else:
                             TEMP1 = TEMP[1].rstrip("\r\n")
                             if len(TEMP1) < 22:
@@ -227,9 +230,9 @@ class GuardianASTServer(object):
                         logger.info('S60202: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60203"):
-                        TEMP = response.split('S60203')
+                        TEMP = request.split('S60203')
                         if len(TEMP) < 2:
-                            sock.send("9999FF1B\n")
+                            response = AST_ERROR
                         else:
                             TEMP1 = TEMP[1].rstrip("\r\n")
                             if len(TEMP1) < 22:
@@ -241,9 +244,9 @@ class GuardianASTServer(object):
                         logger.info('S60203: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60204"):
-                        TEMP = response.split('S60204')
+                        TEMP = request.split('S60204')
                         if len(TEMP) < 2:
-                            sock.send("9999FF1B\n")
+                            response = AST_ERROR
                         else:
                             TEMP1 = TEMP[1].rstrip("\r\n")
                             if len(TEMP1) < 22:
@@ -255,11 +258,9 @@ class GuardianASTServer(object):
                         logger.info('S60204: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60200"):
-                        TEMP = response.split('S60200')
+                        TEMP = request.split('S60200')
                         if len(TEMP) < 2:
-                            # 9999 indicates that the command was not understood and
-                            # FF1B is the checksum for the 9999
-                            sock.send("9999FF1B\n")
+                            response = AST_ERROR
                         else:
                             TEMP1 = TEMP[1].rstrip("\r\n")
                             if len(TEMP1) < 22:
@@ -279,13 +280,14 @@ class GuardianASTServer(object):
                                 product4 = TEMP1
                         logger.info('S60200: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     else:
-                        sock.send("9999FF1B\n")
-                # Else it is a currently unsupported command so print the error message found in the manual
-                # 9999 indicates that the command was not understood and FF1B is the checksum for the 9999
+                        response = AST_ERROR
                 else:
-                    sock.send("9999FF1B\n")
+                    response = AST_ERROR
                     # log what was entered
-                    logger.info('%s command attempt %s:%d. (%s)', response, addr[0], addr[1], session.id)
+                    logger.info('%s command attempt %s:%d. (%s)', request, addr[0], addr[1], session.id)
+                if response:
+                    sock.send(response)
+                session.add_event({"type": "AST {0}".format(cmd), "request": request, "response": response})
             except Exception, e:
                 print 'Unknown Error: {}'.format(str(e))
                 raise
