@@ -60,32 +60,44 @@ class MySQLlogger(object):
 
     def _create_db(self):
         cursor = self.conn.cursor()
-        cursor.execute("""CREATE TABLE IF NOT EXISTS `events` (
-                        `id` bigint(20) NOT NULL AUTO_INCREMENT,
-                        `sensorid` text NOT NULL,
-                        `session` text NOT NULL,
-                        `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        `remote` text NOT NULL,
-                        `protocol` text NOT NULL,
-                        `request` text NOT NULL,
-                        `response` text NOT NULL,
-                        PRIMARY KEY (`id`)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-                       """)
+        cursor.execute(""" SELECT count(*) FROM information_schema.tables WHERE table_name = %s and table_schema=%s""",("events",self.db)) 
+        if (cursor.fetchone()[0]) == 0:
+            cursor.execute("""CREATE TABLE IF NOT EXISTS `events` (
+                            `id` bigint(20) NOT NULL AUTO_INCREMENT,
+                            `sensorid` text NOT NULL,
+                            `session` text NOT NULL,
+                            `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            `remote` text NOT NULL,
+                            `protocol` text NOT NULL,
+                            `request` text NOT NULL,
+                            `response` text NOT NULL,
+                            PRIMARY KEY (`id`)
+                            ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+                           """)
 
     def log(self, event, retry=1):
         cursor = self.conn.cursor()
 
         try:
-            cursor.execute("""INSERT INTO
-                                events (sensorid, session, remote, protocol, request, response)
-                              VALUES
-                                (%s, %s, %s, %s, %s, %s)""", (str(self.sensorid),
-                                                              str(event["id"]),
-                                                              str(event["remote"]),
-                                                              event["data_type"],
-                                                              event["data"].get('request'),
-                                                              event["data"].get('response')))
+            if len(event["data"].keys()) > 1:
+                cursor.execute("""INSERT INTO
+                                    events (sensorid, session, remote, protocol, request, response)
+                                  VALUES
+                                    (%s, %s, %s, %s, %s, %s)""", (str(self.sensorid),
+                                                                  str(event["id"]),
+                                                                  str(event["remote"]),
+                                                                  event["data_type"],
+                                                                  event["data"].get('request'),
+                                                                  event["data"].get('response')))
+            else:
+                cursor.execute("""INSERT INTO
+                                    events (sensorid, session, remote, protocol,request, response)
+                                  VALUES
+                                    (%s, %s, %s, %s, %s,"NA")""", (str(self.sensorid),
+                                                                  str(event["id"]),
+                                                                  str(event["remote"]),
+                                                                  event["data_type"],
+                                                                  event["data"].get('type')))
             self.conn.commit()
         except (AttributeError, MySQLdb.OperationalError):
             self._connect()
