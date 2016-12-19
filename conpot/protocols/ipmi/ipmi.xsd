@@ -31,7 +31,7 @@
             </xs:sequence>
             <xs:attribute type="xs:string" name="enabled" use="required"/>
             <xs:attribute type="xs:string" name="host" use="required"/>
-            <xs:attribute type="xs:integer" name="port" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
         </xs:complexType>
     </xs:element>
  </xs:schema>
