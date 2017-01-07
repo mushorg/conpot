@@ -184,6 +184,8 @@ class S7Server(object):
         except socket.error:
             session.add_event({'type': 'CONNECTION_LOST'})
             logger.debug('Connection reset by peer, remote: {0}. ({1})'.format(address[0], session.id))
+        except Exception as e:
+            logger.info('Exception caught {0}, remote: {1}. ({2})'.format(e, address[0], session.id))
 
     def start(self, host, port):
         connection = (host, port)
