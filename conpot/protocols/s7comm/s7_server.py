@@ -181,6 +181,9 @@ class S7Server(object):
         except socket.timeout:
             session.add_event({'type': 'CONNECTION_LOST'})
             logger.debug('Socket timeout, remote: {0}. ({1})'.format(address[0], session.id))
+        except socket.error:
+            session.add_event({'type': 'CONNECTION_LOST'})
+            logger.debug('Connection reset by peer, remote: {0}. ({1})'.format(address[0], session.id))
 
     def start(self, host, port):
         connection = (host, port)
