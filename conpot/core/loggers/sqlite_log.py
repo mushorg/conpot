@@ -60,7 +60,7 @@ class SQLiteLogger(object):
         cursor = self.conn.cursor()
         cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
                        (str(event["id"]), str(event["remote"]), event['data_type'],
-                        event["data"].get('request'), event["data"].get('response'))
+                        str(event["data"].get('request')), str(event["data"].get('response')))
         )
         self.conn.commit()
         return cursor.lastrowid
