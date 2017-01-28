@@ -11,7 +11,7 @@ libtaxii>=1.1.0
 MySQL-python
 xlrd
 crc16
-enum
+enum34
 hpfeeds
 modbus-tk
 stix-validator

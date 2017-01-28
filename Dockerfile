@@ -34,4 +34,4 @@ VOLUME /var/log/conpot/
 
 EXPOSE 80 102 161/udp 502
 
-CMD ["/usr/local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot/conpot.log"]
+CMD ["/usr/local/bin/conpot", "--force", "--template", "default", "--logfile", "/var/log/conpot/conpot.log"]
