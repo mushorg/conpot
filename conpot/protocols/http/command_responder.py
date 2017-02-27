@@ -523,7 +523,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
 
         # there are certain situations where variables are (not yet) registered
         # ( e.g. corrupted request syntax ). In this case, we set them manually.
-        if hasattr(self, 'path'):
+        if hasattr(self, 'path') and self.path is not None:
             requeststring = self.path
         else:
             requeststring = ''
