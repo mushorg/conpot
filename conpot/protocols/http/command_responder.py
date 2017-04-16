@@ -402,7 +402,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 relrqfilename = rqfilename
 
             try:
-                with open(os.path.join(docpath, 'htdocs', relrqfilename), 'rb') as f:
+                with open(os.path.join(docpath, 'http/htdocs', relrqfilename), 'rb') as f:
                     payload = f.read()
 
             except IOError as e:
