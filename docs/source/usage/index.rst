@@ -7,5 +7,5 @@ Conpot usage
 
 .. toctree::
 
-    usage
+    customization
     hmi
