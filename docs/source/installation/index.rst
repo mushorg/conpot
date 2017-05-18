@@ -12,4 +12,3 @@ Basics instruction on how to install Conpot
     debian
     centos
     configuration
-    usage
