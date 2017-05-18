@@ -1,6 +1,7 @@
 Example Usage
 =============
 
+You can start conpot by just running it from the commandline.
 ::
 
     box$ conpot

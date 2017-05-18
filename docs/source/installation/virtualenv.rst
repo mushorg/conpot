@@ -11,7 +11,7 @@ Install dependencies:
 ::
 
     apt-get install git libsmi2ldbl smistrip libxslt1-dev python-dev libevent-dev
-    
+
 Create the virtualenv
 ::
 
