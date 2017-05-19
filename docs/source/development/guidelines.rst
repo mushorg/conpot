@@ -34,7 +34,7 @@ Just one-time add of remote:
 
 ::
 
-  git remote add mushorg https://github.com/mushorg/glastopf.git
+  git remote add mushorg https://github.com/mushorg/conpot.git
 
 And rebase:
 

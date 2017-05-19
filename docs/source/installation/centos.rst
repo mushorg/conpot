@@ -50,7 +50,7 @@ $ sudo mysql_secure_installation
 ::
 
 $ cd /usr/local/src
-$ sudo git clone https://github.com/glastopf/conpot
+$ sudo git clone https://github.com/mushorg/conpot
 $ cd conpot/
 $ sudo python setup.py install
 
