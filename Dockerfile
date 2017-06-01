@@ -1,21 +1,15 @@
-FROM ubuntu:14.04.1
+FROM python:2
 
 ENV DEBIAN_FRONTEND noninteractive
 
-# Prepare source.list
-RUN sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty main universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-updates main universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-backports main universe multiverse' /etc/apt/sources.list && \
-    sed -i '1ideb mirror://mirrors.ubuntu.com/mirrors.txt trusty-security main universe multiverse' /etc/apt/sources.list
+# Add non-free packagesto, needed for snmp-mibs-downloader
+RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-        git \
+RUN apt-get update -y -qq && apt-get install -y -qq \
         libmysqlclient-dev \
         libsmi2ldbl \
         libxslt1-dev \
-        python \
-        python-dev \
         snmp-mibs-downloader && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
