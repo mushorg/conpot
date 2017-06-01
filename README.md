@@ -1,53 +1,41 @@
-Conpot |travis badge| |landscape badge| |downloads badge| |version badge|
-=======================
+# Conpot
 
-.. |travis badge| image:: https://img.shields.io/travis/mushorg/conpot/master.svg
-   :target: https://travis-ci.org/mushorg/conpot
-.. |landscape badge| image:: https://landscape.io/github/mushorg/conpot/master/landscape.png
-   :target: https://landscape.io/github/mushorg/conpot/master
-   :alt: Code Health
-.. |downloads badge| image:: https://img.shields.io/pypi/dm/conpot.svg
-   :target: https://pypi.python.org/pypi/Conpot/
-.. |version badge| image:: https://img.shields.io/pypi/v/conpot.svg
-   :target: https://pypi.python.org/pypi/Conpot/
+[![Travis CI](https://img.shields.io/travis/mushorg/conpot/master.svg)](https://travis-ci.org/mushorg/conpot)
+[![Code Health](https://landscape.io/github/mushorg/conpot/master/landscape.png)](https://landscape.io/github/mushorg/conpot/master)
+[![Downloads Counter](https://img.shields.io/pypi/dm/conpot.svg)](https://pypi.python.org/pypi/Conpot/) 
+[![Version](https://img.shields.io/pypi/v/conpot.svg)](https://pypi.python.org/pypi/Conpot/)
 
-ABOUT
------
+
+## About
 
 Conpot is an ICS honeypot with the goal to collect intelligence about the motives and
 methods of adversaries targeting industrial control systems
 
-DOCUMENTATION
--------------
+## Documentation
 
-The build of the documentations `source <https://github.com/mushorg/conpot/tree/master/docs/source>`_ can be 
-found `here <http://mushorg.github.io/conpot/>`_. There you will also find the instructions on how to 
-`install <http://mushorg.github.io/conpot/installation/ubuntu.html>`_ conpot and the 
-`FAQ <http://mushorg.github.io/conpot/faq.html>`_.
+The build of the documentations [source](https://github.com/mushorg/conpot/tree/master/docs/source) can be found [here](http://mushorg.github.io/conpot/). There you will also find the instructions on how to [install](http://mushorg.github.io/conpot/installation/ubuntu.html) conpot and the [FAQ](http://mushorg.github.io/conpot/faq.html).
 
-EASY INSTALL USING DOCKER CONTAINER
------------------------------------
+## Easy install using Docker
 
-**Via a pre-built image**
+#### Via a pre-built image
 
-1. Install `Docker <https://www.docker.com/>`_
-2. Run ``docker pull honeynet/conpot``
-3. Run ``docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge honeynet/conpot:latest /bin/sh``
-4. Finally run ``conpot --template default``
+1. Install [Docker](https://docs.docker.com/engine/installation/)
+2. Run `docker pull honeynet/conpot`
+3. Run `docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge honeynet/conpot:latest /bin/sh`
+4. Finally run conpot --template default`
 
-Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup. **Or, you may also** 
+Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
-**Build docker image from source**
+#### Build docker image from source
 
-1. Install `Docker <https://www.docker.com/>`_
-2. Download the Dockerfile from conpot repo ``wget https://raw.githubusercontent.com/mushorg/conpot/master/Dockerfile``
-3. Run ``docker build -t conpot .``
-4. Run ``docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge conpot``
+1. Install [Docker](https://docs.docker.com/engine/installation/)
+2. Download the Dockerfile from the conpot repo `wget https://raw.githubusercontent.com/mushorg/conpot/master/Dockerfile`
+3. Run `docker build -t conpot .`
+4. Run `docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge conpot`
 
-Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup. 
+Navigate to `http://MY_IP_ADDRESS` to confirm the setup. 
 
-HPFEEDS
--------
+## HPFEEDS
 
 The honeypot has hpfeeds, our central logging feature disabled by
 default. By sending your data via hpfeeds you agree that your data
@@ -55,15 +43,14 @@ might be shared with 3rd parties. If you are interested in the data
 collected by Conpot instances, please contact Lukas at
 glaslos@gmail.com
 
-SUPPORT
--------
+## Support
 
 Thanks to JetBrains for free PyCharm licenses!
 
-SAMPLE OUTPUT
--------------
+## Sample output
 
-.. code-block:: shell
+
+```shell
 
     # conpot --template default
 
@@ -97,3 +84,4 @@ SAMPLE OUTPUT
     2015-11-08 11:24:02,462 Bacnet server started on: ('0.0.0.0', 47808)
     2015-11-08 11:24:02,462 IPMI server started on: ('0.0.0.0', 623)
     2015-11-08 11:24:07,307 Privileges dropped, running as "nobody:nobody"
+```
