@@ -40,7 +40,7 @@ Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup. **Or, you may also**
 **Build docker image from source**
 
 1. Install `Docker <https://www.docker.com/>`_
-2. Download the Dockerfile from conpot repo ``wget https://raw.githubusercontent.com/mushorg/conpot/master/Dockerfile``
+2. Clone this repo ``git clone git@github.com:mushorg/conpot.git && cd conpot``
 3. Run ``docker build -t conpot .``
 4. Run ``docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge conpot``
 
