@@ -14,19 +14,22 @@ RUN apt-get update -y -qq && apt-get install -y -qq \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clone git repo and build the honeypot
-RUN cd /opt/ && \
-    git clone https://github.com/mushorg/conpot.git && \
-    cd conpot/ && \
-    python setup.py install && \
-    rm -rf /opt/conpot /tmp/* /var/tmp/*
+# Copy the app from the host folder (probably, a cloned repo)
+COPY ./ /opt/conpot/
+WORKDIR /opt/conpot
 
-## Create directories
-RUN mkdir -p /opt/myhoneypot/var
+# Install Python requirements
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR /opt/myhoneypot
-VOLUME /opt/myhoneypot
+# Install te conpot application
+RUN python setup.py install
+RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
+
+# Create directories
+RUN mkdir -p /var/log/conpot/
+
+VOLUME /var/log/conpot/
 
 EXPOSE 80 102 161/udp 502
 
-CMD ["/usr/local/bin/conpot", "--template", "default", "--logfile", "/opt/myhoneypot/var/conpot.log"]
+CMD ["/usr/local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot.log"]
