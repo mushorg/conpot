@@ -28,7 +28,7 @@ setup(
     },
     keywords="ICS SCADA honeypot",
     include_package_data=True,
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
     and methods of adversaries targeting industrial control systems""",
     test_suite='nose.collector',
