@@ -30,6 +30,7 @@ addons:
     - python-mysqldb
     - libmysqlclient-dev
 install:
+- pip install -U pip setuptools
 - export PYTHONIOENCODING=UTF8
 - python setup.py install
 - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
