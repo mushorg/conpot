@@ -86,13 +86,21 @@ class SlaveBase(Databank):
                     response_pdu = slave.handle_request(request_pdu)
                     # make the full response
                     response = query.build_response(response_pdu)
+
                 else:
                     # return no response, and data necessary for logging
                     return (None, {'request': request_pdu.encode('hex'),
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
-        except (IOError, MissingKeyError) as e:
+        except MissingKeyError:
+            # there is no slave behind this slave_id
+            # we should just return no reponse 
+            return (None, {'request': request_pdu.encode('hex'),
+                           'slave_id': slave_id,
+                           'function_code': func_code,
+                           'response': ''})
+        except IOError as e:
             # If the request was not handled correctly, return a server error
             # response
             r = struct.pack(
