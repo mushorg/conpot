@@ -92,7 +92,12 @@ class ModbusServer(modbus.Server):
 
         try:
             while True:
-                request = sock.recv(7)
+                request = None
+                try:
+                    request = sock.recv(7)
+                except Exception as e:
+                    logger.info('Exception occurred in sock.recv()')
+
                 if not request:
                     logger.info('Modbus client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})

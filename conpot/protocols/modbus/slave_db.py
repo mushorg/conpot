@@ -23,7 +23,7 @@ class SlaveBase(Databank):
         Databank.__init__(self)
         self.dom = etree.parse(template)
 
-    def add_slave(self, slave_id):
+    def add_slave(self, slave_id, unsigned=True, memory=None):
         """
         Add a new slave with the given id
         """
@@ -54,12 +54,19 @@ class SlaveBase(Databank):
             slave_id, request_pdu = query.parse_request(request)
             if len(request_pdu) > 0:
                 (func_code, ) = struct.unpack(">B", request_pdu[0])
+
+            logger.info("WORKING MODE: %s" % mode)
+
             if mode == 'tcp':
                 if slave_id == 0:
                     slave = self.get_slave(slave_id)
+
+                    logger.info("slave_id: %d" % slave.id)
+
                     response_pdu = slave.handle_request(request_pdu)
                     response = query.build_response(response_pdu)
                 elif slave_id == 255:
+
                     # r = struct.pack(">BB", func_code + 0x80, 0x0B)
                     # response = query.build_response(r)
                     slave = self.get_slave(slave_id)
@@ -81,7 +88,7 @@ class SlaveBase(Databank):
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
-                elif slave_id > 0 and slave_id <= 247:
+                elif 0 < slave_id <= 247:
                     slave = self.get_slave(slave_id)
                     response_pdu = slave.handle_request(request_pdu)
                     # make the full response
@@ -93,7 +100,8 @@ class SlaveBase(Databank):
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
-        except MissingKeyError:
+        except MissingKeyError as e:
+            logger.info(e)
             # there is no slave behind this slave_id
             # we should just return no reponse 
             return (None, {'request': request_pdu.encode('hex'),
@@ -101,12 +109,13 @@ class SlaveBase(Databank):
                            'function_code': func_code,
                            'response': ''})
         except IOError as e:
+            logger.info(e)
             # If the request was not handled correctly, return a server error
             # response
             r = struct.pack(
                 ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
-        except (ModbusInvalidRequestError) as e:
+        except ModbusInvalidRequestError as e:
             logger.info(e)
 
         if slave:
