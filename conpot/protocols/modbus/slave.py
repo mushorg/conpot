@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 class MBSlave(Slave):
 
+    """
+    Customized Modbus slave representation extending modbus_tk.modbus.Slave
+    """
+
     def __init__(self, slave_id, dom):
         Slave.__init__(self, slave_id)
         self._fn_code_map = {defines.READ_COILS: self._read_coils,
@@ -26,10 +30,10 @@ class MBSlave(Slave):
                              defines.REPORT_SLAVE_ID: self._report_slave_id,
                              }
         self.dom = dom
-        logger.info("Modbus slave (ID: %d) created" % self._id)
+        logger.debug("Modbus slave (ID: %d) created" % self._id)
 
     def _report_slave_id(self, request_pdu):
-        logger.info('Requested to report slave ID (0x11)')
+        logger.debug('Requested to report slave ID (0x11)')
         response = struct.pack(">B", 0x11)  # function code
         response += struct.pack(">B", 1)    # byte count
         response += struct.pack(">B", 1)     # salve id
@@ -75,7 +79,7 @@ class MBSlave(Slave):
         and returns the response pdu
         """
 
-        logger.info("Salve (ID: %d) is handling request" % self._id)
+        logger.debug("Salve (ID: %d) is handling request" % self._id)
 
         with self._data_lock:  # thread-safe
             try:
