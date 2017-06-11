@@ -4,7 +4,7 @@
         <ProductCode>SIMATIC</ProductCode>
         <MajorMinorRevision>S7-200</MajorMinorRevision>
     </device_info>
-    <mode>serial</mode>
+    <mode>tcp</mode>
     <delay>100</delay>
     <slaves>
         <slave id="0">

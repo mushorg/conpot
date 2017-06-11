@@ -23,7 +23,7 @@ class SlaveBase(Databank):
         Databank.__init__(self)
         self.dom = etree.parse(template)
 
-    def add_slave(self, slave_id):
+    def add_slave(self, slave_id, unsigned=True, memory=None):
         """
         Add a new slave with the given id
         """
@@ -54,52 +54,64 @@ class SlaveBase(Databank):
             slave_id, request_pdu = query.parse_request(request)
             if len(request_pdu) > 0:
                 (func_code, ) = struct.unpack(">B", request_pdu[0])
+
+            logger.debug("Working mode: %s" % mode)
+
             if mode == 'tcp':
-                if slave_id == 0:
-                    slave = self.get_slave(slave_id)
-                    response_pdu = slave.handle_request(request_pdu)
-                    response = query.build_response(response_pdu)
-                elif slave_id == 255:
-                    # r = struct.pack(">BB", func_code + 0x80, 0x0B)
-                    # response = query.build_response(r)
+                if slave_id == 0 or slave_id == 255:
                     slave = self.get_slave(slave_id)
                     response_pdu = slave.handle_request(request_pdu)
                     response = query.build_response(response_pdu)
                 else:
-                    # return no response, and data necessary for logging
+                    # TODO:
+                    # Under tcp mode, shall we just return nothing for
+                    # invalid slave IDs, or return DEVICE FAILURE error?
+                    # Would it be better to make this configurable?
                     return (None, {'request': request_pdu.encode('hex'),
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
             elif mode == 'serial':
-                if slave_id == 0:
+                if slave_id == 0:           # broadcasting
                     for key in self._slaves:
                         response_pdu = self._slaves[key].handle_request(
                             request_pdu, broadcast=True)
-                    # no response is sent
+
+                    # no response is sent back
                     return (None, {'request': request_pdu.encode('hex'),
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
-                elif slave_id > 0 and slave_id <= 247:
+                elif 0 < slave_id <= 247:   # normal request handling
                     slave = self.get_slave(slave_id)
                     response_pdu = slave.handle_request(request_pdu)
                     # make the full response
                     response = query.build_response(response_pdu)
                 else:
-                    # return no response, and data necessary for logging
+                    # TODO:
+                    # Same question here. Return nothing or an error?
                     return (None, {'request': request_pdu.encode('hex'),
                                    'slave_id': slave_id,
                                    'function_code': func_code,
                                    'response': ''})
-        except (IOError, MissingKeyError) as e:
+        except MissingKeyError as e:
+            logger.error(e)
+            # There is no slave behind this slave_id
+            # We just return no response
+            return (None, {'request': request_pdu.encode('hex'),
+                           'slave_id': slave_id,
+                           'function_code': func_code,
+                           'response': ''})
+        except IOError as e:
+            logger.error(e)
             # If the request was not handled correctly, return a server error
             # response
             r = struct.pack(
                 ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
-        except (ModbusInvalidRequestError) as e:
-            logger.info(e)
+        except ModbusInvalidRequestError as e:
+            logger.error(e)
+            #TODO: do something here?
 
         if slave:
             function_code = slave.function_code

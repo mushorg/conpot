@@ -111,7 +111,7 @@ class TestBase(unittest.TestCase):
         #issue request to modbus server
         master.execute(slave=1, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
 
-        #extract the generated logentries
+        #extract the generated log entries
         log_queue = conpot_core.get_sessionManager().log_queue
 
         conn_log_item = log_queue.get(True, 2)
