@@ -64,13 +64,12 @@ class SlaveBase(Databank):
                     response = query.build_response(response_pdu)
                 else:
                     # TODO:
-                    # Under tcp mode, shall we just return nothing for
-                    # invalid slave IDs, or return DEVICE FAILURE error?
+                    # Shall we return SLAVE DEVICE FAILURE, or ILLEGAL ACCESS?
                     # Would it be better to make this configurable?
-                    return (None, {'request': request_pdu.encode('hex'),
-                                   'slave_id': slave_id,
-                                   'function_code': func_code,
-                                   'response': ''})
+                    r = struct.pack(
+                        ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
+                    response = query.build_response(r)
+
             elif mode == 'serial':
                 if slave_id == 0:           # broadcasting
                     for key in self._slaves:
@@ -89,29 +88,21 @@ class SlaveBase(Databank):
                     response = query.build_response(response_pdu)
                 else:
                     # TODO:
-                    # Same question here. Return nothing or an error?
-                    return (None, {'request': request_pdu.encode('hex'),
-                                   'slave_id': slave_id,
-                                   'function_code': func_code,
-                                   'response': ''})
-        except MissingKeyError as e:
+                    # Same here. Return SLAVE DEVICE FAILURE or ILLEGAL ACCESS?
+                    r = struct.pack(
+                        ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
+                    response = query.build_response(r)
+
+        except (MissingKeyError, IOError) as e:
             logger.error(e)
-            # There is no slave behind this slave_id
-            # We just return no response
-            return (None, {'request': request_pdu.encode('hex'),
-                           'slave_id': slave_id,
-                           'function_code': func_code,
-                           'response': ''})
-        except IOError as e:
-            logger.error(e)
-            # If the request was not handled correctly, return a server error
-            # response
+            # If slave was not found or the request was not handled correctly,
+            # return a server error response
             r = struct.pack(
                 ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
         except ModbusInvalidRequestError as e:
             logger.error(e)
-            #TODO: do something here?
+            # TODO: return something here?
 
         if slave:
             function_code = slave.function_code
