@@ -23,7 +23,7 @@ import tempfile
 import shutil
 import os
 
-from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
+from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp2, find_mibs, compile_mib
 from conpot.protocols.snmp import command_responder
 
 
@@ -32,25 +32,38 @@ class TestBase(unittest.TestCase):
         """
         Tests that the wrapper can process a valid mib file without errors.
         """
-        result = mib2pysnmp('conpot/tests/data/VOGON-POEM-MIB.mib')
-        self.assertTrue('mibBuilder.exportSymbols("VOGON-POEM-MIB"' in result,
-                        'mib2pysnmp did not generate the expected output. Output: {0}'.format(result))
+        tmpdir = tempfile.mkdtemp()
+        result = mib2pysnmp2('conpot/tests/data/VOGON-POEM-MIB.mib', tmpdir)
+        self.assertTrue(result and self.check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
+                        'mib2pysnmp2 did not generate the expected output.')
+
+    def check_content(self, pyfile):
+        ret = False
+        with open(pyfile) as f:
+            for l in f.readlines():
+                if 'mibBuilder.exportSymbols("VOGON-POEM-MIB"' in l:
+                    ret = True
+                    break
+
+        return ret
 
     def test_wrapper_output(self):
         """
         Tests that the wrapper generates output that can be consumed by the command responder.
         """
         tmpdir = None
+
         try:
+            result = None
             tmpdir = tempfile.mkdtemp()
-            result = mib2pysnmp('conpot/tests/data/VOGON-POEM-MIB.mib')
 
-            with open(os.path.join(tmpdir, 'VOGON-POEM-MIB' + '.py'), 'w') as output_file:
-                output_file.write(result)
-
-            cmd_responder = command_responder.CommandResponder('', 0, [tmpdir])
-            cmd_responder.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules('VOGON-POEM-MIB')
-            result = cmd_responder._get_mibSymbol('VOGON-POEM-MIB', 'poemNumber')
+            if mib2pysnmp2('conpot/tests/data/VOGON-POEM-MIB.mib', tmpdir):
+                # with open(os.path.join(tmpdir, 'VOGON-POEM-MIB' + '.py'), 'w') as output_file:
+                #     output_file.write(result)
+                # output_file = os.path.join(tmpdir, 'VOGON-POEM-MIB.py')
+                cmd_responder = command_responder.CommandResponder('', 0, [tmpdir])
+                cmd_responder.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules('VOGON-POEM-MIB')
+                result = cmd_responder._get_mibSymbol('VOGON-POEM-MIB', 'poemNumber')
 
             self.assertIsNotNone(result, 'The expected MIB (VOGON-POEM-MIB) could not be loaded.')
         finally:
