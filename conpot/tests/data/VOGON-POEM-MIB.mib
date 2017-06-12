@@ -7,7 +7,9 @@ IMPORTS
     snmpTraps                                FROM SNMPv2-MIB;
 
 vogonpoem MODULE-IDENTITY
-    LAST-UPDATED "200006140000Z" ORGANIZATION "Vogon inc." CONTACT-INFO
+    LAST-UPDATED "200006140000Z"
+    ORGANIZATION "Vogon inc."
+    CONTACT-INFO
                  "Prostetnic Vogon Jeltze
                   Galactic Hyperspace Planning Council"
     DESCRIPTION  ""
