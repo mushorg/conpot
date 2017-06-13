@@ -20,6 +20,14 @@ import logging
 import os
 import re
 
+from pysmi.reader.localfile import FileReader
+from pysmi.searcher.pyfile import PyFileSearcher
+from pysmi.searcher.pypackage import PyPackageSearcher
+from pysmi.searcher.stub import StubSearcher
+from pysmi.writer.pyfile import PyFileWriter
+from pysmi.parser.smi import SmiV2Parser
+from pysmi.codegen.pysnmp import PySnmpCodeGen, baseMibs
+from pysmi.compiler import MibCompiler
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +48,6 @@ def mib2pysnmp2(mib_file, output_dir):
     :param output_dir: path to the output directory
     :return: True if we successfully compile the .mib to a .py
     """
-    from pysmi.reader.localfile import FileReader
-    from pysmi.searcher.pyfile import PyFileSearcher
-    from pysmi.searcher.pypackage import PyPackageSearcher
-    from pysmi.searcher.stub import StubSearcher
-    from pysmi.writer.pyfile import PyFileWriter
-    from pysmi.parser.smi import SmiV2Parser
-    from pysmi.codegen.pysnmp import PySnmpCodeGen, baseMibs
-    from pysmi.compiler import MibCompiler
 
     logger.debug('Compiling mib file: %s', mib_file)
 
@@ -66,7 +66,7 @@ def mib2pysnmp2(mib_file, output_dir):
     mibCompiler.addSearchers(PyPackageSearcher('pysnmp.mibs'))
     mibCompiler.addSearchers(StubSearcher(*baseMibs))
 
-    # compile, there should be a MIBFILE.py generated under /tmp/pysnmp/mibs/
+    # compile, there should be a MIBFILE.py generated under output_dir
     mibName = os.path.basename(mib_file).replace('.mib', '')
     results = mibCompiler.compile(mibName)
 
@@ -166,19 +166,10 @@ def compile_mib(mib_name, output_dir):
     """
     # resolve dependencies recursively
 
-    # TODO:
-    # we don't need to solve dependencies ourselves any longer
-    # pysmi handles this automatically
-    #for dependency in mib_dependency_map[mib_name]:
-    #    if dependency not in compiled_mibs and dependency in file_map:
-    #        compile_mib(dependency, output_dir)
-    _compile_mib(mib_name, output_dir)
+    for dependency in mib_dependency_map[mib_name]:
+        if dependency not in compiled_mibs and dependency in file_map:
+            compile_mib(dependency, output_dir)
 
-
-def _compile_mib(mib_name, output_dir):
     result = mib2pysnmp2(file_map[mib_name], output_dir)
-    # output_filename = os.path.basename(os.path.splitext(mib_name)[0]) + '.py'
-    # with open(os.path.join(output_dir, output_filename), 'w') as output:
-    #     output.write(pysnmp_str_obj)
     if result:
         compiled_mibs.append(mib_name)

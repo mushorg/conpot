@@ -98,7 +98,7 @@ class ModbusServer(modbus.Server):
                     request = sock.recv(7)
                 except Exception as e:
                     logger.error('Exception occurred in ModbusServer.handle() '
-                                 'at sock.recv()')
+                                 'at sock.recv(): %s', str(e))
 
                 if not request:
                     logger.info('Modbus client disconnected. (%s)', session.id)

@@ -28,12 +28,16 @@ from conpot.protocols.snmp import command_responder
 
 
 class TestBase(unittest.TestCase):
+
+    def setUp(self):
+        self.mib_file = reduce(os.path.join, 'conpot/tests/data/VOGON-POEM-MIB.mib'.split('/'))
+
     def test_wrapper_processing(self):
         """
         Tests that the wrapper can process a valid mib file without errors.
         """
         tmpdir = tempfile.mkdtemp()
-        result = mib2pysnmp2('conpot/tests/data/VOGON-POEM-MIB.mib', tmpdir)
+        result = mib2pysnmp2(self.mib_file, tmpdir)
         self.assertTrue(result and self.check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
                         'mib2pysnmp2 did not generate the expected output.')
 
@@ -57,10 +61,7 @@ class TestBase(unittest.TestCase):
             result = None
             tmpdir = tempfile.mkdtemp()
 
-            if mib2pysnmp2('conpot/tests/data/VOGON-POEM-MIB.mib', tmpdir):
-                # with open(os.path.join(tmpdir, 'VOGON-POEM-MIB' + '.py'), 'w') as output_file:
-                #     output_file.write(result)
-                # output_file = os.path.join(tmpdir, 'VOGON-POEM-MIB.py')
+            if mib2pysnmp2(self.mib_file, tmpdir):
                 cmd_responder = command_responder.CommandResponder('', 0, [tmpdir])
                 cmd_responder.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules('VOGON-POEM-MIB')
                 result = cmd_responder._get_mibSymbol('VOGON-POEM-MIB', 'poemNumber')
@@ -76,7 +77,7 @@ class TestBase(unittest.TestCase):
         input_dir = None
         try:
             input_dir = tempfile.mkdtemp()
-            input_file = 'conpot/tests/data/VOGON-POEM-MIB.mib'
+            input_file = self.mib_file
             shutil.copy(input_file, input_dir)
             available_mibs = find_mibs([input_dir])
             self.assertIn('VOGON-POEM-MIB', available_mibs)
@@ -92,7 +93,7 @@ class TestBase(unittest.TestCase):
         try:
             input_dir = tempfile.mkdtemp()
             output_dir = tempfile.mkdtemp()
-            shutil.copy('conpot/tests/data/VOGON-POEM-MIB.mib', input_dir)
+            shutil.copy(self.mib_file, input_dir)
             find_mibs([input_dir])
             compile_mib('VOGON-POEM-MIB', output_dir)
             self.assertIn('VOGON-POEM-MIB.py', os.listdir(output_dir))

@@ -36,7 +36,7 @@ class MBSlave(Slave):
         logger.debug('Requested to report slave ID (0x11)')
         response = struct.pack(">B", 0x11)  # function code
         response += struct.pack(">B", 1)    # byte count
-        response += struct.pack(">B", 1)     # slave id
+        response += struct.pack(">B", 1)    # slave id
         response += struct.pack(">B", 0xFF) # run status, OxFF on, 0x00 off
         return response
 
