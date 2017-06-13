@@ -45,11 +45,13 @@ class Databus(object):
         if getattr(item, "get_value", None):
             # this could potentially generate a context switch, but as long the called method
             # does not "callback" the databus we should be fine
+            logger.debug('(K, V): (%s, %s)' % (key, item.get_value()))
             return item.get_value()
         elif hasattr(item, '__call__'):
             return item()
         else:
             # guaranteed to not generate context switch
+            logger.debug('(K, V): (%s, %s)' % (key, item))
             return item
 
     def set_value(self, key, value):
