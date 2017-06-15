@@ -1,0 +1,12 @@
+version: "2"
+services:
+  conpot:
+    build: ./
+    ports:
+     - "80:80"
+     - "102:102"
+     - "502:502"
+     - "161:161/udp"
+    volumes:
+     - ./conpot.log:/var/log/conpot.log
+    restart: always
