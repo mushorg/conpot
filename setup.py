@@ -28,14 +28,14 @@ setup(
     },
     keywords="ICS SCADA honeypot",
     include_package_data=True,
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
     and methods of adversaries targeting industrial control systems""",
     test_suite='nose.collector',
     tests_require="nose",
     dependency_links=[
         "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
-        "https://github.com/mushorg/modbus-tk/archive/master.zip#egg=modbus-tk"
+        "https://github.com/ljean/modbus-tk/archive/master.zip#egg=modbus-tk"
     ],
     install_requires=open('requirements.txt').read().splitlines(),
 )

@@ -11,6 +11,7 @@ from gevent.server import StreamServer
 
 import modbus_tk.modbus_tcp as modbus_tcp
 from modbus_tk import modbus
+
 # Following imports are required for modbus template evaluation
 import modbus_tk.defines as mdef
 
@@ -76,8 +77,8 @@ class ModbusServer(modbus.Server):
                         name, slave_id, request_type, start_addr, size)
 
             logger.info('Conpot modbus initialized')
-        except (Exception) as e:
-            logger.info(e)
+        except Exception as e:
+            logger.error(e)
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
@@ -92,7 +93,13 @@ class ModbusServer(modbus.Server):
 
         try:
             while True:
-                request = sock.recv(7)
+                request = None
+                try:
+                    request = sock.recv(7)
+                except Exception as e:
+                    logger.error('Exception occurred in ModbusServer.handle() '
+                                 'at sock.recv(): %s', str(e))
+
                 if not request:
                     logger.info('Modbus client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
@@ -122,6 +129,9 @@ class ModbusServer(modbus.Server):
                     sock.sendall(response)
                     logger.info('Modbus response sent to %s', address[0])
                 else:
+                    # TODO:
+                    # response could be None under several different cases
+
                     # MB serial connection addressing UID=0
                     if (self.mode == 'serial' and logdata['slave_id'] == 0):
                         # delay is in milliseconds

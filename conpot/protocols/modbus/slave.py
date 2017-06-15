@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 class MBSlave(Slave):
 
+    """
+    Customized Modbus slave representation extending modbus_tk.modbus.Slave
+    """
+
     def __init__(self, slave_id, dom):
         Slave.__init__(self, slave_id)
         self._fn_code_map = {defines.READ_COILS: self._read_coils,
@@ -23,8 +27,18 @@ class MBSlave(Slave):
                              defines.WRITE_MULTIPLE_COILS: self._write_multiple_coils,
                              defines.WRITE_MULTIPLE_REGISTERS: self._write_multiple_registers,
                              defines.DEVICE_INFO: self._device_info,
+                             defines.REPORT_SLAVE_ID: self._report_slave_id,
                              }
         self.dom = dom
+        logger.debug("Modbus slave (ID: %d) created" % self._id)
+
+    def _report_slave_id(self, request_pdu):
+        logger.debug('Requested to report slave ID (0x11)')
+        response = struct.pack(">B", 0x11)  # function code
+        response += struct.pack(">B", 1)    # byte count
+        response += struct.pack(">B", 1)    # slave id
+        response += struct.pack(">B", 0xFF) # run status, OxFF on, 0x00 off
+        return response
 
     def _device_info(self, request_pdu):
         info_root = self.dom.xpath('//modbus/device_info')[0]
@@ -64,6 +78,9 @@ class MBSlave(Slave):
         parse the request pdu, makes the corresponding action
         and returns the response pdu
         """
+
+        logger.debug("Slave (ID: %d) is handling request" % self._id)
+
         with self._data_lock:  # thread-safe
             try:
                 # get the function code
