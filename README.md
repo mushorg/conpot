@@ -35,6 +35,12 @@ Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
 Navigate to `http://MY_IP_ADDRESS` to confirm the setup. 
 
+#### Build docker image from souce with docker-compose
+
+1. Install docker-compose
+1. `docker-compose build`
+2. `docker-compose up`
+
 ## HPFEEDS
 
 The honeypot has hpfeeds, our central logging feature disabled by

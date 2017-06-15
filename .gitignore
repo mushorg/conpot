@@ -47,3 +47,5 @@ docs/build
 
 docs/source/conpot_version.py
 .log
+
+log/
