@@ -7,8 +7,8 @@ services:
      - "102:102" #S7Comm
      - "502:502" #Modbus
      - "161:161/udp" #SNMP
-     - "47808:47808" #Bacnet
-     - "623:623" #IPMI
+#     - "47808:47808" #Bacnet
+#     - "623:623" #IPMI
     volumes:
      - ./log:/var/log/conpot
     restart: always

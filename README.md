@@ -35,11 +35,12 @@ Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
 Navigate to `http://MY_IP_ADDRESS` to confirm the setup. 
 
-#### Build docker image from souce with docker-compose
+#### Build from source and run with docker-compose
 
-1. Install docker-compose
-1. `docker-compose build`
-2. `docker-compose up`
+1. Install [docker-compose](https://docs.docker.com/compose/install/) 
+2. Build the image with `docker-compose build`
+3. Test if everything is running correctly with `docker-compose up`
+4. Permanently run as a daemon with `docker-compose up -d`
 
 ## HPFEEDS
 
