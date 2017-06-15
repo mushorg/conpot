@@ -22,14 +22,14 @@ The build of the documentations [source](https://github.com/mushorg/conpot/tree/
 1. Install [Docker](https://docs.docker.com/engine/installation/)
 2. Run `docker pull honeynet/conpot`
 3. Run `docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge honeynet/conpot:latest /bin/sh`
-4. Finally run conpot --template default`
+4. Finally run `conpot --template default`
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
 #### Build docker image from source
 
 1. Install [Docker](https://docs.docker.com/engine/installation/)
-2. Download the Dockerfile from the conpot repo `wget https://raw.githubusercontent.com/mushorg/conpot/master/Dockerfile`
+2. Clone this repo with `git clone https://github.com/mushorg/conpot.git` and `cd conpot`
 3. Run `docker build -t conpot .`
 4. Run `docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge conpot`
 
