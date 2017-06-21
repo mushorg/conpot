@@ -35,6 +35,13 @@ Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
 Navigate to `http://MY_IP_ADDRESS` to confirm the setup. 
 
+#### Build from source and run with docker-compose
+
+1. Install [docker-compose](https://docs.docker.com/compose/install/) 
+2. Build the image with `docker-compose build`
+3. Test if everything is running correctly with `docker-compose up`
+4. Permanently run as a daemon with `docker-compose up -d`
+
 ## HPFEEDS
 
 The honeypot has hpfeeds, our central logging feature disabled by
