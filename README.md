@@ -38,9 +38,10 @@ Navigate to `http://MY_IP_ADDRESS` to confirm the setup.
 #### Build from source and run with docker-compose
 
 1. Install [docker-compose](https://docs.docker.com/compose/install/) 
-2. Build the image with `docker-compose build`
-3. Test if everything is running correctly with `docker-compose up`
-4. Permanently run as a daemon with `docker-compose up -d`
+2. Clone this repo with `git clone https://github.com/mushorg/conpot.git` and `cd conpot`
+3. Build the image with `docker-compose build`
+4. Test if everything is running correctly with `docker-compose up`
+5. Permanently run as a daemon with `docker-compose up -d`
 
 ## HPFEEDS
 
