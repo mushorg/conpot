@@ -21,6 +21,7 @@ import os
 import re
 
 from pysmi.reader.localfile import FileReader
+from pysmi.reader.httpclient import HttpReader
 from pysmi.searcher.pyfile import PyFileSearcher
 from pysmi.searcher.pypackage import PyPackageSearcher
 from pysmi.searcher.stub import StubSearcher
@@ -55,9 +56,8 @@ def mib2pysnmp2(mib_file, output_dir):
     mibCompiler = MibCompiler(SmiV2Parser(), PySnmpCodeGen(),
                               PyFileWriter(output_dir))
 
-    # add default sources and mib_file's location
-    mibCompiler.addSources(FileReader('/usr/share/mibs/ietf'))
-    mibCompiler.addSources(FileReader('/usr/share/mibs/iana'))
+    # add sources from where we fetch dependencies
+    mibCompiler.addSources(HttpReader('mibs.snmplabs.com', 80, '/asn1/@mib@'))
     mibCompiler.addSources(
         FileReader(os.path.dirname(os.path.abspath(mib_file))))
 
@@ -78,6 +78,7 @@ def mib2pysnmp2(mib_file, output_dir):
 
 def mib2pysnmp(mib_file):
     """
+    Deprecated
     Wraps the 'build-pysnmp-mib' script.
     :param mib_file: Path to the MIB file.
     :return: A string representation of the compiled MIB file (string).
