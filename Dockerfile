@@ -8,9 +8,7 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 # Install dependencies
 RUN apt-get update -y -qq && apt-get install -y -qq \
         libmysqlclient-dev \
-        libsmi2ldbl \
-        libxslt1-dev \
-        snmp-mibs-downloader && \
+        libxslt1-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -19,7 +17,11 @@ COPY ./ /opt/conpot/
 WORKDIR /opt/conpot
 
 # Install Python requirements
+RUN pip install --no-cache-dir coverage
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Run test cases
+RUN coverage run --timid --source=conpot setup.py test
 
 # Install the Conpot application
 RUN python setup.py install
