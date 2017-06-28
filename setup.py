@@ -35,7 +35,6 @@ setup(
     tests_require="nose",
     dependency_links=[
         "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
-        "https://github.com/ljean/modbus-tk/archive/master.zip#egg=modbus-tk"
     ],
     install_requires=open('requirements.txt').read().splitlines(),
 )
