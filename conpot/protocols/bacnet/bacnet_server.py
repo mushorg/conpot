@@ -23,7 +23,7 @@ import socket
 from lxml import etree
 
 from gevent.server import DatagramServer
-from bacpypes.app import LocalDeviceObject
+from bacpypes.service.device import LocalDeviceObject
 from bacpypes.apdu import APDU
 from bacpypes.pdu import PDU
 from bacpypes.errors import DecodingError
