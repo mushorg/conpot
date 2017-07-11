@@ -20,3 +20,4 @@ cybox
 bacpypes==0.16.1
 pyghmi
 mixbox
+modbus-tk

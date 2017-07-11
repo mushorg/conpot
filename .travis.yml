@@ -39,13 +39,15 @@ before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 script:
 - coverage run --timid --source=conpot setup.py test
-- /home/travis/virtualenv/python2.7.9/bin/conpot
+- "/home/travis/virtualenv/python2.7.9/bin/conpot"
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls
 notifications:
   irc:
   - irc.freenode.org#conpot-dev
+  slack:
+    secure: kNsZ0yGar7bcvU4xazqCeGf8zJ8PfbQ16X+Q4Fzu4mHNcnmmal80BHMwHKHfg5SBZViDVqZeA+yEGFAK4z93IXGKLhcCkXiw7qm9K29dP7DWgAFwDn42XNPjx5mQF9elr6T8AD0S1oQM4ML+0h1I+nYY+SK28UUjvDh65o9NHqA=
 deploy:
   provider: pypi
   user: Johnny.Vestergaard
@@ -54,4 +56,4 @@ deploy:
   on:
     repo: mushorg/conpot
     all_branches: true
-    condition: $TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+
+    condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"
