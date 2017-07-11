@@ -1,5 +1,5 @@
 gevent>=1.0
-pysnmp==4.3.5
+pysnmp==4.3.8
 pysmi==0.1.3
 lxml
 bottle
@@ -17,7 +17,7 @@ modbus-tk
 stix-validator
 stix
 cybox
-bacpypes==0.13.8
+bacpypes==0.16.1
 pyghmi
 mixbox
 modbus-tk
