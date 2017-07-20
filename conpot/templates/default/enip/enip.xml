@@ -1,0 +1,17 @@
+<enip enabled="True" host="0.0.0.0" port="44818">
+    <device_info>
+        <VendorId>1</VendorId>
+        <ProductName>1756-L61/B LOGIX5561</ProductName>
+        <DeviceType>14</DeviceType>
+        <SerialNumber>7079450</SerialNumber>
+        <ProductRevision>2562</ProductRevision>
+        <ProductCode>90</ProductCode>
+    </device_info>
+
+    <!-- tcp or udp -->
+    <mode>tcp</mode>
+
+    <!-- Delay response to each request -->
+    <delay>100</delay>
+
+</enip>

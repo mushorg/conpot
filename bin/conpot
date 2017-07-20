@@ -41,6 +41,7 @@ from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.protocols.http.web_server import HTTPServer
+from conpot.protocols.enip.enip_server import EnipServer
 from conpot.helpers import fix_sslwrap
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
 from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
@@ -270,7 +271,8 @@ def main():
         ('snmp', SNMPServer),
         ('bacnet', BacnetServer),
         ('ipmi', IpmiServer),
-        ('guardian_ast', GuardianASTServer)
+        ('guardian_ast', GuardianASTServer),
+        ('enip', EnipServer)
     )
 
     # no need to fork process when we don't want to change MAC address
