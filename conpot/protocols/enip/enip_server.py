@@ -43,14 +43,15 @@ class EnipConfig(object):
         self.product_name = dom.xpath('//enip/device_info/ProductName/text()')[0]
         self.serial_number = dom.xpath('//enip/device_info/SerialNumber/text()')[0]
         self.mode = dom.xpath('//enip/mode/text()')[0]
+        self.timeout = float(dom.xpath('//enip/timeout/text()')[0])
+        self.latency = float(dom.xpath('//enip/latency/text()')[0])
 
 
 class EnipServer(object):
     """
     ENIP server
     """
-    def __init__(self, template, template_directory, args, timeout=5):
-        self.timeout = timeout
+    def __init__(self, template, template_directory, args):
         self.config = EnipConfig(template)
         self.stopped = False
         logger.debug('ENIP server serial number: ' + self.config.serial_number)
@@ -60,28 +61,27 @@ class EnipServer(object):
         logger.debug("Incoming client address: (%s, %s)" % (address[0], address[1]))
 
     def start(self, host, port):
-        '''
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        self.server.start()
-        '''
         srv_ctl = cpppo.dotdict()
-        srv_ctl.control = cpppo.apidict(timeout=20)
+        srv_ctl.control = cpppo.apidict(timeout=self.config.timeout)
         srv_ctl.control['done'] = False
         srv_ctl.control['disable'] = False
-        srv_ctl.control.setdefault('latency', 0.1)
+        srv_ctl.control.setdefault('latency', self.config.latency)
 
         tags = cpppo.dotdict()
         options = cpppo.dotdict()
         options.setdefault('enip_process', logix.process)
         kwargs = dict(options, tags=tags, server=srv_ctl)
 
-        logger.debug('ENIP server started on: %s:%d' % (host, port))
+        tcp_mode = True if self.config.mode == 'tcp' else False
+        udp_mode = True if self.config.mode == 'udp' else False
+
+        logger.debug('ENIP server started on: %s:%d, mode: %s' % (host, port, self.config.mode))
         while not self.stopped:
             logger.debug('Server loop')
+
             network.server_main(address=(host, port), target=enip_srv, kwargs=kwargs,
                                 idle_service=None,
-                                udp=False, tcp=True, thread_factory=network.server_thread)
+                                udp=udp_mode, tcp=tcp_mode, thread_factory=network.server_thread)
 
 
     def stop(self):

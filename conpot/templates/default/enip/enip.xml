@@ -7,11 +7,7 @@
         <ProductRevision>2562</ProductRevision>
         <ProductCode>90</ProductCode>
     </device_info>
-
-    <!-- tcp or udp -->
-    <mode>tcp</mode>
-
-    <!-- Delay response to each request -->
-    <delay>100</delay>
-
+    <mode>tcp</mode> <!-- tcp or udp -->
+    <latency>0.1</latency>
+    <timeout>20</timeout>
 </enip>
