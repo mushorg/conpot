@@ -42,6 +42,8 @@ class EnipConfig(object):
 
     def parse_template(self):
         dom = etree.parse(self.template)
+        self.server_addr    = dom.xpath('//enip/@host')[0]
+        self.server_port    = int(dom.xpath('//enip/@port')[0])
         self.vendor_id      = int(dom.xpath('//enip/device_info/VendorId/text()')[0])
         self.device_type    = int(dom.xpath('//enip/device_info/DeviceType/text()')[0])
         self.product_rev    = int(dom.xpath('//enip/device_info/ProductRevision/text()')[0])
@@ -58,8 +60,10 @@ class EnipServer(object):
     ENIP server
     """
 
-    def __init__(self, template, template_directory, args):
+    def __init__(self, template):
         self.config = EnipConfig(template)
+        self.addr = self.config.server_addr
+        self.port = self.config.server_port
         self.stopped = False
         self.connections = cpppo.dotdict()
         logger.debug('ENIP server serial number: ' + self.config.serial_number)
@@ -107,6 +111,9 @@ class EnipServer(object):
             raise NotImplemented("Unknown socket protocol for EtherNet/IP CIP")
 
     def handle_tcp(self, conn, address, name, enip_process, delay=None, **kwds):
+        """
+        Handle a TCP client
+        """
         source = cpppo.rememberable()
         with parser.enip_machine(name=name, context='enip') as machine:
             try:
@@ -220,7 +227,7 @@ class EnipServer(object):
 
                 stats['processed'] = source.sent
             except:
-                # Parsing failure.  We're done.  Suck out some remaining input to give us some context.
+                # Parsing failure.
                 stats['processed'] = source.sent
                 memory = bytes(bytearray(source.memory))
                 pos = len(source.memory)
