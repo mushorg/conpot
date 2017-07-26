@@ -28,7 +28,7 @@ from cpppo.server.enip import client
 class TestBase(unittest.TestCase):
     def setUp(self):
         template = reduce(os.path.join, 'conpot/templates/default/enip/enip.xml'.split('/'))
-        self.enip_server = EnipServer(template)
+        self.enip_server = EnipServer(template, None, None)
         self.server_greenlet = gevent.spawn(self.enip_server.start, self.enip_server.addr, self.enip_server.port)
         self.server_greenlet.start()
 

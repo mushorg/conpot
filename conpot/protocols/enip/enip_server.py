@@ -60,7 +60,7 @@ class EnipServer(object):
     ENIP server
     """
 
-    def __init__(self, template):
+    def __init__(self, template, template_directory, args):
         self.config = EnipConfig(template)
         self.addr = self.config.server_addr
         self.port = self.config.server_port
