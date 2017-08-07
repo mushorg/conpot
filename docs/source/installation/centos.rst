@@ -1,4 +1,4 @@
-Centos instalation 7.1
+Centos installation 7.1
 ======================================
 
 Validated to work on Centos version 7.1-1503 & Conpot v4 (but may likely work on other centos versions/ rpm disto.
