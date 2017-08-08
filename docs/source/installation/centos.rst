@@ -27,7 +27,7 @@ Upgrade `lxml`
 
 $ sudo pip install -U lxml
 
-4. Starting mysql server
+4. Start mysql server
 ------------------------
 ::
 
