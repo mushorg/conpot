@@ -248,7 +248,96 @@ class EnipServer(object):
                 conn.close()
 
     def handle_udp(self, conn, name, enip_process, **kwds):
-        pass
+        """
+        Process UDP packets from multiple clients
+        """
+        with parser.enip_machine(name=name, context='enip') as machine:
+            while not kwds['server']['control']['done'] and not kwds['server']['control']['disable']:
+                try:
+                    source = cpppo.rememberable()
+                    data = cpppo.dotdict()
+
+                    # If no/partial EtherNet/IP header received, parsing will fail with a NonTerminal
+                    # Exception (dfa exits in non-terminal state).  Build data.request.enip:
+                    begun = cpppo.timer()  # waiting for next transaction
+                    addr, stats = None, None
+                    with contextlib.closing(machine.run(
+                            path='request', source=source, data=data)) as engine:
+                        # PyPy compatibility; avoid deferred destruction of generators
+                        for mch, sta in engine:
+                            if sta is not None:
+                                # No more transitions available.  Wait for input.
+                                continue
+                            assert not addr, "Incomplete UDP request from client %r" % (addr)
+                            msg = None
+                            while msg is None:
+                                # For UDP, we'll allow no input only at the start of a new request parse
+                                # (addr is None); anything else will be considered a failed request Back
+                                # to the trough for more symbols, after having already received a packet
+                                # from a peer?  No go!
+                                wait = (kwds['server']['control']['latency']
+                                        if source.peek() is None else 0)
+                                brx = cpppo.timer()
+                                msg, frm = network.recvfrom(conn, timeout=wait)
+                                now = cpppo.timer()
+                                (logger.info if msg else logger.debug)(
+                                    "Transaction receive after %7.3fs (%5s bytes in %7.3f/%7.3fs): %r",
+                                    now - begun, len(msg) if msg is not None else "None",
+                                    now - brx, wait, self.stats_for(frm)[0])
+                                # If we're at a None (can't proceed), and we haven't yet received input,
+                                # then this is where we implement "Blocking"; we just loop for input.
+
+                            # We have received exactly one packet from an identified peer!
+                            begun = now
+                            addr = frm
+                            stats, _ = self.stats_for(addr)
+                            # For UDP, we don't ever receive incoming EOF, or set stats['eof'].
+                            # However, we can respond to a manual eof (eg. from web interface) by
+                            # ignoring the peer's packets.
+                            assert stats and not stats.get('eof'), \
+                                "Ignoring UDP request from client %r: %r" % (addr, msg)
+                            stats['received'] += len(msg)
+                            logger.debug("%s recv: %5d: %s", machine.name_centered(), len(msg), cpppo.reprlib.repr(msg))
+                            source.chain(msg)
+
+                    # Terminal state and EtherNet/IP header recognized; process and return response
+                    assert stats
+                    if 'request' in data:
+                        stats['requests'] += 1
+                    # enip_process must be able to handle no request (empty data), indicating the
+                    # clean termination of the session if closed from this end (not required if
+                    # enip_process returned False, indicating the connection was terminated by
+                    # request.)
+                    if enip_process(addr, data=data, **kwds):
+                        # Produce an EtherNet/IP response carrying the encapsulated response data.
+                        # If no encapsulated data, ensure we also return a non-zero EtherNet/IP
+                        # status.  A non-zero status indicates the end of the session.
+                        assert 'response.enip' in data, "Expected EtherNet/IP response; none found"
+                        if 'input' not in data.response.enip or not data.response.enip.input:
+                            logger.warning("Expected EtherNet/IP response encapsulated message; none found")
+                            assert data.response.enip.status, "If no/empty response payload, expected non-zero EtherNet/IP status"
+
+                        rpy = parser.enip_encode(data.response.enip)
+                        logger.debug("%s send: %5d: %s", machine.name_centered(),
+                                       len(rpy), cpppo.reprlib.repr(rpy))
+                        conn.sendto(rpy, addr)
+
+                    logger.debug("Transaction complete after %7.3fs", cpppo.timer() - begun)
+
+                    stats['processed'] = source.sent
+                except:
+                    # Parsing failure.  Suck out some remaining input to give us some context, but don't re-raise
+                    if stats:
+                        stats['processed'] = source.sent
+                    memory = bytes(bytearray(source.memory))
+                    pos = len(source.memory)
+                    future = bytes(bytearray(b for b in source))
+                    where = "at %d total bytes:\n%s\n%s (byte %d)" % (
+                        stats.get('processed', 0) if stats else 0,
+                        repr(memory + future), '-' * (len(repr(memory)) - 1) + '^', pos)
+                    logger.error("Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n", addr, where,
+                              ''.join(traceback.format_exception(*sys.exc_info())))
+
 
     def start(self, host, port):
         srv_ctl = cpppo.dotdict()
