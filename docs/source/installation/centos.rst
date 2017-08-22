@@ -1,9 +1,9 @@
-Centos instalation 7.1
+CentOS installation 7.3
 ======================================
 
-Validated to work on Centos version 7.1-1503 & Conpot v4 (but may likely work on other centos versions/ rpm disto.
+Validated to work on CentOS version 7.3-1611 & Conpot 0.5.1 (may also work on other CentOS versions)
 
-1. login via ssh with a account with sufficient system privileges (e.g root)
+1. Login via ssh with an account with sufficient system privileges (e.g root)
 ----------------------------------------------------------------------------
 2. Upgrade the system
 ---------------------
@@ -11,50 +11,43 @@ Validated to work on Centos version 7.1-1503 & Conpot v4 (but may likely work on
 
 $ sudo yum -y update
 
-3. Install epel repository
---------------------------
 
-::
-
-$ sudo rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-
-4. Install needed packages and libs
+3. Install needed packages and libs
 -----------------------------------
 ::
 
-$ sudo yum -y install libxslt-devel libxml2-devel python-pip python-2.7.5-16.el7.x86_64
-$ sudo yum -y install mariadb-server mysql-connector-python.noarch mariadb-devel-5.5.41-2.el7_0.x86_64
+$ sudo yum -y install libxslt-devel libxml2-devel python-pip python
+$ sudo yum -y install mariadb-server mysql-connector-python.noarch mariadb-devel
 $ sudo yum -y install git python-lxml.x86_64 python-devel
 $ sudo yum -y groupinstall "Development tools"
-$ sudo easy_install -U setuptools
+$ wget https://bootstrap.pypa.io/get-pip.py && sudo python ./get-pip.py
 
-Below command force lxml to be version 3.3.5
+Upgrade `lxml`
 ::
 
-$ sudo easy_install lxml==3.3.5
+$ sudo pip install -U lxml
 
-5. Starting mysql server
+4. Start mysql server
 ------------------------
 ::
 
 $ sudo chkconfig mariadb on
 $ sudo service mariadb start
 
-Sugestions to mysql secure instalation are to change the root password and accect to removing anonymous users,test database and Disallow root login.
+Sugestions to mysql secure installation are to change the root password and accect to removing anonymous users, test database and disallow root login.
 ::
 
 $ sudo mysql_secure_installation
 
-6. CONPOT installation
+5. CONPOT installation
 ----------------------
 ::
 
-$ cd /usr/local/src
-$ sudo git clone https://github.com/mushorg/conpot
+$ git clone https://github.com/mushorg/conpot
 $ cd conpot/
 $ sudo python setup.py install
 
-7. Open ports in firewalld : 80 , 102, 161 and 502
+6. Open ports in firewalld : 80 , 102, 161 and 502
 ---------------------------------------------------
 ::
 
@@ -65,20 +58,14 @@ $ firewall-cmd --permanent --add-port=502/tcp
 $ firewall-cmd --reload
 
 
-8. temp fix as conpot currently requires the "nogroup" for the moment - raised in issue #267
---------------------------------------------------------------------------------------------
-::
-
-$ sudo groupadd nogroup
-
-9. Start the Conpot honeypot
+7. Start the Conpot honeypot
 -----------------------------
 
 ::
 
 $ conpot --template default
 
-10. check if its running and you can access it from remote (in browser)
+8. Check if it's running and you can access it from remote (in browser)
 -----------------------------------------------------------------------
 
 ::
