@@ -84,7 +84,6 @@ class TestBase(unittest.TestCase):
                 self.assertEqual(100, val[0])
 
     def test_write_tags(self):
-        self.assertEqual(1, 1)
         with client.connector(host=self.enip_server.addr,
                               port=self.enip_server.port, timeout=1.0) as connection:
             tags = ['@22/1/1=(SINT)50', '@22/1/1']
