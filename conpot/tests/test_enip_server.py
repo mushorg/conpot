@@ -44,7 +44,8 @@ class TestBase(unittest.TestCase):
             while True:
                 response, ela = client.await(connection, timeout=1.0)
                 if response:
-                    self.assertEqual("Communications", response['enip']['CIP']['list_services']['CPF']['item'][0]['communications_service']['service_name'])
+                    self.assertEqual("Communications",
+                                     response['enip']['CIP']['list_services']['CPF']['item'][0]['communications_service']['service_name'])
                 else:
                     break
 
@@ -61,3 +62,35 @@ class TestBase(unittest.TestCase):
                     self.assertEqual(expected, response['enip']['CIP']['list_identity']['CPF']['item'][0]['identity_object']['product_name'])
                 else:
                     break
+
+    def attribute_operations(self, paths, int_type=None, **kwds):
+        for op in client.parse_operations(paths, int_type=int_type or 'SINT', **kwds):
+            path_end = op['path'][-1]
+            if 'instance' in path_end:
+                op['method'] = 'get_attributes_all'
+                assert 'data' not in op, "All Attributes cannot be operated on using Set Attribute services"
+            elif 'symbolic' in path_end or 'attribute' in path_end or 'element':
+                op['method'] = 'set_attribute_single' if 'data' in op else 'get_attribute_single'
+            else:
+                raise AssertionError("Path invalid for Attribute services: %r", op['path'])
+            yield op
+
+    def test_read_tags(self):
+        with client.connector(host=self.enip_server.addr,
+                              port=self.enip_server.port, timeout=1.0) as connection:
+            tags = ['@22/1/1']
+            ops = self.attribute_operations(tags)
+            for idx, dsc, op, rpy, sts, val in connection.pipeline(operations=ops):
+                self.assertEqual(100, val[0])
+
+    def test_write_tags(self):
+        self.assertEqual(1, 1)
+        with client.connector(host=self.enip_server.addr,
+                              port=self.enip_server.port, timeout=1.0) as connection:
+            tags = ['@22/1/1=(SINT)50', '@22/1/1']
+            ops = self.attribute_operations(tags)
+            for idx, dsc, op, rpy, sts, val in connection.pipeline(operations=ops):
+                if idx == 0:
+                    self.assertEqual(True, val)
+                elif idx == 1:
+                    self.assertEqual(50, val[0])

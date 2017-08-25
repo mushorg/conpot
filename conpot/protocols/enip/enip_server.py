@@ -27,8 +27,10 @@ from lxml import etree
 from cpppo.server import network
 from cpppo.server.enip import logix
 from cpppo.server.enip import parser
+from cpppo.server.enip import device
 
 logger = logging.getLogger(__name__)
+
 
 
 class EnipConfig(object):
@@ -39,6 +41,17 @@ class EnipConfig(object):
     def __init__(self, template):
         self.template = template
         self.parse_template()
+
+    class Tag(object):
+        """
+        Represents device tag setting parsed from template
+        """
+        def __init__(self, name, type, size, value, addr=None):
+            self.name = name
+            self.type = str(type).upper()
+            self.size = size
+            self.value = value
+            self.addr = addr
 
     def parse_template(self):
         dom = etree.parse(self.template)
@@ -54,10 +67,25 @@ class EnipConfig(object):
         self.timeout        = float(dom.xpath('//enip/timeout/text()')[0])
         self.latency        = float(dom.xpath('//enip/latency/text()')[0])
 
+        # parse device tags, these tags will be further processed by the ENIP server
+        self.dtags = []
+        for t in dom.xpath('//enip/tags/tag'):
+            name = t.xpath('@name')[0]
+            type = t.xpath('type/text()')[0]
+            value = t.xpath('value/text()')[0]
+            addr = t.xpath('addr/text()')[0]
+            size = 1
+            try:
+                size = int(t.xpath('size/text()')[0])
+            except:
+                raise AssertionError("Invalid tag size: %r" % size)
+
+            self.dtags.append(self.Tag(name, type, size, value, addr))
+
 
 class EnipServer(object):
     """
-    ENIP server
+    Ethernet/IP server
     """
 
     def __init__(self, template, template_directory, args):
@@ -66,6 +94,11 @@ class EnipServer(object):
         self.port = self.config.server_port
         self.stopped = False
         self.connections = cpppo.dotdict()
+
+        # all known tags
+        self.tags = cpppo.dotdict()
+        self.set_tags()
+
         logger.debug('ENIP server serial number: ' + self.config.serial_number)
         logger.debug('ENIP server product name: ' + self.config.product_name)
 
@@ -338,6 +371,66 @@ class EnipServer(object):
                     logger.error("Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n", addr, where,
                               ''.join(traceback.format_exception(*sys.exc_info())))
 
+    def set_tags(self):
+        typenames = {
+            "BOOL":    (parser.BOOL,    0,   lambda v: bool(v)),
+            "INT":     (parser.INT,     0,   lambda v: int(v)),
+            "DINT":    (parser.DINT,    0,   lambda v: long(v)),
+            "SINT":    (parser.SINT,    0,   lambda v: int(v)),
+            "REAL":    (parser.REAL,    0.0, lambda v: float(v)),
+            "SSTRING": (parser.SSTRING, '',  lambda v: str(v)),
+            "STRING":  (parser.STRING,  '',  lambda v: str(v)),
+        }
+
+        for t in self.config.dtags:
+            tag_name = t.name
+            tag_type = t.type
+            tag_size = t.size
+
+            assert tag_type in typenames, "Invalid tag type; must be one of %r" % list(typenames)
+            tag_class, tag_default, f = typenames[tag_type]
+            tag_value = f(t.value)
+
+            tag_address = t.addr
+            logger.debug("tag address: %s", tag_address)
+
+            path, attribute = None, None
+            if tag_address:
+                # Resolve the @cls/ins/att, and optionally [elm] or /elm
+                segments, elm, cnt = device.parse_path_elements('@' + tag_address)
+                assert not cnt or cnt == 1, \
+                    "A Tag may be specified to indicate a single element: %s" % (tag_address)
+                path = {'segment': segments}
+                cls, ins, att = device.resolve(path, attribute=True)
+                assert ins > 0, "Cannot specify the Class' instance for a tag's address"
+                elm = device.resolve_element(path)
+                # Look thru defined tags for one assigned to same cls/ins/att (maybe different elm);
+                # must be same type/size.
+                for tn, te in dict.items(self.tags):
+                    if not te['path']:
+                        continue  # Ignore tags w/o pre-defined path...
+                    if device.resolve(te['path'], attribute=True) == (cls, ins, att):
+                        assert te.attribute.parser.__class__ is tag_class and len(te.attribute) == tag_size, \
+                            "Incompatible Attribute types for tags %r and %r" % (tn, tag_name)
+                        attribute = te.attribute
+                        break
+
+            if not attribute:
+                # No Attribute found
+                attribute = device.Attribute(tag_name, tag_class,
+                                             default = (tag_value if tag_size == 1 else [tag_value] * tag_size))
+
+
+            # Ready to create the tag and its Attribute (and error code to return, if any).  If tag_size
+            # is 1, it will be a scalar Attribute.  Since the tag_name may contain '.', we don't want
+            # the normal dotdict.__setitem__ resolution to parse it; use plain dict.__setitem__.
+            logger.debug("Creating tag: %-14s%-10s %10s[%4d]", tag_name, '@' + tag_address if tag_address else '',
+                       attribute.parser.__class__.__name__, len(attribute))
+            tag_entry = cpppo.dotdict()
+            tag_entry.attribute = attribute  # The Attribute (may be shared by multiple tags)
+            tag_entry.path = path  # Desired Attribute path (may include element), or None
+            tag_entry.error = 0x00
+            dict.__setitem__(self.tags, tag_name, tag_entry)
 
     def start(self, host, port):
         srv_ctl = cpppo.dotdict()
@@ -346,19 +439,15 @@ class EnipServer(object):
         srv_ctl.control['disable'] = False
         srv_ctl.control.setdefault('latency', self.config.latency)
 
-        tags = cpppo.dotdict()
         options = cpppo.dotdict()
         options.setdefault('enip_process', logix.process)
-        kwargs = dict(options, tags=tags, server=srv_ctl)
+        kwargs = dict(options, tags=self.tags, server=srv_ctl)
 
         tcp_mode = True if self.config.mode == 'tcp' else False
         udp_mode = True if self.config.mode == 'udp' else False
 
-        logger.debug('ENIP server started on: %s:%d, mode: %s' % (
-        host, port, self.config.mode))
+        logger.debug('ENIP server started on: %s:%d, mode: %s' % (host, port, self.config.mode))
         while not self.stopped:
-            logger.debug('Server loop')
-
             network.server_main(address=(host, port), target=self.handle,
                                 kwargs=kwargs, idle_service=None,
                                 udp=udp_mode, tcp=tcp_mode,
