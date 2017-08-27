@@ -1,0 +1,35 @@
+<enip enabled="True" host="0.0.0.0" port="44818">
+    <device_info>
+        <VendorId>1</VendorId>
+        <ProductName>1756-L61/B LOGIX5561</ProductName>
+        <DeviceType>14</DeviceType>
+        <SerialNumber>7079450</SerialNumber>
+        <ProductRevision>2562</ProductRevision>
+        <ProductCode>90</ProductCode>
+    </device_info>
+
+    <mode>tcp</mode> <!-- tcp or udp -->
+    <latency>0.1</latency>
+    <timeout>20</timeout>
+
+    <tags>
+        <tag name="SCADA">
+            <type>SINT</type>
+            <size>1</size>
+            <value>100</value>
+            <addr>22/1/1</addr>
+        </tag>
+        <tag name="TEXT">
+            <type>SSTRING</type>
+            <size>32</size>
+            <value>A</value>
+            <addr>22/1/2</addr>
+        </tag>
+        <tag name="FLOAT">
+            <type>REAL</type>
+            <size>4</size>
+            <value>0.1</value>
+            <addr>22/1/3</addr>
+        </tag>
+    </tags>
+</enip>

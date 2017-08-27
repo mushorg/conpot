@@ -4,7 +4,7 @@ CentOS installation 7.3
 Validated to work on CentOS version 7.3-1611 & Conpot 0.5.1 (may also work on other CentOS versions)
 
 1. Login via ssh with an account with sufficient system privileges (e.g root)
-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 2. Upgrade the system
 ---------------------
 ::
