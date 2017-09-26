@@ -43,7 +43,7 @@ class GuardianASTServer(object):
         logger.info('Conpot GuardianAST initialized')
 
     def handle(self, sock, addr):
-        session = conpot_core.get_session('guardian_ast', addr[0], addr[1])
+        session = conpot_core.get_session('guardian_ast', addr[0], addr[1], self.host, self.port)
         logger.info('New GuardianAST connection from %s:%d. (%s)', addr[0], addr[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         current_time = datetime.datetime.utcnow()
@@ -297,6 +297,8 @@ class GuardianASTServer(object):
         session.add_event({'type': 'CONNECTION_LOST'})
 
     def start(self, host, port):
+        self.host = host
+        self.port = port
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info('GuardianAST server started on: {0}'.format(connection))
