@@ -28,6 +28,8 @@ class ModbusServer(modbus.Server):
         self.timeout = timeout
         self.delay = None
         self.mode = None
+        self.host = None
+        self.port = None
         databank = slave_db.SlaveBase(template)
 
         # Constructor: initializes the server settings
