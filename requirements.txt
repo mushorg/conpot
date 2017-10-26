@@ -12,6 +12,8 @@ MySQL-python
 xlrd
 crc16
 enum
+natsort
+scapy
 hpfeeds
 modbus-tk
 stix-validator
