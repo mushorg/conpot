@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="utf-8"?>
+<snmp enabled="True" host="0.0.0.0" port="161">
+    <config>
+        <!-- Configure individual delays for SNMP commands -->
+        <entity name="tarpit" command="get">0.1;0.2</entity>
+        <entity name="tarpit" command="set">0.1;0.2</entity>
+        <entity name="tarpit" command="next">0.0;0.1</entity>
+        <entity name="tarpit" command="bulk">0.2;0.4</entity>
+
+        <!-- Configure DoS evasion thresholds (req_per_ip/minute;req_overall/minute) -->
+        <entity name="evasion" command="get">120;240</entity>
+        <entity name="evasion" command="set">120;240</entity>
+        <entity name="evasion" command="next">240;600</entity>
+        <entity name="evasion" command="bulk">120;240</entity>
+    </config>
+    <mibs>
+        <mib name="SNMPv2-MIB">
+            <symbol name="sysDescr">
+                <!-- Value is key in databus -->
+                <value>SystemDescription</value> <!-- Siemens, SIMATIC, S7-300 -->
+            </symbol>
+            <symbol name="sysObjectID">
+                <value>sysObjectID</value><!-- 0.0 -->
+            </symbol>
+            <symbol name="sysUpTime">
+                <value>Uptime</value>
+            </symbol>
+            <symbol name="sysContact">
+                <value>sysContact</value><!-- Siemens AG -->
+            </symbol>
+            <symbol name="sysLocation">
+                <value>sysLocation</value><!-- Paris -->
+            </symbol>
+            <symbol name="sysServices">
+                <value>sysServices</value><!-- 72 -->
+            </symbol>
+        </mib>
+        <!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="IF-MIB">
+            <symbol name="ifNumber" instance="0">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifIndex" instance="1">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifDescr" instance="1">
+                <value>ifDescr</value>
+            </symbol>
+            <symbol name="ifType" instance="1">
+                <value>ifType</value>
+            </symbol>
+            <symbol name="ifMtu" instance="1">
+                <value>ifMtu</value>
+            </symbol>
+            <symbol name="ifSpeed" instance="1">
+                <value>ifSpeed</value>
+            </symbol>
+            <symbol name="ifPhysAddress" instance="1">
+                <value>ifPhysAddress</value>
+            </symbol>
+            <symbol name="ifAdminStatus" instance="1">
+                <value>ifAdminStatus</value>
+            </symbol>
+            <symbol name="ifOperStatus" instance="1">
+                <value>ifOperStatus</value>
+            </symbol>
+            <symbol name="ifLastChange" instance="1">
+                <value>ifLastChange</value>
+            </symbol>
+            <symbol name="ifInOctets" instance="1">
+                <value>ifInOctets</value>
+            </symbol>
+            <symbol name="ifInUcastPkts" instance="1">
+                <value>ifInUcastPkts</value>
+            </symbol>
+            <symbol name="ifInNUcastPkts" instance="1">
+                <value>ifInNUcastPkts</value>
+            </symbol>
+            <symbol name="ifInDiscards" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifInErrors" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifInUnknownProtos" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutOctets" instance="1">
+                <value>ifOutOctets</value>
+            </symbol>
+            <symbol name="ifOutUcastPkts" instance="1">
+                <value>ifOutUcastPkts</value>
+            </symbol>
+            <symbol name="ifOutUNcastPkts" instance="1">
+                <value>ifOutUNcastPkts</value>
+            </symbol>
+            <symbol name="ifOutDiscards" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutErrors" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutQLen" instance="1">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifSpecific" instance="1">
+                <value>sysObjectID</value>
+            </symbol>
+        </mib>
+        <!-- # Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="IP-MIB">
+            <symbol name="ipForwarding">
+                <value>ipForwarding</value>
+            </symbol>
+            <symbol name="ipDefaultTTL">
+                <value>ipDefaultTTL</value>
+            </symbol>
+            <symbol name="ipInReceives">
+                <value>ipInReceives</value>
+            </symbol>
+            <symbol name="ipInHdrErrors">
+                <value>ipInHdrErrors</value>
+            </symbol>
+            <symbol name="ipInAddrErrors">
+                <value>ipInAddrErrors</value>
+            </symbol>
+            <symbol name="ipForwDatagrams">
+                <value>ipForwDatagrams</value>
+            </symbol>
+            <symbol name="ipInUnknownProtos">
+                <value>ipInUnknownProtos</value>
+            </symbol>
+            <symbol name="ipInDiscards">
+                <value>ipInDiscards</value>
+            </symbol>
+            <symbol name="ipInDelivers">
+                <value>ipInDelivers</value>
+            </symbol>
+            <symbol name="ipOutRequests">
+                <value>ipOutRequests</value>
+            </symbol>
+            <symbol name="ipOutDiscards">
+                <value>ipOutDiscards</value>
+            </symbol>
+            <symbol name="ipOutNoRoutes">
+                <value>ipOutNoRoutes</value>
+            </symbol>
+            <symbol name="ipReasmTimeout">
+                <value>ipReasmTimeout</value>
+            </symbol>
+            <symbol name="ipReasmReqds">
+                <value>ipReasmReqds</value>
+            </symbol>
+            <symbol name="ipReasmOKs">
+                <value>ipReasmOKs</value>
+            </symbol>
+            <symbol name="ipReasmFails">
+                <value>ipReasmFails</value>
+            </symbol>
+            <symbol name="ipFragOKs">
+                <value>ipFragOKs</value>
+            </symbol>
+            <symbol name="ipFragFails">
+                <value>ipFragFails</value>
+            </symbol>
+            <symbol name="ipFragCreates">
+                <value>ipFragCreates</value>
+            </symbol>
+            <symbol name="ipAdEntAddr" instance="163.172.189.137">
+                <value>ipAdEntAddr</value>
+            </symbol>
+            <symbol name="ipAdEntIfIndex" instance="163.172.189.137">
+                <value>ipAdEntIfIndex</value>
+            </symbol>
+            <symbol name="ipAdEntNetMask" instance="163.172.189.137">
+                <value>ipAdEntNetMask</value>
+            </symbol>
+            <symbol name="ipAdEntBcastAddr" instance="163.172.189.137">
+                <value>ipAdEntBcastAddr</value>
+            </symbol>
+            <symbol name="ipAdEntReasmMaxSize" instance="163.172.189.137">
+                <value>ipAdEntReasmMaxSize</value>
+            </symbol>
+            <symbol name="icmpInMsgs">
+                <value>icmpInMsgs</value>
+            </symbol>
+            <symbol name="icmpInErrors">
+                <value>icmpInErrors</value>
+            </symbol>
+            <symbol name="icmpInDestUnreachs">
+                <value>icmpInDestUnreachs</value>
+            </symbol>
+            <symbol name="icmpInTimeExcds">
+                <value>icmpInTimeExcds</value>
+            </symbol>
+            <symbol name="icmpInParmProbs">
+                <value>icmpInParmProbs</value>
+            </symbol>
+            <symbol name="icmpInSrcQuenchs">
+                <value>icmpInSrcQuenchs</value>
+            </symbol>
+            <symbol name="icmpInRedirects">
+                <value>icmpInRedirects</value>
+            </symbol>
+            <symbol name="icmpInEchos">
+                <value>icmpInEchos</value>
+            </symbol>
+            <symbol name="icmpInEchoReps">
+                <value>icmpInEchoReps</value>
+            </symbol>
+            <symbol name="icmpInTimestamps">
+                <value>icmpInTimestamps</value>
+            </symbol>
+            <symbol name="icmpInTimestampReps">
+                <value>icmpInTimestampReps</value>
+            </symbol>
+            <symbol name="icmpInAddrMasks">
+                <value>icmpInAddrMasks</value>
+            </symbol>
+            <symbol name="icmpInAddrMaskReps">
+                <value>icmpInAddrMaskReps</value>
+            </symbol>
+            <symbol name="icmpOutMsgs">
+                <value>icmpOutMsgs</value>
+            </symbol>
+            <symbol name="icmpOutErrors">
+                <value>icmpOutErrors</value>
+            </symbol>
+            <symbol name="icmpOutDestUnreachs">
+                <value>icmpOutDestUnreachs</value>
+            </symbol>
+            <symbol name="icmpOutTimeExcds">
+                <value>icmpOutTimeExcds</value>
+            </symbol>
+            <symbol name="icmpOutParmProbs">
+                <value>icmpOutParmProbs</value>
+            </symbol>
+            <symbol name="icmpOutSrcQuenchs">
+                <value>icmpOutSrcQuenchs</value>
+            </symbol>
+            <symbol name="icmpOutRedirects">
+                <value>icmpOutRedirects</value>
+            </symbol>
+            <symbol name="icmpOutEchos">
+                <value>icmpOutEchos</value>
+            </symbol>
+            <symbol name="icmpOutEchoReps">
+                <value>icmpOutEchoReps</value>
+            </symbol>
+            <symbol name="icmpOutTimestamps">
+                <value>icmpOutTimestamps</value>
+            </symbol>
+            <symbol name="icmpOutTimestampReps">
+                <value>icmpOutTimestampReps</value>
+            </symbol>
+            <symbol name="icmpOutAddrMasks">
+                <value>icmpOutAddrMasks</value>
+            </symbol>
+            <symbol name="icmpOutAddrMaskReps">
+                <value>icmpOutAddrMaskReps</value>
+            </symbol>
+        </mib>
+        <!--  Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="TCP-MIB">
+            <symbol name="tcpRtoAlgorithm">
+                <value>tcpRtoAlgorithm</value>
+            </symbol>
+            <symbol name="tcpRtoMin">
+                <value>tcpRtoMin</value>
+            </symbol>
+            <symbol name="tcpRtoMax">
+                <value>tcpRtoMax</value>
+            </symbol>
+            <symbol name="tcpMaxConn">
+                <value>tcpMaxConn</value>
+            </symbol>
+            <symbol name="tcpActiveOpens">
+                <value>tcpActiveOpens</value>
+            </symbol>
+            <symbol name="tcpPassiveOpens">
+                <value>tcpPassiveOpens</value>
+            </symbol>
+            <symbol name="tcpAttemptFails">
+                <value>tcpAttemptFails</value>
+            </symbol>
+            <symbol name="tcpEstabResets">
+                <value>tcpEstabResets</value>
+            </symbol>
+            <symbol name="tcpCurrEstab">
+                <value>tcpCurrEstab</value>
+            </symbol>
+            <symbol name="tcpInSegs">
+                <value>tcpInSegs</value>
+            </symbol>
+            <symbol name="tcpOutSegs">
+                <value>tcpOutSegs</value>
+            </symbol>
+            <symbol name="tcpRetransSegs">
+                <value>tcpRetransSegs</value>
+            </symbol>
+            <symbol name="tcpConnState" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnState</value>
+            </symbol>
+            <symbol name="tcpConnLocalAddress" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnLocalAddress</value>
+            </symbol>
+            <symbol name="tcpConnLocalPort" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnLocalPort</value>
+            </symbol>
+            <symbol name="tcpConnRemAddress" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnRemAddress</value>
+            </symbol>
+            <symbol name="tcpConnRemPort" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnRemPort</value>
+            </symbol>
+        </mib>
+        <!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="UDP-MIB">
+            <symbol name="udpInDatagrams">
+                <value>udpInDatagrams</value>
+            </symbol>
+            <symbol name="udpNoPorts">
+                <value>udpNoPorts</value>
+            </symbol>
+            <symbol name="udpInErrors">
+                <value>udpInErrors</value>
+            </symbol>
+            <symbol name="udpOutDatagrams">
+                <value>udpOutDatagrams</value>
+            </symbol>
+            <symbol name="udpLocalAddress" instance="163.172.189.137.161">
+                <value>udpLocalAddress</value>
+            </symbol>
+            <symbol name="udpLocalPort" instance="163.172.189.137.161">
+                <value>udpLocalPort</value>
+            </symbol>
+        </mib>
+    </mibs>
+</snmp>
