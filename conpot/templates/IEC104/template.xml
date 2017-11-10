@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de>
+<!-- Copyright (C) 2017  Patrick Reichenberger (University of Passau) <patrick.reichenberger@t-online.de>
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -364,7 +364,7 @@
                 <value type="value">20</value>
             </key>
             <!-- Maximum difference receive sequence number to send state variable (Max. Anzahl unquittierter Telegramme) -->
-            <!-- not implemented already -->
+            <!-- not implemented yet -->
             <key name="k">
                 <value type="value">12</value>
             </key>
@@ -429,6 +429,9 @@
             </key>
 
             <!-- 22- -->
+            <key name="22_19">
+                <value type="value">1</value>
+            </key>
             <key name="22_20">
                 <value type="value">1</value>
             </key>

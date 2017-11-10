@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de>
+<!-- Copyright (C) 2017  Patrick Reichenberger (University of Passau) <patrick.reichenberger@t-online.de>
 
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
@@ -75,6 +75,9 @@
         </category>
 
         <category name="SingleCommand" id="45">
+            <register name="22_19">
+                <value>22_19</value>
+            </register>
             <register name="22_20" rel="13_20">
                 <value>22_20</value>
             </register>
