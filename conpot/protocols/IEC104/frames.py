@@ -1,4 +1,4 @@
-# Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de>
+# Copyright (C) 2017  Patrick Reichenberger (University of Passau) <patrick.reichenberger@t-online.de>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,6 +17,9 @@
 
 from scapy.all import *
 from datetime import datetime
+
+# Station Address (maybe better in databus)
+station_addr = 0x1e28
 
 
 # Structure of control field formats
@@ -838,7 +841,7 @@ class asdu_head(Packet):
                    BitField("T", 0, 1), BitField("PN", 0, 1), BitField("COT", 6, 6),
                    # XByteField("COT", 0x06),
                    XByteField("OrigAddr", 0x00),
-                   LEShortField("Addr", 0x1e28)]
+                   LEShortField("Addr", station_addr)]
 
     def guess_payload_class(self, payload):
         if self.TypeID == 1:

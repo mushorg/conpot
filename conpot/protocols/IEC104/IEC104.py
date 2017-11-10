@@ -1,4 +1,4 @@
-# Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de>
+# Copyright (C) 2017  Patrick Reichenberger (University of Passau) <patrick.reichenberger@t-online.de>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -193,23 +193,23 @@ class IEC104(object):
         type_id = container.getfieldval("TypeID")
         station_address = container.getfieldval("Addr")
         # 45: Single command
-        if type_id == TypeIdentification["C_SC_NA_1"] and station_address == 0x1e28:
+        if type_id == TypeIdentification["C_SC_NA_1"] and station_address == station_addr:
             return self.handle_single_command45(container)
 
         # 46: Double command
-        elif type_id == TypeIdentification["C_DC_NA_1"] and station_address == 0x1e28:
+        elif type_id == TypeIdentification["C_DC_NA_1"] and station_address == station_addr:
             return self.handle_double_command46(container)
 
         # 49: Setpoint command, scaled value
-        elif type_id == TypeIdentification["C_SE_NB_1"] and station_address == 0x1e28:
+        elif type_id == TypeIdentification["C_SE_NB_1"] and station_address == station_addr:
             return self.handle_setpointscaled_command49(container)
 
         # 50: Setpoint command, short floating point value
-        elif type_id == TypeIdentification["C_SE_NC_1"] and station_address == 0x1e28:
+        elif type_id == TypeIdentification["C_SE_NC_1"] and station_address == station_addr:
             return self.handle_setpointfloatpoint_command50(container)
 
         # 100: (General-) Interrogation command
-        elif type_id == TypeIdentification["C_IC_NA_1"] and station_address in (0x1e28, 0xFFFF):
+        elif type_id == TypeIdentification["C_IC_NA_1"] and station_address in (station_addr, 0xFFFF):
             return self.handle_inro_command100(container)
 
     def send_104frame(self, frame):
@@ -272,12 +272,10 @@ class IEC104(object):
             cause_of_transmission = int(container.getfieldval("COT"))
             info_obj_addr = container.getfieldval("IOA")
             field_val = container.getfieldval("SCS")
-            print cause_of_transmission
             if cause_of_transmission == 6:
                 obj = self.device_data_controller.get_object_from_reg(info_obj_addr)  # get destination object
                 if not (obj is None):  # if exists in xml-file
                     obj_cat = int(obj.category_id)  # get type (single command)
-                    print obj_cat
                     if obj_cat == 45:  # if object has type single command
                         # === Activation confirmation
                         act_con = i_frame() / asdu_head(COT=7) / asdu_infobj_45(IOA=info_obj_addr, SCS=field_val)
@@ -477,7 +475,6 @@ class IEC104(object):
                 # === Activation confirmation for inro
                 act_con_inro = i_frame() / asdu_head(COT=7) / asdu_infobj_100(QOI=qualif_of_inro)
                 check_asdu_100(act_con_inro, "m")
-                print
                 yield self.send_104frame(act_con_inro)
                 # === Inro response
                 if qualif_of_inro == 20:
