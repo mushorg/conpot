@@ -1,6 +1,6 @@
 gevent>=1.0
-pysnmp==4.3.9
-pysmi==0.1.3
+pysnmp
+pysmi
 lxml
 bottle
 jinja2
