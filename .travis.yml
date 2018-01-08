@@ -37,7 +37,7 @@ install:
 - pip install coveralls
 before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
-- chmod +x - "/home/travis/virtualenv/python2.7.9/bin/conpot"
+- chmod +x "/home/travis/virtualenv/python2.7.9/bin/conpot"
 script:
 - coverage run --timid --source=conpot setup.py test
 - "/home/travis/virtualenv/python2.7.9/bin/conpot"
