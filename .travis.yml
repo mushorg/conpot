@@ -40,7 +40,7 @@ before_script:
 - chmod +x "$REPO/bin/conpot"
 script:
 - coverage run --timid --source=conpot setup.py test
-- "$REPO/bin/conpot"
+- "$REPO/bin/conpot -f"
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls
