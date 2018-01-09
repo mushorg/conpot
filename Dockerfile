@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir coverage
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run test cases
-RUN coverage run --timid --source=conpot setup.py test
+# RUN coverage run --timid --source=conpot setup.py test
 
 # Install the Conpot application
 RUN python setup.py install
@@ -34,4 +34,4 @@ VOLUME /var/log/conpot/
 
 EXPOSE 80 102 161/udp 502
 
-CMD ["/usr/local/bin/conpot", "--force", "--template", "default", "--logfile", "/var/log/conpot/conpot.log"]
+CMD ["/usr/local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot/conpot.log"]
