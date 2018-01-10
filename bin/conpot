@@ -151,11 +151,18 @@ def main():
                         help="Name of one of the supplied templates, or the full path to a custom template.",
                         default=''
                         )
+    parser.add_argument("-f", "--force",
+                        help="Force use testing config.",
+                        metavar="testing.cfg",
+                        action='store_const',
+                        const=True,
+                        default=False
+    )
     parser.add_argument("-c", "--config",
                         help="The configuration file to use",
-                        default=os.path.join(package_directory, 'conpot.cfg'),
-                        metavar="config.cfg"
+                        metavar="conpot.cfg",
                         )
+
     parser.add_argument("-l", "--logfile",
                         help="The logfile to use",
                         default="conpot.log"
@@ -178,10 +185,23 @@ def main():
     setup_logging(args.logfile, args.verbose)
 
     config = ConfigParser()
-    if not os.path.isfile(args.config):
-        args.config = os.path.join(package_directory, 'conpot.cfg')
-        logger.info('No conpot.cfg found in current directory, using default configuration: %s', args.config)
-    config.read(args.config)
+
+    # Loading default config if config not set.
+    if args.force:
+        args.config = os.path.join(package_directory, 'testing.cfg')
+        logger.info('--force option specified. Using testing configuration:')
+        config.read(args.config)
+        print(args.config)
+    else:
+        try:
+            if not os.path.isfile(os.path.join(package_directory, args.config)):
+                raise
+            args.config = os.path.join(package_directory, args.config)
+            logger.info('Config file found!')
+            config.read(args.config)
+        except:
+            logger.info('\nCould not find config file!\nUse -f option to try the test configuration')
+            sys.exit(1)
 
     # No template specified
     if not args.template:
@@ -291,6 +311,12 @@ def main():
                 if dom_protocol.xpath('//{0}'.format(protocol_name)):
                     if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
                         host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
+                        # -- > Are we running on testing config?
+                        if 'testing.cfg' in args.config:
+                            if not '127.' in host:
+                                if not args.force:
+                                    logger.error('To run conpot on a non local interface, please specify -f option')
+                                    sys.exit(1)
                         port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
                         server = server_class(protocol_template, root_template_directory, args)
                         greenlet = gevent.spawn(server.start, host, port)
