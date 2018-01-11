@@ -11,6 +11,8 @@ libtaxii>=1.1.0
 MySQL-python
 xlrd
 crc16
+natsort
+scapy
 enum34
 hpfeeds
 modbus-tk

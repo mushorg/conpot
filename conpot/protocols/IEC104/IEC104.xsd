@@ -1,0 +1,46 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="IEC104">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="device_info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="vendor_name"/>
+                            <xs:element type="xs:string" name="product_code"/>
+                            <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="categories">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="category" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="register" maxOccurs="unbounded" minOccurs="0">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="value" minOccurs="1" maxOccurs="1"/>
+                                                </xs:sequence>
+                                                <xs:attribute type="xs:string" name="name" use="required"/>
+                                                <xs:attribute type="xs:string" name="rel" use="optional"/>
+                                                <!--<xs:attribute type="xs:byte" name="units" use="optional"/>
+                                                <xs:attribute type="xs:byte" name="unknown" use="optional"/>-->
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="name" use="required"/>
+                                    <xs:attribute type="xs:short" name="id" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+ </xs:schema>

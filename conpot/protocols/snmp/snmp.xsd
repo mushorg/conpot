@@ -1,4 +1,5 @@
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="qualified"
            elementFormDefault="qualified">
     <xs:element name="snmp">
         <xs:complexType>
@@ -30,7 +31,7 @@
                 <xs:element name="mibs">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element name="mib">
+                            <xs:element name="mib" maxOccurs="unbounded" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="symbol" maxOccurs="unbounded"
@@ -47,6 +48,7 @@
                                                 </xs:sequence>
                                                 <xs:attribute type="xs:string" name="name"
                                                               use="required"/>
+                                                <xs:attribute type="xs:string" name="instance" />
                                             </xs:complexType>
                                         </xs:element>
                                     </xs:sequence>
@@ -59,7 +61,7 @@
             </xs:sequence>
             <xs:attribute type="xs:string" name="enabled" use="required"/>
             <xs:attribute type="xs:string" name="host" use="required"/>
-            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
+            <xs:attribute type="xs:short" name="port" use="required"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>
