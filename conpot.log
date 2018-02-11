@@ -1,0 +1,1441 @@
+2018-02-06 21:08:12,757 --force option specified. Using testing configuration:
+2018-02-06 21:08:12,767 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/proxy
+2018-02-06 21:08:12,768 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-06 21:08:12,971 Fetched 59.178.58.156 as external ip.
+2018-02-06 21:08:13,008 Kamstrup Channel A proxy server started, listening on ('0.0.0.0', 1025), proxy for: (192.168.1.176, 1025) using <conpot.protocols.kamstrup.meter_protocol.decoder_382.Decoder382 object at 0x7fd7b9ed1590> decoder.
+2018-02-06 21:08:13,009 Kamstrup Channel B proxy server started, listening on ('0.0.0.0', 1026), proxy for: (192.168.0.10, 1026) using <conpot.protocols.kamstrup.meter_protocol.decoder_382.Decoder382 object at 0x7fd7b7886510> decoder.
+2018-02-06 21:08:13,027 Kamstrup telnet proxy server started, listening on ('0.0.0.0', 50100), proxy for: (192.168.0.10, 50100) using <conpot.protocols.misc.ascii_decoder.AsciiDecoder object at 0x7fd7b782ac50> decoder.
+2018-02-06 21:08:13,028 SSL proxy proxy server started, listening on ('0.0.0.0', 1234), proxy for: (192.168.1.123, 443) using None decoder.
+2018-02-06 21:08:18,031 Privileges dropped, running as "nobody:nogroup"
+2018-02-06 21:10:32,100 New kamstrup_telnet session from 127.0.0.1 (ca95d40f-2fb3-491e-9003-ffdb891ee49d)
+2018-02-06 21:10:32,101 New connection from 127.0.0.1:41514 on kamstrup_telnet proxy. (ca95d40f-2fb3-491e-9003-ffdb891ee49d)
+2018-02-06 21:10:52,786 Stopping Conpot
+2018-02-08 16:27:44,865 --force option specified. Using testing configuration:
+2018-02-08 16:27:44,927 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:27:44,928 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:27:46,086 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:27:46,108 Conpot modbus initialized
+2018-02-08 16:27:46,108 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:27:46,122 Conpot S7Comm initialized
+2018-02-08 16:27:46,123 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:27:46,129 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:27:46,135 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:27:46,154 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:27:46,155 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:27:46,163 IPMI BMC initialized.
+2018-02-08 16:27:46,164 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:27:46,164 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:27:46,177 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:27:46,178 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:27:46,178 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:27:46,181 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:27:46,182 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:27:46,182 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:27:46,183 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:27:46,186 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:27:46,186 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:27:46,188 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:27:46,189 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:27:46,499 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:27:46,501 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:27:46,502 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:27:46,502 handle server PID [12852] running on ('0.0.0.0', 44818)
+2018-02-08 16:27:46,502 handle server PID [12852] responding to external done/disable signal in object 140702203311376
+2018-02-08 16:27:51,188 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:36:44,841 New http session from 127.0.0.1 (70abd831-c8cd-48d5-85e2-b3407e2aac75)
+2018-02-08 16:36:44,841 HTTP/1.1 GET request from ('127.0.0.1', 52648): ('/', ['Host: localhost\r\n', 'Connection: keep-alive\r\n', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.108 Safari/537.36\r\n', 'Upgrade-Insecure-Requests: 1\r\n', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\r\n', 'Accept-Encoding: gzip, deflate, br\r\n', 'Accept-Language: en-US,en;q=0.9\r\n', 'Cookie: path=/; gsScrollPos-257=0; gsScrollPos-271=0; gsScrollPos-442=; username-localhost-8888="2|1:0|10:1515940328|23:username-localhost-8888|44:YWEzOGM5ZDMxYWU0NGU2NzhhNDVkODdlZjI4NTM3MzQ=|9251ec03deca387de986e71a62d95175bee3ae8837bf4a6f4db4104d5d69257e"; gsScrollPos-386=0; session=eyJ1c2VyIjoiYWRtaW4ifQ.DUYfaA.bCHZpv7Mzz5wGG4QK9jAD0grgIY; gsScrollPos-268=0\r\n'], None). 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:36:44,841 HTTP/1.1 response to ('127.0.0.1', 52648): 302. 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:36:45,208 HTTP/1.1 GET request from ('127.0.0.1', 52648): ('/index.html', ['Host: localhost\r\n', 'Connection: keep-alive\r\n', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.108 Safari/537.36\r\n', 'Upgrade-Insecure-Requests: 1\r\n', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\r\n', 'Accept-Encoding: gzip, deflate, br\r\n', 'Accept-Language: en-US,en;q=0.9\r\n', 'Cookie: path=/; gsScrollPos-257=0; gsScrollPos-271=0; gsScrollPos-442=; username-localhost-8888="2|1:0|10:1515940328|23:username-localhost-8888|44:YWEzOGM5ZDMxYWU0NGU2NzhhNDVkODdlZjI4NTM3MzQ=|9251ec03deca387de986e71a62d95175bee3ae8837bf4a6f4db4104d5d69257e"; gsScrollPos-386=0; session=eyJ1c2VyIjoiYWRtaW4ifQ.DUYfaA.bCHZpv7Mzz5wGG4QK9jAD0grgIY; gsScrollPos-268=0\r\n'], None). 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:36:45,209 HTTP/1.1 response to ('127.0.0.1', 52648): 200. 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:36:45,617 HTTP/1.1 GET request from ('127.0.0.1', 52648): ('/favicon.ico', ['Host: localhost\r\n', 'Connection: keep-alive\r\n', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.108 Safari/537.36\r\n', 'Accept: image/webp,image/apng,image/*,*/*;q=0.8\r\n', 'Referer: http://localhost/index.html\r\n', 'Accept-Encoding: gzip, deflate, br\r\n', 'Accept-Language: en-US,en;q=0.9\r\n', 'Cookie: path=/; gsScrollPos-257=0; gsScrollPos-271=0; gsScrollPos-442=; username-localhost-8888="2|1:0|10:1515940328|23:username-localhost-8888|44:YWEzOGM5ZDMxYWU0NGU2NzhhNDVkODdlZjI4NTM3MzQ=|9251ec03deca387de986e71a62d95175bee3ae8837bf4a6f4db4104d5d69257e"; gsScrollPos-386=0; session=eyJ1c2VyIjoiYWRtaW4ifQ.DUYfaA.bCHZpv7Mzz5wGG4QK9jAD0grgIY; gsScrollPos-268=0\r\n'], None). 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:36:45,617 HTTP/1.1 response to ('127.0.0.1', 52648): 404. 70abd831-c8cd-48d5-85e2-b3407e2aac75
+2018-02-08 16:37:13,267 Stopping Conpot
+2018-02-08 16:37:13,267 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 16:41:21,115 --force option specified. Using testing configuration:
+2018-02-08 16:41:21,117 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:41:21,117 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:41:21,189 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:41:21,198 Conpot modbus initialized
+2018-02-08 16:41:21,199 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:41:21,203 Conpot S7Comm initialized
+2018-02-08 16:41:21,204 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:41:21,206 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:41:21,208 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:41:21,210 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:41:21,210 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:41:21,213 IPMI BMC initialized.
+2018-02-08 16:41:21,213 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:41:21,213 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:41:21,216 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:41:21,217 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:41:21,217 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:41:21,218 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:41:21,219 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:41:21,219 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:41:21,220 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:41:21,220 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:41:21,221 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:41:21,221 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:41:21,222 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:41:21,486 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:41:21,488 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:41:21,489 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:41:21,489 handle server PID [14330] running on ('0.0.0.0', 44818)
+2018-02-08 16:41:21,489 handle server PID [14330] responding to external done/disable signal in object 140490455315728
+2018-02-08 16:41:26,222 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:43:21,036 Stopping Conpot
+2018-02-08 16:43:21,037 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 16:43:25,598 --force option specified. Using testing configuration:
+2018-02-08 16:43:25,600 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:43:25,600 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:43:25,666 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:43:25,675 Conpot modbus initialized
+2018-02-08 16:43:25,675 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:43:25,679 Conpot S7Comm initialized
+2018-02-08 16:43:25,680 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:43:25,682 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:43:25,684 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:43:25,686 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:43:25,687 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:43:25,689 IPMI BMC initialized.
+2018-02-08 16:43:25,689 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:43:25,690 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:43:25,693 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:43:25,693 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:43:25,694 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:43:25,695 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:43:25,695 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:43:25,696 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:43:25,696 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:43:25,697 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:43:25,697 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:43:25,698 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:43:25,698 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:43:25,966 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:43:25,968 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:43:25,969 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:43:25,969 handle server PID [14511] running on ('0.0.0.0', 44818)
+2018-02-08 16:43:25,969 handle server PID [14511] responding to external done/disable signal in object 140113849087248
+2018-02-08 16:43:30,700 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:44:10,535 Stopping Conpot
+2018-02-08 16:44:10,535 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 16:44:24,858 --force option specified. Using testing configuration:
+2018-02-08 16:44:24,860 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:44:24,861 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:44:29,933 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:44:29,940 Conpot modbus initialized
+2018-02-08 16:44:29,941 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:44:29,945 Conpot S7Comm initialized
+2018-02-08 16:44:29,946 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:44:29,948 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:44:29,950 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:44:29,952 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:44:29,953 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:44:29,955 IPMI BMC initialized.
+2018-02-08 16:44:29,955 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:44:29,956 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:44:29,958 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:44:29,959 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:44:29,959 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:44:29,960 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:44:29,961 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:44:29,961 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:44:29,961 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:44:29,962 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:44:29,962 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:44:29,963 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:44:29,963 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:44:30,226 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:44:30,228 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:44:30,228 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:44:30,229 handle server PID [14683] running on ('0.0.0.0', 44818)
+2018-02-08 16:44:30,229 handle server PID [14683] responding to external done/disable signal in object 140052274246928
+2018-02-08 16:44:34,964 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:48:43,284 --force option specified. Using testing configuration:
+2018-02-08 16:48:43,285 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:48:43,286 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:48:43,351 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:48:43,357 Conpot modbus initialized
+2018-02-08 16:48:43,358 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:48:43,361 Conpot S7Comm initialized
+2018-02-08 16:48:43,361 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:48:43,364 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:48:43,366 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:48:43,368 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:48:43,369 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:48:43,371 IPMI BMC initialized.
+2018-02-08 16:48:43,371 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:48:43,371 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:48:43,374 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:43,375 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:48:43,375 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:43,376 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:48:43,376 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:48:43,377 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:43,377 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:48:43,377 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:48:43,378 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:48:43,425 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:48:43,433 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:48:43,496 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:48:43,497 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:48:43,498 handle server PID [15030] running on ('0.0.0.0', 44818)
+2018-02-08 16:48:43,498 handle server PID [15030] responding to external done/disable signal in object 140431435067776
+2018-02-08 16:48:43,499 Stopping because <Greenlet at 0x7fb8bdd129b0: <bound method ModbusServer.start of <conpot.protocols.modbus.modbus_server.ModbusServer object at 0x7fb8caa157d0>>('0.0.0.0', 502)> died: [Errno 98] Address already in use: ('0.0.0.0', 502)
+2018-02-08 16:48:49,472 Stopping Conpot
+2018-02-08 16:48:49,473 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 16:48:57,022 --force option specified. Using testing configuration:
+2018-02-08 16:48:57,024 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:48:57,025 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:48:57,092 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:48:57,101 Conpot modbus initialized
+2018-02-08 16:48:57,102 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:48:57,107 Conpot S7Comm initialized
+2018-02-08 16:48:57,108 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:48:57,109 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:48:57,111 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:48:57,114 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:48:57,114 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:48:57,117 IPMI BMC initialized.
+2018-02-08 16:48:57,117 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:48:57,118 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:48:57,121 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:57,122 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:48:57,122 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:57,123 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:48:57,124 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:48:57,124 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:48:57,125 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:48:57,125 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:48:57,126 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:48:57,127 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:48:57,128 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:48:57,390 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:48:57,392 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:48:57,392 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:48:57,393 handle server PID [15117] running on ('0.0.0.0', 44818)
+2018-02-08 16:48:57,393 handle server PID [15117] responding to external done/disable signal in object 140304807719296
+2018-02-08 16:49:02,127 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:49:13,279 New modbus session from 127.0.0.1 (3186cfae-bbb6-48c7-91f1-c8ec6312059f)
+2018-02-08 16:49:13,279 New Modbus connection from 127.0.0.1:42632. (3186cfae-bbb6-48c7-91f1-c8ec6312059f)
+2018-02-08 16:50:39,324 New snmp session from 127.0.0.1 (01a22832-1e7f-4706-b232-30c0bf844a71)
+2018-02-08 16:50:39,325 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1 
+2018-02-08 16:50:39,325 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.1.0 Siemens, SIMATIC, S7-200
+2018-02-08 16:50:39,400 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.1.0 
+2018-02-08 16:50:39,400 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.2.0 1.3.6.1.4.1.20408
+2018-02-08 16:50:39,487 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.2.0 
+2018-02-08 16:50:39,488 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.3.0 102
+2018-02-08 16:50:39,561 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.3.0 
+2018-02-08 16:50:39,562 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.4.0 Siemens AG
+2018-02-08 16:50:39,634 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.4.0 
+2018-02-08 16:50:39,635 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.5.0 CP 443-1 EX40
+2018-02-08 16:50:39,749 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.5.0 
+2018-02-08 16:50:39,750 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.6.0 Venus
+2018-02-08 16:50:39,770 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.6.0 
+2018-02-08 16:50:39,771 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.7.0 72
+2018-02-08 16:50:39,785 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.7.0 
+2018-02-08 16:50:39,785 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.1.8.0 0
+2018-02-08 16:50:39,879 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.1.8.0 
+2018-02-08 16:50:39,880 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.1.0 9
+2018-02-08 16:50:39,930 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.1.0 
+2018-02-08 16:50:39,931 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.2.0 0
+2018-02-08 16:50:39,994 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.2.0 
+2018-02-08 16:50:39,995 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.3.0 0
+2018-02-08 16:50:40,041 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.3.0 
+2018-02-08 16:50:40,042 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.4.0 0
+2018-02-08 16:50:40,136 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.4.0 
+2018-02-08 16:50:40,136 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.5.0 0
+2018-02-08 16:50:40,173 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.5.0 
+2018-02-08 16:50:40,174 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.6.0 0
+2018-02-08 16:50:40,204 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.6.0 
+2018-02-08 16:50:40,204 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.8.0 0
+2018-02-08 16:50:40,236 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.8.0 
+2018-02-08 16:50:40,237 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.9.0 0
+2018-02-08 16:50:40,311 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.9.0 
+2018-02-08 16:50:40,311 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.10.0 0
+2018-02-08 16:50:40,378 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.10.0 
+2018-02-08 16:50:40,379 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.11.0 0
+2018-02-08 16:50:40,466 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.11.0 
+2018-02-08 16:50:40,466 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.12.0 0
+2018-02-08 16:50:40,484 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.12.0 
+2018-02-08 16:50:40,486 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.13.0 0
+2018-02-08 16:50:40,505 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.13.0 
+2018-02-08 16:50:40,506 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.14.0 0
+2018-02-08 16:50:40,602 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.14.0 
+2018-02-08 16:50:40,603 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.15.0 0
+2018-02-08 16:50:40,632 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.15.0 
+2018-02-08 16:50:40,633 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.16.0 0
+2018-02-08 16:50:40,705 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.16.0 
+2018-02-08 16:50:40,705 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.17.0 0
+2018-02-08 16:50:40,796 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.17.0 
+2018-02-08 16:50:40,796 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.18.0 0
+2018-02-08 16:50:40,901 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.18.0 
+2018-02-08 16:50:40,902 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.19.0 0
+2018-02-08 16:50:40,949 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.19.0 
+2018-02-08 16:50:40,950 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.20.0 0
+2018-02-08 16:50:40,961 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.20.0 
+2018-02-08 16:50:40,965 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.21.0 0
+2018-02-08 16:50:41,054 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.21.0 
+2018-02-08 16:50:41,055 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.22.0 0
+2018-02-08 16:50:41,094 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.22.0 
+2018-02-08 16:50:41,095 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.24.0 0
+2018-02-08 16:50:41,115 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.24.0 
+2018-02-08 16:50:41,116 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.27.0 0
+2018-02-08 16:50:41,213 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.27.0 
+2018-02-08 16:50:41,214 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.28.0 0
+2018-02-08 16:50:41,299 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.28.0 
+2018-02-08 16:50:41,299 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.29.0 0
+2018-02-08 16:50:41,388 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.29.0 
+2018-02-08 16:50:41,388 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.30.0 1
+2018-02-08 16:50:41,473 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.30.0 
+2018-02-08 16:50:41,473 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.31.0 0
+2018-02-08 16:50:41,578 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.31.0 
+2018-02-08 16:50:41,579 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.32.0 0
+2018-02-08 16:50:41,725 SNMPv1 GetNext request from ('127.0.0.1', 32819): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:50:41,725 SNMPv1 GetNext response to ('127.0.0.1', 32819): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:50:48,823 Stopping Conpot
+2018-02-08 16:50:48,824 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 16:51:18,705 --force option specified. Using testing configuration:
+2018-02-08 16:51:18,706 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 16:51:18,707 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 16:51:19,516 Fetched 59.178.37.71 as external ip.
+2018-02-08 16:51:19,522 Conpot modbus initialized
+2018-02-08 16:51:19,523 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 16:51:19,526 Conpot S7Comm initialized
+2018-02-08 16:51:19,526 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 16:51:19,528 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 16:51:19,530 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 16:51:19,532 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 16:51:19,533 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 16:51:19,535 IPMI BMC initialized.
+2018-02-08 16:51:19,535 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 16:51:19,536 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 16:51:19,538 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:51:19,539 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:51:19,539 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:51:19,540 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 16:51:19,541 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 16:51:19,541 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 16:51:19,541 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 16:51:19,542 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 16:51:19,542 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 16:51:19,542 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 16:51:19,543 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 16:51:19,801 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 16:51:19,803 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 16:51:19,804 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 16:51:19,804 handle server PID [15415] running on ('0.0.0.0', 44818)
+2018-02-08 16:51:19,804 handle server PID [15415] responding to external done/disable signal in object 140384151598352
+2018-02-08 16:51:24,544 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 16:51:29,256 New snmp session from 127.0.0.1 (ff433149-1228-4ff3-8bc5-7c96b5f7e0fc)
+2018-02-08 16:51:29,257 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1 
+2018-02-08 16:51:29,257 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.1.0 Siemens, SIMATIC, S7-200
+2018-02-08 16:51:29,313 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.1.0 
+2018-02-08 16:51:29,313 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.2.0 1.3.6.1.4.1.20408
+2018-02-08 16:51:29,420 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.2.0 
+2018-02-08 16:51:29,420 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.3.0 11
+2018-02-08 16:51:29,454 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.3.0 
+2018-02-08 16:51:29,455 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.4.0 Siemens AG
+2018-02-08 16:51:29,487 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.4.0 
+2018-02-08 16:51:29,488 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.5.0 CP 443-1 EX40
+2018-02-08 16:51:29,524 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.5.0 
+2018-02-08 16:51:29,525 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.6.0 Venus
+2018-02-08 16:51:29,633 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.6.0 
+2018-02-08 16:51:29,634 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.7.0 72
+2018-02-08 16:51:29,674 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.7.0 
+2018-02-08 16:51:29,675 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.1.8.0 0
+2018-02-08 16:51:29,713 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.1.8.0 
+2018-02-08 16:51:29,713 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.1.0 9
+2018-02-08 16:51:29,733 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.1.0 
+2018-02-08 16:51:29,734 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.2.0 0
+2018-02-08 16:51:29,782 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.2.0 
+2018-02-08 16:51:29,782 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.3.0 0
+2018-02-08 16:51:29,795 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.3.0 
+2018-02-08 16:51:29,796 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.4.0 0
+2018-02-08 16:51:29,812 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.4.0 
+2018-02-08 16:51:29,813 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.5.0 0
+2018-02-08 16:51:29,918 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.5.0 
+2018-02-08 16:51:29,918 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.6.0 0
+2018-02-08 16:51:29,996 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.6.0 
+2018-02-08 16:51:29,996 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.8.0 0
+2018-02-08 16:51:30,017 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.8.0 
+2018-02-08 16:51:30,018 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.9.0 0
+2018-02-08 16:51:30,034 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.9.0 
+2018-02-08 16:51:30,035 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.10.0 0
+2018-02-08 16:51:30,098 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.10.0 
+2018-02-08 16:51:30,098 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.11.0 0
+2018-02-08 16:51:30,176 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.11.0 
+2018-02-08 16:51:30,177 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.12.0 0
+2018-02-08 16:51:30,192 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.12.0 
+2018-02-08 16:51:30,193 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.13.0 0
+2018-02-08 16:51:30,209 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.13.0 
+2018-02-08 16:51:30,210 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.14.0 0
+2018-02-08 16:51:30,250 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.14.0 
+2018-02-08 16:51:30,252 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.15.0 0
+2018-02-08 16:51:30,294 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.15.0 
+2018-02-08 16:51:30,295 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.16.0 0
+2018-02-08 16:51:30,321 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.16.0 
+2018-02-08 16:51:30,322 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.17.0 0
+2018-02-08 16:51:30,423 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.17.0 
+2018-02-08 16:51:30,424 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.18.0 0
+2018-02-08 16:51:30,527 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.18.0 
+2018-02-08 16:51:30,528 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.19.0 0
+2018-02-08 16:51:30,580 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.19.0 
+2018-02-08 16:51:30,580 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.20.0 0
+2018-02-08 16:51:30,665 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.20.0 
+2018-02-08 16:51:30,666 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.21.0 0
+2018-02-08 16:51:30,716 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.21.0 
+2018-02-08 16:51:30,717 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.22.0 0
+2018-02-08 16:51:30,763 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.22.0 
+2018-02-08 16:51:30,764 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.24.0 0
+2018-02-08 16:51:30,843 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.24.0 
+2018-02-08 16:51:30,844 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.27.0 0
+2018-02-08 16:51:30,914 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.27.0 
+2018-02-08 16:51:30,915 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.28.0 0
+2018-02-08 16:51:30,997 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.28.0 
+2018-02-08 16:51:30,997 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.29.0 0
+2018-02-08 16:51:31,050 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.29.0 
+2018-02-08 16:51:31,051 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.30.0 1
+2018-02-08 16:51:31,086 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.30.0 
+2018-02-08 16:51:31,088 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.31.0 0
+2018-02-08 16:51:31,134 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.31.0 
+2018-02-08 16:51:31,134 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.32.0 0
+2018-02-08 16:51:31,279 SNMPv1 GetNext request from ('127.0.0.1', 35866): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:51:31,279 SNMPv1 GetNext response to ('127.0.0.1', 35866): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:51:44,677 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1 
+2018-02-08 16:51:44,678 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.1.0 Siemens, SIMATIC, S7-200
+2018-02-08 16:51:44,774 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.1.0 
+2018-02-08 16:51:44,774 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.2.0 1.3.6.1.4.1.20408
+2018-02-08 16:51:44,880 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.2.0 
+2018-02-08 16:51:44,881 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.3.0 26
+2018-02-08 16:51:44,974 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.3.0 
+2018-02-08 16:51:44,974 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.4.0 Siemens AG
+2018-02-08 16:51:45,046 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.4.0 
+2018-02-08 16:51:45,047 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.5.0 CP 443-1 EX40
+2018-02-08 16:51:45,103 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.5.0 
+2018-02-08 16:51:45,103 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.6.0 Venus
+2018-02-08 16:51:45,165 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.6.0 
+2018-02-08 16:51:45,165 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.7.0 72
+2018-02-08 16:51:45,191 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.7.0 
+2018-02-08 16:51:45,191 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.1.8.0 0
+2018-02-08 16:51:45,288 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.1.8.0 
+2018-02-08 16:51:45,289 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.1.0 46
+2018-02-08 16:51:45,313 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.1.0 
+2018-02-08 16:51:45,314 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.2.0 0
+2018-02-08 16:51:45,344 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.2.0 
+2018-02-08 16:51:45,345 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.3.0 0
+2018-02-08 16:51:45,393 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.3.0 
+2018-02-08 16:51:45,394 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.4.0 0
+2018-02-08 16:51:45,470 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.4.0 
+2018-02-08 16:51:45,471 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.5.0 0
+2018-02-08 16:51:45,555 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.5.0 
+2018-02-08 16:51:45,555 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.6.0 0
+2018-02-08 16:51:45,584 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.6.0 
+2018-02-08 16:51:45,584 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.8.0 0
+2018-02-08 16:51:45,672 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.8.0 
+2018-02-08 16:51:45,672 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.9.0 0
+2018-02-08 16:51:45,684 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.9.0 
+2018-02-08 16:51:45,685 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.10.0 0
+2018-02-08 16:51:45,711 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.10.0 
+2018-02-08 16:51:45,712 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.11.0 0
+2018-02-08 16:51:45,815 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.11.0 
+2018-02-08 16:51:45,816 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.12.0 0
+2018-02-08 16:51:45,873 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.12.0 
+2018-02-08 16:51:45,873 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.13.0 0
+2018-02-08 16:51:45,921 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.13.0 
+2018-02-08 16:51:45,922 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.14.0 0
+2018-02-08 16:51:45,967 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.14.0 
+2018-02-08 16:51:45,967 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.15.0 0
+2018-02-08 16:51:46,071 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.15.0 
+2018-02-08 16:51:46,072 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.16.0 0
+2018-02-08 16:51:46,130 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.16.0 
+2018-02-08 16:51:46,131 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.17.0 0
+2018-02-08 16:51:46,189 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.17.0 
+2018-02-08 16:51:46,190 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.18.0 0
+2018-02-08 16:51:46,228 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.18.0 
+2018-02-08 16:51:46,229 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.19.0 0
+2018-02-08 16:51:46,312 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.19.0 
+2018-02-08 16:51:46,313 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.20.0 0
+2018-02-08 16:51:46,342 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.20.0 
+2018-02-08 16:51:46,342 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.21.0 0
+2018-02-08 16:51:46,379 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.21.0 
+2018-02-08 16:51:46,380 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.22.0 0
+2018-02-08 16:51:46,449 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.22.0 
+2018-02-08 16:51:46,450 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.24.0 0
+2018-02-08 16:51:46,539 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.24.0 
+2018-02-08 16:51:46,540 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.27.0 0
+2018-02-08 16:51:46,601 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.27.0 
+2018-02-08 16:51:46,601 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.28.0 0
+2018-02-08 16:51:46,647 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.28.0 
+2018-02-08 16:51:46,648 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.29.0 0
+2018-02-08 16:51:46,693 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.29.0 
+2018-02-08 16:51:46,694 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.30.0 1
+2018-02-08 16:51:46,785 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.30.0 
+2018-02-08 16:51:46,786 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.31.0 0
+2018-02-08 16:51:46,890 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.31.0 
+2018-02-08 16:51:46,891 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.32.0 0
+2018-02-08 16:51:47,054 SNMPv1 GetNext request from ('127.0.0.1', 42908): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:51:47,055 SNMPv1 GetNext response to ('127.0.0.1', 42908): 1.3.6.1.2.1.11.32.0 
+2018-02-08 16:51:48,511 Stopping Conpot
+2018-02-08 16:51:48,511 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-08 17:03:44,602 --force option specified. Using testing configuration:
+2018-02-08 17:03:44,604 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-08 17:03:44,604 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-08 17:03:45,059 Fetched 59.178.46.217 as external ip.
+2018-02-08 17:03:45,067 Conpot modbus initialized
+2018-02-08 17:03:45,068 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-08 17:03:45,071 Conpot S7Comm initialized
+2018-02-08 17:03:45,071 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-08 17:03:45,073 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-08 17:03:45,075 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-08 17:03:45,078 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-08 17:03:45,078 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-08 17:03:45,080 IPMI BMC initialized.
+2018-02-08 17:03:45,081 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-08 17:03:45,081 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-08 17:03:45,084 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 17:03:45,084 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 17:03:45,084 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 17:03:45,086 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-08 17:03:45,086 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-08 17:03:45,086 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-08 17:03:45,086 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-08 17:03:45,087 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-08 17:03:45,087 Modbus server started on: ('0.0.0.0', 502)
+2018-02-08 17:03:45,088 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-08 17:03:45,088 HTTP server started on: ('0.0.0.0', 80)
+2018-02-08 17:03:45,359 SNMP server started on: ('0.0.0.0', 161)
+2018-02-08 17:03:45,361 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-08 17:03:45,361 IPMI server started on: ('0.0.0.0', 623)
+2018-02-08 17:03:45,362 handle server PID [15885] running on ('0.0.0.0', 44818)
+2018-02-08 17:03:45,362 handle server PID [15885] responding to external done/disable signal in object 139804288611600
+2018-02-08 17:03:48,228 New snmp session from 127.0.0.1 (ddf31f23-74cb-4c7d-bc1e-bd4fb4ffa94b)
+2018-02-08 17:03:48,229 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1 
+2018-02-08 17:03:48,229 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.1.0 Siemens, SIMATIC, S7-200
+2018-02-08 17:03:48,300 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.1.0 
+2018-02-08 17:03:48,301 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.2.0 1.3.6.1.4.1.20408
+2018-02-08 17:03:48,341 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.2.0 
+2018-02-08 17:03:48,341 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.3.0 4
+2018-02-08 17:03:48,415 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.3.0 
+2018-02-08 17:03:48,415 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.4.0 Siemens AG
+2018-02-08 17:03:48,474 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.4.0 
+2018-02-08 17:03:48,475 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.5.0 CP 443-1 EX40
+2018-02-08 17:03:48,534 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.5.0 
+2018-02-08 17:03:48,534 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.6.0 Venus
+2018-02-08 17:03:48,614 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.6.0 
+2018-02-08 17:03:48,615 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.7.0 72
+2018-02-08 17:03:48,671 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.7.0 
+2018-02-08 17:03:48,672 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.1.8.0 0
+2018-02-08 17:03:48,695 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.1.8.0 
+2018-02-08 17:03:48,696 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.1.0 9
+2018-02-08 17:03:48,792 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.1.0 
+2018-02-08 17:03:48,792 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.2.0 0
+2018-02-08 17:03:48,802 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.2.0 
+2018-02-08 17:03:48,804 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.3.0 0
+2018-02-08 17:03:48,905 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.3.0 
+2018-02-08 17:03:48,905 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.4.0 0
+2018-02-08 17:03:48,943 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.4.0 
+2018-02-08 17:03:48,944 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.5.0 0
+2018-02-08 17:03:49,013 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.5.0 
+2018-02-08 17:03:49,013 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.6.0 0
+2018-02-08 17:03:49,054 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.6.0 
+2018-02-08 17:03:49,055 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.8.0 0
+2018-02-08 17:03:49,076 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.8.0 
+2018-02-08 17:03:49,077 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.9.0 0
+2018-02-08 17:03:49,166 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.9.0 
+2018-02-08 17:03:49,167 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.10.0 0
+2018-02-08 17:03:49,215 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.10.0 
+2018-02-08 17:03:49,216 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.11.0 0
+2018-02-08 17:03:49,234 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.11.0 
+2018-02-08 17:03:49,235 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.12.0 0
+2018-02-08 17:03:49,253 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.12.0 
+2018-02-08 17:03:49,254 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.13.0 0
+2018-02-08 17:03:49,289 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.13.0 
+2018-02-08 17:03:49,290 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.14.0 0
+2018-02-08 17:03:49,340 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.14.0 
+2018-02-08 17:03:49,341 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.15.0 0
+2018-02-08 17:03:49,426 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.15.0 
+2018-02-08 17:03:49,427 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.16.0 0
+2018-02-08 17:03:49,498 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.16.0 
+2018-02-08 17:03:49,498 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.17.0 0
+2018-02-08 17:03:49,564 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.17.0 
+2018-02-08 17:03:49,565 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.18.0 0
+2018-02-08 17:03:49,668 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.18.0 
+2018-02-08 17:03:49,669 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.19.0 0
+2018-02-08 17:03:49,768 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.19.0 
+2018-02-08 17:03:49,769 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.20.0 0
+2018-02-08 17:03:49,805 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.20.0 
+2018-02-08 17:03:49,805 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.21.0 0
+2018-02-08 17:03:49,858 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.21.0 
+2018-02-08 17:03:49,859 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.22.0 0
+2018-02-08 17:03:49,891 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.22.0 
+2018-02-08 17:03:49,892 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.24.0 0
+2018-02-08 17:03:49,974 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.24.0 
+2018-02-08 17:03:49,975 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.27.0 0
+2018-02-08 17:03:50,040 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.27.0 
+2018-02-08 17:03:50,041 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.28.0 0
+2018-02-08 17:03:50,090 Privileges dropped, running as "nobody:nogroup"
+2018-02-08 17:03:50,126 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.28.0 
+2018-02-08 17:03:50,127 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.29.0 0
+2018-02-08 17:03:50,231 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.29.0 
+2018-02-08 17:03:50,232 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.30.0 1
+2018-02-08 17:03:50,242 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.30.0 
+2018-02-08 17:03:50,243 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.31.0 0
+2018-02-08 17:03:50,340 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.31.0 
+2018-02-08 17:03:50,341 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.32.0 0
+2018-02-08 17:03:50,539 SNMPv1 GetNext request from ('127.0.0.1', 57563): 1.3.6.1.2.1.11.32.0 
+2018-02-08 17:03:50,540 SNMPv1 GetNext response to ('127.0.0.1', 57563): 1.3.6.1.2.1.11.32.0 
+2018-02-08 17:03:58,831 New modbus session from 127.0.0.1 (f6c12f4a-bcfb-467a-8b34-c92f5261e8cc)
+2018-02-08 17:03:58,831 New Modbus connection from 127.0.0.1:43256. (f6c12f4a-bcfb-467a-8b34-c92f5261e8cc)
+2018-02-08 17:04:15,869 Stopping Conpot
+2018-02-08 17:04:15,870 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-11 23:25:00,213 --force option specified. Using testing configuration:
+2018-02-11 23:25:00,270 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-11 23:25:00,271 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-11 23:25:01,498 Fetched 59.178.37.169 as external ip.
+2018-02-11 23:25:01,570 Conpot modbus initialized
+2018-02-11 23:25:01,571 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-11 23:25:01,607 Conpot S7Comm initialized
+2018-02-11 23:25:01,607 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-11 23:25:01,622 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-11 23:25:01,638 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-11 23:25:01,642 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-11 23:25:01,643 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-11 23:25:01,652 IPMI BMC initialized.
+2018-02-11 23:25:01,652 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-11 23:25:01,653 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-11 23:25:01,671 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:25:01,672 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-11 23:25:01,672 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:25:01,673 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-11 23:25:01,674 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-11 23:25:01,674 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:25:01,675 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-11 23:25:01,716 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-11 23:25:01,716 Modbus server started on: ('0.0.0.0', 502)
+2018-02-11 23:25:01,717 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-11 23:25:01,718 HTTP server started on: ('0.0.0.0', 80)
+2018-02-11 23:25:02,108 SNMP server started on: ('0.0.0.0', 161)
+2018-02-11 23:25:02,110 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-11 23:25:02,110 IPMI server started on: ('0.0.0.0', 623)
+2018-02-11 23:25:02,110 handle server PID [28968] running on ('0.0.0.0', 44818)
+2018-02-11 23:25:02,111 handle server PID [28968] responding to external done/disable signal in object 139962423051536
+2018-02-11 23:25:06,718 Privileges dropped, running as "nobody:nogroup"
+2018-02-11 23:27:58,559 New modbus session from 127.0.0.1 (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:27:58,560 New Modbus connection from 127.0.0.1:54762. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:27:58,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:27:58,562 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000100000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:27:58,562 Modbus response sent to 127.0.0.1
+2018-02-11 23:27:59,560 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:27:59,560 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000200000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:27:59,561 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:00,560 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:00,561 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000300000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:00,561 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:01,560 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:01,561 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000400000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:01,561 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:02,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:02,561 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000500000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:02,562 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:03,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:03,562 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000600000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:03,562 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:04,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:04,562 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000700000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:04,562 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:05,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:05,562 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000800000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:05,562 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:06,561 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:06,562 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000900000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:06,563 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:07,562 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:07,563 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000a00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:07,563 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:08,562 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:08,563 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000b00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:08,564 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:09,562 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:09,564 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000c00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:09,564 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:10,562 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:10,563 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000d00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:10,564 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:11,563 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:11,563 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000e00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:11,564 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:12,563 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:12,564 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000f00000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:12,564 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:13,563 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:13,564 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '001000000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:13,565 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:14,563 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:28:14,564 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '001100000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:28:14,565 Modbus response sent to 127.0.0.1
+2018-02-11 23:28:15,264 Modbus client disconnected. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:05,146 New Modbus connection from 127.0.0.1:54802. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:05,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:29:05,148 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000100000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:05,148 Modbus response sent to 127.0.0.1
+2018-02-11 23:29:06,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:29:06,147 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000200000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:06,148 Modbus response sent to 127.0.0.1
+2018-02-11 23:29:07,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:29:07,147 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000300000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:07,148 Modbus response sent to 127.0.0.1
+2018-02-11 23:29:08,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:29:08,148 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000400000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:08,149 Modbus response sent to 127.0.0.1
+2018-02-11 23:29:09,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:29:09,148 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000500000006010227100001', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:29:09,149 Modbus response sent to 127.0.0.1
+2018-02-11 23:29:09,335 Modbus client disconnected. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:32:32,756 New Modbus connection from 127.0.0.1:54912. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:32:32,757 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:32:32,758 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000100000006010227100020', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:32:32,758 Modbus response sent to 127.0.0.1
+2018-02-11 23:32:33,757 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:32:33,757 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000200000006010227100020', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:32:33,758 Modbus response sent to 127.0.0.1
+2018-02-11 23:32:34,757 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:32:34,757 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000300000006010227100020', 'response': '8202'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:32:34,758 Modbus response sent to 127.0.0.1
+2018-02-11 23:32:35,405 Modbus client disconnected. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:33:58,254 New Modbus connection from 127.0.0.1:54966. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:34:03,256 Exception occurred in ModbusServer.handle() at sock.recv(): timed out
+2018-02-11 23:34:03,257 Modbus client disconnected. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:35:24,617 New Modbus connection from 127.0.0.1:55008. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:35:26,874 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:35:26,874 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 2, 'request': '000100000006020100010001', 'response': '8102'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:35:26,875 Modbus response sent to 127.0.0.1
+2018-02-11 23:35:31,556 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010100010001', 'response': '010101'} (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:35:31,556 Modbus response sent to 127.0.0.1
+2018-02-11 23:35:36,557 Exception occurred in ModbusServer.handle() at sock.recv(): timed out
+2018-02-11 23:35:36,558 Modbus client disconnected. (7a1d77bd-0ffa-4c01-98af-449669cb8a11)
+2018-02-11 23:35:47,378 Stopping Conpot
+2018-02-11 23:35:47,378 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-11 23:35:50,516 --force option specified. Using testing configuration:
+2018-02-11 23:35:50,518 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-11 23:35:50,519 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-11 23:35:55,592 Fetched 59.178.37.169 as external ip.
+2018-02-11 23:35:55,600 Conpot modbus initialized
+2018-02-11 23:35:55,601 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-11 23:35:55,604 Conpot S7Comm initialized
+2018-02-11 23:35:55,604 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-11 23:35:55,607 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-11 23:35:55,608 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-11 23:35:55,611 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-11 23:35:55,611 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-11 23:35:55,613 IPMI BMC initialized.
+2018-02-11 23:35:55,614 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-11 23:35:55,614 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-11 23:35:55,617 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:35:55,617 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-11 23:35:55,618 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:35:55,619 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-11 23:35:55,619 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-11 23:35:55,619 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-11 23:35:55,620 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-11 23:35:55,620 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-11 23:35:55,621 Modbus server started on: ('0.0.0.0', 502)
+2018-02-11 23:35:55,621 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-11 23:35:55,622 HTTP server started on: ('0.0.0.0', 80)
+2018-02-11 23:35:55,858 SNMP server started on: ('0.0.0.0', 161)
+2018-02-11 23:35:55,860 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-11 23:35:55,861 IPMI server started on: ('0.0.0.0', 623)
+2018-02-11 23:35:55,861 handle server PID [29545] running on ('0.0.0.0', 44818)
+2018-02-11 23:35:55,862 handle server PID [29545] responding to external done/disable signal in object 140302117262608
+2018-02-11 23:36:00,623 Privileges dropped, running as "nobody:nogroup"
+2018-02-11 23:36:23,498 New modbus session from 127.0.0.1 (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:23,499 New Modbus connection from 127.0.0.1:55032. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:23,500 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:23,501 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:23,502 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:24,500 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:24,501 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:24,502 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:24,787 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:27,700 New Modbus connection from 127.0.0.1:55042. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:27,701 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:27,702 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:27,702 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:28,701 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:28,701 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:28,702 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:29,701 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:29,702 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000300000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:29,702 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:30,365 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:46,221 New Modbus connection from 127.0.0.1:55052. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:46,222 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:46,222 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:46,223 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:47,222 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:36:47,222 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010100000001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:36:47,223 Modbus response sent to 127.0.0.1
+2018-02-11 23:36:47,447 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:37:28,194 New Modbus connection from 127.0.0.1:55074. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:37:30,948 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:37:30,949 Modbus traffic from 127.0.0.1: {'function_code': 3, 'slave_id': 1, 'request': '000100000006010327110001', 'response': '8302'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:37:30,949 Modbus response sent to 127.0.0.1
+2018-02-11 23:37:35,950 Exception occurred in ModbusServer.handle() at sock.recv(): timed out
+2018-02-11 23:37:35,951 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:39:21,509 New Modbus connection from 127.0.0.1:55124. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:39:23,037 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:39:23,038 Modbus response sent to 127.0.0.1
+2018-02-11 23:39:28,039 Exception occurred in ModbusServer.handle() at sock.recv(): timed out
+2018-02-11 23:39:28,040 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:01,817 New Modbus connection from 127.0.0.1:55142. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:03,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:03,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:04,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:04,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:05,369 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000300000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:05,370 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:06,369 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000400000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:06,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:07,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000500000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:07,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:08,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000600000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:08,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:09,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000700000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:09,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:10,369 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000800000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:10,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:11,369 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000900000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:11,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:12,369 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000a00000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:12,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:13,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000b00000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:13,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:14,368 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000c00000006010100010001', 'response': '010101'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:14,369 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:17,689 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:24,312 New Modbus connection from 127.0.0.1:55156. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:25,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000100000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:25,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:26,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000200000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:26,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:27,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000300000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:27,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:28,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000400000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:28,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:29,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000500000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:29,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:30,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000600000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:30,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:31,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000700000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:31,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:32,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000800000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:32,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:33,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000900000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:33,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:34,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000a00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:34,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:35,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000b00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:35,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:36,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000c00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:36,803 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:37,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000d00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:37,803 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:38,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000e00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:38,803 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:39,802 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '000f00000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:39,803 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:40,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '001000000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:40,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:41,803 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '001100000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:41,803 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:42,801 Modbus traffic from 127.0.0.1: {'function_code': 2, 'slave_id': 1, 'request': '001200000006010227110001', 'response': '020100'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:40:42,802 Modbus response sent to 127.0.0.1
+2018-02-11 23:40:47,803 Exception occurred in ModbusServer.handle() at sock.recv(): timed out
+2018-02-11 23:40:47,804 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,159 New Modbus connection from 127.0.0.1:55224. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,160 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,160 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,161 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,169 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,170 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,171 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,179 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,180 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,181 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,190 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,191 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,192 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,200 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,200 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,201 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,210 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,211 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,211 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,220 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,221 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,222 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,231 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,233 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,235 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,240 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,241 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,241 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,251 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,251 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,252 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,261 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,261 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,262 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,271 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,271 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,272 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,281 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,282 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,283 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,292 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,292 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,293 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,301 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,302 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '000f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,302 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,312 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,313 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,314 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,322 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,322 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,323 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,332 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,333 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,333 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,342 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,343 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,343 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,352 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,354 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,354 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,362 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,363 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,363 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,373 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,374 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,376 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,383 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,385 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,386 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,393 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,393 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,394 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,403 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,404 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,405 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,413 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,415 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,416 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,423 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,424 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,424 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,433 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,434 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,435 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,444 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,445 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,446 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,453 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,454 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,455 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,464 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,464 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '001f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,465 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,474 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,476 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,477 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,484 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,485 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,485 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,494 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,495 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,495 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,505 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,505 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,506 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,514 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,515 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,515 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,525 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,525 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,526 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,535 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,536 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,537 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,545 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,546 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,546 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,555 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,556 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,556 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,565 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,566 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,567 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,575 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,576 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,576 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,588 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,589 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,590 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,596 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,597 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,598 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,606 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,607 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,607 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,617 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,617 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,618 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,627 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,627 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '002f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,629 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,637 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,638 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,639 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,647 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,649 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,650 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,657 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,658 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,660 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,667 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,668 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,669 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,677 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,678 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,678 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,688 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,689 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,690 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,698 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,699 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,699 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,708 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,709 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,709 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,718 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,719 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,720 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,729 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,729 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,730 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,738 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,739 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,740 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,749 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,750 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,751 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,759 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,760 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,760 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,769 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,770 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,770 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,779 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,780 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,781 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,790 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,790 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '003f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,791 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,800 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,801 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,801 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,810 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,811 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,811 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,821 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,821 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,822 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,831 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,832 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,832 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,841 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,842 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,843 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,852 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,852 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,853 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,862 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,862 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,863 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,872 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,872 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,873 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,882 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,883 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,886 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,892 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,893 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,893 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,902 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,903 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,903 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,913 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,914 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,914 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,923 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,923 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,924 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,933 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,933 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,934 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,943 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,944 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,946 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,953 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,953 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '004f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,954 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,963 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,964 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,964 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,974 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,974 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,975 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,984 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,985 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,985 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:05,994 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:05,995 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:05,995 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,005 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,006 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,007 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,014 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,015 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,015 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,025 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,026 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,027 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,035 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,036 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,038 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,045 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,045 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,046 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,055 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,056 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,056 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,065 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,066 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,067 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,075 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,076 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,077 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,086 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,086 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,087 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,096 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,097 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,098 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,106 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,106 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,107 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,117 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,118 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '005f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,119 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,127 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,128 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,129 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,136 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,137 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,137 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,147 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,147 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,148 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,157 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,158 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,159 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,167 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,168 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,168 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,177 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,178 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,178 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,187 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,188 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,188 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,199 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,199 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,199 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,207 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,209 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,210 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,217 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,218 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,218 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,228 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,228 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,229 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,238 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,239 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,239 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,248 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,249 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,250 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,258 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,259 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,259 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,268 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,269 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,269 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,278 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,280 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '006f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,281 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,288 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,289 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,289 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,299 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,299 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,300 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,309 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,311 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,312 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,319 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,320 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,320 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,329 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,330 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,330 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,339 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,341 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,341 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,349 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,350 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,350 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,360 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,360 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,361 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,370 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,371 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,371 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,380 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,380 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,381 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,390 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,390 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,391 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,400 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,401 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,402 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,410 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,411 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,411 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,420 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,421 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,422 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,431 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,432 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,433 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,441 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,441 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '007f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,442 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,451 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,452 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,452 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,461 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,462 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,463 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,471 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,473 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,474 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,481 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,482 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,482 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,492 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,493 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,493 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,505 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,505 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,506 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,512 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,517 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,518 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,523 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,523 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,523 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,532 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,534 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,534 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,543 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,544 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,545 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,553 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,554 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,554 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,564 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,564 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,565 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,573 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,574 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,575 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,584 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,584 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,585 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,593 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,594 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,594 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,604 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,604 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '008f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,605 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,614 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,615 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,616 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,624 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,625 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,626 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,634 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,635 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,635 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,645 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,646 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,646 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,657 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,657 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,658 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,665 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,666 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,668 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,675 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,676 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,676 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,685 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,686 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,686 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,695 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,696 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,697 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,706 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,708 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,708 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,716 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,716 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009a00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,717 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,726 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,726 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009b00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,727 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,736 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,738 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009c00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,738 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,746 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,747 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009d00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,747 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,756 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,757 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009e00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,758 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,767 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,769 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '009f00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,769 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,777 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,777 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,778 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,787 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,787 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,788 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,797 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,800 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,800 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,807 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,808 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,808 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,818 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,819 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,819 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,828 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,828 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,829 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,837 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,841 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,842 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,848 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,849 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,850 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,858 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,859 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,860 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,868 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,868 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00a900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,869 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,878 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,879 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00aa00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,879 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,889 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,889 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00ab00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,890 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,898 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,899 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00ac00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,899 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,909 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,909 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00ad00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,910 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,919 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,920 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00ae00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,922 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,929 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,932 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00af00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,933 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,939 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,941 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,942 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,949 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,951 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,952 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,959 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,962 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,962 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,970 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,971 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,973 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,980 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,981 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b400000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,983 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:06,990 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:06,993 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b500000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:06,994 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,000 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,001 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b600000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,001 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,011 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,012 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b700000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,013 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,020 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,021 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b800000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,021 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,031 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,032 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00b900000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,033 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,041 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,042 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00ba00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,043 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,051 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,053 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00bb00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,054 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,061 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,062 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00bc00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,062 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,072 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,072 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00bd00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,073 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,081 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,082 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00be00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,082 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,091 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,092 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00bf00000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,092 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,101 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,103 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00c000000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,103 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,111 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,112 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00c100000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,112 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,122 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,122 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00c200000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,123 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,132 Exception caught: Modbus Error: Exception code = 2. (A proper response will be sent to the peer)
+2018-02-11 23:42:07,133 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00c300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-11 23:42:07,134 Modbus response sent to 127.0.0.1
+2018-02-11 23:42:07,136 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
