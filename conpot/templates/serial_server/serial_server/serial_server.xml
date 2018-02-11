@@ -1,0 +1,10 @@
+<serial_server enabled="True">
+    <server name="Arduino Modbus RTU slave device" host="0.0.0.0" port="650">
+        <serial_port>/dev/ttyACM0</serial_port>
+        <baud_rate>9600</baud_rate>
+        <data_bits>8</data_bits>
+        <stop_bits>1</stop_bits>
+        <parity>none</parity>
+        <decoder>conpot.protocols.misc.modbus_rtu.ModbusRtuDecoder</decoder>
+    </server>
+</serial_server>
