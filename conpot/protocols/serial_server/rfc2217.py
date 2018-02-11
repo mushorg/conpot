@@ -19,6 +19,8 @@
 import gevent
 from gevent import monkey
 gevent.monkey.patch_all()
+from gevent import select
+# gevent.monkey.patch_select()
 
 import socket
 import os
@@ -26,10 +28,10 @@ import select
 
 import sys
 import time
-import threading
 import serial
-import serial.rfc2217
-
+# import serial.rfc2217
+# RFC 2217 specifies that a serial server should connect
+# one
 import logging
 from lxml import etree
 
@@ -44,7 +46,7 @@ class SerialServer:
     """
     Some description - Serial to Ethernet converter
     """
-    def __init__(self, config):
+    def __init__(self, config, timeout=5):
 
         # Get the slave settings from template
         self.name = config.xpath('@name')[0]
@@ -57,9 +59,7 @@ class SerialServer:
         self.width = int(config.xpath('data_bits/text()')[0])
         self.parity = config.xpath('parity/text()')[0]
         self.stopbits = int(config.xpath('stop_bits/text()')[0]) #serial.STOPBITS_ONE
-
         self.timeout = 0
-
         self.xonxoff = int(config.xpath('xonxoff/text()')[0])
         self.rts = int(config.xpath('rtscts/text()')[0])
 
@@ -67,11 +67,13 @@ class SerialServer:
         # self.READ_ONLY = select.POLLIN | select.POLLPRI
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.settimeout(timeout)
 
-        self.poller = select.poll()
+        self.poller = gevent.select.poll()
         self.fd_to_socket = {}
         self.clients = []
-        self.rfc2217 = None     # Initialize later
+        # self.rfc2217 = None   # Initialize later
 
     def start(self):
         """
@@ -83,7 +85,7 @@ class SerialServer:
             # Flush the input and output
             self.tty.flushInput()
             self.tty.flushOutput()
-            # self.tty.timeout = 0 # Non-blocking
+
             # connect the terminal with control lines
             # self.tty.dtr = Ture
             # self.tty.rts = Ture
@@ -104,7 +106,7 @@ class SerialServer:
                 self.handle()
 
         except serial.SerialException as e:
-            logging.debug("Unable to connect to serial device. Please check your config. {0}".format(e))
+            logging.debug("Unable to connect to serial device. Please check your serial connection config. {0}".format(e))
             sys.exit(1)
         except socket.error as e:
             logging.debug("Socket Error: {0}".format(e))
@@ -118,13 +120,13 @@ class SerialServer:
         """
         logging.info("Stopping the serial-server {0}:{1}".format(self.host, self.port))
         for client in self.clients:
-            logging.debug("Closing connection to client: {0}".format(client.getpeername()))
             client.close()
         logging.info("Closing the serial connection for {0} on {1}".format(self.name, self.device))
         self.tty.close()
         self.server.close()
 
     def add_client(self, client):
+        logging.info("The fd is : {0}".format(self.fd_to_socket))
         logging.info("New Connection from {0}".format(client.getpeername()))
         client.setblocking(0)   # why?
         # Add the client to a dictionary of file descriptors
@@ -147,7 +149,7 @@ class SerialServer:
 
     def handle(self):
         # Trying to IO multiplex things here.
-        events = self.poller.poll(5) # poll timeout is 500
+        events = self.poller.poll(5) # poll timeout is 5
         for fd, flag in events:
             # Get the socket from the fd dict
             s = self.fd_to_socket[fd]
@@ -165,7 +167,6 @@ class SerialServer:
                 # serial port is readable; Read data from serial port
                 elif s is self.tty:
                     data = s.read(1024)
-                    # logging.info(serial.to_bytes(self.rfc2217.escape(data)))
                     for client in self.clients:
                         client.send(data)
                 # Need to fetch data from client instead!
@@ -175,48 +176,15 @@ class SerialServer:
                     # check if client has data
                     if data:
                         # write to serial device
-                        self.tty.write(data)
+                        try:
+                            self.tty.write(data)
+                        except serial.SerialTimeoutException as e:
+                            logging.info("Serial Timeout Reached".format(e))
                     else:
                         # No data supplied
                         # Interpret empty result as closed connection - close the connection
                         self.remove_client(s, 'Got no data')
 
-
-# if __name__ == '__main__':
-
-    # srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # handler
-    # while True:
-    #     try:
-    #         client_socket, addr = srv.accept()
-    #         logging.info('Connected by {}:{}'.format(addr[0], addr[1]))
-    #         client_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-    #         ser.rts = True
-    #         ser.dtr = True
-    #         # enter network <-> serial loop
-    #         r = Redirector(
-    #             ser,
-    #             client_socket,
-    #             args.verbosity > 0)
-    #         try:
-    #             r.shortcircuit()
-    #         finally:
-    #             logging.info('Disconnected')
-    #             r.stop()
-    #             client_socket.close()
-    #             ser.dtr = False
-    #             ser.rts = False
-    #             # Restore port settings (may have been changed by RFC 2217
-    #             # capable client)
-    #             ser.apply_settings(settings)
-    #     except KeyboardInterrupt:
-    #         sys.stdout.write('\n')
-    #         break
-    #     except socket.error as msg:
-    #         logging.error(str(msg))
-
-    # logging.info('--- exit ---')
 
 # For debugging
 if __name__ == '__main__':
