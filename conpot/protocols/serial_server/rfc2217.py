@@ -18,20 +18,17 @@
 
 import gevent
 from gevent import monkey
-gevent.monkey.patch_all()
-from gevent import select
-# gevent.monkey.patch_select()
 
 import socket
 import os
 import select
-
 import sys
 import time
 import serial
+
+gevent.monkey.patch_all()
 # import serial.rfc2217
-# RFC 2217 specifies that a serial server should connect
-# one
+
 import logging
 from lxml import etree
 
@@ -41,6 +38,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 _READ_ONLY = select.POLLIN # select.POLLPRI not supported by gevent
+
 
 class SerialServer:
     """
@@ -59,7 +57,7 @@ class SerialServer:
         self.width = int(config.xpath('data_bits/text()')[0])
         self.parity = config.xpath('parity/text()')[0]
         self.stopbits = int(config.xpath('stop_bits/text()')[0]) #serial.STOPBITS_ONE
-        self.timeout = 0
+        self.timeout = timeout
         self.xonxoff = int(config.xpath('xonxoff/text()')[0])
         self.rts = int(config.xpath('rtscts/text()')[0])
 
@@ -68,7 +66,7 @@ class SerialServer:
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.settimeout(timeout)
+        self.server.settimeout(self.timeout)
 
         self.poller = gevent.select.poll()
         self.fd_to_socket = {}
@@ -181,6 +179,7 @@ class SerialServer:
                         except serial.SerialTimeoutException as e:
                             logging.info("Serial Timeout Reached".format(e))
                     else:
+                        logging.info("s is {0}".format(s))
                         # No data supplied
                         # Interpret empty result as closed connection - close the connection
                         self.remove_client(s, 'Got no data')
