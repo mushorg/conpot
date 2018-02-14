@@ -16,14 +16,13 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
-from gevent import monkey
+# import gevent
+# from gevent import monkey
 
 import socket
 import os
 import select
 import sys
-import time
 import serial
 
 # gevent.monkey.patch_all() # unstable behaviour -- recheck
@@ -83,6 +82,7 @@ class SerialServer:
         self.xon = int(config.xpath('xonxoff/text()')[0])
         self.rts = int(config.xpath('rtscts/text()')[0])
         self.time_out = 0  # serial connection read timeout
+        self.serial_id = self.name.lower().replace(' ', '_')
         if decoder:
             namespace, _classname = self.decoder.rsplit('.', 1)
             module = __import__(namespace, fromlist=[_classname])
@@ -133,21 +133,23 @@ class SerialServer:
         finally:
             self.stop()
 
-    def _add_client(self, sock, address):
+    def _add_client(self, sock, address, session):
         """Add/configure a connected client socket"""
         sock.setblocking(False)  # force socket.timeout in worst case
         self.sockets[sock.fileno()] = sock  # Add client to the dictionary
         self.addresses[sock] = address  # store the address of client
+        session.add_event({'type': 'NEW_CONNECTION'})
         self.poller.register(sock, select.POLLIN)
 
-    def _remove_client(self, sock, reason='unknown'):
+    def _remove_client(self, sock, session, reason='unknown'):
         """Remove a connected client"""
         conn = self.addresses.pop(sock, None)
         logger.info("Disconnecting client {} : {} on {}".format(conn, reason, self.name))
+        session.add_event({'type': 'CONNECTION_TERMINATED'})
         self.poller.unregister(sock)
         sock.close()
 
-    def _build_request(self, sock, raw_data):
+    def _build_request(self, sock, raw_data, session):
         # build request for nice request/response logs
         # having and adding to buffers only required when we need request/response logs
         if self.decoder:
@@ -158,8 +160,9 @@ class SerialServer:
             logger.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
         else:
             logger.info('Received data from client: {0} - {1}'.format(self.addresses[sock], raw_data.encode('string-escape')))
+            session.add_event({'raw_request': raw_data.encode('string-escape'), 'raw_response': ''})
 
-    def _build_response(self, sock, raw_data):
+    def _build_response(self, sock, raw_data, session):
         # build response for nice request/response logs
         # having and adding to buffers only required when we need request/response logs
         if self.decoder:
@@ -170,16 +173,19 @@ class SerialServer:
             logger.debug('Response data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
         else:
             logger.info('Response data from serial device: {0} - {1}'.format(self.device, raw_data.encode('string-escape')))
+            session.add_event({'raw_request': '', 'raw_response': raw_data.encode('string-escape')})
 
-    def _parse_request_response(self, client_sock):
+    def _parse_request_response(self, client_sock, session):
         """Function that checks whether the packet in buffers is valid, logs request and response"""
         if self.decoder:
             try:
                 if self.decoder.validate_crc(self.bytes_received[client_sock]) and \
                         self.decoder.validate_crc(self.bytes_to_send[self.tty]):
-                    logger.info('Traffic on serial device - request: {0},\n response: {1} on serial server {2}'.
-                                 format(self.decoder.decode(self.bytes_received.pop(client_sock, b'')),
-                                        self.decoder.decode(self.bytes_to_send.pop(self.tty, b'')), self.name))
+                    rb = self.decoder.decode(self.bytes_received.pop(client_sock, b''))
+                    sb = self.decoder.decode(self.bytes_to_send.pop(self.tty, b''))
+                    logger.info('Traffic on serial device - request: {0},\n response: {1} on serial server {2}'.format(
+                        rb, sb, self.name))
+                    session.add_event({'request': rb, 'response': sb})
             except Exception as decoder_exp:
                 logger.debug("On serial server {1} - error occurred while decoding: {0}".format(decoder_exp, self.name))
 
@@ -190,6 +196,7 @@ class SerialServer:
 
     def handle(self):
         """Handle connections and manage the poll."""
+        session = None
         for fd, event in self._all_events():
             sock = self.sockets[fd]
             # Socket closed: remove from the DS
@@ -199,8 +206,10 @@ class SerialServer:
                 sb = self.bytes_to_send.pop(sock, b'')
                 if rb:
                     logger.info('On serial server {} - {} Client sent {} but then closed'.format(address, rb, self.name))
+                    session.add_event({'type': 'CONNECTION_QUIT'})
                 elif sb:
                     logger.info('On serial server {} - {} Client closed before we sent {}'.format(address, sb, self.name))
+                    session.add_event({'type': 'CONNECTION_LOST'})
                 else:
                     logger.info('On serial server {} - {} Client closed socket normally'.format(address, self.name))
                 self.poller.unregister(fd)
@@ -211,8 +220,10 @@ class SerialServer:
                 # New Socket: A new client has connected
                 if sock is self.listener:
                     sock, address = sock.accept()
-                    logger.info('New Connection from {0} on serial server {1}'.format(address, self.name))
-                    self._add_client(sock, address)
+                    session = conpot_core.get_session(self.serial_id, address[0], address[1])
+                    logger.info('New Connection from {0}:{1} on serial server {2}. ({3})'.
+                                format(address[0], address[1], self.serial_id, session.id))
+                    self._add_client(sock, address, session)
 
                 # check whether sock is client or serial device
                 elif sock is self.tty:
@@ -222,11 +233,10 @@ class SerialServer:
                         if not data:
                             raise serial.SerialException
                         else:
-                            self._build_response(sock, data)
+                            self._build_response(sock, data, session)
                             for client in self.addresses.keys():
                                 client.send(data)
-                                if self.decoder: self._parse_request_response(client)
-
+                                if self.decoder: self._parse_request_response(client, session)
                     except socket.timeout:
                         logger.error('Client Timed out on serial server {}'.format(self.name))
                     except socket.error:
@@ -239,15 +249,18 @@ class SerialServer:
                     # sock is a client sending in some data
                     data = sock.recv(80)
                     if not data:  # end of file
-                        self._remove_client(sock, 'Socket timeout - Got no data from client')
+                        # remove the client and close the databus session
+                        self._remove_client(sock, session, 'Socket timeout - Got no data from client')
                         # next poll() would be POLLNVAL, and thus cleanup
                         continue
                     else:
-                        self._build_request(sock, data)
+                        self._build_request(sock, data, session)
                         try:
                             self.tty.write(data)
                         except serial.SerialTimeoutException as stm:
                             logger.error("Serial Timeout Reached".format(stm))
+        # close the databus session
+        session.set_ended()
 
     def stop(self):
         """Stop the Serial Server"""
