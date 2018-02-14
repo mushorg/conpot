@@ -25,7 +25,7 @@ import sys
 import time
 import serial
 
-# gevent.monkey.patch_all() # crashes -- recheck
+# gevent.monkey.patch_all() # unstable behaviour -- recheck
 # import serial.rfc2217
 
 import logging
@@ -33,51 +33,50 @@ from lxml import etree
 
 logger = logging.getLogger(__name__)
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-
-# Some basic utility functions
-def _create_srv_socket(address, timeout=0):
-    """Build and return a listening server socket."""
-    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    listener.bind(address)
-    listener.listen(64)
-    listener.settimeout(timeout)
-    logging.info('Listening at {}'.format(address))
-    return listener
-
-
-def _all_events(poll_object):
-    while True:
-        for fd, event in poll_object.poll(500):  # wait 500 milliseconds before selecting
-            yield fd, event
+# import conpot.core as conpot_core
 
 
 class SerialServer:
     """
     Serial over IP Converter -- Not RFC2217 complaint.
     Allows connecting a serial device to *any* number of TCP clients
-    :param: XML template object having information regarding host, port, serial device etc.
+    :param: XML template object having information regarding host, port, serial device, baud rate etc.
     """
     def __init__(self, args):
         self._parse_template_obj(args)  # setup the config for a one serial device
         self._setup_tty()  # setup the serial device
-        self.listener = _create_srv_socket((self.host, self.port))
+        self.listener = None
+        self._create_srv_socket((self.host, self.port))
         self.sockets = {
             self.listener.fileno(): self.listener,
             self.tty.fileno(): self.tty
         }
 
-        self.addresses = {}
-        self.bytes_received = {}
-        self.bytes_to_send = {}
+        self.addresses = {}   # store the client sockets info
+        self.bytes_to_send = {}  # store data that is to be sent from serial device - for decoder
+        self.bytes_received = {}  # store data received from clients - for decoder
 
         # Setup the poller
-        self.poller = select.poll()  # gevent.select.poll() - Since we are monkey_patching
+        self.poller = select.poll()  # gevent.select.poll() - Since we are monkey_patching - unstable behaviour
         self.poller.register(self.listener, select.POLLIN)
         self.poller.register(self.tty, select.POLLIN)
-        # self.rfc2217 = None   # Initialize later
+        # self.rfc2217 = NotImplemented  # Initialize later
+
+    # Some basic utility functions
+    def _all_events(self):
+        while True:
+            for fd, event in self.poller.poll(500):  # wait 500 milliseconds before selecting
+                yield fd, event
+
+    def _create_srv_socket(self, address, timeout=5):
+        """Build and return a listening server socket."""
+        self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.listener.bind(address)
+        self.listener.listen(64)
+        self.listener.settimeout(timeout)
 
     def start(self):
         """
@@ -87,9 +86,9 @@ class SerialServer:
         try:
             self.handle()
         except socket.timeout as e:
-            logging.debug('Socket Timeout: {0}'.format(e))
+            logging.error('Socket Timeout: {0}'.format(e))
         except socket.error as e:
-            logging.debug('Socket Error: {0}'.format(e))
+            logging.error('Socket Error: {0}'.format(e))
         finally:
             self.stop()
 
@@ -105,11 +104,25 @@ class SerialServer:
         self.poller.unregister(sock)
         sock.close()
 
+    def _build_request(self, sock, raw_data):
+        if sock in self.bytes_received:
+            self.bytes_received[sock] += raw_data
+        else:
+            self.bytes_received[sock] = raw_data
+        logging.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
+
+    def _build_response(self, sock, raw_data):
+        if sock in self.bytes_to_send:
+            self.bytes_to_send[sock] += raw_data
+        else:
+            self.bytes_to_send[sock] = raw_data
+        logging.debug('Received data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
+
     def handle(self):
         """
         Handle and manage the poll.
         """
-        for fd, event in _all_events(self.poller):
+        for fd, event in self._all_events():
             sock = self.sockets[fd]
             # Socket closed: remove from the DS
             if event & (select.POLLHUP | select.POLLERR | select.POLLNVAL):
@@ -142,15 +155,20 @@ class SerialServer:
                         if not data:
                             raise serial.SerialException
                         else:
-                            logging.debug('Received data from serial device: {0} - {1}'.format(self.device, data))
+                            self._build_response(sock, data)
                             # TODO: Add decoder here
                             for client in self.addresses.keys():
                                 client.send(data)
+                    except socket.timeout:
+                        logging.error('Client Timed out')
                     except socket.error:
-                        logging.info('client socket error')
+                        logging.error('Socket error')
                     except Exception as some_other_exception:
-                        logging.info('Exception occurred while reading serial device: {0}'.format(some_other_exception))
-                        sys.exit(1)  # TODO: check correct error codes
+                        logging.error('Exception occurred while reading serial device: {0}'.format(some_other_exception))
+                        sys.exit(3)
+                    finally:
+                        logging.info ('Request: {0}, Response: {1}'.format (self.bytes_received.pop(sock, b''),
+                                                                            self.bytes_to_send.pop(self.tty, b'')))
 
                 else:
                     # sock is a client sending in some data
@@ -161,11 +179,15 @@ class SerialServer:
                         continue
                     else:
                         # TODO: Add decoder here
-                        logging.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], data))
+                        self._build_request(sock, data)
                         try:
                             self.tty.write(data)
-                        except serial.SerialTimeoutException as e:
-                            logging.info("Serial Timeout Reached".format(e))
+                        except serial.SerialTimeoutException as stm:
+                            logging.error("Serial Timeout Reached".format(stm))
+
+            else:
+                logging.info ('Request: {0}, Response: {1}'.format (self.bytes_received.pop (sock, b''),
+                                                                    self.bytes_to_send.pop (self.tty, b'')))
 
     def stop(self):
         """
@@ -192,30 +214,34 @@ class SerialServer:
         self.xon = int(config.xpath('xonxoff/text()')[0])
         self.rts = int(config.xpath('rtscts/text()')[0])
         self.time_out = 0  # serial connection read timeout
-
-        self.decoder = None    # TODO:Implement later
+        self.decoder = config.xpath('decoder/text()')[0]
+        # if self.decoder:
+        #     namespace, _classname = self.decoder.rsplit('.', 1)
+        #     module = __import__(namespace, fromlist=[_classname])
+        #     _class = getattr(module, _classname)
+        #     self.decoder = _class()
+        # else:
+        self.decoder = None
 
     def _setup_tty(self):
+        self.tty = serial.serial_for_url(self.device,
+                                         self.baud_rate,
+                                         self.width,
+                                         self.parity,
+                                         self.stop_bits,
+                                         self.time_out,
+                                         self.xon,
+                                         self.rts,
+                                         do_not_open=True)
         try:
-            self.tty = serial.serial_for_url(self.device,
-                                             self.baud_rate,
-                                             self.width,
-                                             self.parity,
-                                             self.stop_bits,
-                                             self.time_out,
-                                             self.xon,
-                                             self.rts)
-            if self.tty is not None:
-                logging.info("Connected to {0} device on serial port {1}".format(self.name, self.device))
-                # Flush the input and output
-                self.tty.flushInput()
-                self.tty.flushOutput()
-            else:
-                raise serial.SerialException("Unable to connect to serial device. Please check your serial connection "
-                                             "config.")
-        except Exception as e:
-            logging.debug("An exception occurred {0}".format(e))
-            sys.exit(1)
+            self.tty.open()
+            logging.info("Connected to {0} device on serial port {1}".format(self.name, self.device))
+        except serial.SerialException as e:
+            logging.error("Could not open serial port {}: {}".format(self.name, e))
+            sys.exit(3)
+        # Flush the input and output
+        self.tty.flushInput()
+        self.tty.flushOutput()
 
 
 # For debugging

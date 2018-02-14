@@ -1,4 +1,3 @@
-# Conpot's serial to Ethernet conversion.
 # Copyright (C) 2018  Abhinav Saxena <xandfury@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -26,7 +25,7 @@ import sys
 import time
 import serial
 
-gevent.monkey.patch_all()
+# gevent.monkey.patch_all() - crashes -- check
 # import serial.rfc2217
 
 import logging
@@ -110,7 +109,6 @@ class SerialServer:
             logging.debug("Socket Error: {0}".format(e))
         finally:
             self.stop()
-
 
     def stop(self):
         """
