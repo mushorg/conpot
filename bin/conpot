@@ -51,6 +51,7 @@ from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 from conpot.protocols.IEC104.IEC104_server import IEC104Server
 
 from conpot.emulators.proxy import Proxy
+from conpot.emulators.serial.serial_server import SerialServer
 from conpot.utils import ext_ip
 from conpot.utils import mac_addr
 
@@ -333,6 +334,31 @@ def main():
         log_worker = LogWorker(config, dom_base, session_manager, public_ip)
         greenlet = gevent.spawn(log_worker.start)
         greenlet.link_exception(on_unhandled_greenlet_exception)
+
+        # TODO: Make serial fit into protocol_instance_mapping
+        template_serial = os.path.join (root_template_directory, 'serial_server', 'serial_server', 'serial_server.xml')
+        if os.path.isfile (template_serial):
+            xsd_file = os.path.join (os.path.dirname (inspect.getfile (SerialServer)), 'serial_server.xsd')
+            validate_template (template_serial, xsd_file)
+            dom_proxy = etree.parse (template_serial)
+            if dom_proxy.xpath ('//serial_server'):
+                if ast.literal_eval (dom_proxy.xpath ('//serial_server/@enabled')[0]):
+                    servers = dom_proxy.xpath ('//serial_server/*')
+                    for s in servers:
+                        decoder = s.xpath ('./decoder/text()')
+                        if len (decoder) > 0:
+                            decoder = decoder[0]
+                        else:
+                            decoder = None
+                        serial_server_instance = SerialServer(s, decoder)
+                        serial_server = serial_server_instance.start()
+                        servers.append(serial_server_instance)
+                        serial_server_greenlet = gevent.spawn (serial_server.start)
+                        serial_server_greenlet.link_exception (on_unhandled_greenlet_exception)
+                else:
+                    logger.info ('Serial Server available but disabled by template.')
+        else:
+            logger.info ('No serial server template found. Service will remain unconfigured/stopped.')
 
         # TODO: Make proxy fit into protocol_instance_mapping
         template_proxy = os.path.join(root_template_directory, 'proxy', 'proxy.xml')
