@@ -1,13 +1,13 @@
 <serial_server enabled="True">
-    <server name="Arduino Modbus RTU slave device" host="0.0.0.0" port="6500">
-        <serial_port>/dev/ttyACM1</serial_port>
+    <server name="Arduino Modbus RTU Slave A" host="0.0.0.0" port="6500">
+        <serial_port>/dev/ttyACM1</serial_port>   <!-- Use COM port for windows -->
         <baud_rate>9600</baud_rate>
-        <data_bits>8</data_bits>    <!--also called the byte_size in some slaves -->
-        <parity>N</parity>
-        <stop_bits>1</stop_bits>
+        <data_bits>8</data_bits>    <!-- also called the byte_size. Possible options : (5, 6, 7, 8) -->
+        <parity>N</parity>          <!-- Possible options : ('N', 'E', 'O', 'M', 'S') WITHOUT QUOTES -->
+        <stop_bits>1</stop_bits>    <!-- Possible options : (1, 1.5, 2) -->
         <!--No timeout here-->
-        <xonxoff>0</xonxoff>
-        <rtscts>0</rtscts>
-        <decoder>conpot.protocols.misc.modbus_rtu.ModbusRtuDecoder</decoder>
+        <xonxoff>0</xonxoff>        <!-- If you don't know this setting, leave 0 -->
+        <rtscts>0</rtscts>          <!-- If you don't know this setting, leave 0 -->
+        <decoder>conpot.protocols.misc.modbus_rtu.ModbusRtuDecoder</decoder>     <!-- The decoder you want to use -->
     </server>
 </serial_server>

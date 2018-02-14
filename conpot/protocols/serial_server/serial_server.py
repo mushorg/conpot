@@ -1,4 +1,5 @@
 # Copyright (C) 2018  Abhinav Saxena <xandfury@gmail.com>
+# Institute of Informatics and Communication, University of Delhi, South Campus
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -33,7 +34,7 @@ from lxml import etree
 
 logger = logging.getLogger(__name__)
 
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 # import conpot.core as conpot_core
 
@@ -48,7 +49,8 @@ class SerialServer:
     :param: XML template object having information regarding host, port, serial device, baud rate etc.
     """
     def __init__(self, args, decoder=None):
-        self._parse_template_obj(args, decoder)  # setup the config for a one serial device
+        self._parse_template_obj(args, decoder)  # setup the config for one serial device per template object
+        # TODO: Figure out a better way to parse the template. Using a template object is probably not a good idea
         self._setup_tty()  # setup the serial device
         self.listener = None
         self._create_srv_socket((self.host, self.port))
@@ -67,29 +69,68 @@ class SerialServer:
         self.poller.register(self.tty, select.POLLIN)
         # self.rfc2217 = NotImplemented  # Initialize later
 
-    # Some basic utility functions
-    def _all_events(self):
-        while True:
-            for fd, event in self.poller.poll(500):  # wait 500 milliseconds before selecting
-                yield fd, event
+    def _parse_template_obj(self, config, decoder):
+        # Get the slave settings from template
+        self.name = config.xpath('@name')[0]
+        self.host = config.xpath('@host')[0]
+        self.port = int(config.xpath('@port')[0])
+        # Get the slave settings from template
+        self.device = config.xpath('serial_port/text()')[0]
+        self.baud_rate = int(config.xpath('baud_rate/text()')[0])
+        self.width = int(config.xpath('data_bits/text()')[0])
+        self.parity = config.xpath('parity/text()')[0]
+        self.stop_bits = int(config.xpath('stop_bits/text()')[0])
+        self.xon = int(config.xpath('xonxoff/text()')[0])
+        self.rts = int(config.xpath('rtscts/text()')[0])
+        self.time_out = 0  # serial connection read timeout
+        self.decoder = config.xpath('decoder/text()')[0]
+        if self.decoder:
+            namespace, _classname = self.decoder.rsplit('.', 1)
+            module = __import__(namespace, fromlist=[_classname])
+            _class = getattr(module, _classname)
+            self.decoder = _class()
+        else:
+            self.decoder = decoder
 
-    def _create_srv_socket(self, address, timeout=5):
+    def _setup_tty(self):
+        """Setup and connect to the serial device specified"""
+        self.tty = serial.serial_for_url(self.device,
+                                         self.baud_rate,
+                                         self.width,
+                                         self.parity,
+                                         self.stop_bits,
+                                         self.time_out,
+                                         self.xon,
+                                         self.rts,
+                                         do_not_open=True)
+        try:
+            self.tty.open()
+            logging.info("Connected to {0} device on serial port {1}".format(self.name, self.device))
+        except serial.SerialException as serial_exp:
+            logging.error("Could not open serial port {}: {}".format(self.name, serial_exp))
+            sys.exit(3)
+        # Flush input and output
+        self.tty.flushInput()
+        self.tty.flushOutput()
+
+    # Some basic utility functions
+    def _create_srv_socket(self, connection):
         """Build and return a listening server socket."""
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.listener.bind(address)
+        self.listener.bind(connection)
         self.listener.listen(64)
-        self.listener.settimeout(timeout)
+        # self.listener.settimeout(timeout)
 
     def start(self):
         """Start the Serial Server"""
         logging.info('Starting serial server at: {0}'.format(self.listener.getsockname()))
         try:
             self.handle()
-        except socket.timeout as e:
-            logging.error('Serial server socket timeout: {0}'.format(e))
-        except socket.error as e:
-            logging.error('Serial server socket error: {0}'.format(e))
+        except socket.timeout as timeout_exp:
+            logging.error('Serial server socket timeout: {0}'.format(timeout_exp))
+        except socket.error as socket_error_exp:
+            logging.error('Serial server socket error: {0}'.format(socket_error_exp))
         finally:
             self.stop()
 
@@ -103,34 +144,50 @@ class SerialServer:
     def _remove_client(self, sock, reason='unknown'):
         """Remove a connected client"""
         conn = self.addresses.pop(sock, None)
-        logging.info("Disconnecting client {} : {} on serial server {}".format(conn, reason, self.name))
+        logging.info("Disconnecting client {} : {} on {}".format(conn, reason, self.name))
         self.poller.unregister(sock)
         sock.close()
 
     def _build_request(self, sock, raw_data):
-        if sock in self.bytes_received:
-            self.bytes_received[sock] += raw_data
+        # build request for nice request/response logs
+        # having and adding to buffers only required when we need request/response logs
+        if self.decoder:
+            if sock in self.bytes_received:
+                self.bytes_received[sock] += raw_data
+            else:
+                self.bytes_received[sock] = raw_data
+            logging.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
         else:
-            self.bytes_received[sock] = raw_data
-        logging.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
+            logging.info('Received data from client: {0} - {1}'.format(self.addresses[sock], raw_data))
 
     def _build_response(self, sock, raw_data):
-        if sock in self.bytes_to_send:
-            self.bytes_to_send[sock] += raw_data
+        # build response for nice request/response logs
+        # having and adding to buffers only required when we need request/response logs
+        if self.decoder:
+            if sock in self.bytes_to_send:
+                self.bytes_to_send[sock] += raw_data
+            else:
+                self.bytes_to_send[sock] = raw_data
+            logging.debug('Received data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
         else:
-            self.bytes_to_send[sock] = raw_data
-        logging.debug('Received data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
+            logging.info('Received data from serial device: {0} - {1}'.format(self.device, raw_data))
 
     def _parse_request_response(self, client_sock):
-        """Function that checks whether the packet in buffers is valid"""
-        try:
-            if self.decoder.validate_crc(self.bytes_received[client_sock]) and \
-                    self.decoder.validate_crc(self.bytes_to_send[self.tty]):
-                logging.info('Traffic on serial device - request: {0},\n response: {1} on serial server {2}'.
-                             format(self.decoder.decode(self.bytes_received.pop(client_sock, b'')),
-                                    self.decoder.decode(self.bytes_to_send.pop(self.tty, b'')), self.name))
-        except Exception as e:
-            logging.debug("On serial server {1} - error occurred while decoding: {0}".format(e, self.name))
+        """Function that checks whether the packet in buffers is valid, logs request and response"""
+        if self.decoder:
+            try:
+                if self.decoder.validate_crc(self.bytes_received[client_sock]) and \
+                        self.decoder.validate_crc(self.bytes_to_send[self.tty]):
+                    logging.info('Traffic on serial device - request: {0},\n response: {1} on serial server {2}'.
+                                 format(self.decoder.decode(self.bytes_received.pop(client_sock, b'')),
+                                        self.decoder.decode(self.bytes_to_send.pop(self.tty, b'')), self.name))
+            except Exception as decoder_exp:
+                logging.debug("On serial server {1} - error occurred while decoding: {0}".format(decoder_exp, self.name))
+
+    def _all_events(self):
+        while True:
+            for fd, event in self.poller.poll(500):  # wait 500 milliseconds before selecting
+                yield fd, event
 
     def handle(self):
         """Handle connections and manage the poll."""
@@ -187,7 +244,6 @@ class SerialServer:
                         # next poll() would be POLLNVAL, and thus cleanup
                         continue
                     else:
-                        # TODO: Add decoder here
                         self._build_request(sock, data)
                         try:
                             self.tty.write(data)
@@ -202,50 +258,6 @@ class SerialServer:
         logging.info('Closing the serial connection for {0} on {1}'.format(self.name, self.device))
         self.tty.close()
         self.listener.close()
-
-    def _parse_template_obj(self, config, decoder):
-        # Get the slave settings from template
-        self.name = config.xpath('@name')[0]
-        self.host = config.xpath('@host')[0]
-        self.port = int(config.xpath('@port')[0])
-        # Get the slave settings from template
-        self.device = config.xpath('serial_port/text()')[0]
-        self.baud_rate = int(config.xpath('baud_rate/text()')[0])
-        self.width = int(config.xpath('data_bits/text()')[0])
-        self.parity = config.xpath('parity/text()')[0]
-        self.stop_bits = int(config.xpath('stop_bits/text()')[0])
-        self.xon = int(config.xpath('xonxoff/text()')[0])
-        self.rts = int(config.xpath('rtscts/text()')[0])
-        self.time_out = 0  # serial connection read timeout
-        self.decoder = config.xpath('decoder/text()')[0]
-        # if self.decoder:
-        #     namespace, _classname = self.decoder.rsplit('.', 1)
-        #     module = __import__(namespace, fromlist=[_classname])
-        #     _class = getattr(module, _classname)
-        #     self.decoder = _class()
-        # else:
-        self.decoder = decoder
-
-    def _setup_tty(self):
-        """Setup and connect to the serial device specified"""
-        self.tty = serial.serial_for_url(self.device,
-                                         self.baud_rate,
-                                         self.width,
-                                         self.parity,
-                                         self.stop_bits,
-                                         self.time_out,
-                                         self.xon,
-                                         self.rts,
-                                         do_not_open=True)
-        try:
-            self.tty.open()
-            logging.info("Connected to {0} device on serial port {1}".format(self.name, self.device))
-        except serial.SerialException as e:
-            logging.error("Could not open serial port {}: {}".format(self.name, e))
-            sys.exit(3)
-        # Flush the input and output
-        self.tty.flushInput()
-        self.tty.flushOutput()
 
 
 # For debugging
