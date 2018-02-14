@@ -55,8 +55,8 @@ class SerialServer:
         }
 
         self.addresses = {}   # store the client sockets info
-        self.bytes_to_send = {}  # store data that is to be sent from serial device - for decoder
-        self.bytes_received = {}  # store data received from clients - for decoder
+        self.bytes_to_send = {}  # buffer to store data that is to be sent from serial device - for decoder
+        self.bytes_received = {}  # buffer to store data received from clients - for decoder
 
         # Setup the poller
         self.poller = select.poll()  # gevent.select.poll() - Since we are monkey_patching - unstable behaviour
@@ -79,9 +79,7 @@ class SerialServer:
         self.listener.settimeout(timeout)
 
     def start(self):
-        """
-        Start the Serial Server
-        """
+        """Start the Serial Server"""
         logging.info('Starting serial server at: {0}'.format(self.listener.getsockname()))
         try:
             self.handle()
@@ -93,12 +91,14 @@ class SerialServer:
             self.stop()
 
     def _add_client(self, sock, address):
+        """Add/configure a connected client socket"""
         sock.setblocking(False)  # force socket.timeout in worst case
         self.sockets[sock.fileno()] = sock  # Add client to the dictionary
         self.addresses[sock] = address  # store the address of client
         self.poller.register(sock, select.POLLIN)
 
     def _remove_client(self, sock, reason='unknown'):
+        """Remove a connected client"""
         name = self.addresses.pop(sock, None)
         logging.info("Disconnecting client {0} : {1}".format(name, reason))
         self.poller.unregister(sock)
@@ -119,9 +119,7 @@ class SerialServer:
         logging.debug('Received data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
 
     def handle(self):
-        """
-        Handle and manage the poll.
-        """
+        """Handle connections and manage the poll."""
         for fd, event in self._all_events():
             sock = self.sockets[fd]
             # Socket closed: remove from the DS
@@ -167,7 +165,7 @@ class SerialServer:
                         logging.error('Exception occurred while reading serial device: {0}'.format(some_other_exception))
                         sys.exit(3)
                     finally:
-                        logging.info ('Request: {0}, Response: {1}'.format (self.bytes_received.pop(sock, b''),
+                        logging.info('Request: {0}, Response: {1}'.format (self.bytes_received.pop(sock, b''),
                                                                             self.bytes_to_send.pop(self.tty, b'')))
 
                 else:
@@ -185,14 +183,8 @@ class SerialServer:
                         except serial.SerialTimeoutException as stm:
                             logging.error("Serial Timeout Reached".format(stm))
 
-            else:
-                logging.info ('Request: {0}, Response: {1}'.format (self.bytes_received.pop (sock, b''),
-                                                                    self.bytes_to_send.pop (self.tty, b'')))
-
     def stop(self):
-        """
-        Stop the Serial Server
-        """
+        """Stop the Serial Server"""
         logging.info('Stopping the serial-server {0}:{1}'.format(self.host, self.port))
         for client in self.addresses.keys():
             client.close()
@@ -224,6 +216,7 @@ class SerialServer:
         self.decoder = None
 
     def _setup_tty(self):
+        """Setup and connect to the serial device specified"""
         self.tty = serial.serial_for_url(self.device,
                                          self.baud_rate,
                                          self.width,
@@ -248,6 +241,8 @@ class SerialServer:
 if __name__ == '__main__':
     template_directory = os.getcwd() + '/../../templates/serial_server/serial_server/'
     e = etree.parse(template_directory + 'serial_server.xml').getroot()
+    sys.path.append('../misc')  # for decoder
+    from modbus_rtu_decoder import ModbusRtuDecoder # testing for modbus rtu slave device
     # Find all the serial connections
     serial_configs = e.findall('server')
     for config in serial_configs:

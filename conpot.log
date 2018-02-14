@@ -1439,3 +1439,37 @@
 2018-02-11 23:42:07,133 Modbus traffic from 127.0.0.1: {'function_code': 1, 'slave_id': 1, 'request': '00c300000006010127100001', 'response': '8102'} (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
 2018-02-11 23:42:07,134 Modbus response sent to 127.0.0.1
 2018-02-11 23:42:07,136 Modbus client disconnected. (b51e79dc-6ef5-4fc5-b283-d8d7e87c387d)
+2018-02-14 19:01:42,177 --force option specified. Using testing configuration:
+2018-02-14 19:01:42,223 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-14 19:01:42,224 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-14 19:01:47,457 Fetched 59.178.42.188 as external ip.
+2018-02-14 19:01:47,489 Conpot modbus initialized
+2018-02-14 19:01:47,489 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-14 19:01:47,509 Conpot S7Comm initialized
+2018-02-14 19:01:47,510 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-14 19:01:47,522 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-14 19:01:47,538 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-14 19:01:47,542 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-14 19:01:47,542 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-14 19:01:47,555 IPMI BMC initialized.
+2018-02-14 19:01:47,555 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-14 19:01:47,556 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-14 19:01:47,571 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-14 19:01:47,572 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-14 19:01:47,572 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-14 19:01:47,574 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-14 19:01:47,574 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-14 19:01:47,575 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-14 19:01:47,575 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-14 19:01:47,613 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-14 19:01:47,613 Modbus server started on: ('0.0.0.0', 502)
+2018-02-14 19:01:47,614 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-14 19:01:47,615 HTTP server started on: ('0.0.0.0', 80)
+2018-02-14 19:01:47,975 SNMP server started on: ('0.0.0.0', 161)
+2018-02-14 19:01:47,977 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-14 19:01:47,977 IPMI server started on: ('0.0.0.0', 623)
+2018-02-14 19:01:47,978 handle server PID [23035] running on ('0.0.0.0', 44818)
+2018-02-14 19:01:47,978 handle server PID [23035] responding to external done/disable signal in object 140310702413072
+2018-02-14 19:01:52,617 Privileges dropped, running as "nobody:nogroup"
+2018-02-14 19:02:23,875 Stopping Conpot
+2018-02-14 19:02:23,875 HTTP server will shut down gracefully as soon as all connections are closed.
