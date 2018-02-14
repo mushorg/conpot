@@ -27,7 +27,7 @@ class ModbusRtuDecoder:
         (message['Slave ID'], ) = unpack('>B', data[0])
         pdu = data[1:-2]
         if len(pdu) > 1:
-            (message['Function Code'], ) = unpack('>B', data[1])
+            (message['function code'], ) = unpack('>B', data[1])
             message['Data'] = unpack('>' + ('B' * len(data[2:-2])), data[2:-2])
         (message['CRC'], ) = unpack('>H', data[-2:])
         return message
