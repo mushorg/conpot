@@ -336,7 +336,7 @@ def main():
         greenlet.link_exception(on_unhandled_greenlet_exception)
 
         # TODO: Make serial fit into protocol_instance_mapping
-        template_serial = os.path.join (root_template_directory, 'serial_server', 'serial_server', 'serial_server.xml')
+        template_serial = os.path.join (root_template_directory, 'serial_server', 'serial_server.xml')
         if os.path.isfile (template_serial):
             xsd_file = os.path.join (os.path.dirname (inspect.getfile (SerialServer)), 'serial_server.xsd')
             validate_template (template_serial, xsd_file)

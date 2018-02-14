@@ -1473,3 +1473,250 @@
 2018-02-14 19:01:52,617 Privileges dropped, running as "nobody:nogroup"
 2018-02-14 19:02:23,875 Stopping Conpot
 2018-02-14 19:02:23,875 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-15 00:39:59,470 --force option specified. Using testing configuration:
+2018-02-15 00:39:59,472 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-15 00:39:59,473 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:39:59,550 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:39:59,557 Conpot modbus initialized
+2018-02-15 00:39:59,558 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-15 00:39:59,563 Conpot S7Comm initialized
+2018-02-15 00:39:59,563 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-15 00:39:59,566 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-15 00:39:59,568 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-15 00:39:59,570 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-15 00:39:59,571 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-15 00:39:59,574 IPMI BMC initialized.
+2018-02-15 00:39:59,574 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-15 00:39:59,574 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-15 00:39:59,577 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 00:39:59,578 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-15 00:39:59,578 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 00:39:59,580 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-15 00:39:59,580 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-15 00:39:59,581 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 00:39:59,581 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-15 00:39:59,582 No serial server template found. Service will remain unconfigured/stopped.
+2018-02-15 00:39:59,582 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-15 00:39:59,582 Modbus server started on: ('0.0.0.0', 502)
+2018-02-15 00:39:59,583 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-15 00:39:59,583 HTTP server started on: ('0.0.0.0', 80)
+2018-02-15 00:39:59,874 SNMP server started on: ('0.0.0.0', 161)
+2018-02-15 00:39:59,876 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-15 00:39:59,877 IPMI server started on: ('0.0.0.0', 623)
+2018-02-15 00:39:59,877 handle server PID [10180] running on ('0.0.0.0', 44818)
+2018-02-15 00:39:59,878 handle server PID [10180] responding to external done/disable signal in object 140328147182864
+2018-02-15 00:40:04,584 Privileges dropped, running as "nobody:nogroup"
+2018-02-15 00:40:17,939 Stopping Conpot
+2018-02-15 00:40:17,939 HTTP server will shut down gracefully as soon as all connections are closed.
+2018-02-15 00:40:33,137 
+Could not find config file!
+Use -f option to try the test configuration
+2018-02-15 00:40:41,678 --force option specified. Using testing configuration:
+2018-02-15 00:41:25,199 --force option specified. Using testing configuration:
+2018-02-15 00:41:25,200 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:41:25,202 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:41:25,278 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:41:25,280 No serial server template found. Service will remain unconfigured/stopped.
+2018-02-15 00:41:25,280 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-15 00:41:30,282 Privileges dropped, running as "nobody:nogroup"
+2018-02-15 00:42:38,860 --force option specified. Using testing configuration:
+2018-02-15 00:42:38,861 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:42:38,862 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:42:44,947 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:42:44,949 No serial server template found. Service will remain unconfigured/stopped.
+2018-02-15 00:42:44,949 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-15 00:42:49,951 Privileges dropped, running as "nobody:nogroup"
+2018-02-15 00:43:18,070 --force option specified. Using testing configuration:
+2018-02-15 00:43:18,071 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:43:18,072 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:43:23,157 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:43:23,158 No serial server template found. Service will remain unconfigured/stopped.
+2018-02-15 00:43:23,159 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-15 00:43:28,161 Privileges dropped, running as "nobody:nogroup"
+2018-02-15 00:44:40,746 --force option specified. Using testing configuration:
+2018-02-15 00:44:40,748 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:44:40,749 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:44:40,809 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:48:24,799 --force option specified. Using testing configuration:
+2018-02-15 00:48:24,801 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:48:24,801 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:48:25,161 Fetched 59.178.42.188 as external ip.
+2018-02-15 00:48:25,167 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM1
+2018-02-15 00:48:25,167 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 00:48:47,790 New Connection from ('127.0.0.1', 33710) on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:47,812 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:48,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:49,810 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:50,809 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:51,812 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:52,811 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:53,810 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:54,810 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:55,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:56,812 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:57,811 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:58,810 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:48:59,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:00,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:01,812 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:02,811 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:03,814 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:04,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:05,813 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 00:49:05,925 Stopping the serial-server 0.0.0.0:6500
+2018-02-15 00:49:05,925 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM1
+2018-02-15 00:57:38,300 
+Could not find config file!
+Use -f option to try the test configuration
+2018-02-15 00:57:46,451 --force option specified. Using testing configuration:
+2018-02-15 00:57:46,452 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 00:57:46,453 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 00:57:46,518 Fetched 59.178.42.188 as external ip.
+2018-02-15 01:02:19,340 --force option specified. Using testing configuration:
+2018-02-15 01:02:19,346 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 01:02:19,348 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 01:02:24,692 Fetched 59.178.42.188 as external ip.
+2018-02-15 01:08:12,884 --force option specified. Using testing configuration:
+2018-02-15 01:08:12,886 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 01:08:12,887 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 01:08:18,787 Fetched 59.178.42.188 as external ip.
+2018-02-15 01:08:18,792 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM1
+2018-02-15 01:08:18,793 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 01:08:23,193 New Connection from ('127.0.0.1', 34414) on serial server Arduino Modbus RTU Slave A
+2018-02-15 01:08:23,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:23,210 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:23,217 Received data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:08:24,193 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:24,209 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:24,213 Received data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:08:25,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:25,208 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:25,212 Received data from serial device: /dev/ttyACM1 -  ¡ˆ
+2018-02-15 01:08:26,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:26,211 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:26,215 Received data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:08:27,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:27,211 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:27,214 Received data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:08:28,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:28,209 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:28,213 Received data from serial device: /dev/ttyACM1 -  ¡ˆ
+2018-02-15 01:08:29,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:29,207 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:29,211 Received data from serial device: /dev/ttyACM1 -  ¡
+2018-02-15 01:08:29,216 Received data from serial device: /dev/ttyACM1 - ˆ
+2018-02-15 01:08:30,194 Received data from client: ('127.0.0.1', 34414) -    ¹Ê
+2018-02-15 01:08:30,210 Received data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:08:30,218 Received data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:08:30,622 Stopping serial-server 0.0.0.0:6500
+2018-02-15 01:08:30,622 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM1
+2018-02-15 01:12:15,980 --force option specified. Using testing configuration:
+2018-02-15 01:12:15,981 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 01:12:15,981 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 01:12:16,047 Fetched 59.178.42.188 as external ip.
+2018-02-15 01:12:16,054 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM1
+2018-02-15 01:12:16,055 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 01:12:20,362 New Connection from ('127.0.0.1', 34540) on serial server Arduino Modbus RTU Slave A
+2018-02-15 01:12:20,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:20,377 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:20,381 Response data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:12:21,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:21,377 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:21,381 Response data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:12:22,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:22,377 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:22,381 Response data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:12:23,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:23,377 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:23,381 Response data from serial device: /dev/ttyACM1 -  ¡ˆ
+2018-02-15 01:12:24,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:24,376 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:24,381 Response data from serial device: /dev/ttyACM1 -  ¡ˆ
+2018-02-15 01:12:25,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:25,376 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:25,380 Response data from serial device: /dev/ttyACM1 -  ¡
+2018-02-15 01:12:25,384 Response data from serial device: /dev/ttyACM1 - ˆ
+2018-02-15 01:12:26,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:26,376 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:26,380 Response data from serial device: /dev/ttyACM1 - `
+2018-02-15 01:12:26,384 Response data from serial device: /dev/ttyACM1 - H
+2018-02-15 01:12:27,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:27,377 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:27,380 Response data from serial device: /dev/ttyACM1 - `
+2018-02-15 01:12:27,384 Response data from serial device: /dev/ttyACM1 - H
+2018-02-15 01:12:28,362 Received data from client: ('127.0.0.1', 34540) -    ¹Ê
+2018-02-15 01:12:28,380 Response data from serial device: /dev/ttyACM1 - 
+2018-02-15 01:12:28,384 Response data from serial device: /dev/ttyACM1 - `H
+2018-02-15 01:12:29,205 Stopping serial-server 0.0.0.0:6500
+2018-02-15 01:12:29,206 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM1
+2018-02-15 01:14:54,871 --force option specified. Using testing configuration:
+2018-02-15 01:14:54,873 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 01:14:54,874 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 01:14:55,738 Fetched 59.178.42.188 as external ip.
+2018-02-15 01:14:55,745 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM1
+2018-02-15 01:14:55,746 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 01:14:58,896 New Connection from ('127.0.0.1', 34650) on serial server Arduino Modbus RTU Slave A
+2018-02-15 01:14:58,915 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:14:58,929 Response data from serial device: /dev/ttyACM1 - \x01
+2018-02-15 01:14:58,933 Response data from serial device: /dev/ttyACM1 - \x02\x01\x01`
+2018-02-15 01:14:58,937 Response data from serial device: /dev/ttyACM1 - H
+2018-02-15 01:14:59,896 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:14:59,912 Response data from serial device: /dev/ttyACM1 - \x01\x02\x01
+2018-02-15 01:14:59,916 Response data from serial device: /dev/ttyACM1 - \x00\xa1\x88
+2018-02-15 01:15:00,896 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:00,912 Response data from serial device: /dev/ttyACM1 - \x01\x02
+2018-02-15 01:15:00,916 Response data from serial device: /dev/ttyACM1 - \x01\x01`H
+2018-02-15 01:15:01,896 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:01,911 Response data from serial device: /dev/ttyACM1 - \x01\x02
+2018-02-15 01:15:01,915 Response data from serial device: /dev/ttyACM1 - \x01\x00\xa1\x88
+2018-02-15 01:15:02,896 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:02,911 Response data from serial device: /dev/ttyACM1 - \x01\x02
+2018-02-15 01:15:02,915 Response data from serial device: /dev/ttyACM1 - \x01\x01`H
+2018-02-15 01:15:03,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:03,911 Response data from serial device: /dev/ttyACM1 - \x01
+2018-02-15 01:15:03,915 Response data from serial device: /dev/ttyACM1 - \x02\x01\x01`
+2018-02-15 01:15:03,919 Response data from serial device: /dev/ttyACM1 - H
+2018-02-15 01:15:04,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:04,911 Response data from serial device: /dev/ttyACM1 - \x01
+2018-02-15 01:15:04,915 Response data from serial device: /dev/ttyACM1 - \x02\x01\x01`
+2018-02-15 01:15:04,919 Response data from serial device: /dev/ttyACM1 - H
+2018-02-15 01:15:05,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:05,914 Response data from serial device: /dev/ttyACM1 - \x01\x02\x01\x00
+2018-02-15 01:15:05,918 Response data from serial device: /dev/ttyACM1 - \xa1\x88
+2018-02-15 01:15:06,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:06,912 Response data from serial device: /dev/ttyACM1 - \x01\x02\x01
+2018-02-15 01:15:06,916 Response data from serial device: /dev/ttyACM1 - \x00\xa1\x88
+2018-02-15 01:15:07,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:07,910 Response data from serial device: /dev/ttyACM1 - \x01
+2018-02-15 01:15:07,915 Response data from serial device: /dev/ttyACM1 - \x02\x01\x00\xa1
+2018-02-15 01:15:07,918 Response data from serial device: /dev/ttyACM1 - \x88
+2018-02-15 01:15:08,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:08,913 Response data from serial device: /dev/ttyACM1 - \x01\x02\x01
+2018-02-15 01:15:08,917 Response data from serial device: /dev/ttyACM1 - \x01`H
+2018-02-15 01:15:09,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:09,912 Response data from serial device: /dev/ttyACM1 - \x01\x02
+2018-02-15 01:15:09,916 Response data from serial device: /dev/ttyACM1 - \x01\x01`H
+2018-02-15 01:15:10,897 Received data from client: ('127.0.0.1', 34650) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-15 01:15:10,912 Response data from serial device: /dev/ttyACM1 - \x01\x02
+2018-02-15 01:15:10,916 Response data from serial device: /dev/ttyACM1 - \x01\x01`H
+2018-02-15 01:15:11,374 Stopping serial-server 0.0.0.0:6500
+2018-02-15 01:15:11,374 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM1
