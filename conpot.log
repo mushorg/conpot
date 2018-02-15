@@ -1803,3 +1803,43 @@ Use -f option to try the test configuration
 2018-02-15 10:57:19,043 Disconnecting client ('127.0.0.1', 39690) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
 2018-02-15 10:57:19,044 Stopping serial-server 0.0.0.0:6500
 2018-02-15 10:57:19,044 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM0
+2018-02-15 12:22:56,674 --force option specified. Using testing configuration:
+2018-02-15 12:22:56,675 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 12:22:56,676 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 12:22:56,735 Fetched 59.178.60.224 as external ip.
+2018-02-15 12:22:56,740 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f4787af9e18>
+2018-02-15 12:22:56,743 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-15 12:22:56,743 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 12:23:00,404 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (08899b4e-1d4a-40cb-a2e5-45b41f484172)
+2018-02-15 12:23:00,404 New Connection from 127.0.0.1:43392 on serial server arduino_modbus_rtu_slave_a. (08899b4e-1d4a-40cb-a2e5-45b41f484172)
+2018-02-15 12:23:00,425 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:01,424 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:02,426 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:03,425 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:04,423 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:05,426 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:06,424 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:07,427 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:08,426 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:09,425 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:10,427 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:11,426 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:12,425 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:13,428 Traffic on serial device - request: {'Data': (39, 16, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 45755},
+ response: {'Data': (1, 16), 'function code': 2, 'Slave ID': 1, 'CRC': 41028} on serial server Arduino Modbus RTU Slave A
+2018-02-15 12:23:14,351 Disconnecting client ('127.0.0.1', 43392) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-15 13:04:13,757 Stopping serial-server 0.0.0.0:6500
+2018-02-15 13:04:13,757 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM0

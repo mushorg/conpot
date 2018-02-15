@@ -90,7 +90,7 @@ class SerialServer:
             self.decoder = _class()
         else:
             self.decoder = None
-        logger.info('On serial server {} - using decoder: {}'.format(self.name, self.decoder))
+        logger.info('On serial server %s - using decoder: %s', self.name, self.decoder)
 
     def _setup_tty(self):
         """Setup and connect to the serial device specified"""
@@ -105,9 +105,9 @@ class SerialServer:
                                          do_not_open=True)
         try:
             self.tty.open()
-            logger.info("Connected to {0} device on serial port {1}".format(self.name, self.device))
-        except serial.SerialException as serial_exp:
-            logger.error("Could not open serial port {}: {}".format(self.name, serial_exp))
+            logger.info('Connected to %s device on serial port %s', self.name, self.device)
+        except serial.SerialException:
+            logger.exception('Could not open serial port')
             sys.exit(3)
         # Flush input and output
         self.tty.flushInput()
@@ -124,13 +124,14 @@ class SerialServer:
 
     def start(self):
         """Start the Serial Server"""
-        logger.info('Starting serial server at: {0}'.format(self.listener.getsockname()))
+        logger.info('Starting serial server at: %s', self.listener.getsockname())
         try:
+            # TODO: Add authentication here
             self.handle()
-        except socket.timeout as timeout_exp:
-            logger.error('Serial server socket timeout: {0}'.format(timeout_exp))
-        except socket.error as socket_error_exp:
-            logger.error('Serial server socket error: {0}'.format(socket_error_exp))
+        except socket.timeout:
+            logger.exception('Serial server socket timeout')
+        except socket.error:
+            logger.exception('Serial server socket error')
         finally:
             self.stop()
 
@@ -142,10 +143,10 @@ class SerialServer:
         session.add_event({'type': 'NEW_CONNECTION'})
         self.poller.register(sock, select.POLLIN)
 
-    def _remove_client(self, sock, reason='UNKNOWN'):
+    def _remove_client(self, sock, session, reason='UNKNOWN'):
         """Remove a connected client"""
         conn = self.addresses.pop(sock, None)
-        logger.info("Disconnecting client {} : {} on {}".format(conn, reason, self.name))
+        logger.info('Disconnecting client %s : %s on %s', conn, reason, self.name)
         session.add_event({'type': reason})
         self.poller.unregister(sock)
         sock.shutdown(socket.SHUT_RDWR)
@@ -159,10 +160,10 @@ class SerialServer:
                 self.bytes_received[sock] += raw_data
             else:
                 self.bytes_received[sock] = raw_data
-            logger.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
+            logger.debug('Received data from client: %s - %s', self.addresses[sock], self.bytes_received[sock])
         else:
             self.bytes_received[sock] = raw_data  # make sure poller does not misbehave
-            logger.info('Received data from client: {0} - {1}'.format(self.addresses[sock], raw_data.encode('string-escape')))
+            logger.info('Received data from client: %s - %s', self.addresses[sock], raw_data.encode('string-escape'))
             session.add_event({'raw_request': raw_data.encode('string-escape'), 'raw_response': ''})
 
     def _build_response(self, sock, raw_data, session):
@@ -173,10 +174,10 @@ class SerialServer:
                 self.bytes_to_send[sock] += raw_data
             else:
                 self.bytes_to_send[sock] = raw_data
-            logger.debug('Response data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
+            logger.debug('Response data from serial device: %s - %s', self.device, self.bytes_to_send[sock])
         else:
             self.bytes_to_send[sock] = raw_data  # make sure poller does not misbehave
-            logger.info('Response data from serial device: {0} - {1}'.format(self.device, raw_data.encode('string-escape')))
+            logger.info('Response data from serial device: %s - %s', self.device, raw_data.encode('string-escape'))
             session.add_event({'raw_request': '', 'raw_response': raw_data.encode('string-escape')})
 
     def _parse_request_response(self, client_sock, session):
@@ -187,11 +188,11 @@ class SerialServer:
                         self.decoder.validate_crc(self.bytes_to_send[self.tty]):
                     rb = self.decoder.decode(self.bytes_received.pop(client_sock, b''))
                     sb = self.decoder.decode(self.bytes_to_send.pop(self.tty, b''))
-                    logger.info('Traffic on serial device - request: {0},\n response: {1} on serial server {2}'.format(
-                        rb, sb, self.name))
+                    logger.info('Traffic on serial device - request: %s,\n response: %s on serial server %s', rb, sb,
+                                self.name)
                     session.add_event({'request': rb, 'response': sb})
-            except Exception as decoder_exp:
-                logger.debug("On serial server {1} - error occurred while decoding: {0}".format(decoder_exp, self.name))
+            except Exception:
+                logger.exception('On serial server %s - error occurred while decoding', self.name)
 
     def _all_events(self):
         while True:
@@ -209,16 +210,16 @@ class SerialServer:
                 rb = self.bytes_received.pop(sock, b'')
                 sb = self.bytes_to_send.pop(sock, b'')
                 if rb:
-                    logger.info('On serial server {} - {} Client sent {} but then closed'.format(address, rb, self.name))
-                    self._remove_client(sock, 'CONNECTION_QUIT')
+                    logger.info('On serial server %s - %s Client sent {} but then closed', address, rb, self.name)
+                    self._remove_client(sock, session, 'CONNECTION_QUIT')
                 elif sb:
-                    logger.info('On serial server {} - {} Client closed before we sent {}'.format(address, sb, self.name))
-                    self._remove_client(sock, 'CONNECTION_LOST')
+                    logger.info('On serial server %s - %s Client closed before we sent {}', address, sb, self.name)
+                    self._remove_client(sock, session, 'CONNECTION_LOST')
                 else:
-                    logger.info('On serial server {} - {} Client closed socket normally'.format(address, self.name))
+                    logger.info('On serial server %s - %s Client closed socket normally', address, self.name)
                 self.poller.unregister(fd)
                 # close the databus session
-                session.set_ended ()
+                session.set_ended()
                 del self.sockets[fd]
 
             # Incoming data from either a serial device or a client
@@ -226,9 +227,10 @@ class SerialServer:
                 # New Socket: A new client has connected
                 if sock is self.listener:
                     sock, address = sock.accept()
+                    # For new client, start the databus session.
                     session = conpot_core.get_session(self.serial_id, address[0], address[1])
-                    logger.info('New Connection from {0}:{1} on serial server {2}. ({3})'.
-                                format(address[0], address[1], self.serial_id, session.id))
+                    logger.info('New Connection from %s:%s on serial server %s. (%s)', address[0], address[1],
+                                self.serial_id, session.id)
                     self._add_client(sock, address, session)
 
                 # check whether sock is client or serial device
@@ -244,11 +246,11 @@ class SerialServer:
                                 client.send(data)
                                 if self.decoder: self._parse_request_response(client, session)
                     except socket.timeout:
-                        logger.error('Client Timed out on serial server {}'.format(self.name))
+                        logger.exception('Client Timed out on serial server %s', self.name)
                     except socket.error:
-                        logger.error('Socket error on serial server {}'.format(self.name))
-                    except Exception as some_other_exception:
-                        logger.error('Exception occurred while reading serial device: {0}'.format(some_other_exception))
+                        logger.exception('Socket error on serial server %s', self.name)
+                    except Exception:
+                        logger.exception('Exception occurred while reading serial device: %s', self.name)
                         sys.exit(3)
 
                 else:
@@ -256,21 +258,21 @@ class SerialServer:
                     data = sock.recv(80)
                     if not data:  # end of file
                         # remove the client and close the databus session
-                        self._remove_client(sock, 'CONNECTION_TERMINATED')
+                        self._remove_client(sock, session, 'CONNECTION_TERMINATED')
                         # next poll() would be POLLNVAL, and thus cleanup
                     else:
                         self._build_request(sock, data, session)
                         try:
                             self.tty.write(data)
-                        except serial.SerialTimeoutException as stm:
-                            logger.error("Serial Timeout Reached".format(stm))
+                        except serial.SerialTimeoutException:
+                            logger.exception('Serial Timeout Reached')
 
     def stop(self):
         """Stop the Serial Server"""
-        logger.info('Stopping serial-server {0}:{1}'.format(self.host, self.port))
+        logger.info('Stopping serial-server %s:%s', self.host, self.port)
         for client in self.addresses.keys():
             client.close()
-        logger.info('Closing the serial connection for {0} on {1}'.format(self.name, self.device))
+        logger.info('Closing the serial connection for %s on %s', self.name, self.device)
         self.tty.close()
         self.listener.shutdown(socket.SHUT_RDWR)
         self.listener.close()
@@ -288,6 +290,6 @@ if __name__ == '__main__':
         server = SerialServer(config, ModbusRtuDecoder)
         try:
             server.start()
-        except Exception as e:
-            logging.info("Error Occurred! {0}".format(e))
+        except Exception:
+            logging.exception('Error Occurred!')
             sys.exit(1)
