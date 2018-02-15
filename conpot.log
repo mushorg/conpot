@@ -1720,3 +1720,86 @@ Use -f option to try the test configuration
 2018-02-15 01:15:10,916 Response data from serial device: /dev/ttyACM1 - \x01\x01`H
 2018-02-15 01:15:11,374 Stopping serial-server 0.0.0.0:6500
 2018-02-15 01:15:11,374 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM1
+2018-02-15 10:32:15,015 
+Could not find config file!
+Use -f option to try the test configuration
+2018-02-15 10:32:21,077 --force option specified. Using testing configuration:
+2018-02-15 10:32:21,079 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default
+2018-02-15 10:32:21,080 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:32:21,239 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:32:21,246 Conpot modbus initialized
+2018-02-15 10:32:21,247 Found and enabled ('modbus', <class 'conpot.protocols.modbus.modbus_server.ModbusServer'>) protocol.
+2018-02-15 10:32:21,251 Conpot S7Comm initialized
+2018-02-15 10:32:21,252 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
+2018-02-15 10:32:21,256 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
+2018-02-15 10:32:21,258 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
+2018-02-15 10:32:21,261 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
+2018-02-15 10:32:21,261 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
+2018-02-15 10:32:21,267 IPMI BMC initialized.
+2018-02-15 10:32:21,267 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
+2018-02-15 10:32:21,268 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
+2018-02-15 10:32:21,273 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 10:32:21,273 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-15 10:32:21,274 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 10:32:21,275 Class    22/0x0016, Instance   1, Attribute     3 <== [{'class': 22}, {'instance': 1}, {'attribute': 3}]
+2018-02-15 10:32:21,276 Class    22/0x0016, Instance   1, Attribute     2 <== [{'class': 22}, {'instance': 1}, {'attribute': 2}]
+2018-02-15 10:32:21,276 Class    22/0x0016, Instance   1, Attribute     1 <== [{'class': 22}, {'instance': 1}, {'attribute': 1}]
+2018-02-15 10:32:21,276 Found and enabled ('enip', <class 'conpot.protocols.enip.enip_server.EnipServer'>) protocol.
+2018-02-15 10:32:21,277 No serial server template found. Service will remain unconfigured/stopped.
+2018-02-15 10:32:21,277 No proxy template found. Service will remain unconfigured/stopped.
+2018-02-15 10:32:21,277 Modbus server started on: ('0.0.0.0', 502)
+2018-02-15 10:32:21,278 S7Comm server started on: ('0.0.0.0', 102)
+2018-02-15 10:32:21,278 HTTP server started on: ('0.0.0.0', 80)
+2018-02-15 10:32:21,587 SNMP server started on: ('0.0.0.0', 161)
+2018-02-15 10:32:21,589 Bacnet server started on: ('0.0.0.0', 47808)
+2018-02-15 10:32:21,590 IPMI server started on: ('0.0.0.0', 623)
+2018-02-15 10:32:21,591 handle server PID [20560] running on ('0.0.0.0', 44818)
+2018-02-15 10:32:21,591 handle server PID [20560] responding to external done/disable signal in object 140630226440272
+2018-02-15 10:32:34,553 --force option specified. Using testing configuration:
+2018-02-15 10:32:34,555 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:32:34,555 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:32:39,625 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:41:19,836 --force option specified. Using testing configuration:
+2018-02-15 10:41:19,838 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:41:19,839 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:41:19,905 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:41:53,450 --force option specified. Using testing configuration:
+2018-02-15 10:41:53,451 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:41:53,452 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:41:53,720 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:49:43,406 --force option specified. Using testing configuration:
+2018-02-15 10:49:43,407 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:49:43,408 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:49:43,478 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:52:42,818 --force option specified. Using testing configuration:
+2018-02-15 10:52:42,819 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:52:42,820 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:52:45,168 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:52:45,174 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7fa111ca9ea8>
+2018-02-15 10:52:45,174 Could not open serial port Arduino Modbus RTU Slave A: [Errno 2] could not open port /dev/ttyACM1: [Errno 2] No such file or directory: '/dev/ttyACM1'
+2018-02-15 10:56:37,165 --force option specified. Using testing configuration:
+2018-02-15 10:56:37,167 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:56:37,168 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:56:37,244 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:56:37,249 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f757be41ea8>
+2018-02-15 10:56:37,250 Could not open serial port Arduino Modbus RTU Slave A: [Errno 2] could not open port /dev/ttyACM1: [Errno 2] No such file or directory: '/dev/ttyACM1'
+2018-02-15 10:57:06,691 --force option specified. Using testing configuration:
+2018-02-15 10:57:06,693 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-15 10:57:06,693 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-15 10:57:06,768 Fetched 59.178.60.224 as external ip.
+2018-02-15 10:57:06,773 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7fd05f2a19e0>
+2018-02-15 10:57:06,775 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-15 10:57:06,775 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-15 10:57:15,409 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (10c51451-5845-443b-bf35-413acbbf9507)
+2018-02-15 10:57:15,410 New Connection from 127.0.0.1:39690 on serial server arduino_modbus_rtu_slave_a. (10c51451-5845-443b-bf35-413acbbf9507)
+2018-02-15 10:57:15,431 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 10:57:16,430 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 24648} on serial server Arduino Modbus RTU Slave A
+2018-02-15 10:57:17,429 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 10:57:18,429 Traffic on serial device - request: {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562},
+ response: {'Data': (1, 0), 'function code': 2, 'Slave ID': 1, 'CRC': 41352} on serial server Arduino Modbus RTU Slave A
+2018-02-15 10:57:19,043 Disconnecting client ('127.0.0.1', 39690) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-15 10:57:19,044 Stopping serial-server 0.0.0.0:6500
+2018-02-15 10:57:19,044 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM0

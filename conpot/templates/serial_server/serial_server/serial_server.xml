@@ -1,6 +1,6 @@
 <serial_server enabled="True">
     <server name="Arduino Modbus RTU Slave A" host="0.0.0.0" port="6500">
-        <serial_port>/dev/ttyACM1</serial_port>   <!-- Use COM port for windows -->
+        <serial_port>/dev/ttyACM0</serial_port>   <!-- Use COM port for windows -->
         <baud_rate>9600</baud_rate>               <!-- Possible options: (50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4... ) -->
         <data_bits>8</data_bits>    <!-- also called the byte_size. Possible options : (5, 6, 7, 8) -->
         <parity>N</parity>          <!-- Possible options : ('N', 'E', 'O', 'M', 'S') WITHOUT QUOTES -->

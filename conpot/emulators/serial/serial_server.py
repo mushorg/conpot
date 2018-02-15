@@ -84,12 +84,13 @@ class SerialServer:
         self.time_out = 0  # serial connection read timeout
         self.serial_id = self.name.lower().replace(' ', '_')
         if decoder:
-            namespace, _classname = self.decoder.rsplit('.', 1)
+            namespace, _classname = decoder.rsplit('.', 1)
             module = __import__(namespace, fromlist=[_classname])
             _class = getattr(module, _classname)
             self.decoder = _class()
         else:
-            self.decoder = decoder
+            self.decoder = None
+        logger.info('On serial server {} - using decoder: {}'.format(self.name, self.decoder))
 
     def _setup_tty(self):
         """Setup and connect to the serial device specified"""
@@ -141,12 +142,13 @@ class SerialServer:
         session.add_event({'type': 'NEW_CONNECTION'})
         self.poller.register(sock, select.POLLIN)
 
-    def _remove_client(self, sock, session, reason='unknown'):
+    def _remove_client(self, sock, reason='UNKNOWN'):
         """Remove a connected client"""
         conn = self.addresses.pop(sock, None)
         logger.info("Disconnecting client {} : {} on {}".format(conn, reason, self.name))
-        session.add_event({'type': 'CONNECTION_TERMINATED'})
+        session.add_event({'type': reason})
         self.poller.unregister(sock)
+        sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
     def _build_request(self, sock, raw_data, session):
@@ -159,6 +161,7 @@ class SerialServer:
                 self.bytes_received[sock] = raw_data
             logger.debug('Received data from client: {0} - {1}'.format(self.addresses[sock], self.bytes_received[sock]))
         else:
+            self.bytes_received[sock] = raw_data  # make sure poller does not misbehave
             logger.info('Received data from client: {0} - {1}'.format(self.addresses[sock], raw_data.encode('string-escape')))
             session.add_event({'raw_request': raw_data.encode('string-escape'), 'raw_response': ''})
 
@@ -172,6 +175,7 @@ class SerialServer:
                 self.bytes_to_send[sock] = raw_data
             logger.debug('Response data from serial device: {0} - {1}'.format(self.device, self.bytes_to_send[sock]))
         else:
+            self.bytes_to_send[sock] = raw_data  # make sure poller does not misbehave
             logger.info('Response data from serial device: {0} - {1}'.format(self.device, raw_data.encode('string-escape')))
             session.add_event({'raw_request': '', 'raw_response': raw_data.encode('string-escape')})
 
@@ -206,13 +210,15 @@ class SerialServer:
                 sb = self.bytes_to_send.pop(sock, b'')
                 if rb:
                     logger.info('On serial server {} - {} Client sent {} but then closed'.format(address, rb, self.name))
-                    session.add_event({'type': 'CONNECTION_QUIT'})
+                    self._remove_client(sock, 'CONNECTION_QUIT')
                 elif sb:
                     logger.info('On serial server {} - {} Client closed before we sent {}'.format(address, sb, self.name))
-                    session.add_event({'type': 'CONNECTION_LOST'})
+                    self._remove_client(sock, 'CONNECTION_LOST')
                 else:
                     logger.info('On serial server {} - {} Client closed socket normally'.format(address, self.name))
                 self.poller.unregister(fd)
+                # close the databus session
+                session.set_ended ()
                 del self.sockets[fd]
 
             # Incoming data from either a serial device or a client
@@ -250,17 +256,14 @@ class SerialServer:
                     data = sock.recv(80)
                     if not data:  # end of file
                         # remove the client and close the databus session
-                        self._remove_client(sock, session, 'Socket timeout - Got no data from client')
+                        self._remove_client(sock, 'CONNECTION_TERMINATED')
                         # next poll() would be POLLNVAL, and thus cleanup
-                        continue
                     else:
                         self._build_request(sock, data, session)
                         try:
                             self.tty.write(data)
                         except serial.SerialTimeoutException as stm:
                             logger.error("Serial Timeout Reached".format(stm))
-        # close the databus session
-        session.set_ended()
 
     def stop(self):
         """Stop the Serial Server"""
@@ -269,6 +272,7 @@ class SerialServer:
             client.close()
         logger.info('Closing the serial connection for {0} on {1}'.format(self.name, self.device))
         self.tty.close()
+        self.listener.shutdown(socket.SHUT_RDWR)
         self.listener.close()
 
 
