@@ -31,10 +31,11 @@ import serial
 import logging
 from lxml import etree
 import errno
+
 # logger = logging.getLogger(__name__)
 
 import logging as logger
-logger.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logger.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 import conpot.core as conpot_core
 
@@ -142,6 +143,9 @@ class SerialServer:
                 pass
             else:
                 logger.exception('Socket error on serial server %s', self.name, str(se))
+                raise
+        except Exception:
+            logging.exception('Unexpected error occured')
 
     def _add_client(self, sock, address, session):
         """
@@ -174,12 +178,9 @@ class SerialServer:
 
     def _build_request(self, client_address, raw_data, session):
         # build request for nice request/response logs
-        # having and adding to buffers only required when we need request/response logs
-        # we are building the request response per client_address. So this first logical step is get
-        # the client address
+        # we are building the request response per client_address.
         self.bytes_received[client_address] = raw_data  # make sure poller does not misbehave
         logger.info('Received data from client: %s - %s', client_address, raw_data.encode('string-escape'))
-        self.rb_decoded = self.decoder.decode(raw_data) # a small hack to ensure that we get proper tuples for request/response
         session.add_event({'raw_request': raw_data.encode('string-escape'), 'raw_response': ''})
 
     def _build_response(self, client_address, raw_data, session):
@@ -197,7 +198,7 @@ class SerialServer:
             # serial device
             if client_address in self.bytes_to_send:
                 # if that is the case, just append the raw_data received to the buffer.
-                self.bytes_to_send[client_address] += raw_data
+                self.bytes_to_send[client_address] += raw_data  # TODO: This is probably a bad idea. Use bytearray instead
             else:
                 # if not, then this is first time a client has sent some data,
                 # add the client and the data to the buffer

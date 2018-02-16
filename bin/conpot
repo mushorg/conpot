@@ -345,16 +345,19 @@ def main():
                 if ast.literal_eval (dom_serial.xpath ('//serial_server/@enabled')[0]):
                     servers = dom_serial.xpath ('//serial_server/*')
                     for s in servers:
-                        decoder = s.xpath ('./decoder/text()')
+                        decoder = s.xpath('./decoder/text()')
                         if len (decoder) > 0:
                             decoder = decoder[0]
                         else:
                             decoder = None
-                        serial_server_instance = SerialServer(s, decoder)
-                        # serial_server = serial_server_instance.start()
+                        # ----> s becomes an instance of SerialServer class? Fix
+                        serial_server_instance = SerialServer(s, decoder)  # change template obj to params
+                        server = serial_server_instance
                         servers.append(serial_server_instance)
-                        serial_server_greenlet = gevent.spawn(serial_server_instance.start)
+                        # TODO: Add serial to the premise of greenlets
+                        serial_server_greenlet = gevent.spawn(server.start)
                         serial_server_greenlet.link_exception(on_unhandled_greenlet_exception)
+                        # server.start()
                 else:
                     logger.info ('Serial Server available but disabled by template.')
         else:

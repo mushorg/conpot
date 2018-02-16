@@ -62,16 +62,17 @@ class TestSerial(unittest.TestCase):
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
-    def test_client_connect(self):
+    def test_single_client_connect(self):
         """test to check whether a single client is able to connect to serial server"""
         pass
 
-    def test_on_dos(self):
+    def test_on_multiple_clients_connect(self):
         """
         Objective: Benchmark the total number of requests/response serial server can process under heavy traffic
-        from multiple clients. Gives an idea regarding asynchronous i/o capability
+        from multiple clients. Gives an idea regarding asynchronous i/o capability.
         """
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

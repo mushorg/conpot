@@ -55,5 +55,6 @@ class ModbusRtuDecoder:
 # for debugging:
 if __name__ == '__main__':
     test_data = b'\x01\x02\x00\x00\x00\x01\xb9\xca'
+    #  test_data_2 = \x01\x02\'\x10\x00\x01\xb2\xbb
     assert ModbusRtuDecoder.validate_crc(test_data)
     print(ModbusRtuDecoder.decode(test_data))

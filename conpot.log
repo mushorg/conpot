@@ -5031,3 +5031,1477 @@ error: [Errno 104] Connection reset by peer
 2018-02-16 21:20:24,854 Fetched 59.178.45.26 as external ip.
 2018-02-16 21:20:24,859 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f9b06093488>
 2018-02-16 21:20:24,861 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 21:58:38,095 --force option specified. Using testing configuration:
+2018-02-16 21:58:38,096 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 21:58:38,096 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 21:58:38,956 Fetched 59.178.45.26 as external ip.
+2018-02-16 21:58:38,961 On serial server Arduino Modbus RTU Slave A - using decoder: None
+2018-02-16 21:58:38,964 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 21:59:10,879 --force option specified. Using testing configuration:
+2018-02-16 21:59:10,880 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 21:59:10,881 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 21:59:15,976 Fetched 59.178.45.26 as external ip.
+2018-02-16 21:59:15,980 On serial server Arduino Modbus RTU Slave A - using decoder: None
+2018-02-16 21:59:15,982 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:10:41,665 --force option specified. Using testing configuration:
+2018-02-16 22:10:41,666 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:10:41,667 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:10:41,739 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:10:41,743 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f75613c6dd0>
+2018-02-16 22:10:41,746 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:16:14,011 --force option specified. Using testing configuration:
+2018-02-16 22:16:14,012 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:16:14,013 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:16:19,074 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:16:19,078 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f0b761cb488>
+2018-02-16 22:16:19,080 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:22:04,601 --force option specified. Using testing configuration:
+2018-02-16 22:22:04,603 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:22:04,603 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:22:05,760 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:22:05,765 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f21f3156e18>
+2018-02-16 22:22:05,768 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:24:37,104 --force option specified. Using testing configuration:
+2018-02-16 22:24:37,105 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:24:37,106 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:24:38,218 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:24:38,223 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f89a8d13488>
+2018-02-16 22:24:38,226 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:24:38,227 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 22:25:21,734 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (23c2b5c9-b229-480e-a9bd-0b4bf3fc2425)
+2018-02-16 22:25:21,734 New Connection from 127.0.0.1:45532 on serial server arduino_modbus_rtu_slave_a. (23c2b5c9-b229-480e-a9bd-0b4bf3fc2425)
+2018-02-16 22:25:21,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:21,753 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x01
+2018-02-16 22:25:21,757 Received data from serial device for client: ('127.0.0.1', 45532) - `H
+2018-02-16 22:25:21,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:22,734 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:22,748 Received data from serial device for client: ('127.0.0.1', 45532) - \x01
+2018-02-16 22:25:22,752 Received data from serial device for client: ('127.0.0.1', 45532) - \x02\x01\x01`
+2018-02-16 22:25:22,756 Received data from serial device for client: ('127.0.0.1', 45532) - H
+2018-02-16 22:25:22,757 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:23,734 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:23,751 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x01
+2018-02-16 22:25:23,756 Received data from serial device for client: ('127.0.0.1', 45532) - `H
+2018-02-16 22:25:23,756 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:24,734 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:24,751 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01
+2018-02-16 22:25:24,755 Received data from serial device for client: ('127.0.0.1', 45532) - \x01`H
+2018-02-16 22:25:24,755 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:25,735 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:25,750 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:25,754 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x01`H
+2018-02-16 22:25:25,755 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:26,735 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:26,750 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:26,754 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x00\xa1\x88
+2018-02-16 22:25:26,754 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:27,735 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:27,749 Received data from serial device for client: ('127.0.0.1', 45532) - \x01
+2018-02-16 22:25:27,753 Received data from serial device for client: ('127.0.0.1', 45532) - \x02\x01\x00\xa1
+2018-02-16 22:25:27,757 Received data from serial device for client: ('127.0.0.1', 45532) - \x88
+2018-02-16 22:25:27,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:28,735 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:28,752 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x00
+2018-02-16 22:25:28,756 Received data from serial device for client: ('127.0.0.1', 45532) - \xa1\x88
+2018-02-16 22:25:28,757 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:29,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:29,752 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01
+2018-02-16 22:25:29,756 Received data from serial device for client: ('127.0.0.1', 45532) - \x01`H
+2018-02-16 22:25:29,756 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:30,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:30,751 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:30,755 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x01`H
+2018-02-16 22:25:30,756 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:31,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:31,750 Received data from serial device for client: ('127.0.0.1', 45532) - \x01
+2018-02-16 22:25:31,754 Received data from serial device for client: ('127.0.0.1', 45532) - \x02\x01\x01`
+2018-02-16 22:25:31,758 Received data from serial device for client: ('127.0.0.1', 45532) - H
+2018-02-16 22:25:31,759 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:32,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:32,754 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x01
+2018-02-16 22:25:32,758 Received data from serial device for client: ('127.0.0.1', 45532) - `H
+2018-02-16 22:25:32,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:33,736 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:33,753 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01
+2018-02-16 22:25:33,757 Received data from serial device for client: ('127.0.0.1', 45532) - \x01`H
+2018-02-16 22:25:33,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:33,988 New Connection from 127.0.0.1:45542 on serial server arduino_modbus_rtu_slave_a. (23c2b5c9-b229-480e-a9bd-0b4bf3fc2425)
+2018-02-16 22:25:33,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:34,007 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x10
+2018-02-16 22:25:34,007 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01\x10
+2018-02-16 22:25:34,011 Received data from serial device for client: ('127.0.0.1', 45532) - \xa0D
+2018-02-16 22:25:34,011 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:34,012 Received data from serial device for client: ('127.0.0.1', 45542) - \xa0D
+2018-02-16 22:25:34,012 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:34,737 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:34,752 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:34,753 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02
+2018-02-16 22:25:34,756 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x01`H
+2018-02-16 22:25:34,757 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:34,757 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x01`H
+2018-02-16 22:25:34,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:34,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:35,006 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x10
+2018-02-16 22:25:35,007 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01\x10
+2018-02-16 22:25:35,010 Received data from serial device for client: ('127.0.0.1', 45532) - \xa0D
+2018-02-16 22:25:35,011 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:35,011 Received data from serial device for client: ('127.0.0.1', 45542) - \xa0D
+2018-02-16 22:25:35,012 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:35,737 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:35,751 Received data from serial device for client: ('127.0.0.1', 45532) - \x01
+2018-02-16 22:25:35,752 Received data from serial device for client: ('127.0.0.1', 45542) - \x01
+2018-02-16 22:25:35,756 Received data from serial device for client: ('127.0.0.1', 45532) - \x02\x01\x00\xa1
+2018-02-16 22:25:35,756 Received data from serial device for client: ('127.0.0.1', 45542) - \x02\x01\x00\xa1
+2018-02-16 22:25:35,759 Received data from serial device for client: ('127.0.0.1', 45532) - \x88
+2018-02-16 22:25:35,760 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:35,760 Received data from serial device for client: ('127.0.0.1', 45542) - \x88
+2018-02-16 22:25:35,761 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:35,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:36,005 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01
+2018-02-16 22:25:36,006 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01
+2018-02-16 22:25:36,009 Received data from serial device for client: ('127.0.0.1', 45532) - \x10\xa0D
+2018-02-16 22:25:36,010 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:36,010 Received data from serial device for client: ('127.0.0.1', 45542) - \x10\xa0D
+2018-02-16 22:25:36,011 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:36,737 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:36,755 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x01
+2018-02-16 22:25:36,755 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01\x01
+2018-02-16 22:25:36,759 Received data from serial device for client: ('127.0.0.1', 45532) - `H
+2018-02-16 22:25:36,759 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:36,760 Received data from serial device for client: ('127.0.0.1', 45542) - `H
+2018-02-16 22:25:36,760 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:36,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:37,005 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:37,005 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02
+2018-02-16 22:25:37,009 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x10\xa0D
+2018-02-16 22:25:37,010 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:37,011 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x10\xa0D
+2018-02-16 22:25:37,012 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:37,737 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:37,754 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01\x01
+2018-02-16 22:25:37,755 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01\x01
+2018-02-16 22:25:37,758 Received data from serial device for client: ('127.0.0.1', 45532) - `H
+2018-02-16 22:25:37,759 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:37,759 Received data from serial device for client: ('127.0.0.1', 45542) - `H
+2018-02-16 22:25:37,760 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:25:37,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:38,004 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02
+2018-02-16 22:25:38,004 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02
+2018-02-16 22:25:38,008 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x10\xa0D
+2018-02-16 22:25:38,009 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:38,010 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x10\xa0D
+2018-02-16 22:25:38,010 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:38,737 Received data from client: ('127.0.0.1', 45532) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:25:38,753 Received data from serial device for client: ('127.0.0.1', 45532) - \x01\x02\x01
+2018-02-16 22:25:38,754 Received data from serial device for client: ('127.0.0.1', 45542) - \x01\x02\x01
+2018-02-16 22:25:38,757 Received data from serial device for client: ('127.0.0.1', 45532) - \x00\xa1\x88
+2018-02-16 22:25:38,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:38,758 Received data from serial device for client: ('127.0.0.1', 45542) - \x00\xa1\x88
+2018-02-16 22:25:38,759 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:25:38,989 Received data from client: ('127.0.0.1', 45542) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:25:39,003 Received data from serial device for client: ('127.0.0.1', 45532) - \x01
+2018-02-16 22:25:39,004 Received data from serial device for client: ('127.0.0.1', 45542) - \x01
+2018-02-16 22:25:39,007 Received data from serial device for client: ('127.0.0.1', 45532) - \x02\x01\x10\xa0
+2018-02-16 22:25:39,008 Received data from serial device for client: ('127.0.0.1', 45542) - \x02\x01\x10\xa0
+2018-02-16 22:25:39,011 Received data from serial device for client: ('127.0.0.1', 45532) - D
+2018-02-16 22:25:39,012 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45532),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:39,012 Received data from serial device for client: ('127.0.0.1', 45542) - D
+2018-02-16 22:25:39,013 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45542),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:25:39,432 Connection reset by peer
+2018-02-16 22:25:39,433 Stopping serial-server 0.0.0.0:6500
+2018-02-16 22:25:39,433 Closing the serial connection for Arduino Modbus RTU Slave A on /dev/ttyACM0
+2018-02-16 22:26:46,297 --force option specified. Using testing configuration:
+2018-02-16 22:26:46,299 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:26:46,299 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:26:46,361 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:26:46,365 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f45b1516e18>
+2018-02-16 22:26:46,368 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:26:46,368 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 22:26:49,006 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (8fffb44c-3b63-4190-8053-99d9ce68bcc5)
+2018-02-16 22:26:49,006 New Connection from 127.0.0.1:45572 on serial server arduino_modbus_rtu_slave_a. (8fffb44c-3b63-4190-8053-99d9ce68bcc5)
+2018-02-16 22:26:49,008 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:49,024 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01
+2018-02-16 22:26:49,028 Received data from serial device for client: ('127.0.0.1', 45572) - \x01`H
+2018-02-16 22:26:49,029 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:26:50,006 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:50,024 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01\x01
+2018-02-16 22:26:50,028 Received data from serial device for client: ('127.0.0.1', 45572) - `H
+2018-02-16 22:26:50,028 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:26:51,006 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:51,023 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01
+2018-02-16 22:26:51,027 Received data from serial device for client: ('127.0.0.1', 45572) - \x00\xa1\x88
+2018-02-16 22:26:51,028 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:26:52,006 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:52,022 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01
+2018-02-16 22:26:52,026 Received data from serial device for client: ('127.0.0.1', 45572) - \x01`H
+2018-02-16 22:26:52,027 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:26:52,227 New Connection from 127.0.0.1:45574 on serial server arduino_modbus_rtu_slave_a. (8fffb44c-3b63-4190-8053-99d9ce68bcc5)
+2018-02-16 22:26:52,228 Received data from client: ('127.0.0.1', 45574) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:26:52,243 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x02
+2018-02-16 22:26:52,244 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02
+2018-02-16 22:26:52,247 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x10\xa0D
+2018-02-16 22:26:52,248 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:52,249 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x10\xa0D
+2018-02-16 22:26:52,249 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:53,007 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:53,021 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x02
+2018-02-16 22:26:53,022 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02
+2018-02-16 22:26:53,025 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x00\xa1\x88
+2018-02-16 22:26:53,026 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:26:53,027 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x00\xa1\x88
+2018-02-16 22:26:53,027 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:26:53,228 Received data from client: ('127.0.0.1', 45574) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:26:53,242 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x02
+2018-02-16 22:26:53,243 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02
+2018-02-16 22:26:53,247 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x10\xa0D
+2018-02-16 22:26:53,248 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:53,248 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x10\xa0D
+2018-02-16 22:26:53,249 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:54,007 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:54,021 Received data from serial device for client: ('127.0.0.1', 45574) - \x01
+2018-02-16 22:26:54,021 Received data from serial device for client: ('127.0.0.1', 45572) - \x01
+2018-02-16 22:26:54,025 Received data from serial device for client: ('127.0.0.1', 45574) - \x02\x01\x00\xa1
+2018-02-16 22:26:54,025 Received data from serial device for client: ('127.0.0.1', 45572) - \x02\x01\x00\xa1
+2018-02-16 22:26:54,029 Received data from serial device for client: ('127.0.0.1', 45574) - \x88
+2018-02-16 22:26:54,029 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:26:54,030 Received data from serial device for client: ('127.0.0.1', 45572) - \x88
+2018-02-16 22:26:54,030 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:26:54,228 Received data from client: ('127.0.0.1', 45574) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:26:54,242 Received data from serial device for client: ('127.0.0.1', 45574) - \x01
+2018-02-16 22:26:54,243 Received data from serial device for client: ('127.0.0.1', 45572) - \x01
+2018-02-16 22:26:54,246 Received data from serial device for client: ('127.0.0.1', 45574) - \x02\x01\x10\xa0
+2018-02-16 22:26:54,246 Received data from serial device for client: ('127.0.0.1', 45572) - \x02\x01\x10\xa0
+2018-02-16 22:26:54,250 Received data from serial device for client: ('127.0.0.1', 45574) - D
+2018-02-16 22:26:54,250 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:54,251 Received data from serial device for client: ('127.0.0.1', 45572) - D
+2018-02-16 22:26:54,251 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:55,007 Received data from client: ('127.0.0.1', 45572) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:26:55,024 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x02\x01\x01
+2018-02-16 22:26:55,025 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01\x01
+2018-02-16 22:26:55,028 Received data from serial device for client: ('127.0.0.1', 45574) - `H
+2018-02-16 22:26:55,029 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:26:55,029 Received data from serial device for client: ('127.0.0.1', 45572) - `H
+2018-02-16 22:26:55,030 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:26:55,228 Received data from client: ('127.0.0.1', 45574) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:26:55,245 Received data from serial device for client: ('127.0.0.1', 45574) - \x01\x02\x01\x10
+2018-02-16 22:26:55,246 Received data from serial device for client: ('127.0.0.1', 45572) - \x01\x02\x01\x10
+2018-02-16 22:26:55,250 Received data from serial device for client: ('127.0.0.1', 45574) - \xa0D
+2018-02-16 22:26:55,251 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45574),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:55,251 Received data from serial device for client: ('127.0.0.1', 45572) - \xa0D
+2018-02-16 22:26:55,253 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45572),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:26:55,709 Connection reset by peer
+2018-02-16 22:27:29,473 --force option specified. Using testing configuration:
+2018-02-16 22:27:29,474 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:27:29,475 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:27:29,948 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:27:29,953 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7fcf5dc1b488>
+2018-02-16 22:27:29,956 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:27:29,956 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 22:27:31,832 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (b2b97048-9a80-4e60-91e4-49a02f12f938)
+2018-02-16 22:27:31,833 New Connection from 127.0.0.1:45618 on serial server arduino_modbus_rtu_slave_a. (b2b97048-9a80-4e60-91e4-49a02f12f938)
+2018-02-16 22:27:31,834 Received data from client: ('127.0.0.1', 45618) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:27:31,851 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02\x01\x00
+2018-02-16 22:27:31,855 Received data from serial device for client: ('127.0.0.1', 45618) - \xa1\x88
+2018-02-16 22:27:31,856 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:27:32,832 Received data from client: ('127.0.0.1', 45618) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:27:32,846 Received data from serial device for client: ('127.0.0.1', 45618) - \x01
+2018-02-16 22:27:32,851 Received data from serial device for client: ('127.0.0.1', 45618) - \x02\x01\x01`
+2018-02-16 22:27:32,855 Received data from serial device for client: ('127.0.0.1', 45618) - H
+2018-02-16 22:27:32,855 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:27:33,832 Received data from client: ('127.0.0.1', 45618) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:27:33,850 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02\x01\x01
+2018-02-16 22:27:33,854 Received data from serial device for client: ('127.0.0.1', 45618) - `H
+2018-02-16 22:27:33,855 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:27:34,226 New Connection from 127.0.0.1:45620 on serial server arduino_modbus_rtu_slave_a. (b2b97048-9a80-4e60-91e4-49a02f12f938)
+2018-02-16 22:27:34,227 Received data from client: ('127.0.0.1', 45620) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:27:34,243 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02\x01
+2018-02-16 22:27:34,244 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x02\x01
+2018-02-16 22:27:34,247 Received data from serial device for client: ('127.0.0.1', 45618) - \x10\xa0D
+2018-02-16 22:27:34,248 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:34,248 Received data from serial device for client: ('127.0.0.1', 45620) - \x10\xa0D
+2018-02-16 22:27:34,249 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45620),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:34,833 Received data from client: ('127.0.0.1', 45618) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:27:34,849 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02\x01
+2018-02-16 22:27:34,850 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x02\x01
+2018-02-16 22:27:34,853 Received data from serial device for client: ('127.0.0.1', 45618) - \x01`H
+2018-02-16 22:27:34,854 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:27:34,854 Received data from serial device for client: ('127.0.0.1', 45620) - \x01`H
+2018-02-16 22:27:34,855 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45620),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:27:35,226 Received data from client: ('127.0.0.1', 45620) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:27:35,242 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02\x01
+2018-02-16 22:27:35,243 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x02\x01
+2018-02-16 22:27:35,247 Received data from serial device for client: ('127.0.0.1', 45618) - \x10\xa0D
+2018-02-16 22:27:35,248 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:35,249 Received data from serial device for client: ('127.0.0.1', 45620) - \x10\xa0D
+2018-02-16 22:27:35,249 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45620),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:35,833 Received data from client: ('127.0.0.1', 45618) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:27:35,848 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02
+2018-02-16 22:27:35,849 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x02
+2018-02-16 22:27:35,853 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x00\xa1\x88
+2018-02-16 22:27:35,853 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:27:35,853 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x00\xa1\x88
+2018-02-16 22:27:35,854 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45620),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:27:36,226 Received data from client: ('127.0.0.1', 45620) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:27:36,242 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x02
+2018-02-16 22:27:36,243 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x02
+2018-02-16 22:27:36,246 Received data from serial device for client: ('127.0.0.1', 45618) - \x01\x10\xa0D
+2018-02-16 22:27:36,247 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45618),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:36,248 Received data from serial device for client: ('127.0.0.1', 45620) - \x01\x10\xa0D
+2018-02-16 22:27:36,249 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45620),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:27:36,674 Connection reset by peer
+2018-02-16 22:30:03,449 --force option specified. Using testing configuration:
+2018-02-16 22:30:03,450 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:30:03,451 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:30:03,655 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:30:03,669 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7feeb9f26e18>
+2018-02-16 22:30:03,672 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:30:03,672 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 22:30:05,584 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (3512098e-aff8-4770-8cc5-f977e44a56e8)
+2018-02-16 22:30:05,585 New Connection from 127.0.0.1:45726 on serial server arduino_modbus_rtu_slave_a. (3512098e-aff8-4770-8cc5-f977e44a56e8)
+2018-02-16 22:30:05,586 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:05,603 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02\x01\x01
+2018-02-16 22:30:05,607 Received data from serial device for client: ('127.0.0.1', 45726) - `H
+2018-02-16 22:30:05,608 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:06,584 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:06,598 Received data from serial device for client: ('127.0.0.1', 45726) - \x01
+2018-02-16 22:30:06,602 Received data from serial device for client: ('127.0.0.1', 45726) - \x02\x01\x01`
+2018-02-16 22:30:06,606 Received data from serial device for client: ('127.0.0.1', 45726) - H
+2018-02-16 22:30:06,607 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:07,584 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:07,602 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02\x01\x00
+2018-02-16 22:30:07,606 Received data from serial device for client: ('127.0.0.1', 45726) - \xa1\x88
+2018-02-16 22:30:07,607 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:30:08,156 New Connection from 127.0.0.1:45730 on serial server arduino_modbus_rtu_slave_a. (3512098e-aff8-4770-8cc5-f977e44a56e8)
+2018-02-16 22:30:08,157 Received data from client: ('127.0.0.1', 45730) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:30:08,171 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x02
+2018-02-16 22:30:08,171 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02
+2018-02-16 22:30:08,175 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x10\xa0D
+2018-02-16 22:30:08,176 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:08,177 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x10\xa0D
+2018-02-16 22:30:08,178 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:08,585 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:08,601 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x02\x01
+2018-02-16 22:30:08,602 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02\x01
+2018-02-16 22:30:08,605 Received data from serial device for client: ('127.0.0.1', 45730) - \x01`H
+2018-02-16 22:30:08,606 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:08,606 Received data from serial device for client: ('127.0.0.1', 45726) - \x01`H
+2018-02-16 22:30:08,607 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:09,156 Received data from client: ('127.0.0.1', 45730) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:30:09,170 Received data from serial device for client: ('127.0.0.1', 45730) - \x01
+2018-02-16 22:30:09,172 Received data from serial device for client: ('127.0.0.1', 45726) - \x01
+2018-02-16 22:30:09,174 Received data from serial device for client: ('127.0.0.1', 45730) - \x02\x01\x10\xa0
+2018-02-16 22:30:09,175 Received data from serial device for client: ('127.0.0.1', 45726) - \x02\x01\x10\xa0
+2018-02-16 22:30:09,178 Received data from serial device for client: ('127.0.0.1', 45730) - D
+2018-02-16 22:30:09,179 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:09,180 Received data from serial device for client: ('127.0.0.1', 45726) - D
+2018-02-16 22:30:09,180 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:09,585 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:09,600 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x02
+2018-02-16 22:30:09,601 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02
+2018-02-16 22:30:09,604 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x00\xa1\x88
+2018-02-16 22:30:09,605 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:30:09,605 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x00\xa1\x88
+2018-02-16 22:30:09,606 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:30:10,156 Received data from client: ('127.0.0.1', 45730) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:30:10,174 Received data from serial device for client: ('127.0.0.1', 45730) - \x01\x02\x01\x10
+2018-02-16 22:30:10,175 Received data from serial device for client: ('127.0.0.1', 45726) - \x01\x02\x01\x10
+2018-02-16 22:30:10,178 Received data from serial device for client: ('127.0.0.1', 45730) - \xa0D
+2018-02-16 22:30:10,179 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:10,179 Received data from serial device for client: ('127.0.0.1', 45726) - \xa0D
+2018-02-16 22:30:10,180 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:30:10,585 Received data from client: ('127.0.0.1', 45726) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:30:10,600 Received data from serial device for client: ('127.0.0.1', 45730) - \x01
+2018-02-16 22:30:10,600 Received data from serial device for client: ('127.0.0.1', 45726) - \x01
+2018-02-16 22:30:10,604 Received data from serial device for client: ('127.0.0.1', 45730) - \x02\x01\x01`
+2018-02-16 22:30:10,604 Received data from serial device for client: ('127.0.0.1', 45726) - \x02\x01\x01`
+2018-02-16 22:30:10,608 Received data from serial device for client: ('127.0.0.1', 45730) - H
+2018-02-16 22:30:10,608 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45730),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:10,608 Received data from serial device for client: ('127.0.0.1', 45726) - H
+2018-02-16 22:30:10,609 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45726),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:30:11,117 Connection reset by peer
+2018-02-16 22:31:42,750 --force option specified. Using testing configuration:
+2018-02-16 22:31:42,752 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 22:31:42,752 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 22:31:42,816 Fetched 59.178.45.26 as external ip.
+2018-02-16 22:31:42,821 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f582f713488>
+2018-02-16 22:31:42,824 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 22:31:42,825 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 22:31:46,976 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (6490ae63-42c0-4484-b66e-c41bdb11f8e0)
+2018-02-16 22:31:46,976 New Connection from 127.0.0.1:45794 on serial server arduino_modbus_rtu_slave_a. (6490ae63-42c0-4484-b66e-c41bdb11f8e0)
+2018-02-16 22:31:46,978 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:46,994 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01
+2018-02-16 22:31:46,998 Received data from serial device for client: ('127.0.0.1', 45794) - \x01`H
+2018-02-16 22:31:46,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:47,976 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:47,993 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01\x01
+2018-02-16 22:31:47,997 Received data from serial device for client: ('127.0.0.1', 45794) - `H
+2018-02-16 22:31:47,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:48,976 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:48,992 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01
+2018-02-16 22:31:48,996 Received data from serial device for client: ('127.0.0.1', 45794) - \x01`H
+2018-02-16 22:31:48,997 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:49,976 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:49,991 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02
+2018-02-16 22:31:49,995 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x00\xa1\x88
+2018-02-16 22:31:49,996 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:31:50,976 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:50,991 Received data from serial device for client: ('127.0.0.1', 45794) - \x01
+2018-02-16 22:31:50,995 Received data from serial device for client: ('127.0.0.1', 45794) - \x02\x01\x01`
+2018-02-16 22:31:50,999 Received data from serial device for client: ('127.0.0.1', 45794) - H
+2018-02-16 22:31:50,999 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:51,826 New Connection from 127.0.0.1:45796 on serial server arduino_modbus_rtu_slave_a. (6490ae63-42c0-4484-b66e-c41bdb11f8e0)
+2018-02-16 22:31:51,826 Received data from client: ('127.0.0.1', 45796) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:31:51,843 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01
+2018-02-16 22:31:51,843 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02\x01
+2018-02-16 22:31:51,846 Received data from serial device for client: ('127.0.0.1', 45794) - \x10\xa0D
+2018-02-16 22:31:51,847 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:51,848 Received data from serial device for client: ('127.0.0.1', 45796) - \x10\xa0D
+2018-02-16 22:31:51,849 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:51,977 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:51,994 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01\x01
+2018-02-16 22:31:51,995 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02\x01\x01
+2018-02-16 22:31:51,998 Received data from serial device for client: ('127.0.0.1', 45794) - `H
+2018-02-16 22:31:51,999 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:51,999 Received data from serial device for client: ('127.0.0.1', 45796) - `H
+2018-02-16 22:31:52,000 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:52,826 Received data from client: ('127.0.0.1', 45796) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:31:52,842 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01
+2018-02-16 22:31:52,843 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02\x01
+2018-02-16 22:31:52,846 Received data from serial device for client: ('127.0.0.1', 45794) - \x10\xa0D
+2018-02-16 22:31:52,847 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:52,848 Received data from serial device for client: ('127.0.0.1', 45796) - \x10\xa0D
+2018-02-16 22:31:52,849 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:52,977 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:52,994 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02\x01
+2018-02-16 22:31:52,994 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02\x01
+2018-02-16 22:31:52,998 Received data from serial device for client: ('127.0.0.1', 45794) - \x01`H
+2018-02-16 22:31:52,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:52,998 Received data from serial device for client: ('127.0.0.1', 45796) - \x01`H
+2018-02-16 22:31:52,999 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 22:31:53,826 Received data from client: ('127.0.0.1', 45796) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:31:53,841 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02
+2018-02-16 22:31:53,842 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02
+2018-02-16 22:31:53,845 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x10\xa0D
+2018-02-16 22:31:53,846 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:53,847 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x10\xa0D
+2018-02-16 22:31:53,848 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:53,977 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:53,993 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02
+2018-02-16 22:31:53,993 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02
+2018-02-16 22:31:53,997 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x00\xa1\x88
+2018-02-16 22:31:53,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:31:53,998 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x00\xa1\x88
+2018-02-16 22:31:53,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:31:54,826 Received data from client: ('127.0.0.1', 45796) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-16 22:31:54,841 Received data from serial device for client: ('127.0.0.1', 45794) - \x01
+2018-02-16 22:31:54,842 Received data from serial device for client: ('127.0.0.1', 45796) - \x01
+2018-02-16 22:31:54,845 Received data from serial device for client: ('127.0.0.1', 45794) - \x02\x01\x10\xa0
+2018-02-16 22:31:54,845 Received data from serial device for client: ('127.0.0.1', 45796) - \x02\x01\x10\xa0
+2018-02-16 22:31:54,849 Received data from serial device for client: ('127.0.0.1', 45794) - D
+2018-02-16 22:31:54,849 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:54,850 Received data from serial device for client: ('127.0.0.1', 45796) - D
+2018-02-16 22:31:54,850 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 22:31:54,977 Received data from client: ('127.0.0.1', 45794) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-16 22:31:54,992 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x02
+2018-02-16 22:31:54,992 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x02
+2018-02-16 22:31:54,996 Received data from serial device for client: ('127.0.0.1', 45794) - \x01\x00\xa1\x88
+2018-02-16 22:31:54,997 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45794),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:31:54,997 Received data from serial device for client: ('127.0.0.1', 45796) - \x01\x00\xa1\x88
+2018-02-16 22:31:54,998 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 45796),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 22:31:55,324 Connection reset by peer
+2018-02-16 23:47:52,049 --force option specified. Using testing configuration:
+2018-02-16 23:47:52,051 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 23:47:52,051 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 23:47:52,812 Fetched 59.178.45.26 as external ip.
+2018-02-16 23:48:42,839 --force option specified. Using testing configuration:
+2018-02-16 23:48:42,841 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 23:48:42,841 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 23:48:42,905 Fetched 59.178.45.26 as external ip.
+2018-02-16 23:48:42,909 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7fdc174f3488>
+2018-02-16 23:48:42,912 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 23:48:42,912 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 23:48:45,655 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (64246254-dbcd-4dd9-a583-b63a17f4613f)
+2018-02-16 23:48:45,656 New Connection from 127.0.0.1:48920 on serial server arduino_modbus_rtu_slave_a. (64246254-dbcd-4dd9-a583-b63a17f4613f)
+2018-02-16 23:48:45,659 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:45,674 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:45,678 Received data from serial device for client: ('127.0.0.1', 48920) - `H
+2018-02-16 23:48:45,679 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:46,655 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:46,670 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:46,670 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:46,674 Received data from serial device for client: ('127.0.0.1', 48920) - `
+2018-02-16 23:48:46,674 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:46,678 Received data from serial device for client: ('127.0.0.1', 48920) - H
+2018-02-16 23:48:46,678 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:47,656 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:47,669 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:47,669 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:47,673 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:47,674 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:47,677 Received data from serial device for client: ('127.0.0.1', 48920) - `H
+2018-02-16 23:48:47,678 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:48,656 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:48,673 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:48,673 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:48,677 Received data from serial device for client: ('127.0.0.1', 48920) - `H
+2018-02-16 23:48:48,677 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:49,656 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:49,672 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:49,673 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:49,676 Received data from serial device for client: ('127.0.0.1', 48920) - `H
+2018-02-16 23:48:49,677 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:50,656 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:50,672 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:50,672 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:50,676 Received data from serial device for client: ('127.0.0.1', 48920) -  ¡ˆ
+2018-02-16 23:48:50,676 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:51,657 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:51,671 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:51,672 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:51,675 Received data from serial device for client: ('127.0.0.1', 48920) - `
+2018-02-16 23:48:51,676 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:51,679 Received data from serial device for client: ('127.0.0.1', 48920) - H
+2018-02-16 23:48:51,680 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:52,657 Received data from client: ('127.0.0.1', 48920) -    ¹Ê
+2018-02-16 23:48:52,670 Received data from serial device for client: ('127.0.0.1', 48920) - 
+2018-02-16 23:48:52,671 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:52,675 Received data from serial device for client: ('127.0.0.1', 48920) -  ¡
+2018-02-16 23:48:52,675 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:52,679 Received data from serial device for client: ('127.0.0.1', 48920) - ˆ
+2018-02-16 23:48:52,679 On serial server Arduino Modbus RTU Slave A - error occurred while decoding
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/emulators/serial/serial_server.py", line 221, in _parse_request_response
+    if self.decoder.validate_crc(self.bytes_to_send[client_address]):
+  File "/usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/protocols/misc/modbus_rtu_decoder.py", line 35, in validate_crc
+    return crc == utils.calculate_crc(message[:-2])
+  File "/usr/local/lib/python2.7/dist-packages/modbus_tk/utils.py", line 146, in calculate_crc
+    crc = crc ^ ord(i)
+TypeError: ord() expected string of length 1, but int found
+2018-02-16 23:48:53,422 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 48920) closed socket normally
+2018-02-16 23:48:53,423 Disconnecting client ('127.0.0.1', 48920) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-16 23:54:25,503 --force option specified. Using testing configuration:
+2018-02-16 23:54:25,504 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-16 23:54:25,505 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-16 23:54:26,782 Fetched 59.178.45.26 as external ip.
+2018-02-16 23:54:26,788 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f73ccb5ddd0>
+2018-02-16 23:54:26,791 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-16 23:54:26,791 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-16 23:54:28,530 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (d7a22802-8645-46c5-bee7-8a7c1d39f075)
+2018-02-16 23:54:28,531 New Connection from 127.0.0.1:49122 on serial server arduino_modbus_rtu_slave_a. (d7a22802-8645-46c5-bee7-8a7c1d39f075)
+2018-02-16 23:54:28,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:28,548 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:28,552 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:28,553 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:29,530 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:29,548 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:29,552 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:29,552 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:30,530 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:30,547 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:30,551 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:30,551 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:31,530 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:31,546 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:31,550 Received data from serial device for client: ('127.0.0.1', 49122) -  ¡ˆ
+2018-02-16 23:54:31,551 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:32,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:32,546 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:32,550 Received data from serial device for client: ('127.0.0.1', 49122) -  ¡ˆ
+2018-02-16 23:54:32,550 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:33,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:33,545 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:33,549 Received data from serial device for client: ('127.0.0.1', 49122) -  ¡
+2018-02-16 23:54:33,553 Received data from serial device for client: ('127.0.0.1', 49122) - ˆ
+2018-02-16 23:54:33,554 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:34,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:34,548 Received data from serial device for client: ('127.0.0.1', 49122) -  
+2018-02-16 23:54:34,552 Received data from serial device for client: ('127.0.0.1', 49122) - ¡ˆ
+2018-02-16 23:54:34,553 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:35,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:35,548 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:35,552 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:35,552 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:36,531 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:36,547 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:36,551 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:36,552 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:37,485 New Connection from 127.0.0.1:49126 on serial server arduino_modbus_rtu_slave_a. (d7a22802-8645-46c5-bee7-8a7c1d39f075)
+2018-02-16 23:54:37,485 Received data from client: ('127.0.0.1', 49126) - ' ²»
+2018-02-16 23:54:37,501 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:37,502 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:37,505 Received data from serial device for client: ('127.0.0.1', 49126) -  D
+2018-02-16 23:54:37,506 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:37,507 Received data from serial device for client: ('127.0.0.1', 49122) -  D
+2018-02-16 23:54:37,507 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:37,532 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:37,546 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:37,547 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:37,551 Received data from serial device for client: ('127.0.0.1', 49126) - `H
+2018-02-16 23:54:37,551 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:37,552 Received data from serial device for client: ('127.0.0.1', 49122) - `H
+2018-02-16 23:54:37,552 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:38,485 Received data from client: ('127.0.0.1', 49126) - ' ²»
+2018-02-16 23:54:38,501 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:38,501 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:38,505 Received data from serial device for client: ('127.0.0.1', 49126) -  D
+2018-02-16 23:54:38,506 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:38,507 Received data from serial device for client: ('127.0.0.1', 49122) -  D
+2018-02-16 23:54:38,507 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:38,532 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:38,546 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:38,546 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:38,550 Received data from serial device for client: ('127.0.0.1', 49126) - `
+2018-02-16 23:54:38,550 Received data from serial device for client: ('127.0.0.1', 49122) - `
+2018-02-16 23:54:38,554 Received data from serial device for client: ('127.0.0.1', 49126) - H
+2018-02-16 23:54:38,554 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:38,555 Received data from serial device for client: ('127.0.0.1', 49122) - H
+2018-02-16 23:54:38,555 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-16 23:54:39,485 Received data from client: ('127.0.0.1', 49126) - ' ²»
+2018-02-16 23:54:39,500 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:39,501 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:39,504 Received data from serial device for client: ('127.0.0.1', 49126) -  D
+2018-02-16 23:54:39,505 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:39,505 Received data from serial device for client: ('127.0.0.1', 49122) -  D
+2018-02-16 23:54:39,506 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:39,532 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:39,549 Received data from serial device for client: ('127.0.0.1', 49126) -  
+2018-02-16 23:54:39,550 Received data from serial device for client: ('127.0.0.1', 49122) -  
+2018-02-16 23:54:39,553 Received data from serial device for client: ('127.0.0.1', 49126) - ¡ˆ
+2018-02-16 23:54:39,554 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:39,554 Received data from serial device for client: ('127.0.0.1', 49122) - ¡ˆ
+2018-02-16 23:54:39,555 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:40,485 Received data from client: ('127.0.0.1', 49126) - ' ²»
+2018-02-16 23:54:40,499 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:40,501 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:40,504 Received data from serial device for client: ('127.0.0.1', 49126) -  
+2018-02-16 23:54:40,504 Received data from serial device for client: ('127.0.0.1', 49122) -  
+2018-02-16 23:54:40,508 Received data from serial device for client: ('127.0.0.1', 49126) - D
+2018-02-16 23:54:40,508 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:40,509 Received data from serial device for client: ('127.0.0.1', 49122) - D
+2018-02-16 23:54:40,510 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-16 23:54:40,532 Received data from client: ('127.0.0.1', 49122) -    ¹Ê
+2018-02-16 23:54:40,548 Received data from serial device for client: ('127.0.0.1', 49126) - 
+2018-02-16 23:54:40,549 Received data from serial device for client: ('127.0.0.1', 49122) - 
+2018-02-16 23:54:40,553 Received data from serial device for client: ('127.0.0.1', 49126) -  ¡ˆ
+2018-02-16 23:54:40,553 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49126),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:40,554 Received data from serial device for client: ('127.0.0.1', 49122) -  ¡ˆ
+2018-02-16 23:54:40,554 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49122),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-16 23:54:40,884 Connection reset by peer
+2018-02-17 00:08:54,182 --force option specified. Using testing configuration:
+2018-02-17 00:08:54,184 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 00:08:54,185 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 00:08:55,577 Fetched 59.178.45.26 as external ip.
+2018-02-17 00:08:55,582 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f2485d134d0>
+2018-02-17 00:08:55,585 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 00:08:55,586 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-17 00:16:17,205 --force option specified. Using testing configuration:
+2018-02-17 00:16:17,207 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 00:16:17,207 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 00:16:22,271 Fetched 59.178.45.26 as external ip.
+2018-02-17 00:16:22,277 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f8ce236b560>
+2018-02-17 00:16:22,279 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 00:16:22,280 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-17 00:16:24,398 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (fc57201c-3c97-4f7d-91b7-69c5b81e680c)
+2018-02-17 00:16:24,398 New Connection from 127.0.0.1:49814 on serial server arduino_modbus_rtu_slave_a. (fc57201c-3c97-4f7d-91b7-69c5b81e680c)
+2018-02-17 00:16:24,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:24,417 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01\x00
+2018-02-17 00:16:24,421 Received data from serial device for client: ('127.0.0.1', 49814) - \xa1\x88
+2018-02-17 00:16:24,422 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:25,398 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:25,412 Received data from serial device for client: ('127.0.0.1', 49814) - \x01
+2018-02-17 00:16:25,416 Received data from serial device for client: ('127.0.0.1', 49814) - \x02\x01\x00\xa1
+2018-02-17 00:16:25,420 Received data from serial device for client: ('127.0.0.1', 49814) - \x88
+2018-02-17 00:16:25,421 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:26,398 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:26,411 Received data from serial device for client: ('127.0.0.1', 49814) - \x01
+2018-02-17 00:16:26,416 Received data from serial device for client: ('127.0.0.1', 49814) - \x02\x01\x00\xa1
+2018-02-17 00:16:26,420 Received data from serial device for client: ('127.0.0.1', 49814) - \x88
+2018-02-17 00:16:26,420 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:27,398 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:27,415 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01\x00
+2018-02-17 00:16:27,419 Received data from serial device for client: ('127.0.0.1', 49814) - \xa1\x88
+2018-02-17 00:16:27,420 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:28,398 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:28,414 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01
+2018-02-17 00:16:28,418 Received data from serial device for client: ('127.0.0.1', 49814) - \x01`H
+2018-02-17 00:16:28,419 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:29,398 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:29,414 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02
+2018-02-17 00:16:29,418 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x01`H
+2018-02-17 00:16:29,418 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:30,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:30,413 Received data from serial device for client: ('127.0.0.1', 49814) - \x01
+2018-02-17 00:16:30,417 Received data from serial device for client: ('127.0.0.1', 49814) - \x02\x01\x00\xa1
+2018-02-17 00:16:30,421 Received data from serial device for client: ('127.0.0.1', 49814) - \x88
+2018-02-17 00:16:30,422 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:31,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:31,412 Received data from serial device for client: ('127.0.0.1', 49814) - \x01
+2018-02-17 00:16:31,416 Received data from serial device for client: ('127.0.0.1', 49814) - \x02\x01\x00\xa1
+2018-02-17 00:16:31,421 Received data from serial device for client: ('127.0.0.1', 49814) - \x88
+2018-02-17 00:16:31,421 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:32,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:32,416 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01\x00
+2018-02-17 00:16:32,420 Received data from serial device for client: ('127.0.0.1', 49814) - \xa1\x88
+2018-02-17 00:16:32,420 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:33,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:33,415 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02
+2018-02-17 00:16:33,419 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x01`H
+2018-02-17 00:16:33,420 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:34,399 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:34,414 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02
+2018-02-17 00:16:34,419 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x01`H
+2018-02-17 00:16:34,419 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:35,400 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:35,414 Received data from serial device for client: ('127.0.0.1', 49814) - \x01
+2018-02-17 00:16:35,418 Received data from serial device for client: ('127.0.0.1', 49814) - \x02\x01\x01`
+2018-02-17 00:16:35,422 Received data from serial device for client: ('127.0.0.1', 49814) - H
+2018-02-17 00:16:35,422 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:36,400 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:36,417 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01\x01
+2018-02-17 00:16:36,422 Received data from serial device for client: ('127.0.0.1', 49814) - `H
+2018-02-17 00:16:36,422 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:37,400 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:37,417 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01
+2018-02-17 00:16:37,421 Received data from serial device for client: ('127.0.0.1', 49814) - \x00\xa1\x88
+2018-02-17 00:16:37,422 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:16:38,400 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:38,416 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02\x01
+2018-02-17 00:16:38,420 Received data from serial device for client: ('127.0.0.1', 49814) - \x01`H
+2018-02-17 00:16:38,421 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:39,401 Received data from client: ('127.0.0.1', 49814) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:16:39,415 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x02
+2018-02-17 00:16:39,420 Received data from serial device for client: ('127.0.0.1', 49814) - \x01\x01`H
+2018-02-17 00:16:39,420 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 49814),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:16:39,969 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 49814) closed socket normally
+2018-02-17 00:16:39,969 Disconnecting client ('127.0.0.1', 49814) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-17 00:19:57,222 --force option specified. Using testing configuration:
+2018-02-17 00:19:57,224 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 00:19:57,224 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 00:19:57,329 Fetched 59.178.45.26 as external ip.
+2018-02-17 00:19:57,335 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f945da8dea8>
+2018-02-17 00:19:57,338 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 00:32:39,780 --force option specified. Using testing configuration:
+2018-02-17 00:32:39,782 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 00:32:39,783 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 00:32:40,144 Fetched 59.178.45.26 as external ip.
+2018-02-17 00:32:40,148 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7efe7d60b560>
+2018-02-17 00:32:40,151 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 00:53:09,487 --force option specified. Using testing configuration:
+2018-02-17 00:53:09,488 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 00:53:09,489 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 00:53:15,279 Fetched 59.178.45.26 as external ip.
+2018-02-17 00:53:15,283 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7ff7fa0ceea8>
+2018-02-17 00:53:15,285 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 00:53:15,285 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-17 00:53:18,207 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (74591266-a63e-44ad-a0b6-1539ab932d48)
+2018-02-17 00:53:18,207 New Connection from 127.0.0.1:51498 on serial server arduino_modbus_rtu_slave_a. (74591266-a63e-44ad-a0b6-1539ab932d48)
+2018-02-17 00:53:18,209 Received data from client: ('127.0.0.1', 51498) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:53:18,224 Received data from serial device for client: ('127.0.0.1', 51498) - \x01\x02\x01
+2018-02-17 00:53:18,229 Received data from serial device for client: ('127.0.0.1', 51498) - \x00\xa1\x88
+2018-02-17 00:53:18,229 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51498),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:53:19,207 Received data from client: ('127.0.0.1', 51498) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:53:19,224 Received data from serial device for client: ('127.0.0.1', 51498) - \x01\x02\x01\x00
+2018-02-17 00:53:19,228 Received data from serial device for client: ('127.0.0.1', 51498) - \xa1\x88
+2018-02-17 00:53:19,228 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51498),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 00:53:20,207 Received data from client: ('127.0.0.1', 51498) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:53:20,223 Received data from serial device for client: ('127.0.0.1', 51498) - \x01\x02\x01
+2018-02-17 00:53:20,227 Received data from serial device for client: ('127.0.0.1', 51498) - \x01`H
+2018-02-17 00:53:20,228 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51498),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 00:53:21,207 Received data from client: ('127.0.0.1', 51498) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 00:53:21,222 Received data from serial device for client: ('127.0.0.1', 51498) - \x01\x02
+2018-02-17 00:53:21,224 Connection reset by peer
+2018-02-17 01:05:23,197 --force option specified. Using testing configuration:
+2018-02-17 01:05:23,198 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 01:05:23,199 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 01:05:23,264 Fetched 59.178.45.26 as external ip.
+2018-02-17 01:05:23,269 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f6fa41135a8>
+2018-02-17 01:05:23,272 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 01:05:23,272 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-17 01:05:24,893 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (819d763d-ab71-4196-9a4b-f4f141b5c30c)
+2018-02-17 01:05:24,893 New Connection from 127.0.0.1:51950 on serial server arduino_modbus_rtu_slave_a. (819d763d-ab71-4196-9a4b-f4f141b5c30c)
+2018-02-17 01:05:24,895 Received data from client: ('127.0.0.1', 51950) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:24,909 Received data from serial device for client: ('127.0.0.1', 51950) - \x01
+2018-02-17 01:05:24,913 Received data from serial device for client: ('127.0.0.1', 51950) - \x02\x01\x01`
+2018-02-17 01:05:24,917 Received data from serial device for client: ('127.0.0.1', 51950) - H
+2018-02-17 01:05:24,918 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51950),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:05:25,893 Received data from client: ('127.0.0.1', 51950) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:25,907 Received data from serial device for client: ('127.0.0.1', 51950) - \x01\x02
+2018-02-17 01:05:25,911 Received data from serial device for client: ('127.0.0.1', 51950) - \x01\x01`H
+2018-02-17 01:05:25,912 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51950),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:05:26,676 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 51950) closed socket normally
+2018-02-17 01:05:26,676 Disconnecting client ('127.0.0.1', 51950) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-17 01:05:31,326 New Connection from 127.0.0.1:51958 on serial server arduino_modbus_rtu_slave_a. (819d763d-ab71-4196-9a4b-f4f141b5c30c)
+2018-02-17 01:05:31,327 Received data from client: ('127.0.0.1', 51958) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:31,342 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x02\x01
+2018-02-17 01:05:31,346 Received data from serial device for client: ('127.0.0.1', 51958) - \x01`H
+2018-02-17 01:05:31,347 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:05:32,326 Received data from client: ('127.0.0.1', 51958) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:32,340 Received data from serial device for client: ('127.0.0.1', 51958) - \x01
+2018-02-17 01:05:32,345 Received data from serial device for client: ('127.0.0.1', 51958) - \x02\x01\x01`
+2018-02-17 01:05:32,348 Received data from serial device for client: ('127.0.0.1', 51958) - H
+2018-02-17 01:05:32,349 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:05:33,326 Received data from client: ('127.0.0.1', 51958) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:33,343 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x02\x01\x00
+2018-02-17 01:05:33,347 Received data from serial device for client: ('127.0.0.1', 51958) - \xa1\x88
+2018-02-17 01:05:33,348 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:05:33,735 New Connection from 127.0.0.1:51960 on serial server arduino_modbus_rtu_slave_a. (819d763d-ab71-4196-9a4b-f4f141b5c30c)
+2018-02-17 01:05:33,736 Received data from client: ('127.0.0.1', 51960) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:05:33,753 Received data from serial device for client: ('127.0.0.1', 51960) - \x01\x02\x01\x10
+2018-02-17 01:05:33,754 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x02\x01\x10
+2018-02-17 01:05:33,756 Received data from serial device for client: ('127.0.0.1', 51960) - \xa0D
+2018-02-17 01:05:33,757 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51960),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:33,758 Received data from serial device for client: ('127.0.0.1', 51958) - \xa0D
+2018-02-17 01:05:33,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:34,326 Received data from client: ('127.0.0.1', 51958) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:34,342 Received data from serial device for client: ('127.0.0.1', 51960) - \x01\x02
+2018-02-17 01:05:34,342 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x02
+2018-02-17 01:05:34,346 Received data from serial device for client: ('127.0.0.1', 51960) - \x01\x00\xa1\x88
+2018-02-17 01:05:34,346 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51960),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:05:34,347 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x00\xa1\x88
+2018-02-17 01:05:34,347 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:05:34,735 Received data from client: ('127.0.0.1', 51960) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:05:34,751 Received data from serial device for client: ('127.0.0.1', 51960) - \x01\x02\x01
+2018-02-17 01:05:34,752 Received data from serial device for client: ('127.0.0.1', 51958) - \x01\x02\x01
+2018-02-17 01:05:34,755 Received data from serial device for client: ('127.0.0.1', 51960) - \x10\xa0D
+2018-02-17 01:05:34,756 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51960),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:34,757 Received data from serial device for client: ('127.0.0.1', 51958) - \x10\xa0D
+2018-02-17 01:05:34,758 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:35,327 Received data from client: ('127.0.0.1', 51958) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:05:35,340 Received data from serial device for client: ('127.0.0.1', 51960) - \x01
+2018-02-17 01:05:35,341 Received data from serial device for client: ('127.0.0.1', 51958) - \x01
+2018-02-17 01:05:35,345 Received data from serial device for client: ('127.0.0.1', 51960) - \x02\x01\x00\xa1
+2018-02-17 01:05:35,345 Received data from serial device for client: ('127.0.0.1', 51958) - \x02\x01\x00\xa1
+2018-02-17 01:05:35,349 Received data from serial device for client: ('127.0.0.1', 51960) - \x88
+2018-02-17 01:05:35,349 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51960),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:05:35,349 Received data from serial device for client: ('127.0.0.1', 51958) - \x88
+2018-02-17 01:05:35,350 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:05:35,736 Received data from client: ('127.0.0.1', 51960) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:05:35,750 Received data from serial device for client: ('127.0.0.1', 51960) - \x01
+2018-02-17 01:05:35,751 Received data from serial device for client: ('127.0.0.1', 51958) - \x01
+2018-02-17 01:05:35,754 Received data from serial device for client: ('127.0.0.1', 51960) - \x02\x01\x10\xa0
+2018-02-17 01:05:35,754 Received data from serial device for client: ('127.0.0.1', 51958) - \x02\x01\x10\xa0
+2018-02-17 01:05:35,758 Received data from serial device for client: ('127.0.0.1', 51960) - D
+2018-02-17 01:05:35,759 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51960),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:35,759 Received data from serial device for client: ('127.0.0.1', 51958) - D
+2018-02-17 01:05:35,760 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 51958),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:05:35,827 Connection reset by peer
+2018-02-17 01:10:26,119 --force option specified. Using testing configuration:
+2018-02-17 01:10:26,120 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 01:10:26,120 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 01:10:26,504 Fetched 59.178.45.26 as external ip.
+2018-02-17 01:10:26,509 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f83a030eea8>
+2018-02-17 01:10:26,512 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 01:10:26,512 Starting serial server at: ('0.0.0.0', 6500)
+2018-02-17 01:10:27,897 New arduino_modbus_rtu_slave_a session from 127.0.0.1 (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:27,898 New Connection from 127.0.0.1:52142 on serial server arduino_modbus_rtu_slave_a. (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:27,899 Received data from client: ('127.0.0.1', 52142) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:28,898 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 52142) closed socket normally
+2018-02-17 01:10:28,899 Disconnecting client ('127.0.0.1', 52142) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-17 01:10:28,900 New Connection from 127.0.0.1:52144 on serial server arduino_modbus_rtu_slave_a. (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:28,900 Received data from client: ('127.0.0.1', 52144) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:28,915 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x02
+2018-02-17 01:10:28,919 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x01`H
+2018-02-17 01:10:28,920 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52144),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:29,899 Received data from client: ('127.0.0.1', 52144) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:29,914 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x02
+2018-02-17 01:10:29,918 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x00\xa1\x88
+2018-02-17 01:10:29,919 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52144),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:30,899 Received data from client: ('127.0.0.1', 52144) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:30,916 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x02\x01\x00
+2018-02-17 01:10:30,920 Received data from serial device for client: ('127.0.0.1', 52144) - \xa1\x88
+2018-02-17 01:10:30,921 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52144),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:31,899 Received data from client: ('127.0.0.1', 52144) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:31,915 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x02
+2018-02-17 01:10:31,919 Received data from serial device for client: ('127.0.0.1', 52144) - \x01\x01`H
+2018-02-17 01:10:31,920 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52144),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:32,697 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 52144) closed socket normally
+2018-02-17 01:10:32,698 Disconnecting client ('127.0.0.1', 52144) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-17 01:10:36,442 New Connection from 127.0.0.1:52150 on serial server arduino_modbus_rtu_slave_a. (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:36,443 Received data from client: ('127.0.0.1', 52150) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:36,458 Received data from serial device for client: ('127.0.0.1', 52150) - \x01\x02
+2018-02-17 01:10:36,462 Received data from serial device for client: ('127.0.0.1', 52150) - \x01\x01`H
+2018-02-17 01:10:36,463 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52150),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:37,442 Received data from client: ('127.0.0.1', 52150) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:37,457 Received data from serial device for client: ('127.0.0.1', 52150) - \x01\x02
+2018-02-17 01:10:37,461 Received data from serial device for client: ('127.0.0.1', 52150) - \x01\x00\xa1\x88
+2018-02-17 01:10:37,462 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52150),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:38,095 On serial server Arduino Modbus RTU Slave A - client ('127.0.0.1', 52150) closed socket normally
+2018-02-17 01:10:38,096 Disconnecting client ('127.0.0.1', 52150) : CONNECTION_TERMINATED on Arduino Modbus RTU Slave A
+2018-02-17 01:10:42,848 New Connection from 127.0.0.1:52156 on serial server arduino_modbus_rtu_slave_a. (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:42,849 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:42,865 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02\x01
+2018-02-17 01:10:42,869 Received data from serial device for client: ('127.0.0.1', 52156) - \x00\xa1\x88
+2018-02-17 01:10:42,869 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:43,848 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:43,866 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02\x01
+2018-02-17 01:10:43,868 Received data from serial device for client: ('127.0.0.1', 52156) - \x01`H
+2018-02-17 01:10:43,869 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:44,848 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:44,864 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02
+2018-02-17 01:10:44,868 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x01`H
+2018-02-17 01:10:44,869 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:45,848 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:45,863 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02
+2018-02-17 01:10:45,867 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x00\xa1\x88
+2018-02-17 01:10:45,868 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:45,930 New Connection from 127.0.0.1:52158 on serial server arduino_modbus_rtu_slave_a. (6ba26ddd-a354-42f6-8a0c-dd8671aa6417)
+2018-02-17 01:10:45,931 Received data from client: ('127.0.0.1', 52158) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:10:45,945 Received data from serial device for client: ('127.0.0.1', 52156) - \x01
+2018-02-17 01:10:45,946 Received data from serial device for client: ('127.0.0.1', 52158) - \x01
+2018-02-17 01:10:45,949 Received data from serial device for client: ('127.0.0.1', 52156) - \x02\x01\x10\xa0
+2018-02-17 01:10:45,950 Received data from serial device for client: ('127.0.0.1', 52158) - \x02\x01\x10\xa0
+2018-02-17 01:10:45,953 Received data from serial device for client: ('127.0.0.1', 52156) - D
+2018-02-17 01:10:45,954 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:45,954 Received data from serial device for client: ('127.0.0.1', 52158) - D
+2018-02-17 01:10:45,954 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52158),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:46,849 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:46,863 Received data from serial device for client: ('127.0.0.1', 52156) - \x01
+2018-02-17 01:10:46,863 Received data from serial device for client: ('127.0.0.1', 52158) - \x01
+2018-02-17 01:10:46,867 Received data from serial device for client: ('127.0.0.1', 52156) - \x02\x01\x01`
+2018-02-17 01:10:46,867 Received data from serial device for client: ('127.0.0.1', 52158) - \x02\x01\x01`
+2018-02-17 01:10:46,871 Received data from serial device for client: ('127.0.0.1', 52156) - H
+2018-02-17 01:10:46,871 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:46,872 Received data from serial device for client: ('127.0.0.1', 52158) - H
+2018-02-17 01:10:46,872 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52158),) -
+ Request: None,
+ Response: {'Data': (1, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 24648}
+2018-02-17 01:10:46,930 Received data from client: ('127.0.0.1', 52158) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:10:46,945 Received data from serial device for client: ('127.0.0.1', 52156) - \x01
+2018-02-17 01:10:46,945 Received data from serial device for client: ('127.0.0.1', 52158) - \x01
+2018-02-17 01:10:46,948 Received data from serial device for client: ('127.0.0.1', 52156) - \x02\x01\x10\xa0
+2018-02-17 01:10:46,949 Received data from serial device for client: ('127.0.0.1', 52158) - \x02\x01\x10\xa0
+2018-02-17 01:10:46,952 Received data from serial device for client: ('127.0.0.1', 52156) - D
+2018-02-17 01:10:46,953 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:46,954 Received data from serial device for client: ('127.0.0.1', 52158) - D
+2018-02-17 01:10:46,954 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52158),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:47,849 Received data from client: ('127.0.0.1', 52156) - \x01\x02\x00\x00\x00\x01\xb9\xca
+2018-02-17 01:10:47,866 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02\x01\x00
+2018-02-17 01:10:47,867 Received data from serial device for client: ('127.0.0.1', 52158) - \x01\x02\x01\x00
+2018-02-17 01:10:47,870 Received data from serial device for client: ('127.0.0.1', 52156) - \xa1\x88
+2018-02-17 01:10:47,871 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: {'Data': (0, 0, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 47562},
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:47,871 Received data from serial device for client: ('127.0.0.1', 52158) - \xa1\x88
+2018-02-17 01:10:47,872 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52158),) -
+ Request: None,
+ Response: {'Data': (1, 0), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41352}
+2018-02-17 01:10:47,931 Received data from client: ('127.0.0.1', 52158) - \x01\x02\'\x10\x00\x01\xb2\xbb
+2018-02-17 01:10:47,948 Received data from serial device for client: ('127.0.0.1', 52156) - \x01\x02\x01\x10
+2018-02-17 01:10:47,949 Received data from serial device for client: ('127.0.0.1', 52158) - \x01\x02\x01\x10
+2018-02-17 01:10:47,952 Received data from serial device for client: ('127.0.0.1', 52156) - \xa0D
+2018-02-17 01:10:47,953 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52156),) -
+ Request: None,
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:47,954 Received data from serial device for client: ('127.0.0.1', 52158) - \xa0D
+2018-02-17 01:10:47,954 Traffic on serial device Arduino Modbus RTU Slave A from client (('127.0.0.1', 52158),) -
+ Request: {'Data': (39, 16, 0, 1), 'Function Code': 2, 'Slave ID': 1, 'CRC': 45755},
+ Response: {'Data': (1, 16), 'Function Code': 2, 'Slave ID': 1, 'CRC': 41028}
+2018-02-17 01:10:48,090 Connection reset by peer
+2018-02-17 01:16:49,970 --force option specified. Using testing configuration:
+2018-02-17 01:16:49,971 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 01:16:49,972 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 01:16:53,369 Fetched 59.178.45.26 as external ip.
+2018-02-17 01:16:53,373 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f70f3c64560>
+2018-02-17 01:16:53,376 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
+2018-02-17 01:18:22,969 --force option specified. Using testing configuration:
+2018-02-17 01:18:22,971 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/templates/serial_server
+2018-02-17 01:18:22,971 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.1-py2.7.egg/conpot/testing.cfg
+2018-02-17 01:18:23,045 Fetched 59.178.45.26 as external ip.
+2018-02-17 01:18:23,049 On serial server Arduino Modbus RTU Slave A - using decoder: <conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder instance at 0x7f67ecea6ea8>
+2018-02-17 01:18:23,051 Connected to Arduino Modbus RTU Slave A device on serial port /dev/ttyACM0
