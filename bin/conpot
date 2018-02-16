@@ -351,9 +351,9 @@ def main():
                         else:
                             decoder = None
                         serial_server_instance = SerialServer(s, decoder)
-                        serial_server = serial_server_instance.start()
+                        # serial_server = serial_server_instance.start()
                         servers.append(serial_server_instance)
-                        serial_server_greenlet = gevent.spawn(serial_server.start)
+                        serial_server_greenlet = gevent.spawn(serial_server_instance.start)
                         serial_server_greenlet.link_exception(on_unhandled_greenlet_exception)
                 else:
                     logger.info ('Serial Server available but disabled by template.')

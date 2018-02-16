@@ -37,17 +37,19 @@ class ModbusRtuDecoder:
     @classmethod
     def decode(cls, data):
         """Decode the contents of the packet"""
-        assert cls.validate_crc(data), 'Not a valid Modbus RTU packet'
-        logging.debug('Decoding message: %s', data.encode('string-escape'))
-        message = {}
-        (message['Slave ID'], ) = unpack('>B', data[0])
-        pdu = data[1:-2]
-        if len(pdu) > 1:
-            (message['Function Code'], ) = unpack('>B', data[1])
-            # TODO: Map this to the Function codes provided by mobus_tk
-            message['Data'] = unpack('>' + ('B' * len(data[2:-2])), data[2:-2])
-        (message['CRC'], ) = unpack('>H', data[-2:])
-        return message
+        if cls.validate_crc(data):
+            logging.debug('Decoding message: %s', data.encode('string-escape'))
+            message = {}
+            (message['Slave ID'], ) = unpack('>B', data[0])
+            pdu = data[1:-2]
+            if len(pdu) > 1:
+                (message['Function Code'], ) = unpack('>B', data[1])
+                # TODO: Map this to the Function codes provided by mobus_tk
+                message['Data'] = unpack('>' + ('B' * len(data[2:-2])), data[2:-2])
+            (message['CRC'], ) = unpack('>H', data[-2:])
+            return message
+        else:
+            return
 
 
 # for debugging:
