@@ -31,9 +31,10 @@ import serial
 import logging
 from lxml import etree
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
-# logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+import logging as logger
+logger.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 import conpot.core as conpot_core
 
@@ -47,7 +48,7 @@ class SerialServer:
 
     :param: XML template object having information regarding host, port, serial device, baud rate etc.
     """
-    def __init__(self, args, decoder=None):
+    def __init__(self, args, decoder=None, timeout=0):
         self._parse_template_obj(args, decoder)  # setup the config for one serial device per template object
         # TODO: Figure out a better way to parse the template. Using a template object is probably not a good idea
         self._setup_tty()  # setup the serial device
@@ -120,7 +121,6 @@ class SerialServer:
         self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.listener.bind(connection)
         self.listener.listen(64)
-        # self.listener.settimeout(timeout)
 
     def start(self):
         """Start the Serial Server"""
@@ -137,7 +137,7 @@ class SerialServer:
 
     def _add_client(self, sock, address, session):
         """Add/configure a connected client socket"""
-        sock.setblocking(False)  # force socket.timeout in worst case
+        sock.setblocking(False)  # this is equivalent to sock.settimeout(0.0)
         self.sockets[sock.fileno()] = sock  # Add client to the dictionary
         self.addresses[sock] = address  # store the address of client
         session.add_event({'type': 'NEW_CONNECTION'})
@@ -149,7 +149,6 @@ class SerialServer:
         logger.info('Disconnecting client %s : %s on %s', conn, reason, self.name)
         session.add_event({'type': reason})
         self.poller.unregister(sock)
-        sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
     def _build_request(self, sock, raw_data, session):
@@ -174,7 +173,7 @@ class SerialServer:
                 self.bytes_to_send[sock] += raw_data
             else:
                 self.bytes_to_send[sock] = raw_data
-            logger.debug('Response data from serial device: %s - %s', self.device, self.bytes_to_send[sock])
+            logger.debug('Response data from serial device: %s - %s', self.device, self.bytes_to_send[sock].encode('string-escape'))
         else:
             self.bytes_to_send[sock] = raw_data  # make sure poller does not misbehave
             logger.info('Response data from serial device: %s - %s', self.device, raw_data.encode('string-escape'))
@@ -183,16 +182,19 @@ class SerialServer:
     def _parse_request_response(self, client_sock, session):
         """Function that checks whether the packet in buffers is valid, logs request and response"""
         if self.decoder:
-            try:
-                if self.decoder.validate_crc(self.bytes_received[client_sock]) and \
-                        self.decoder.validate_crc(self.bytes_to_send[self.tty]):
-                    rb = self.decoder.decode(self.bytes_received.pop(client_sock, b''))
-                    sb = self.decoder.decode(self.bytes_to_send.pop(self.tty, b''))
-                    logger.info('Traffic on serial device - request: %s,\n response: %s on serial server %s', rb, sb,
-                                self.name)
-                    session.add_event({'request': rb, 'response': sb})
-            except Exception:
-                logger.exception('On serial server %s - error occurred while decoding', self.name)
+                try:
+                    if self.decoder.validate_crc(self.bytes_received[client_sock]) and \
+                            self.decoder.validate_crc(self.bytes_to_send[self.tty]):
+                        rb = self.decoder.decode(self.bytes_received[client_sock])  # let us keep the sockets in our buffer
+                        sb = self.decoder.decode(self.bytes_to_send.pop(self.tty, b''))
+                        logger.info('Traffic on serial device - request: %s, from %s\n '
+                                    'response: %s on serial server %s',
+                                    rb, client_sock, sb, self.name)
+                        session.add_event({'request': rb, 'response': sb})
+                except KeyError:
+                    logger.exception('Key Error: Client Sock does not exist in the dictionary')
+                except Exception:
+                    logger.exception('On serial server %s - error occurred while decoding', self.name)
 
     def _all_events(self):
         while True:
@@ -206,18 +208,19 @@ class SerialServer:
             sock = self.sockets[fd]
             # Socket closed: remove from the DS
             if event & (select.POLLHUP | select.POLLERR | select.POLLNVAL):
-                address = self.addresses.pop(sock)
+                address = self.addresses[sock]
                 rb = self.bytes_received.pop(sock, b'')
                 sb = self.bytes_to_send.pop(sock, b'')
                 if rb:
-                    logger.info('On serial server %s - %s Client sent {} but then closed', address, rb, self.name)
+                    logger.info('On serial server %s - %s Client sent %s but then closed', address, rb.encode('string-escape'),
+                                self.name)
                     self._remove_client(sock, session, 'CONNECTION_QUIT')
                 elif sb:
-                    logger.info('On serial server %s - %s Client closed before we sent {}', address, sb, self.name)
+                    logger.info('On serial server %s - %s Client closed before we sent %s', address, sb.encode('string-escape')
+                                , self.name)
                     self._remove_client(sock, session, 'CONNECTION_LOST')
                 else:
                     logger.info('On serial server %s - %s Client closed socket normally', address, self.name)
-                self.poller.unregister(fd)
                 # close the databus session
                 session.set_ended()
                 del self.sockets[fd]
@@ -244,7 +247,8 @@ class SerialServer:
                             self._build_response(sock, data, session)
                             for client in self.addresses.keys():
                                 client.send(data)
-                                if self.decoder: self._parse_request_response(client, session)
+                                if self.decoder:
+                                    self._parse_request_response(client, session)
                     except socket.timeout:
                         logger.exception('Client Timed out on serial server %s', self.name)
                     except socket.error:
@@ -282,12 +286,11 @@ class SerialServer:
 if __name__ == '__main__':
     template_directory = os.getcwd() + '/../../templates/serial_server/serial_server/'
     e = etree.parse(template_directory + 'serial_server.xml').getroot()
-    sys.path.append('../misc')  # for decoder
-    from modbus_rtu_decoder import ModbusRtuDecoder  # testing for modbus rtu slave device
     # Find all the serial connections
     serial_configs = e.findall('server')
     for config in serial_configs:
-        server = SerialServer(config, ModbusRtuDecoder)
+        logger.info('Starting Serial Server')
+        server = SerialServer(config, 'conpot.protocols.misc.modbus_rtu_decoder.ModbusRtuDecoder')
         try:
             server.start()
         except Exception:

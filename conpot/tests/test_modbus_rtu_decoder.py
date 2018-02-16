@@ -17,50 +17,22 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-import os
-
-import conpot
 from conpot.protocols.misc.modbus_rtu_decoder import ModbusRtuDecoder
 
-package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
-try:
-    import pty
-except ImportError:
-    pty = None
-import serial
 
-DATA = b'Hello\n'
-
-
-@unittest.skipIf(pty is None, "pty module not supported on platform")
 class TestModbusRtuDecoder(unittest.TestCase):
-    """Test PTY serial open"""
+    """Test to check if Modbus RTU decoder is working as expected"""
 
     def setUp(self):
-        # Open PTY
-        self.master, self.slave = pty.openpty()
+        self.test_data = b'\x01\x02\x00\x00\x00\x01\xb9\xca'
+        self.result = {'Data': (0, 0, 0, 1), 'function code': 2, 'Slave ID': 1, 'CRC': 47562}
 
-    def test_pty_serial_open_slave(self):
-        with serial.Serial(os.ttyname(self.slave), timeout=1) as slave:
-            pass  # OK
+    def test_modbus_rtu_decoder(self):
+        self.assertTrue(ModbusRtuDecoder.validate_crc(self.test_data))
+        self.decoded = [values for values in ModbusRtuDecoder.decode(self.test_data).values()]
+        for i in self.decoded:
+            self.assertIn(i, self.result.values())
 
-    def test_pty_serial_write(self):
-        with serial.Serial(os.ttyname(self.slave), timeout=1) as slave:
-            with os.fdopen(self.master, "wb") as fd:
-                fd.write(DATA)
-                fd.flush()
-                out = slave.read(len(DATA))
-                self.assertEqual(DATA, out)
-
-    def test_pty_serial_read(self):
-        with serial.Serial(os.ttyname(self.slave), timeout=1) as slave:
-            with os.fdopen(self.master, "rb") as fd:
-                slave.write(DATA)
-                slave.flush()
-                out = fd.read(len(DATA))
-                self.assertEqual(DATA, out)
 
 if __name__ == '__main__':
-    sys.stdout.write(__doc__)
-    # When this module is executed from the command-line, it runs all its tests
     unittest.main()

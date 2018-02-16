@@ -340,10 +340,10 @@ def main():
         if os.path.isfile (template_serial):
             xsd_file = os.path.join (os.path.dirname (inspect.getfile (SerialServer)), 'serial_server.xsd')
             validate_template (template_serial, xsd_file)
-            dom_proxy = etree.parse (template_serial)
-            if dom_proxy.xpath ('//serial_server'):
-                if ast.literal_eval (dom_proxy.xpath ('//serial_server/@enabled')[0]):
-                    servers = dom_proxy.xpath ('//serial_server/*')
+            dom_serial = etree.parse (template_serial)
+            if dom_serial.xpath ('//serial_server'):
+                if ast.literal_eval (dom_serial.xpath ('//serial_server/@enabled')[0]):
+                    servers = dom_serial.xpath ('//serial_server/*')
                     for s in servers:
                         decoder = s.xpath ('./decoder/text()')
                         if len (decoder) > 0:
@@ -353,8 +353,8 @@ def main():
                         serial_server_instance = SerialServer(s, decoder)
                         serial_server = serial_server_instance.start()
                         servers.append(serial_server_instance)
-                        serial_server_greenlet = gevent.spawn (serial_server.start)
-                        serial_server_greenlet.link_exception (on_unhandled_greenlet_exception)
+                        serial_server_greenlet = gevent.spawn(serial_server.start)
+                        serial_server_greenlet.link_exception(on_unhandled_greenlet_exception)
                 else:
                     logger.info ('Serial Server available but disabled by template.')
         else:
