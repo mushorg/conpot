@@ -2,7 +2,7 @@
 
 [![Travis CI](https://img.shields.io/travis/mushorg/conpot/master.svg)](https://travis-ci.org/mushorg/conpot)
 [![Code Health](https://landscape.io/github/mushorg/conpot/master/landscape.png)](https://landscape.io/github/mushorg/conpot/master)
-[![Downloads Counter](https://img.shields.io/pypi/dm/conpot.svg)](https://pypi.python.org/pypi/Conpot/) 
+[![Python Version](https://img.shields.io/pypi/pyversions/conpot.svg)](https://pypi.python.org/pypi/Conpot) 
 [![Version](https://img.shields.io/pypi/v/conpot.svg)](https://pypi.python.org/pypi/Conpot/)
 
 
