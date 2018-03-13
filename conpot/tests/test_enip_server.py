@@ -37,12 +37,12 @@ class TestBase(unittest.TestCase):
 
     def test_list_services(self):
         with client.connector(host=self.enip_server.addr,
-                              port=self.enip_server.port, timeout=1.0,
+                              port=self.enip_server.port, timeout=5.0,
                               udp=False, broadcast=False) as connection:
             connection.list_services()
             connection.shutdown()
             while True:
-                response, ela = client.await(connection, timeout=1.0)
+                response, ela = client.await(connection, timeout=5.0)
                 if response:
                     self.assertEqual("Communications",
                                      response['enip']['CIP']['list_services']['CPF']['item'][0]['communications_service']['service_name'])
@@ -51,12 +51,12 @@ class TestBase(unittest.TestCase):
 
     def test_list_identity(self):
         with client.connector(host=self.enip_server.addr,
-                              port=self.enip_server.port, timeout=1.0,
+                              port=self.enip_server.port, timeout=5.0,
                               udp=False, broadcast=False) as connection:
             connection.list_identity()
             connection.shutdown()
             while True:
-                response, ela = client.await(connection, timeout=1.0)
+                response, ela = client.await(connection, timeout=5.0)
                 if response:
                     expected = self.enip_server.config.product_name
                     self.assertEqual(expected, response['enip']['CIP']['list_identity']['CPF']['item'][0]['identity_object']['product_name'])
@@ -77,7 +77,7 @@ class TestBase(unittest.TestCase):
 
     def test_read_tags(self):
         with client.connector(host=self.enip_server.addr,
-                              port=self.enip_server.port, timeout=1.0) as connection:
+                              port=self.enip_server.port, timeout=5.0) as connection:
             tags = ['@22/1/1']
             ops = self.attribute_operations(tags)
             for idx, dsc, op, rpy, sts, val in connection.pipeline(operations=ops):
@@ -85,7 +85,7 @@ class TestBase(unittest.TestCase):
 
     def test_write_tags(self):
         with client.connector(host=self.enip_server.addr,
-                              port=self.enip_server.port, timeout=1.0) as connection:
+                              port=self.enip_server.port, timeout=5.0) as connection:
             tags = ['@22/1/1=(SINT)50', '@22/1/1']
             ops = self.attribute_operations(tags)
             for idx, dsc, op, rpy, sts, val in connection.pipeline(operations=ops):

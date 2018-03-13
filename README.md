@@ -4,7 +4,7 @@
 [![Code Health](https://landscape.io/github/mushorg/conpot/master/landscape.png)](https://landscape.io/github/mushorg/conpot/master)
 [![Python Version](https://img.shields.io/pypi/pyversions/conpot.svg)](https://pypi.python.org/pypi/Conpot) 
 [![Version](https://img.shields.io/pypi/v/conpot.svg)](https://pypi.python.org/pypi/Conpot/)
-
+[![Docs](https://readthedocs.org/projects/conpot/badge/?version=latest)](https://conpot.readthedocs.io/en/latest/)
 
 ## About
 
@@ -13,7 +13,7 @@ methods of adversaries targeting industrial control systems
 
 ## Documentation
 
-The build of the documentations [source](https://github.com/mushorg/conpot/tree/master/docs/source) can be found [here](http://mushorg.github.io/conpot/). There you will also find the instructions on how to [install](http://mushorg.github.io/conpot/installation/ubuntu.html) conpot and the [FAQ](http://mushorg.github.io/conpot/faq.html).
+The build of the documentations [source](https://github.com/mushorg/conpot/tree/master/docs/source) can be found [here](https://conpot.readthedocs.io/en/latest/). There you will also find the instructions on how to [install](https://conpot.readthedocs.io/en/latest/installation/ubuntu.html) conpot and the [FAQ](https://conpot.readthedocs.io/en/latest/faq.html).
 
 ## Easy install using Docker
 
