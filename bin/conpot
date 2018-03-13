@@ -28,7 +28,7 @@ import pwd
 import grp
 import ast
 import inspect
-from ConfigParser import ConfigParser, NoSectionError, NoOptionError
+from ConfigParser import ConfigParser, NoSectionError, NoOptionError, SafeConfigParser
 
 import gevent
 from lxml import etree
@@ -185,7 +185,7 @@ def main():
 
     setup_logging(args.logfile, args.verbose)
 
-    config = ConfigParser()
+    config = SafeConfigParser(os.environ)
 
     # Loading default config if config not set.
     if args.force:
