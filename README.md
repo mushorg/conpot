@@ -1,9 +1,9 @@
 # Conpot
 
-[![Travis CI](https://img.shields.io/travis/mushorg/conpot/master.svg)](https://travis-ci.org/mushorg/conpot)
+[![Build Status](https://travis-ci.org/mushorg/conpot.svg?branch=master)](https://travis-ci.org/mushorg/conpot)
 [![Code Health](https://landscape.io/github/mushorg/conpot/master/landscape.png)](https://landscape.io/github/mushorg/conpot/master)
 [![Python Version](https://img.shields.io/pypi/pyversions/conpot.svg)](https://pypi.python.org/pypi/Conpot) 
-[![Version](https://img.shields.io/pypi/v/conpot.svg)](https://pypi.python.org/pypi/Conpot/)
+[![PyPI version](https://badge.fury.io/py/Conpot.svg)](https://badge.fury.io/py/Conpot)
 [![Docs](https://readthedocs.org/projects/conpot/badge/?version=latest)](https://conpot.readthedocs.io/en/latest/)
 
 ## About
@@ -42,19 +42,6 @@ Navigate to `http://MY_IP_ADDRESS` to confirm the setup.
 3. Build the image with `docker-compose build`
 4. Test if everything is running correctly with `docker-compose up`
 5. Permanently run as a daemon with `docker-compose up -d`
-
-HPFEEDS
--------
-
-The honeypot has hpfeeds, our central logging feature disabled by
-default. By sending your data via hpfeeds you agree that your data
-might be shared with 3rd parties. If you are interested in the data
-collected by Conpot instances, please contact Lukas at
-glaslos@gmail.com
-
-## Support
-
-Thanks to JetBrains for free PyCharm licenses!
 
 ## Sample output
 
