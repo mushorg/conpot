@@ -17,3 +17,7 @@ You can start conpot by just running it from the commandline.
     2013-04-12 16:09:27,143 Modbus traffic from 127.0.0.1: {'request_pdu': '0100010008', 'function_code': 1, 'slave_id': 1, 'response_pdu': '0101ff'} (b763654f-c9d8-45ae-b35a-824dfc220911)
     2013-04-12 16:09:27,144 Client disconnected. (b763654f-c9d8-45ae-b35a-824dfc220911)
 
+If you try to run Conpot with the sudo command:
+box$ sudo conpot
+and you get an error saying command not found, and you CAN run conpot without sudo, but you get permission denied notices then use this command:
+box$ sudo -E env "PATH=$PATH" conpot --template <template name>
