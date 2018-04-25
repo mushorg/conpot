@@ -393,15 +393,13 @@ def main():
 
             drop_privileges(conpot_user, conpot_group)
 
-            try:
-                if len(servers) > 0:
-                    gevent.wait()
-            except KeyboardInterrupt:
-                logging.info('Stopping Conpot')
-                for server in servers:
-                    server.stop()
-        else:
-            logging.info('Conpot has to be executed as root.')
+        try:
+            if len(servers) > 0:
+                gevent.wait()
+        except KeyboardInterrupt:
+            logging.info('Stopping Conpot')
+            for server in servers:
+                server.stop()
 
     else:
         # wait for the child to end
