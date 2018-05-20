@@ -1,2 +1,6 @@
 [report]
-omit = */tests/*
+omit =
+    */tests/*
+    conpot/core/loggers/helpers.py
+    conpot/core/loggers/log_worker.py
+    conpot/core/loggers/syslog.py

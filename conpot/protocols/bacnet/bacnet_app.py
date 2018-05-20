@@ -22,17 +22,16 @@ import logging
 import re
 import sys
 from bacpypes.pdu import GlobalBroadcast
-
-logger = logging.getLogger(__name__)
-
 import bacpypes.object
+from bacpypes import errors
 from bacpypes.app import BIPSimpleApplication
-
 from bacpypes.constructeddata import Any
 from bacpypes.apdu import APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
     ErrorPDU, RejectPDU, IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
 from bacpypes.pdu import PDU
 import ast
+
+logger = logging.getLogger(__name__)
 
 
 class BACnetApp(BIPSimpleApplication):
@@ -46,14 +45,16 @@ class BACnetApp(BIPSimpleApplication):
         self.datagram_server = datagram_server
 
     def get_objects_and_properties(self, dom):
-        # parse the bacnet template for objects and their properties
+        """
+        parse the bacnet template for objects and their properties
+        """
         device_property_list = dom.xpath('//bacnet/device_info/*')
         for prop in device_property_list:
             prop_key = prop.tag.lower().title()
             prop_key = re.sub("['_','-']", "", prop_key)
             prop_key = prop_key[0].lower() + prop_key[1:]
             if prop_key not in self.localDevice.propertyList.value and \
-                            prop_key not in ['deviceIdentifier', 'deviceName']:
+                    prop_key not in ['deviceIdentifier', 'deviceName']:
                 self.add_property(prop_key, prop.text)
 
         object_list = dom.xpath('//bacnet/object_list/object/@name')
@@ -65,6 +66,7 @@ class BACnetApp(BIPSimpleApplication):
                     object_type = re.sub(' ', '', object_type) + 'Object'
             try:
                 device_object = getattr(bacpypes.object, object_type)()
+                device_object.propertyList = list()
             except NameError:
                 logger.critical('Non-existent BACnet object type')
                 sys.exit(3)
@@ -127,7 +129,7 @@ class BACnetApp(BIPSimpleApplication):
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
                     (request.deviceInstanceRangeHighLimit is not None):
-                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1]
+                if (request.deviceInstanceRangeLowLimit > list(self.objectIdentifier.keys())[0][1]
                         > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
@@ -141,7 +143,8 @@ class BACnetApp(BIPSimpleApplication):
             self._response_service = 'IAmRequest'
             self._response = IAmRequest()
             self._response.pduDestination = GlobalBroadcast()
-            self._response.iAmDeviceIdentifier = self.objectIdentifier.keys()[0][1]
+
+            self._response.iAmDeviceIdentifier = list(self.objectIdentifier.keys())[0][1]
             self._response.maxAPDULengthAccepted = int(getattr(self.localDevice, 'maxApduLengthAccepted'))
             self._response.segmentationSupported = getattr(self.localDevice, 'segmentationSupported')
             self._response.vendorID = int(getattr(self.localDevice, 'vendorIdentifier'))
@@ -169,7 +172,7 @@ class BACnetApp(BIPSimpleApplication):
                     self._response_service = 'IHaveRequest'
                     self._response = IHaveRequest()
                     self._response.pduDestination = GlobalBroadcast()
-                    self._response.deviceIdentifier = self.objectIdentifier.keys()[0][1]
+                    self._response.deviceIdentifier = list(self.objectIdentifier.keys())[0][1]
                     self._response.objectIdentifier = obj[1]
                     self._response.objectName = objName
                     break
@@ -260,8 +263,8 @@ class BACnetApp(BIPSimpleApplication):
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except (AttributeError, RuntimeError) as e:
-                logger.warning('Bacnet indication: Invalid service. Error: %s' % e)
+            except (AttributeError, RuntimeError):
+                logger.exception('Bacnet indication: Invalid service.')
                 self._response = None
                 return
             except bacpypes.errors.DecodingError:

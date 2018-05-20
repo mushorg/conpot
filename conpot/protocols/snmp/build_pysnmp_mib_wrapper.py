@@ -40,6 +40,7 @@ compiled_mibs = []
 # key = mib name, value = full path to the file
 file_map = {}
 
+
 def mib2pysnmp(mib_file, output_dir):
     """
     The 'build-pysnmp-mib' script we previously used is no longer available
@@ -114,7 +115,7 @@ def find_mibs(raw_mibs_dirs, recursive=True):
         for _file in _get_files(raw_mibs_dir, recursive):
             files_scanned += 1
             # making sure we don't start parsing some epic file
-            if os.path.getsize(_file) > '1048576':
+            if os.path.getsize(_file) > int('1048576'):
                 continue
             data = open(_file).read()
             # 2048 - just like a rock star.

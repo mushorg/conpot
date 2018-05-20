@@ -54,5 +54,6 @@ class TestMacAddrUtil(unittest.TestCase):
         else:
             self.skipTest("Can't change MAC address")
 
+
 if __name__ == '__main__':
     unittest.main()

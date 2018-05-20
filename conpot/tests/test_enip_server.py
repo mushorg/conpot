@@ -15,15 +15,14 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import os
-
+from functools import reduce
 from conpot.protocols.enip.enip_server import EnipServer
 from cpppo.server import enip
 from cpppo.server.enip import client
+
 
 class TestBase(unittest.TestCase):
     def setUp(self):

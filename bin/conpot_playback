@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
 import sqlite3
 import struct
 
-from conpot.s7comm.tpkt import TPKT
-from conpot.s7comm.cotp import COTP as COTP_BASE_packet
-from conpot.s7comm.cotp import COTP_ConnectionRequest
+from conpot.protocols.s7comm.tpkt import TPKT
+from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
+from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
 
 import modbus_tk.modbus_tcp as modbus_tcp
 
@@ -23,11 +24,11 @@ class ConpotPlayback(object):
             cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
             if cotp_base_packet.tpdu_type == 0xe0:
                 cotp_cr_request = COTP_ConnectionRequest().dissect(cotp_base_packet.payload)
-                print '[s7comm] Received COTP Connection Request:',
-                print 'dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} tpdu-size:{4}. ({5})'.format(
+                print('[s7comm] Received COTP Connection Request:'),
+                print('dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} tpdu-size:{4}. ({5})'.format(
                     cotp_cr_request.dst_ref, cotp_cr_request.src_ref,
                     cotp_cr_request.dst_tsap, cotp_cr_request.src_tsap,
-                    cotp_cr_request.tpdu_size, session_id)
+                    cotp_cr_request.tpdu_size, session_id))
             elif cotp_base_packet.tpdu_type == 0xf0:
                 print('[s7comm] Received known COTP TPDU: {0}. ({1})'.format(cotp_base_packet.tpdu_type, session_id))
             if response:
@@ -49,13 +50,14 @@ class ConpotPlayback(object):
             except modbus_tcp.ModbusInvalidRequestError as e:
                 continue
             else:
-                print "[modbus] {0} - sid: {1} function code: {2} request: {3}".format(timestamp, session_id, func_code, request)
+                print("[modbus] {0} - sid: {1} function code: {2} request: {3}".format(timestamp,
+                                                                                       session_id, func_code, request))
             query = modbus_tcp.TcpQuery()
             resp = query.build_response(dec_response)
             response_pdu = query.parse_response(resp)
             (return_code, byte_2) = struct.unpack(">BB", response_pdu[0:2])
-            print "[modbus] {0} - sid: {1} function code: {2} response: {3}".format(timestamp, session_id,
-                                                                           return_code, response_pdu.encode('hex'))
+            print("[modbus] {0} - sid: {1} function code: {2} response: {3}".format(timestamp, session_id,
+                                                                           return_code, response_pdu.encode('hex')))
 
     def play_snmp(self):
         data = self._get_data(protocol='snmp')
@@ -63,11 +65,11 @@ class ConpotPlayback(object):
             session_id, timestamp, remote, protocol, request, response = entry
             req_prot_version, method, req_content = request.split(" ", 2)
             method = method[:-1]
-            print "[snmp] {0} - sid: {1} request: {2} {3} {4}".format(timestamp, session_id, req_prot_version,
-                                                               method, req_content)
+            print("[snmp] {0} - sid: {1} request: {2} {3} {4}".format(timestamp, session_id, req_prot_version,
+                                                               method, req_content))
             resp_prot_version, _, resp_content = response.split(" ", 2)
-            print "[snmp] {0} - sid: {1} response: {2} {3}".format(timestamp, session_id, resp_prot_version, resp_content)
-
+            print("[snmp] {0} - sid: {1} response: {2} {3}".format(timestamp, session_id, resp_prot_version,
+                                                                   resp_content))
 
 
 if __name__ == "__main__":

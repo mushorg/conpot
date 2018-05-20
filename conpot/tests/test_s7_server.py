@@ -17,10 +17,10 @@
 
 import gevent.monkey
 gevent.monkey.patch_all()
-
+import os
 import unittest
 from collections import namedtuple
-
+import conpot
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
 
@@ -31,9 +31,10 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default/template.xml')
+        self.dir_name = os.path.dirname(conpot.__file__)
+        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
         args = namedtuple('FakeArgs', '')
-        self.s7_instance = S7Server('conpot/templates/default/s7comm/s7comm.xml', 'none', args)
+        self.s7_instance = S7Server(self.dir_name + '/templates/default/s7comm/s7comm.xml', 'none', args)
         gevent.spawn(self.s7_instance.start, '127.0.0.1', 0)
         gevent.sleep(0.5)
         self.server_port = self.s7_instance.server.server_port
@@ -87,3 +88,7 @@ class TestBase(unittest.TestCase):
             except AssertionError:
                 print sec, item, val
                 raise
+
+
+if __name__ == '__main__':
+    unittest.main()

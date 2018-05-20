@@ -18,7 +18,7 @@ import os
 import unittest
 import socket
 from collections import namedtuple
-
+from functools import reduce
 from conpot.protocols.IEC104 import IEC104_server, frames
 import conpot.core as conpot_core
 import gevent.monkey

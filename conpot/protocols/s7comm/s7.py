@@ -86,6 +86,7 @@ class S7(object):
 
         self.magic = int(fixed_header[0])
 
+
         if self.magic != 0x32:
             raise ParseException('s7comm', 'bad magic number, expected 0x32 but got {0}.'.format(self.magic))
 

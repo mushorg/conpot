@@ -22,7 +22,7 @@ import hashlib
 import argparse
 import socket
 
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -135,7 +135,7 @@ class Crawler(object):
 
 
 if __name__ == "__main__":
-    print """
+    print("""
 
     HTTP HMI Crawler
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     Usage on your own risk!
 
-    """
+    """)
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-w", "--www",
@@ -160,16 +160,16 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     try:
-        agreement = raw_input("Are you sure you want to crawl {0}? (y/N): ".format(args.target))
+        agreement = input("Are you sure you want to crawl {0}? (y/N): ".format(args.target))
         if not agreement == "y":
-            print "You have to reply with 'y' to continue... Bye"
+            print("You have to reply with 'y' to continue... Bye")
             sys.exit(0)
         if args.www.endswith("/"):
             args.www = args.www[:-1]
         if not os.path.exists(args.www):
-            confirmation = raw_input("Create directory {0}? (Y/n): ".format(args.www))
+            confirmation = input("Create directory {0}? (Y/n): ".format(args.www))
             if not confirmation == "N":
                 os.makedirs(args.www)
         Crawler(args).work()
     except KeyboardInterrupt:
-        print "Bye..."
+        print("Bye...")

@@ -1,6 +1,6 @@
 language: python
 python:
-- '2.7'
+- '3.5'
 virtualenv:
   system_site_packages: false
 sudo: false
@@ -16,8 +16,7 @@ before_install:
 addons:
   apt:
     packages:
-    - python2.7
-    - python-pip
+    - python3-pip
     - git
     - unzip
     - python-dev
@@ -30,16 +29,15 @@ addons:
     - python-mysqldb
     - libmysqlclient-dev
 install:
-- pip install -U pip setuptools
 - export PYTHONIOENCODING=UTF8
-- python setup.py install
 - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 - pip install coveralls
+- pip install tox
 before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 - chmod +x "$REPO/bin/conpot"
 script:
-- coverage run --timid --source=conpot setup.py test
+- tox
 - "$REPO/bin/conpot -f"
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:

@@ -34,6 +34,7 @@ import conpot.core as conpot_core
 # FF1B is the checksum for the 9999
 AST_ERROR = "9999FF1B\n"
 
+
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
         self.server = None

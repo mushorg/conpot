@@ -15,25 +15,20 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
+from gevent import monkey
+import os
+from functools import reduce
 import unittest
 from datetime import datetime
 from collections import namedtuple
-
-import os
-
 from gevent.queue import Queue
 from gevent.server import StreamServer
-from gevent import monkey
 from modbus_tk.modbus import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
 from conpot.protocols.modbus import modbus_server
 import conpot.core as conpot_core
-
 monkey.patch_all()
 
 
@@ -142,12 +137,11 @@ class TestBase(unittest.TestCase):
         self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
         self.assertEquals('modbus', modbus_log_item['data_type'])
 
-
         req = '000100000006%s0100010080' % ('01' if self.target_slave_id == 1  else 'ff')
 
-        #testing the actual modbus data
+        # testing the actual modbus data
         modbus_expected_payload = {'function_code': 1, 'slave_id': self.target_slave_id,
-                            'request': req,
-                            'response': '0110ffffffffffffffffffffffffffffffff'}
+                                   'request': req,
+                                   'response': '0110ffffffffffffffffffffffffffffffff'}
 
         self.assertDictEqual(modbus_expected_payload, modbus_log_item['data'])

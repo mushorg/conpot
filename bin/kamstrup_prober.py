@@ -23,7 +23,7 @@ import time
 import argparse
 import crc16
 import xml.dom.minidom
-from conpot.protocols.kamstrup import kamstrup_constants
+from conpot.protocols.kamstrup.meter_protocol import kamstrup_constants
 
 
 class KamstrupRegisterCopier(object):
@@ -34,9 +34,8 @@ class KamstrupRegisterCopier(object):
         self.comm_address = comm_address
         self._connect()
 
-
     def _connect(self):
-        print 'Connecting to {0}:{1}'.format(self.ip_address, self.port)
+        print('Connecting to {0}:{1}'.format(self.ip_address, self.port))
         if self._sock is not None:
             self._sock.close()
             time.sleep(1)
@@ -45,9 +44,8 @@ class KamstrupRegisterCopier(object):
         try:
             self._sock.connect((self.ip_address, self.port))
         except socket.error as socket_err:
-            print 'Error while connecting: {0}'.format(str(socket_err))
+            print('Error while connecting: {0}'.format(str(socket_err)))
             self._connect()
-
 
     def get_register(self, register):
         message = [kamstrup_constants.REQUEST_MAGIC, self.comm_address, 0x10, 0x01, register >> 8, register & 0xff]
@@ -72,7 +70,7 @@ class KamstrupRegisterCopier(object):
                 received_data = self._sock.recv(1024)
                 received_data = bytearray(received_data)
             except socket.error as socket_err:
-                print 'Error while communicating: {0}'.format(str(socket_err))
+                print('Error while communicating: {0}'.format(str(socket_err)))
                 self._connect()
         data_length = len(received_data)
 
@@ -134,15 +132,16 @@ for x in candidate_registers_values:
                               'value': register_value,
                               'value_length': length,
                               'unknown': unknown}
-        print 'Found register value at {0}:{1}'.format(hex(x), register_value)
+        print('Found register value at {0}:{1}'.format(hex(x), register_value))
         with open(dumpfile, 'w') as json_file:
             json_file.write(json.dumps(found_registers, indent=4, default=json_default))
     else:
         not_found_counts += 1
         if not_found_counts % 10 == 0:
-            print ('Hang on, still scanning, so far scanned {0} and found {1} registers'
-                   .format(scanned, len(found_registers)))
+            print('Hang on, still scanning, so far scanned {0} and found {1} registers'
+                  .format(scanned, len(found_registers)))
     scanned += 1
+
 
 def generate_conpot_config(result_list):
     config_xml = """<conpot_template name="Kamstrup-Auto382" description="Register clone of an existing Kamstrup meter">
@@ -160,8 +159,9 @@ def generate_conpot_config(result_list):
     pretty_xml = parsed_xml.toprettyxml()
     return pretty_xml
 
-print 'Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers))
-#with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
+
+print('Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers)))
+# with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
 #    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
-print """*** Sample Conpot configuration from this scrape:"""
-print generate_conpot_config(found_registers)
+print("""*** Sample Conpot configuration from this scrape:""")
+print(generate_conpot_config(found_registers))

@@ -16,26 +16,23 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import gevent.monkey
-gevent.monkey.patch_all()
-
 import unittest
 import os
-
 import gevent
 from gevent.server import StreamServer
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
 from conpot.helpers import fix_sslwrap
-
 import conpot
 from conpot.emulators.proxy import Proxy
+gevent.monkey.patch_all()
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
 class TestProxy(unittest.TestCase):
     def test_proxy(self):
-        self.test_input = 'Hiya, this is a test'
+        self.test_input = 'Hiya, this is a test'.encode('utf-8')
         mock_service = StreamServer(('127.0.0.1', 0), self.echo_server)
         gevent.spawn(mock_service.start)
         gevent.sleep(1)
@@ -54,7 +51,7 @@ class TestProxy(unittest.TestCase):
 
     def test_ssl_proxy(self):
         fix_sslwrap()
-        self.test_input = 'Hiya, this is a test'
+        self.test_input = 'Hiya, this is a test'.encode('utf-8')
         keyfile = os.path.join(package_directory, 'templates/default/ssl/ssl.key')
         certfile = os.path.join(package_directory, 'templates/default/ssl/ssl.crt')
 

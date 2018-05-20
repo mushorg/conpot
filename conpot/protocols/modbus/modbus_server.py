@@ -133,7 +133,7 @@ class ModbusServer(modbus.Server):
                     # response could be None under several different cases
 
                     # MB serial connection addressing UID=0
-                    if (self.mode == 'serial' and logdata['slave_id'] == 0):
+                    if (self.mode == 'serial') and (logdata['slave_id'] == 0):
                         # delay is in milliseconds
                         time.sleep(self.delay / 1000)
                         logger.debug(

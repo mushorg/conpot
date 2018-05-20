@@ -1,3 +1,30 @@
+"""
+Some python3 fixtures - helper methods for handy conversions + fix ssl
+"""
+import os
+import struct
+
+
+# py3 chr
+def chr_py3(x): return bytearray((x,))
+
+
+# covert a number to an ascii byte string
+def number_to_bytes(x): return x if isinstance(x, bytes) else bytes(str(int(x)), encoding='ascii')
+
+
+# convert a string to an ascii byte string
+def str_to_bytes(x): return x if isinstance(x, bytes) else str(x).encode('ascii')
+
+
+# pack a short int
+def pack_short_int(x): return x if isinstance(x, bytes) else x.to_bytes(2, byteorder='big')
+
+
+# unpack a short int
+def unpack_short_int(x): return int.from_bytes(x,  byteorder='big')
+
+
 # https://www.bountysource.com/issues/4335201-ssl-broken-for-python-2-7-9
 # Kudos to Eugene for this workaround!
 def fix_sslwrap():

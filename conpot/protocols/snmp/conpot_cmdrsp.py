@@ -35,7 +35,7 @@ class conpot_extension(object):
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
         event_type = 'SNMPv{0} {1}'.format(version, msg_type)
-        request = {'oid': str(req_oid), 'val': str(req_val) }
+        request = {'oid': str(req_oid), 'val': str(req_val)}
         response = None
 
         logger.info('%s request from %s: %s %s', event_type, addr, req_oid, req_val)
@@ -75,7 +75,8 @@ class conpot_extension(object):
 
         if int(threshold_individual) > 0:
             if int(state_individual) > int(threshold_individual):
-                logger.warning('SNMPv%s: DoS threshold for %s exceeded (%s/%s).', cmd, addr, state_individual, threshold_individual)
+                logger.warning('SNMPv%s: DoS threshold for %s exceeded (%s/%s).', cmd, addr, state_individual,
+                               threshold_individual)
                 # DoS threshold exceeded.
                 return True
 
@@ -253,6 +254,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             self.releaseStateInformation(stateReference)
         else:
             raise pysnmp.smi.error.SmiError()
+
 
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, databus_mediator):

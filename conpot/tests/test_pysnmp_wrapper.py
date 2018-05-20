@@ -15,14 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import tempfile
 import shutil
 import os
-
 from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
 from conpot.protocols.snmp import command_responder
 
@@ -30,7 +27,7 @@ from conpot.protocols.snmp import command_responder
 class TestBase(unittest.TestCase):
 
     def setUp(self):
-        self.mib_file = reduce(os.path.join, 'conpot/tests/data/VOGON-POEM-MIB.mib'.split('/'))
+        self.mib_file = os.getcwd() + os.path.join('/conpot/tests/data/VOGON-POEM-MIB.mib')
 
     def test_wrapper_processing(self):
         """
@@ -100,3 +97,7 @@ class TestBase(unittest.TestCase):
         finally:
             shutil.rmtree(input_dir)
             shutil.rmtree(output_dir)
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -213,8 +213,8 @@ class s7:
     def Connect(self):
         """ Establish ISO on TCP connection and negotiate PDU
         """
-        #sleep(1)
-        #self.src_ref = randint(1, 20)
+        # sleep(1)
+        # self.src_ref = randint(1, 20)
         self.src_ref = 10
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(self.timeout)

@@ -41,7 +41,7 @@ class S7Server(object):
         self.ssl_lists = {}
         self.server = None
         S7.ssl_lists = self.ssl_lists
-
+        self.start_time = None  # Initialize later
         dom = etree.parse(template)
 
         system_status_lists = dom.xpath('//s7comm/system_status_lists/*')
@@ -89,9 +89,9 @@ class S7Server(object):
                     # connection request
                     cotp_cr_request = COTP_ConnectionRequest().dissect(cotp_base_packet.payload)
                     logger.info('Received COTP Connection Request: dst-ref:{0} src-ref:{1} dst-tsap:{2} src-tsap:{3} '
-                                 'tpdu-size:{4}. ({5})'.format(cotp_cr_request.dst_ref, cotp_cr_request.src_ref,
-                                                               cotp_cr_request.dst_tsap, cotp_cr_request.src_tsap,
-                                                               cotp_cr_request.tpdu_size, session.id))
+                                'tpdu-size:{4}. ({5})'.format(cotp_cr_request.dst_ref, cotp_cr_request.src_ref,
+                                                              cotp_cr_request.dst_tsap, cotp_cr_request.src_tsap,
+                                                              cotp_cr_request.tpdu_size, session.id))
 
                     # confirm connection response
                     cotp_cc_response = COTP_ConnectionConfirm(cotp_cr_request.src_ref, cotp_cr_request.dst_ref, 0,

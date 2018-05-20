@@ -15,15 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+import gevent.monkey
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 import conpot.core as conpot_core
-
 import unittest
 from collections import namedtuple
-
-import gevent.monkey
-
 gevent.monkey.patch_all()
 
 
@@ -54,4 +50,4 @@ class TestIPMI(unittest.TestCase):
         """
         Objective: Test the IPMI server
         """
-        self.assertTrue(self.ipmi_server != None)
+        self.assertTrue(self.ipmi_server is not None)
