@@ -19,7 +19,7 @@ import time
 import calendar
 
 
-class Uptime(object):
+class Uptime:
     def __init__(self, started=-1):
         if started >= 0:
             initial = started

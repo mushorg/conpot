@@ -16,9 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-import gevent
-import pytest
-from conpot.core.loggers.mysql_log import MySQLlogger
+# from conpot.core.loggers.mysql_log import MySQLlogger
 
 
 @unittest.skip("switch for a more generic db solution in py3")

@@ -261,7 +261,7 @@ class FakeSession(Session):
             message.append(payload_type)
             if baretype == 2:
                 raise NotImplementedError("OEM Payloads")
-            elif baretype not in constants.payload_types.values():
+            elif baretype not in list(constants.payload_types.values()):
                 raise NotImplementedError("Unrecognized payload type %d" % baretype)
             message += struct.unpack("!4B", struct.pack("<I", self.sessionid))
         message += struct.unpack("!4B", struct.pack("<I", self.sequencenumber))

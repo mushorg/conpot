@@ -21,11 +21,11 @@ import random
 
 from datetime import datetime
 
-from HTMLParser import HTMLParser
-from SocketServer import ThreadingMixIn
+from html.parser import HTMLParser
+from socketserver import ThreadingMixIn
 
-import BaseHTTPServer
-import httplib
+import http.server
+import http.client
 import os
 from lxml import etree
 
@@ -36,7 +36,7 @@ import gevent
 logger = logging.getLogger()
 
 
-class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
+class HTTPServer(http.server.BaseHTTPRequestHandler):
 
     def log(self, version, request_type, addr, request, response=None):
 
@@ -229,7 +229,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 with open(os.path.join(docpath, 'statuscodes', str(status) + '.status'), 'rb') as f:
                     payload = f.read()
 
-            except IOError, e:
+            except IOError as e:
                 logger.error('%s', e)
                 payload = ''
 
@@ -276,7 +276,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
                 requestheaders['Connection'] = 'close'
 
                 remotestatus = 0
-                conn = httplib.HTTPConnection(target)
+                conn = http.client.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
 
@@ -450,7 +450,7 @@ class HTTPServer(BaseHTTPServer.BaseHTTPRequestHandler):
             trailers = []
 
             try:
-                conn = httplib.HTTPConnection(target)
+                conn = http.client.HTTPConnection(target)
                 conn.request("GET", requeststring)
                 response = conn.getresponse()
 
@@ -964,7 +964,7 @@ class TemplateParser(HTMLParser):
                     self.payload = self.payload.replace(origin, result)
 
 
-class ThreadedHTTPServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
+class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
 
@@ -973,7 +973,7 @@ class SubHTTPServer(ThreadedHTTPServer):
        the RequestHandlerClass"""
 
     def __init__(self, server_address, RequestHandlerClass, template, docpath):
-        BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass)
+        http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass)
 
         self.docpath = docpath
 

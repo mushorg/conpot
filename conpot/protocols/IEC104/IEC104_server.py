@@ -16,12 +16,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
 from conpot.protocols.IEC104.IEC104 import IEC104
-from frames import *
+from .frames import *
 import logging
 import conpot.core as conpot_core
 from gevent.server import StreamServer
 import gevent
-from errors import *
+from .errors import *
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class IEC104Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
             session.add_event({'type': 'CONNECTION_LOST'})
-        except socket.error, err:
+        except socket.error as err:
             if isinstance(err.args, tuple):
                 if err[0] == errno.EPIPE:
                     # remote peer disconnected
@@ -116,7 +116,7 @@ class IEC104Server(object):
                     # determine and handle different error
                     pass
             else:
-                print "socket error ", err
+                print(("socket error ", err))
             iec104_handler.disconnect()
 
     def start(self, host, port):

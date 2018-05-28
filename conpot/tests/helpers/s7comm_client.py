@@ -312,8 +312,8 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 7: 'Basic Firmware'
             },
             'packer': {
-                (1, 6): lambda(packet): "{0:s} v.{2:d}.{3:d}".format(*unpack('!20sHBBH', packet)),
-                (7,): lambda(packet): "{0:s} v.{3:d}.{4:d}.{5:d}".format(*unpack('!20sHBBBB', packet))
+                (1, 6): lambda packet: "{0:s} v.{2:d}.{3:d}".format(*unpack('!20sHBBH', packet)),
+                (7,): lambda packet: "{0:s} v.{3:d}.{4:d}.{5:d}".format(*unpack('!20sHBBBB', packet))
             }
         },
         0x1c: {
@@ -332,9 +332,9 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 11: 'Location designation of a module'
             },
             'packer': {
-                (1, 2, 5): lambda(packet): "%s" % packet[:24],
-                (3, 7, 8): lambda(packet): "%s" % packet[:32],
-                (4,): lambda(packet): "%s" % packet[:26]
+                (1, 2, 5): lambda packet: "%s" % packet[:24],
+                (3, 7, 8): lambda packet: "%s" % packet[:32],
+                (4,): lambda packet: "%s" % packet[:26]
             }
         }
     }
@@ -342,7 +342,7 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
     con = s7(ip, port, src_tsap, dst_tsap)
     con.Connect()
 
-    for szl_id in szl_dict.keys():
+    for szl_id in list(szl_dict.keys()):
         try:
             entities = con.ReadSZL(szl_id)
         except S7Error:
@@ -357,7 +357,7 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 item = item[2:]
 
                 try:
-                    packers_keys = [i for i in packers.keys() if n in i]
+                    packers_keys = [i for i in list(packers.keys()) if n in i]
                     formated_item = packers[packers_keys[0]](item).strip('\x00')
                 except (struct.error, IndexError):
                     formated_item = StripUnprintable(item).strip('\x00')
@@ -372,13 +372,13 @@ def Scan(ip, port):
     try:
         res = BruteTsap(ip, port)
     except socket.error as e:
-        print "%s:%d %s" % (ip, port, e)
+        print("%s:%d %s" % (ip, port, e))
 
     if not res:
-        print " MEH!"
+        print(" MEH!")
         return False
 
-    print "%s:%d S7comm (src_tsap=0x%x, dst_tsap=0x%x)" % (ip, port, res[0], res[1])
+    print("%s:%d S7comm (src_tsap=0x%x, dst_tsap=0x%x)" % (ip, port, res[0], res[1]))
 
     # sometimes unexpected exceptions occur, so try to get identity several time
     identities = []
@@ -387,7 +387,7 @@ def Scan(ip, port):
             identities = GetIdentity(ip, port, res[0], res[1])
             break
         except (S7ProtocolError, socket.error) as e:
-            print "Attempt {0}:  {1}".format(attempt, e)
+            print("Attempt {0}:  {1}".format(attempt, e))
 
     return identities
 

@@ -375,7 +375,7 @@ class EnipServer(object):
         typenames = {
             "BOOL":    (parser.BOOL,    0,   lambda v: bool(v)),
             "INT":     (parser.INT,     0,   lambda v: int(v)),
-            "DINT":    (parser.DINT,    0,   lambda v: long(v)),
+            "DINT":    (parser.DINT,    0,   lambda v: int(v)),
             "SINT":    (parser.SINT,    0,   lambda v: int(v)),
             "REAL":    (parser.REAL,    0.0, lambda v: float(v)),
             "SSTRING": (parser.SSTRING, '',  lambda v: str(v)),

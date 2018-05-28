@@ -25,7 +25,7 @@ import gevent
 
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
-from command_responder import CommandResponder
+from .command_responder import CommandResponder
 
 logger = logging.getLogger(__name__)
 

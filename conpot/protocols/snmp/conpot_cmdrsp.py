@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class conpot_extension(object):
     def _getStateInfo(self, snmpEngine, stateReference):
-        for k, v in snmpEngine.messageProcessingSubsystems.items():
+        for k, v in list(snmpEngine.messageProcessingSubsystems.items()):
             if stateReference in v._cache.__dict__['_Cache__stateReferenceIndex']:
                 state_dict = v._cache.__dict__['_Cache__stateReferenceIndex'][stateReference][0]
 

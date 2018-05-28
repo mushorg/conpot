@@ -33,8 +33,8 @@ import collections
 
 from lxml import etree
 
-from fakebmc import FakeBmc
-from fakesession import FakeSession
+from .fakebmc import FakeBmc
+from .fakesession import FakeSession
 
 import conpot.core as conpot_core
 
@@ -77,13 +77,13 @@ class IpmiServer(object):
         # XML parsing
         authdata_name = dom.xpath('//ipmi/user_list/user/user_name/text()')
         authdata_passwd = dom.xpath('//ipmi/user_list/user/password/text()')
-        self.authdata = collections.OrderedDict(zip(authdata_name, authdata_passwd))
+        self.authdata = collections.OrderedDict(list(zip(authdata_name, authdata_passwd)))
 
         authdata_priv = dom.xpath('//ipmi/user_list/user/privilege/text()')
-        if False in map(lambda k: 0 < int(k) <= 4, authdata_priv):
+        if False in [0 < int(k) <= 4 for k in authdata_priv]:
             raise ValueError("Privilege level must be between 1 and 4")
         authdata_priv = [int(k) for k in authdata_priv]
-        self.privdata = collections.OrderedDict(zip(authdata_name, authdata_priv))
+        self.privdata = collections.OrderedDict(list(zip(authdata_name, authdata_priv)))
 
         activeusers = dom.xpath('//ipmi/user_list/user/active/text()')
         self.activeusers = [1 if x == 'true' else 0 for x in activeusers]
@@ -91,7 +91,7 @@ class IpmiServer(object):
         fixedusers = dom.xpath('//ipmi/user_list/user/fixed/text()')
         self.fixedusers = [1 if x == 'true' else 0 for x in fixedusers]
 
-        self.channelaccessdata = collections.OrderedDict(zip(authdata_name, activeusers))
+        self.channelaccessdata = collections.OrderedDict(list(zip(authdata_name, activeusers)))
 
         return FakeBmc(self.authdata, self.port)
 
@@ -104,7 +104,7 @@ class IpmiServer(object):
 
     def handle(self, data, address):
         # make sure self.session exists
-        if not address[0] in self.sessions.keys() or not hasattr(self, 'session'):
+        if not address[0] in list(self.sessions.keys()) or not hasattr(self, 'session'):
             # new session for new source
             logger.info('New IPMI traffic from %s', address)
             self.session = FakeSession(address[0], "", "", address[1])
@@ -338,9 +338,9 @@ class IpmiServer(object):
                 returncode = 0xd4
             else:
                 returncode = 0
-            self.usercount = len(self.authdata.keys())
-            self.channelaccess = 0b0000000 | self.privdata[self.authdata.keys()[usid - 1]]
-            if self.channelaccessdata[self.authdata.keys()[usid - 1]] == 'true':
+            self.usercount = len(list(self.authdata.keys()))
+            self.channelaccess = 0b0000000 | self.privdata[list(self.authdata.keys())[usid - 1]]
+            if self.channelaccessdata[list(self.authdata.keys())[usid - 1]] == 'true':
                 # channelaccess: 7=res; 6=callin; 5=link; 4=messaging; 3-0=privilege
                 self.channelaccess |= 0b00110000
 
@@ -355,8 +355,8 @@ class IpmiServer(object):
             # get user name
             userid = request['data'][0]
             returncode = 0
-            username = self.authdata.keys()[userid - 1]
-            data = map(ord, list(username))
+            username = list(self.authdata.keys())[userid - 1]
+            data = list(map(ord, list(username)))
             while len(data) < 16:
                 # filler
                 data.append(0)
@@ -368,13 +368,13 @@ class IpmiServer(object):
             # python does not support dictionary with duplicate keys
             userid = request['data'][0]
             username = ''.join(chr(x) for x in request['data'][1:]).strip('\x00')
-            oldname = self.authdata.keys()[userid - 1]
+            oldname = list(self.authdata.keys())[userid - 1]
             # need to recreate dictionary to preserve order
             self.copyauth = collections.OrderedDict()
             self.copypriv = collections.OrderedDict()
             self.copychannel = collections.OrderedDict()
             index = 0
-            for k, v in self.authdata.iteritems():
+            for k, v in self.authdata.items():
                 if index == userid - 1:
                     self.copyauth.update({username: self.authdata[oldname]})
                     self.copypriv.update({username: self.privdata[oldname]})
@@ -395,7 +395,7 @@ class IpmiServer(object):
             # set user passwd
             passwd_length = request['data'][0] & 0b10000000
             userid = request['data'][0] & 0b00111111
-            username = self.authdata.keys()[userid - 1]
+            username = list(self.authdata.keys())[userid - 1]
             operation = request['data'][1] & 0b00000011
             returncode = 0
 
@@ -407,12 +407,12 @@ class IpmiServer(object):
                 passwd = ''.join(chr(x) for x in request['data'][2:18])
             if operation == 0:
                 # disable user
-                if self.activeusers[self.authdata.keys().index(username)]:
-                    self.activeusers[self.authdata.keys().index(username)] = 0
+                if self.activeusers[list(self.authdata.keys()).index(username)]:
+                    self.activeusers[list(self.authdata.keys()).index(username)] = 0
             elif operation == 1:
                 # enable user
-                if not self.activeusers[self.authdata.keys().index(username)]:
-                    self.activeusers[self.authdata.keys().index(username)] = 1
+                if not self.activeusers[list(self.authdata.keys()).index(username)]:
+                    self.activeusers[list(self.authdata.keys()).index(username)] = 1
             elif operation == 2:
                 # set passwd
                 if len(passwd) not in [16, 20]:

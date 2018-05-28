@@ -20,7 +20,7 @@ import gevent
 from gevent.server import StreamServer
 
 import conpot.core as conpot_core
-from command_responder import CommandResponder
+from .command_responder import CommandResponder
 
 logger = logging.getLogger(__name__)
 

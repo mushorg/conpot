@@ -19,7 +19,7 @@ import logging
 import binascii
 
 import crc16
-import kamstrup_constants
+from . import kamstrup_constants
 import conpot.core as conpot_core
 
 

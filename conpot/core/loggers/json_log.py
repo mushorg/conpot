@@ -17,7 +17,7 @@
 
 
 import json
-from helpers import json_default
+from .helpers import json_default
 
 
 class JsonLogger(object):

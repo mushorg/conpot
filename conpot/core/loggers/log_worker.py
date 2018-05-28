@@ -23,7 +23,7 @@ import time
 
 from datetime import datetime
 
-import ConfigParser
+import configparser
 from gevent.queue import Empty
 
 from conpot.core.loggers.sqlite_log import SQLiteLogger
@@ -32,7 +32,7 @@ from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.json_log import JsonLogger
-from helpers import json_default
+from .helpers import json_default
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class LogWorker(object):
         sessions = self.session_manager._sessions
         try:
             session_timeout = self.config.get("session", "timeout")
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+        except (configparser.NoSectionError, configparser.NoOptionError):
             session_timeout = 5
         for session in sessions:
             if len(session.data) > 0:

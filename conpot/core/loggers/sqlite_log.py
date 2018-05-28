@@ -71,4 +71,4 @@ class SQLiteLogger(object):
     def select_data(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM events")
-        print cursor.fetchall()
+        print((cursor.fetchall()))

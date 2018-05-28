@@ -154,7 +154,7 @@ class BACnetApp(BIPSimpleApplication):
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
                     (request.deviceInstanceRangeHighLimit is not None):
-                if (request.deviceInstanceRangeLowLimit > self.objectIdentifier.keys()[0][1]
+                if (request.deviceInstanceRangeLowLimit > list(self.objectIdentifier.keys())[0][1]
                         > request.deviceInstanceRangeHighLimit):
                     logger.info('Bacnet WhoHasRequest out of range')
                 else:
@@ -241,7 +241,7 @@ class BACnetApp(BIPSimpleApplication):
             except bacpypes.errors.DecodingError:
                 pass
 
-            for key, value in ConfirmedServiceChoice.enumerations.items():
+            for key, value in list(ConfirmedServiceChoice.enumerations.items()):
                 if apdu_service.serviceChoice == value:
                     try:
                         getattr(self, key)(
@@ -270,7 +270,7 @@ class BACnetApp(BIPSimpleApplication):
             except bacpypes.errors.DecodingError:
                 pass
 
-            for key, value in UnconfirmedServiceChoice.enumerations.items():
+            for key, value in list(UnconfirmedServiceChoice.enumerations.items()):
                 if apdu_service.serviceChoice == value:
                     try:
                         getattr(self, key)(

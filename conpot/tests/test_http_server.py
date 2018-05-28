@@ -67,7 +67,7 @@ class TestBase(unittest.TestCase):
         # retrieve reference value from configuration
         sysName = dom.xpath('//core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
-            print sysName
+            print(sysName)
             assert_reference = sysName[0].xpath('./text()')[0][1:-1]
         else:
             assert_reference = None

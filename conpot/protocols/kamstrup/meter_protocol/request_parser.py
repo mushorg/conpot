@@ -19,8 +19,8 @@ import logging
 
 import crc16
 
-import kamstrup_constants
-from messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
+from . import kamstrup_constants
+from .messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
 
 logger = logging.getLogger(__name__)
 

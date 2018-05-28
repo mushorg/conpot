@@ -17,7 +17,7 @@
 
 import logging
 
-import commands
+from . import commands
 
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class CommandResponder(object):
         if command.startswith("H"):
             return self.help_command.run(params)
         if command.startswith("!"):
-            if command in self.commands.keys():
+            if command in list(self.commands.keys()):
                 return self.commands[command].run(params)
 
         return self.COMMAND_NOT_FOUND

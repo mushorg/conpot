@@ -28,7 +28,7 @@ import pwd
 import grp
 import ast
 import inspect
-from ConfigParser import ConfigParser, NoSectionError, NoOptionError, SafeConfigParser
+from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import gevent
 from lxml import etree
@@ -59,7 +59,7 @@ package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
 def logo():
-    print """
+    print("""
                        _
    ___ ___ ___ ___ ___| |_
   |  _| . |   | . | . |  _|
@@ -68,7 +68,7 @@ def logo():
 
   Version {0}
   MushMush Foundation
-""".format(conpot.__version__)
+""".format(conpot.__version__))
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
@@ -158,7 +158,7 @@ def main():
                         action='store_const',
                         const=True,
                         default=False
-    )
+                        )
     parser.add_argument("-c", "--config",
                         help="The configuration file to use",
                         metavar="conpot.cfg",
@@ -185,7 +185,7 @@ def main():
 
     setup_logging(args.logfile, args.verbose)
 
-    config = SafeConfigParser(os.environ)
+    config = ConfigParser(os.environ)
 
     # Loading default config if config not set.
     if args.force:
@@ -196,12 +196,12 @@ def main():
     else:
         try:
             if not os.path.isfile(os.path.join(package_directory, args.config)):
-                raise
+                raise FileNotFoundError
             args.config = os.path.join(package_directory, args.config)
             logger.info('Config file found!')
             config.read(args.config)
-        except:
-            logger.info('\nCould not find config file!\nUse -f option to try the test configuration')
+        except FileNotFoundError:
+            logger.exception('\nCould not find config file!\nUse -f option to try the test configuration')
             sys.exit(1)
 
     # No template specified
@@ -209,9 +209,9 @@ def main():
 
         available_templates = os.listdir(os.path.join(package_directory, 'templates'))
 
-        print "--------------------------------------------------"
-        print " Available templates:"
-        print "--------------------------------------------------\n"
+        print("--------------------------------------------------")
+        print(" Available templates:")
+        print("--------------------------------------------------\n")
 
         for folder in available_templates:
             template_xml = os.path.join(package_directory, 'templates', folder, 'template.xml')
@@ -239,11 +239,11 @@ def main():
                         elif entity.attrib['name'] == 'creator':
                             template_creator = entity.text
 
-                    print "   --template {0}".format(folder)
-                    print "       Unit:        {0} - {1}".format(template_vendor, template_unit)
-                    print "       Desc:        {0}".format(template_description)
-                    print "       Protocols:   {0}".format(template_protocols)
-                    print "       Created by:  {0}\n".format(template_creator)
+                    print("   --template {0}".format(folder))
+                    print("       Unit:        {0} - {1}".format(template_vendor, template_unit))
+                    print("       Desc:        {0}".format(template_description))
+                    print("       Protocols:   {0}".format(template_protocols))
+                    print("       Created by:  {0}\n".format(template_creator))
 
         sys.exit(0)
 
@@ -315,7 +315,7 @@ def main():
                         host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
                         # -- > Are we running on testing config?
                         if 'testing.cfg' in args.config:
-                            if not '127.' in host:
+                            if '127.' not in host:
                                 if not args.force:
                                     logger.error('To run conpot on a non local interface, please specify -f option')
                                     sys.exit(1)

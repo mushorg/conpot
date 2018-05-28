@@ -289,8 +289,8 @@ class GuardianASTServer(object):
                 if response:
                     sock.send(response)
                 session.add_event({"type": "AST {0}".format(cmd), "request": request, "response": response})
-            except Exception, e:
-                print 'Unknown Error: {}'.format(str(e))
+            except Exception as e:
+                print(('Unknown Error: {}'.format(str(e))))
                 raise
             except KeyboardInterrupt:
                 break

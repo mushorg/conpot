@@ -135,7 +135,7 @@ class TestBase(unittest.TestCase):
         # we expect session_id to be 36 characters long (32 x char, 4 x dashes)
         self.assertTrue(len(str(modbus_log_item['id'])), modbus_log_item)
         self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
-        self.assertEquals('modbus', modbus_log_item['data_type'])
+        self.assertEqual('modbus', modbus_log_item['data_type'])
 
         req = '000100000006%s0100010080' % ('01' if self.target_slave_id == 1  else 'ff')
 

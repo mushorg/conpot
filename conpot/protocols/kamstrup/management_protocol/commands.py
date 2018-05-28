@@ -78,7 +78,7 @@ class HelpCommand(BaseCommand):
             return self.CMD_OUTPUT
 
         c = params[0:3]
-        if c in self.commands.keys():
+        if c in list(self.commands.keys()):
             return self.commands[c].help()
 
         return self.INVALID_PARAMETER

@@ -63,7 +63,7 @@ class TestBase(unittest.TestCase):
         s.connect(('127.0.0.1', 2404))
         s.send(frames.TESTFR_act.build())
         data = s.recv(6)
-        self.assertEquals(data, frames.TESTFR_con.build())
+        self.assertEqual(data, frames.TESTFR_con.build())
 
     def test_write_for_non_existing(self):
         """

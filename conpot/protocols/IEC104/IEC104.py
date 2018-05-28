@@ -16,11 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import gevent
 import natsort
-
 from conpot.protocols.IEC104.DeviceDataController import addr_in_hex, inro_response
 from conpot.protocols.IEC104.i_frames_check import *
 import conpot.core as conpot_core
-from frames import *
+from .frames import *
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +478,7 @@ class IEC104(object):
                 # === Inro response
                 if qualif_of_inro == 20:
                     reg = self.device_data_controller.get_registers()
-                    sorted_reg = natsort.natsorted(reg.items())
+                    sorted_reg = natsort.natsorted(list(reg.items()))
 
                     # get response list for certain types
                     resp1_list = inro_response(sorted_reg, 1)
@@ -533,7 +532,7 @@ class IEC104(object):
                 i_send_seq = frm.getfieldval("SendSeq")
                 i_recv_seq = frm.getfieldval("RecvSeq")
                 list_temp.append("i(" + str(i_send_seq) + "," + str(i_recv_seq) + ")")
-        print list_temp
+        print(list_temp)
 
     def disconnect(self):
         self.timeout_t1.cancel()

@@ -104,7 +104,7 @@ class Databus(object):
     def get_shapshot(self):
         # takes a snapshot of the internal honeypot state and returns it as json.
         snapsnot = {}
-        for key in self._data.keys():
+        for key in list(self._data.keys()):
             snapsnot[key] = self.get_value(key)
         return json.dumps(snapsnot)
 
@@ -112,7 +112,7 @@ class Databus(object):
         logger.debug('Resetting databus.')
 
         # if the class has a stop method call it.
-        for value in self._data.values():
+        for value in list(self._data.values()):
             if getattr(value, "stop", None):
                 value.stop()
 

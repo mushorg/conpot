@@ -16,11 +16,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import messages
+from . import messages
 import copy
 from lxml import etree
 
-from register import KamstrupRegister
+from .register import KamstrupRegister
 
 
 logger = logging.getLogger(__name__)

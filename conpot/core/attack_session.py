@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 # one instance per connection
-class AttackSession(object):
+class AttackSession:
     def __init__(self, protocol, source_ip, source_port, databus, log_queue):
         self.log_queue = log_queue
         self.id = uuid.uuid4()

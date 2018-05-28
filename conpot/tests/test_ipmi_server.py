@@ -32,8 +32,8 @@ class TestIPMI(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/ipmi/template.xml')
-	args = namedtuple('FakeArgs', 'port')
-	args.port = 0
+        args = namedtuple('FakeArgs', 'port')
+        args.port = 0
         self.ipmi_server = IpmiServer(
             self.template_path,
             'conpot/templates/ipmi/',

@@ -127,7 +127,7 @@ def find_mibs(raw_mibs_dirs, recursive=True):
     logging.debug('Done scanning for mib files, recursive scan was initiated from {0} directories and found {1} '
                   'MIB files of {2} scanned files.'
                   .format(len(raw_mibs_dirs), len(file_map), files_scanned))
-    return file_map.keys()
+    return list(file_map.keys())
 
 
 def compile_mib(mib_name, output_dir):

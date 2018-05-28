@@ -18,7 +18,7 @@
 import logging
 
 import crc16
-import kamstrup_constants
+from . import kamstrup_constants
 
 
 logger = logging.getLogger(__name__)

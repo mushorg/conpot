@@ -86,7 +86,7 @@ class TestBase(unittest.TestCase):
             try:
                 self.assertTrue(dic[int(sec)][int(item)] == val.strip())
             except AssertionError:
-                print sec, item, val
+                print((sec, item, val))
                 raise
 
 
