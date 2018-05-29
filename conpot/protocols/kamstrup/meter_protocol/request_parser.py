@@ -16,7 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-
+from conpot.helpers import chr_py3
 import crc16
 
 from . import kamstrup_constants
@@ -85,5 +85,5 @@ class KamstrupRequestParser(object):
     @classmethod
     def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
-        calculated_crc = crc16.crc16xmodem(''.join([chr(item) for item in message[:-2]]))
+        calculated_crc = crc16.crc16xmodem(b''.join([chr_py3(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc

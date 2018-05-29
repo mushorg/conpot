@@ -18,7 +18,8 @@
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.protocols.kamstrup.meter_protocol import request_parser
-
+import conpot
+import os
 import unittest
 
 
@@ -27,11 +28,11 @@ class TestKamstrup(unittest.TestCase):
 
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
-
+        self.dir_name = os.path.dirname(conpot.__file__)
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/kamstrup_382/template.xml')
+        self.databus.initialize(self.dir_name + '/templates/kamstrup_382/template.xml')
         self.request_parser = request_parser.KamstrupRequestParser()
-        self.command_responder = CommandResponder('conpot/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
+        self.command_responder = CommandResponder(self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
 
     def tearDown(self):
         self.databus.reset()
@@ -52,3 +53,7 @@ class TestKamstrup(unittest.TestCase):
         self.assertEqual(response.registers[0].name, 1033)
         # we should have no left overs
         self.assertEqual(len(self.request_parser.bytes), 0)
+
+
+if __name__ == '__main__':
+    unittest.main()
