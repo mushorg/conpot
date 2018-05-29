@@ -114,7 +114,6 @@ class TestBase(unittest.TestCase):
         expected.encode(exp_apdu)
         exp_pdu = PDU()
         exp_apdu.encode(exp_pdu)
-
         self.assertEqual(exp_pdu.pduData, received_data)
 
     def test_readProperty(self):

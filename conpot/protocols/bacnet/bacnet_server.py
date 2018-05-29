@@ -21,10 +21,8 @@
 import gevent
 from gevent import monkey; gevent.monkey.patch_all()
 
-import logging
 import socket
 from lxml import etree
-
 from gevent.server import DatagramServer
 from bacpypes.local.device import LocalDeviceObject
 from bacpypes.apdu import APDU
@@ -34,7 +32,11 @@ from bacpypes.errors import DecodingError
 import conpot.core as conpot_core
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
 
-logger = logging.getLogger(__name__)
+# For debugging --
+import sys
+import logging as logger
+# logger = logging.getLogger(__name__)
+logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class BacnetServer(object):
@@ -77,6 +79,7 @@ class BacnetServer(object):
                 logger.exception("PDU: " + format(pdu))
                 return
             self.bacnet_app.indication(apdu, address, self.thisDevice)
+            # send an appropriate response from BACnet app to the attacker
             self.bacnet_app.response(self.bacnet_app._response, address)
         logger.info('Bacnet client disconnected %s:%d. (%s)', address[0], address[1], session.id)
 
@@ -99,3 +102,41 @@ class BacnetServer(object):
 
     def stop(self):
         self.server.stop()
+
+
+if __name__ == '__main__':
+    import os
+    test_template = os.getcwd() + '/../../templates/default/bacnet/bacnet.xml'
+    test = BacnetServer(test_template, None, None)
+    try:
+        from bacpypes.apdu import WhoIsRequest, WhoHasObject, WhoHasRequest
+        # code for generating adpu - who-is
+        # request = WhoIsRequest(deviceInstanceRangeLowLimit=500, deviceInstanceRangeHighLimit=50000)
+        # test_pdu = PDU()
+        # test_apdu = APDU()
+        # request.encode(test_apdu)
+        # test_apdu.encode(test_pdu)
+        # bacnet_app = BACnetApp(test.thisDevice, test)
+        # bacnet_app.get_objects_and_properties(test.dom)
+        # bacnet_app.indication(test_apdu, ('127.0.0.1', 9999), test.thisDevice)
+        # print(bacnet_app._response)
+        # bacnet_app.response(bacnet_app._response, ('127.0.0.1', 9999))
+        # # logger.debug('Starting BACnet Server! at {}:{}'.format('localhost', 9999))
+        # # test.start('127.0.0.1', 9999)
+
+        # testing who-has
+        request_object = WhoHasObject()
+        request_object.objectIdentifier = ('binaryInput', 12)
+        request = WhoHasRequest(object=request_object)
+        test_apdu = APDU()
+        request.encode(test_apdu)
+        test_pdu = PDU()
+        test_apdu.encode(test_pdu)
+        bacnet_app = BACnetApp(test.thisDevice, test)
+        bacnet_app.get_objects_and_properties(test.dom)
+        bacnet_app.indication(test_apdu, ('127.0.0.1', 9999), test.thisDevice)
+        print(bacnet_app._response)
+        bacnet_app.response(bacnet_app._response, ('127.0.0.1', 9999))
+    except KeyboardInterrupt:
+        logger.debug('Stopping BACnet server')
+        test.stop()

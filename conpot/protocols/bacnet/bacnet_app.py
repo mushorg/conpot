@@ -35,6 +35,14 @@ logger = logging.getLogger(__name__)
 
 
 class BACnetApp(BIPSimpleApplication):
+    """
+    BACnet device emulation class. BACnet properties are populated from the template file. Services are defined.
+    Conpot implements a smart sensor and hence
+    - DM-RP-B (execute ReadProperty)
+    - DM-DDB-B (execute Who-Is, initiate I-Am)
+    - DM-DOB-B (execute Who-Has, initiate I-Have)
+    services are supported.
+    """
     def __init__(self, device, datagram_server):
         self._request = None
         self._response = None
@@ -43,11 +51,14 @@ class BACnetApp(BIPSimpleApplication):
         self.objectName = {device.objectName: device}
         self.objectIdentifier = {device.objectIdentifier: device}
         self.datagram_server = datagram_server
+        self.deviceIdentifier = None
+        super(BIPSimpleApplication, self).__init__()
 
     def get_objects_and_properties(self, dom):
         """
         parse the bacnet template for objects and their properties
         """
+        self.deviceIdentifier = int(dom.xpath('//bacnet/device_info/*')[1].text)
         device_property_list = dom.xpath('//bacnet/device_info/*')
         for prop in device_property_list:
             prop_key = prop.tag.lower().title()
@@ -102,6 +113,7 @@ class BACnetApp(BIPSimpleApplication):
         if object_identifier in self.objectIdentifier:
             raise RuntimeError("object already added with the same identifier")
 
+        # Keep dictionaries -- for name and identifiers
         self.objectName[object_name] = obj
         self.objectIdentifier[object_identifier] = obj
         self.localDevice.objectList.append(object_identifier)
@@ -143,8 +155,8 @@ class BACnetApp(BIPSimpleApplication):
             self._response_service = 'IAmRequest'
             self._response = IAmRequest()
             self._response.pduDestination = GlobalBroadcast()
-
-            self._response.iAmDeviceIdentifier = list(self.objectIdentifier.keys())[0][1]
+            self._response.iAmDeviceIdentifier = self.deviceIdentifier
+            # self._response.objectIdentifier = list(self.objectIdentifier.keys())[0][1]
             self._response.maxAPDULengthAccepted = int(getattr(self.localDevice, 'maxApduLengthAccepted'))
             self._response.segmentationSupported = getattr(self.localDevice, 'segmentationSupported')
             self._response.vendorID = int(getattr(self.localDevice, 'vendorIdentifier'))
@@ -172,7 +184,8 @@ class BACnetApp(BIPSimpleApplication):
                     self._response_service = 'IHaveRequest'
                     self._response = IHaveRequest()
                     self._response.pduDestination = GlobalBroadcast()
-                    self._response.deviceIdentifier = list(self.objectIdentifier.keys())[0][1]
+                    # self._response.deviceIdentifier = list(self.objectIdentifier.keys())[0][1]
+                    self._response.deviceIdentifier = self.deviceIdentifier
                     self._response.objectIdentifier = obj[1]
                     self._response.objectName = objName
                     break
@@ -223,7 +236,7 @@ class BACnetApp(BIPSimpleApplication):
                     # self._response.errorCode
 
     def indication(self, apdu, address, device):
-        # logging the received PDU type and Service request
+        """logging the received PDU type and Service request"""
         request = None
         apdu_type = apdu_types.get(apdu.apduType)
         invoke_key = apdu.apduInvokeID
