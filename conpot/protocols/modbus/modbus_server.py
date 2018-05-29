@@ -5,7 +5,7 @@ import socket
 import time
 import logging
 import sys
-
+import codecs
 from lxml import etree
 from gevent.server import StreamServer
 
@@ -117,8 +117,9 @@ class ModbusServer(modbus.Server):
                 # logdata is a dictionary containing request, slave_id,
                 # function_code and response
                 response, logdata = self._databank.handle_request(
-                    query, request, self.mode)
-                logdata['request'] = request.encode('hex')
+                    query, request, self.mode
+                )
+                logdata['request'] = codecs.encode(request, 'hex')
                 session.add_event(logdata)
 
                 logger.info(

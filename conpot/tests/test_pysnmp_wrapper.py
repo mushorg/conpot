@@ -25,6 +25,16 @@ from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs
 from conpot.protocols.snmp import command_responder
 
 
+def check_content(pyfile):
+    ret = False
+    with open(pyfile) as f:
+        for l in f.readlines():
+            if 'mibBuilder.exportSymbols("VOGON-POEM-MIB"' in l:
+                ret = True
+                break
+    return ret
+
+
 class TestBase(unittest.TestCase):
 
     def setUp(self):
@@ -37,18 +47,8 @@ class TestBase(unittest.TestCase):
         """
         tmpdir = tempfile.mkdtemp()
         result = mib2pysnmp(self.mib_file, tmpdir)
-        self.assertTrue(result and self.check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
+        self.assertTrue(result and check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
                         'mib2pysnmp2 did not generate the expected output.')
-
-    def check_content(self, pyfile):
-        ret = False
-        with open(pyfile) as f:
-            for l in f.readlines():
-                if 'mibBuilder.exportSymbols("VOGON-POEM-MIB"' in l:
-                    ret = True
-                    break
-
-        return ret
 
     def test_wrapper_output(self):
         """

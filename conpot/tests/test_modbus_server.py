@@ -22,8 +22,9 @@ import unittest
 from datetime import datetime
 from collections import namedtuple
 from gevent.queue import Queue
+import conpot
 from gevent.server import StreamServer
-from modbus_tk.modbus import ModbusError
+from modbus_tk.exceptions import ModbusInvalidResponseError, ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
@@ -38,9 +39,12 @@ class TestBase(unittest.TestCase):
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
 
+        # get the current directory
+        self.dir_name = os.path.dirname(conpot.__file__)
+
         # make paths platform-independent
-        template = reduce(os.path.join, 'conpot/templates/default/template.xml'.split('/'))
-        modbus_template = reduce(os.path.join, 'conpot/templates/default/modbus/modbus.xml'.split('/'))
+        template = self.dir_name + '/templates/default/template.xml'
+        modbus_template = self.dir_name + '/templates/default/modbus/modbus.xml'
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize(template)
@@ -70,9 +74,10 @@ class TestBase(unittest.TestCase):
         # create READ_COILS request
         master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
         master.set_timeout(1.0)
-        actual_bits = master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
+        actual_bits = master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1,
+                                     quantity_of_x=128)
 
-        #the test template sets all bits to 1 in the range 1-128
+        # the test template sets all bits to 1 in the range 1-128
         expected_bits = [1 for b in range(0, 128)]
         self.assertSequenceEqual(actual_bits, expected_bits)
 
@@ -99,7 +104,6 @@ class TestBase(unittest.TestCase):
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
             master.execute(slave=5, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=1)
-
         self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
 
     def test_modbus_logging(self):
@@ -110,8 +114,10 @@ class TestBase(unittest.TestCase):
          'remote': ('127.0.0.1', 60991),
          'data_type': 'modbus',
          'id': '01bd90d6-76f4-43cb-874f-5c8f254367f5',
-         'data': {'function_code': 1, 'slave_id': 1, 'request': '0100010080', 'response': '0110ffffffffffffffffffffffffffffffff'}}
-
+         'data': {'function_code': 1,
+                  'slave_id': 1,
+                  'request': '0100010080',
+                  'response': '0110ffffffffffffffffffffffffffffffff'}}
         """
 
         self.databus.set_value('memoryModbusSlave%dBlockA' % self.target_slave_id, [1 for b in range(0,128)])
@@ -137,11 +143,14 @@ class TestBase(unittest.TestCase):
         self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
         self.assertEqual('modbus', modbus_log_item['data_type'])
 
-        req = '000100000006%s0100010080' % ('01' if self.target_slave_id == 1  else 'ff')
-
+        req = ('000100000006%s0100010080' % ('01' if self.target_slave_id == 1  else 'ff')).encode()
         # testing the actual modbus data
         modbus_expected_payload = {'function_code': 1, 'slave_id': self.target_slave_id,
                                    'request': req,
-                                   'response': '0110ffffffffffffffffffffffffffffffff'}
+                                   'response': b'0110ffffffffffffffffffffffffffffffff'}
 
         self.assertDictEqual(modbus_expected_payload, modbus_log_item['data'])
+
+
+if __name__ == '__main__':
+    unittest.main()

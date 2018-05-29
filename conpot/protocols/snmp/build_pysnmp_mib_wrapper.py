@@ -117,16 +117,17 @@ def find_mibs(raw_mibs_dirs, recursive=True):
             # making sure we don't start parsing some epic file
             if os.path.getsize(_file) > int('1048576'):
                 continue
-            data = open(_file).read()
-            # 2048 - just like a rock star.
-            mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:2048], re.IGNORECASE)
-            if mib_search:
-                mib_name = mib_search.group('mib_name')
-                file_map[mib_name] = _file
-                generate_dependencies(data, mib_name)
-    logging.debug('Done scanning for mib files, recursive scan was initiated from {0} directories and found {1} '
-                  'MIB files of {2} scanned files.'
-                  .format(len(raw_mibs_dirs), len(file_map), files_scanned))
+            with open(_file) as _mibfile:
+                data = _mibfile.read()
+                # 2048 - just like a rock star.
+                mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:2048], re.IGNORECASE)
+                if mib_search:
+                    mib_name = mib_search.group('mib_name')
+                    file_map[mib_name] = _file
+                    generate_dependencies(data, mib_name)
+        logging.debug('Done scanning for mib files, recursive scan was initiated from {0} directories and found {1} '
+                      'MIB files of {2} scanned files.'
+                      .format(len(raw_mibs_dirs), len(file_map), files_scanned))
     return list(file_map.keys())
 
 
