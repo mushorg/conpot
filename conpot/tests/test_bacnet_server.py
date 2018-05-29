@@ -24,7 +24,7 @@ import os
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.bacnet import bacnet_server
-
+from copy import copy
 from collections import namedtuple
 from bacpypes.pdu import GlobalBroadcast, PDU
 from bacpypes.apdu import APDU, WhoIsRequest, IAmRequest, IHaveRequest,  WhoHasObject,  WhoHasRequest, \
@@ -146,6 +146,31 @@ class TestBase(unittest.TestCase):
         exp_apdu.encode(exp_pdu)
 
         self.assertEqual(exp_pdu.pduData, received_data)
+
+    def test_ignore_malformed_pdu_types(self):
+        """When the request has apduType not 0x01, None should be returned from Conpot"""
+        test_apdu = APDU()
+        test_pdu = PDU()
+        test = IHaveRequest()
+        test.pduDestination = GlobalBroadcast()
+        test.deviceIdentifier = 36113
+        test.objectIdentifier = 12
+        test.objectName = 'BI 01'
+        test.maxAPDULengthAccepted = 1024
+        test.encode(test_apdu)
+        # malformed - Confirmed, simple ack pdu, complex ack pdu, error pdu - etc.
+        malformed_pdus = list()
+        for i in range(8):
+            if i != 1:
+                test_apdu.apduType = i
+                malformed_pdus.append(copy(test_pdu))
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        buf_size = 1024
+        [s.sendto(i.pduData, ('127.0.0.1', self.bacnet_server.server.server_port)) for i in malformed_pdus]
+        results = None
+        with gevent.Timeout(1, False):
+            results = [s.recvfrom(buf_size) for i in range(len(malformed_pdus))]
+        self.assertIsNone(results)
 
 
 if __name__ == "__main__":

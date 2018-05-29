@@ -26,6 +26,7 @@ import bacpypes.object
 from bacpypes import errors
 from bacpypes.app import BIPSimpleApplication
 from bacpypes.constructeddata import Any
+from bacpypes.constructeddata import InvalidParameterDatatype
 from bacpypes.apdu import APDU, apdu_types, confirmed_request_types, unconfirmed_request_types, \
     ErrorPDU, RejectPDU, IAmRequest, IHaveRequest, ReadPropertyACK, ConfirmedServiceChoice, UnconfirmedServiceChoice
 from bacpypes.pdu import PDU
@@ -248,7 +249,7 @@ class BACnetApp(BIPSimpleApplication):
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except (AttributeError, RuntimeError) as e:
+            except (AttributeError, RuntimeError, InvalidParameterDatatype) as e:
                 logger.warning('Bacnet indication: Invalid service. Error: %s' % e)
                 return
             except bacpypes.errors.DecodingError:

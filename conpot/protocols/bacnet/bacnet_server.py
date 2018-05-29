@@ -28,15 +28,11 @@ from bacpypes.local.device import LocalDeviceObject
 from bacpypes.apdu import APDU
 from bacpypes.pdu import PDU
 from bacpypes.errors import DecodingError
-
 import conpot.core as conpot_core
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
 
-# For debugging --
-import sys
-import logging as logger
-# logger = logging.getLogger(__name__)
-logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+import logging
+logger = logging.getLogger(__name__)
 
 
 class BacnetServer(object):
@@ -75,8 +71,7 @@ class BacnetServer(object):
             try:
                 apdu.decode(pdu)
             except DecodingError:
-                logger.exception("DecodingError: %s")
-                logger.exception("PDU: " + format(pdu))
+                logger.warning("DecodingError - PDU: {}".format(pdu))
                 return
             self.bacnet_app.indication(apdu, address, self.thisDevice)
             # send an appropriate response from BACnet app to the attacker
