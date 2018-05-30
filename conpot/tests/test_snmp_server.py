@@ -38,7 +38,7 @@ class TestBase(unittest.TestCase):
         self.host = '127.0.0.1'
         databus = conpot_core.get_databus()
         # get the current directory
-        self.dir_name = os.path.dirname (conpot.__file__)
+        self.dir_name = os.path.dirname(conpot.__file__)
         databus.initialize(self.dir_name + '/templates/default/template.xml')
         args = namedtuple('FakeArgs', 'mibpaths raw_mib')
         args.mibpaths = [self.tmp_dir]

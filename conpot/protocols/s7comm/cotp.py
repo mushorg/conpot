@@ -123,14 +123,14 @@ class COTPConnectionPacket:
 
 
 class COTP_ConnectionConfirm(COTPConnectionPacket):
-
     def __init__(self, dst_ref=0, src_ref=0, opt_field=0, src_tsap=0, dst_tsap=0, tpdu_size=0):
-        super(COTPConnectionPacket, self).__init__(dst_ref,
-                                                   src_ref,
-                                                   opt_field,
-                                                   src_tsap,
-                                                   dst_tsap,
-                                                   tpdu_size)
+        self.dst_ref = dst_ref
+        self.src_ref = src_ref
+        self.opt_field = opt_field
+        self.src_tsap = src_tsap
+        self.dst_tsap = dst_tsap
+        self.tpdu_size = tpdu_size
+        super(COTPConnectionPacket, self).__init__()
 
     def assemble(self):
         return pack('!HHBBBHBBH', self.dst_ref, self.src_ref, self.opt_field,
@@ -144,12 +144,13 @@ class COTP_ConnectionConfirm(COTPConnectionPacket):
 
 class COTP_ConnectionRequest(COTPConnectionPacket):
     def __init__(self, dst_ref=0, src_ref=0, opt_field=0, src_tsap=0, dst_tsap=0, tpdu_size=0):
-        super(COTPConnectionPacket, self).__init__(dst_ref,
-                                                   src_ref,
-                                                   opt_field,
-                                                   src_tsap,
-                                                   dst_tsap,
-                                                   tpdu_size)
+        self.dst_ref = dst_ref
+        self.src_ref = src_ref
+        self.opt_field = opt_field
+        self.src_tsap = src_tsap
+        self.dst_tsap = dst_tsap
+        self.tpdu_size = tpdu_size
+        super(COTPConnectionPacket, self).__init__()
 
     def assemble(self):
         return pack('!HHBBBHBBHBBB', self.dst_ref, self.src_ref, self.opt_field,

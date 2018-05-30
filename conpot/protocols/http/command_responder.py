@@ -28,7 +28,7 @@ import http.server
 import http.client
 import os
 from lxml import etree
-
+from conpot.helpers import str_to_bytes
 import conpot.core as conpot_core
 import gevent
 
@@ -156,8 +156,8 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 message = ''
 
         if self.request_version != 'HTTP/0.9':
-            self.wfile.write("%s %d %s\r\n" %
-                             (self.protocol_version, code, message))
+            msg = str_to_bytes("{} {} {}\r\n".format(self.protocol_version, code, message))
+            self.wfile.write(msg)
 
         # the following two headers are omitted, which is why we override
         # send_response() at all. We do this one on our own...
@@ -786,7 +786,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        get_data_length = self.headers.getheader('content-length')
+        get_data_length = self.headers.get('content-length')
         get_data = None
 
         if get_data_length:
@@ -794,7 +794,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this GET request
         entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
         )
 
         if entity_xml:
@@ -827,7 +827,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # decide upon sending content as a whole or chunked
         if chunks == '0':
             # send payload as a whole to the client
-            self.wfile.write(payload)
+            self.wfile.write(str_to_bytes(payload))
         else:
             # send payload in chunks to the client
             self.send_chunked(chunks, payload, trailers)
@@ -836,7 +836,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.log(self.request_version,
                  self.command,
                  self.client_address,
-                 (self.path, self.headers.headers, get_data),
+                 (self.path, self.headers._headers, get_data),
                  status)
 
     def do_POST(self):
@@ -907,9 +907,10 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 class TemplateParser(HTMLParser):
     def __init__(self, data):
         self.databus = conpot_core.get_databus()
+        self.data = data.decode()
         HTMLParser.__init__(self)
-        self.payload = data
-        self.feed(data)
+        self.payload = self.data
+        self.feed(self.data)
 
     def handle_startendtag(self, tag, attrs):
         """ handles template tags provided in XHTML notation.

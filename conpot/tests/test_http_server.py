@@ -19,7 +19,8 @@ import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import datetime
 from collections import namedtuple
-
+import conpot
+import os
 from lxml import etree
 import gevent
 import requests
@@ -34,16 +35,16 @@ class TestBase(unittest.TestCase):
 
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
-
+        self.dir_name = os.path.dirname(conpot.__file__)
         args = namedtuple('FakeArgs', '')
-        self.http_server = web_server.HTTPServer('conpot/templates/default/http/http.xml',
-                                                 'conpot/templates/default/',
+        self.http_server = web_server.HTTPServer(self.dir_name + '/templates/default/http/http.xml',
+                                                 self.dir_name + '/templates/default/',
                                                  args)
         self.http_worker = gevent.spawn(self.http_server.start, '127.0.0.1', 0)
         gevent.sleep(0.5)
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/default/template.xml')
+        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
 
     def tearDown(self):
         self.http_server.stop()
@@ -62,12 +63,12 @@ class TestBase(unittest.TestCase):
         Objective: Test if http backend is able to retrieve data from databus
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default/template.xml')
+        dom = etree.parse(self.dir_name + '/templates/default/template.xml')
 
         # retrieve reference value from configuration
         sysName = dom.xpath('//core/databus/key_value_mappings/key[@name="sysName"]/value')
         if sysName:
-            print(sysName)
+            # print(sysName)
             assert_reference = sysName[0].xpath('./text()')[0][1:-1]
         else:
             assert_reference = None
@@ -83,7 +84,7 @@ class TestBase(unittest.TestCase):
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse('conpot/templates/default/http/http.xml')
+        dom = etree.parse(self.dir_name + '/templates/default/http/http.xml')
 
         # check for proper tarpit support
         tarpit = dom.xpath('//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
@@ -111,3 +112,7 @@ class TestBase(unittest.TestCase):
         """
         ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(self.http_server.server_port))
         self.assertIn('SUCCESSFUL', ret.text, "Trigger missed. An unexpected page was delivered.")
+
+
+if __name__ == '__main__':
+    unittest.main()
