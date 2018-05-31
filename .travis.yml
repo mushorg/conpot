@@ -38,7 +38,7 @@ before_script:
 - chmod +x "$REPO/bin/conpot"
 script:
 - tox
-- "$REPO/bin/conpot -f"
+- tox -e run
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls
