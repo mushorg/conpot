@@ -32,7 +32,6 @@ class BaseCommand(object):
         " Ie: H !SC\r\n"
     )
 
-
     def help(self):
         return self.HELP_MESSAGE
 

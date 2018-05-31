@@ -18,9 +18,10 @@ import socket
 
 import gevent
 from gevent.server import StreamServer
-
+import conpot
 import conpot.core as conpot_core
-from .command_responder import CommandResponder
+from conpot.protocols.kamstrup.management_protocol.command_responder import CommandResponder
+from conpot.helpers import str_to_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +41,17 @@ class KamstrupManagementServer(object):
         session.add_event({'type': 'NEW_CONNECTION'})
 
         try:
-            sock.send(self.banner.format(
-                conpot_core.get_databus().get_value("mac_address")))
+            sock.send(
+                str_to_bytes(self.banner.format(conpot_core.get_databus().get_value("mac_address")))
+            )
 
             while True:
-                request = sock.recv(1024)
-                if not request:
+                data = sock.recv(1024)
+                if not data:
                     logger.info('Kamstrup client disconnected. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
-
+                request = data.decode()
                 logdata = {'request': request}
                 response = self.command_responder.respond(request)
                 logdata['response'] = response
@@ -60,7 +62,9 @@ class KamstrupManagementServer(object):
                 if response is None:
                     session.add_event({'type': 'CONNECTION_LOST'})
                     break
-                sock.send(response)
+                # encode data before sending
+                reply = str_to_bytes(response)
+                sock.send(reply)
 
         except socket.timeout:
             logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
@@ -72,7 +76,21 @@ class KamstrupManagementServer(object):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info('Kamstrup management protocol server started on: %s', connection)
-        self.server.start()
+        self.server.serve_forever()
 
     def stop(self):
         self.server.stop()
+
+
+if __name__ == '__main__':
+    TCP_IP = '127.0.0.1'
+    TCP_PORT = 50100
+    import os
+    dir_name = os.path.dirname(conpot.__file__)
+    conpot_core.get_databus().initialize(dir_name + '/templates/kamstrup_382/template.xml')
+    server = KamstrupManagementServer(dir_name + '/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml',
+                                      None, None)
+    try:
+        server.start(TCP_IP, TCP_PORT)
+    except KeyboardInterrupt:
+        server.stop()

@@ -20,15 +20,16 @@ Service support based on gaspot.py [https://github.com/sjhilt/GasPot]
 Original authors: Kyle Wilhoit and Stephen Hilt
 """
 
-import gevent
 from gevent.server import StreamServer
-
 import datetime
 import random
-
-import logging as logger
-
+import conpot
 import conpot.core as conpot_core
+import sys
+from conpot.helpers import str_to_bytes
+
+import logging
+logger = logging.getLogger(__name__)
 
 # 9999 indicates that the command was not understood and
 # FF1B is the checksum for the 9999
@@ -51,6 +52,7 @@ class GuardianASTServer(object):
         fill_start = self.fill_offset_time - datetime.timedelta(minutes=313)
         fill_stop = self.fill_offset_time - datetime.timedelta(minutes=303)
         # Default Product names, change based off country needs
+        product1 = self.databus.get_value('product1').ljust(22)
         product1 = self.databus.get_value('product1').ljust(22)
         product2 = self.databus.get_value('product2').ljust(22)
         product3 = self.databus.get_value('product3').ljust(22)
@@ -173,12 +175,11 @@ class GuardianASTServer(object):
                 # The connection has been closed
                 if not request:
                     break
-
-                while not ('\n' in request or '00' in request):
+                while not (b'\n' in request or b'00' in request):
                     request += sock.recv(4096)
                 # if first value is not ^A then do nothing
                 # thanks John(achillean) for the help
-                if request[0] != '\x01':
+                if request[:1] != b'\x01':
                     logger.info('Non ^A command attempt %s:%d. (%s)', addr[0], addr[1], session.id)
                     break
                 # if request is less than 6, than do nothing
@@ -187,7 +188,7 @@ class GuardianASTServer(object):
                     break
 
                 cmds = {"I20100": I20100, "I20200": I20200, "I20300": I20300, "I20400": I20400, "I20500": I20500}
-                cmd = request[1:7]  # strip ^A and \n out
+                cmd = request[1:7].decode()  # strip ^A and \n out
                 response = None
                 if cmd in cmds:
                     logger.info('%s command attempt %s:%d. (%s)', cmd, addr[0], addr[1], session.id)
@@ -287,13 +288,10 @@ class GuardianASTServer(object):
                     # log what was entered
                     logger.info('%s command attempt %s:%d. (%s)', request, addr[0], addr[1], session.id)
                 if response:
-                    sock.send(response)
+                    sock.send(str_to_bytes(response))
                 session.add_event({"type": "AST {0}".format(cmd), "request": request, "response": response})
             except Exception as e:
-                print(('Unknown Error: {}'.format(str(e))))
-                raise
-            except KeyboardInterrupt:
-                break
+                logger.exception(('Unknown Error: {}'.format(str(e))))
         logger.info('GuardianAST client disconnected %s:%d. (%s)', addr[0], addr[1], session.id)
         session.add_event({'type': 'CONNECTION_LOST'})
 
@@ -301,7 +299,7 @@ class GuardianASTServer(object):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info('GuardianAST server started on: {0}'.format(connection))
-        self.server.start()
+        self.server.serve_forever()
 
     def stop(self):
         self.server.stop()
@@ -309,11 +307,13 @@ class GuardianASTServer(object):
 
 if __name__ == '__main__':
     # Set vars for connection information
-    TCP_IP = '0.0.0.0'
+    TCP_IP = '127.0.0.1'
     TCP_PORT = 10001
+    import os
+    dir_name = os.path.dirname(conpot.__file__)
     server = GuardianASTServer(None, None, None)
-    server.start(TCP_IP, TCP_PORT)
+    server.databus.initialize(dir_name + '/templates/guardian_ast/template.xml')
     try:
-        gevent.wait()
+        server.start(TCP_IP, TCP_PORT)
     except KeyboardInterrupt:
         server.stop()
