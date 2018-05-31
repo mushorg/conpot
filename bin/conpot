@@ -190,13 +190,17 @@ def main():
     # Loading default config if config not set.
     if args.force:
         args.config = os.path.join(package_directory, 'testing.cfg')
-        logger.info('--force option specified. Using testing configuration:')
+        logger.info('--force option specified. Using testing configuration')
         config.read(args.config)
-        print(args.config)
     else:
+        # sanity check: see that both config and template arguments are provided - else exit
+        if not (args.config and args.template):
+            print('Invalid arguments supplied. Please check that you pass both template and config arguments before'
+                  ' running Conpot')
+            sys.exit(3)
         try:
             if not os.path.isfile(os.path.join(package_directory, args.config)):
-                raise FileNotFoundError
+                raise FileNotFoundError('Config file not found!')
             args.config = os.path.join(package_directory, args.config)
             logger.info('Config file found!')
             config.read(args.config)

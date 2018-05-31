@@ -29,11 +29,8 @@ from conpot.protocols.s7comm.s7 import S7
 import conpot.core as conpot_core
 from lxml import etree
 
-# import logging
-# logger = logging.getLogger(__name__)
-import logging as logger
-import sys
-logger.basicConfig(stream=sys.stdout, level=logger.INFO)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def cleanse_byte_string(packet):

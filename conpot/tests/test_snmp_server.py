@@ -32,7 +32,7 @@ from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
 
 
-class TestBase(unittest.TestCase):
+class TestSNMPServer(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
         self.host = '127.0.0.1'

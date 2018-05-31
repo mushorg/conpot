@@ -24,7 +24,6 @@ import os
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.bacnet import bacnet_server
-from copy import copy
 from collections import namedtuple
 from bacpypes.pdu import GlobalBroadcast, PDU
 from bacpypes.apdu import APDU, WhoIsRequest, IAmRequest, IHaveRequest,  WhoHasObject,  WhoHasRequest, \
@@ -33,7 +32,7 @@ from bacpypes.constructeddata import Any
 from bacpypes.primitivedata import Real
 
 
-class TestBase(unittest.TestCase):
+class TestBACnetServer(unittest.TestCase):
 
     """
         All tests are executed in a similar way. We initiate a service request to the BACnet server and wait for response.
@@ -54,7 +53,7 @@ class TestBase(unittest.TestCase):
         gevent.sleep(1)
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
+        self.databus.initialize(self.dir_name + '/templates/guardian_ast/template.xml')
 
     def tearDown(self):
         self.bacnet_server.stop()
@@ -147,32 +146,43 @@ class TestBase(unittest.TestCase):
 
         self.assertEqual(exp_pdu.pduData, received_data)
 
-    def test_ignore_pdu_types(self):
-        """When the request has apduType not 0x01, None should be returned from Conpot"""
-        test_request = ReadPropertyRequest(objectIdentifier=('analogInput', 14), propertyIdentifier=85)
-        test_request.apduMaxResp = 1024
-        test_request.apduInvokeID = 101
+    def test_no_response_requests(self):
+        """When the request has apduType not 0x01, no reply should be returned from Conpot"""
+        request = ReadPropertyRequest(objectIdentifier=('analogInput', 14), propertyIdentifier=85)
+        request.pduData = bytearray(b'test_data')
+        request.apduMaxResp = 1024
+        request.apduInvokeID = 101
+        # Build requests - Confirmed, simple ack pdu, complex ack pdu, error pdu - etc.
+        test_requests = list()
 
-        test_apdu = APDU()
-        test_request.encode(test_apdu)
-        # malformed - Confirmed, simple ack pdu, complex ack pdu, error pdu - etc.
-        malformed_apdus = list()
-        for i in range(8):
-            if i != 1:
-                test_apdu.apduType = i
-                test_apdu.pduData = bytearray(b'')
-                test_apdu.apduSeq = i
-                malformed_apdus.append(copy(test_apdu))
+        for i in range(2, 8):
+            if i not in {1, 3, 4}:
+                request.apduType = i
+                if i == 2:
+                    # when apdu.apduType is 2 - we have SimpleAckPDU
+                    # set the apduInvokeID and apduService
+                    request.apduService = 8
+                elif i == 5:
+                    # when apdu.apduType is 5 - we have ErrorPDU
+                    # set the apduInvokeID and apduService
+                    request.apduService = 8
+                elif i == 6:
+                    # when apdu.apduType is 6 - we have RejectPDU
+                    # set the apduInvokeID and apduAbortRejectReason
+                    request.apduAbortRejectReason = 9
+                else:
+                    # when apdu.apduType is 7 - we have AbortPDU
+                    # set the apduInvokeID and apduAbortRejectReason
+                    request.apduAbortRejectReason = 9
+
+                test_requests.append(request)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # create malformed pdu's from the malformed apdus
-        pdu = PDU()
-        malformed_pdus = [i.encode(copy(pdu)) for i in malformed_apdus]
 
         buf_size = 1024
-        [s.sendto(i.pduData, ('127.0.0.1', self.bacnet_server.server.server_port)) for i in malformed_pdus]
+        [s.sendto(i.pduData, ('127.0.0.1', self.bacnet_server.server.server_port)) for i in test_requests]
         results = None
         with gevent.Timeout(1, False):
-            results = [s.recvfrom(buf_size) for i in range(len(malformed_pdus))]
+            results = [s.recvfrom(buf_size) for i in range(len(test_requests))]
         self.assertIsNone(results)
 
 

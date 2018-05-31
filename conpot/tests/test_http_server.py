@@ -29,7 +29,7 @@ from conpot.protocols.http import web_server
 import conpot.core as conpot_core
 
 
-class TestBase(unittest.TestCase):
+class TestHTTPServer(unittest.TestCase):
 
     def setUp(self):
 

@@ -20,11 +20,10 @@ import unittest
 import os
 from functools import reduce
 from conpot.protocols.enip.enip_server import EnipServer
-from cpppo.server import enip
 from cpppo.server.enip import client
 
 
-class TestBase(unittest.TestCase):
+class TestENIPServer(unittest.TestCase):
     def setUp(self):
         template = reduce(os.path.join, 'conpot/templates/default/enip/enip.xml'.split('/'))
         self.enip_server = EnipServer(template, None, None)

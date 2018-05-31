@@ -27,7 +27,7 @@ from conpot.tests.helpers import s7comm_client
 import conpot.core as conpot_core
 
 
-class TestBase(unittest.TestCase):
+class TestS7Server(unittest.TestCase):
 
     def setUp(self):
         self.databus = conpot_core.get_databus()

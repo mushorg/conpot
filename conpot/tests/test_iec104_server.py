@@ -26,7 +26,7 @@ import conpot
 gevent.monkey.patch_all()
 
 
-class TestBase(unittest.TestCase):
+class TestIEC104Server(unittest.TestCase):
 
     def setUp(self):
         self.dir_name = os.path.dirname(conpot.__file__)

@@ -33,7 +33,7 @@ import conpot.core as conpot_core
 monkey.patch_all()
 
 
-class TestBase(unittest.TestCase):
+class TestModbusServer(unittest.TestCase):
 
     def setUp(self):
         # clean up before we start...

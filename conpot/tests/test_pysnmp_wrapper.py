@@ -35,7 +35,7 @@ def check_content(pyfile):
     return ret
 
 
-class TestBase(unittest.TestCase):
+class TestPySNMPWrapper(unittest.TestCase):
 
     def setUp(self):
         self.dir_name = os.path.dirname(conpot.__file__)
