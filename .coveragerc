@@ -1,6 +1,9 @@
 [report]
 omit =
     */tests/*
-    conpot/core/loggers/helpers.py
+    # Temporary: For review.. Discuss with Daniel before finalising what to cover
+    */helpers.py
     conpot/core/loggers/log_worker.py
     conpot/core/loggers/syslog.py
+    conpot/core/loggers/mysql_log.py
+    conpot/core/loggers/sqlite_log.py

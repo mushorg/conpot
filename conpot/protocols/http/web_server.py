@@ -41,3 +41,19 @@ class HTTPServer(object):
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+
+
+if __name__ == '__main__':
+    TCP_IP = '127.0.0.1'
+    TCP_PORT = 50001
+    import os
+    import conpot
+    import conpot.core as conpot_core
+    dir_name = os.path.dirname(conpot.__file__)
+    conpot_core.get_databus().initialize(dir_name + '/templates/default/template.xml')
+    server = HTTPServer(dir_name + '/templates/default/http/http.xml', dir_name + '/templates/default/',
+                        None)
+    try:
+        server.start(TCP_IP, TCP_PORT)
+    except KeyboardInterrupt:
+        server.stop()

@@ -907,7 +907,9 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 class TemplateParser(HTMLParser):
     def __init__(self, data):
         self.databus = conpot_core.get_databus()
-        self.data = data.decode()
+        if type(data) == bytes:
+            data = data.decode()
+        self.data = data
         HTMLParser.__init__(self)
         self.payload = self.data
         self.feed(self.data)
