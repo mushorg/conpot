@@ -767,7 +767,7 @@ def parse_ip(ip_string):
     for octet in octets:
         if int(octet) < 0 or int(octet) > 255:
             return default
-    return ".".join(octets)
+    return ".".join(list(map(str, octets)))
 
 
 def parse_port(port_string):

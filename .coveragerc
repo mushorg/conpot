@@ -12,3 +12,10 @@ omit =
     conpot/core/loggers/stix_transform.py
     conpot/core/loggers/taxii_log.py
     conpot/utils/mac_addr.py
+
+exclude_lines =
+    pragma: no cover
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:

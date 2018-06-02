@@ -25,6 +25,7 @@ from gevent.ssl import wrap_socket
 from conpot.helpers import fix_sslwrap
 import conpot
 from conpot.emulators.proxy import Proxy
+from conpot.protocols.misc.ascii_decoder import AsciiDecoder
 gevent.monkey.patch_all()
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -71,6 +72,16 @@ class TestProxy(unittest.TestCase):
         self.assertEqual(self.test_input, received)
         mock_service.stop(1)
 
+    def test_ascii_decoder(self):
+        test_decoder = AsciiDecoder()
+        # should not raise a UnicodeDecodeError
+        self.assertTrue((test_decoder.decode_in(b'\x80abc') == b'\xef\xbf\xbdabc') and
+                        (test_decoder.decode_out(b'\x80abc') == b'\xef\xbf\xbdabc'))
+
     def echo_server(self, sock, address):
         r = sock.recv(len(self.test_input))
         sock.send(r)
+
+
+if __name__ == '__main__':
+    unittest.main()
