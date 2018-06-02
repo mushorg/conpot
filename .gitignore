@@ -56,7 +56,3 @@ conpot.log
 
 # 2to3 backup files
 *.bak
-
-# In progress work..
-file_io.py
-virtual_fs.py
