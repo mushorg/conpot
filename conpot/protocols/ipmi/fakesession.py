@@ -30,15 +30,15 @@ import hmac
 import hashlib
 from Crypto.Cipher import AES
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
 
 def _monotonic_time():
     return os.times()[4]
 
+
 class FakeSession(Session):
-
     def __init__(self, bmc, userid, password, port):
-
         self.lastpayload = None
         self.servermode = True
         self.privlevel = 4
@@ -61,6 +61,7 @@ class FakeSession(Session):
         self.server = None
         self.sol_handler = None
         self.ipmicallback = self._generic_callback
+        super(Session, self).__init__()
         logger.info('New IPMI session initialized for client (%s)', self.sockaddr)
 
     def _generic_callback(self, response):
@@ -165,7 +166,7 @@ class FakeSession(Session):
         self.waiting_sessions.pop(self, None)
         self.lastpayload = None
         self.last_payload_type = None
-        response = {}
+        response = dict()
         response['netfn'] = payload[1] >> 2
         del payload[0:5]
         # remove the trailing checksum
@@ -176,8 +177,8 @@ class FakeSession(Session):
         self.timeout = 0.5 + (0.5 * random.random())
         self.ipmicallback(response)
 
-    def _send_ipmi_net_payload(self, netfn=None, command=None, data=None, code=0, bridge_request=None, \
-                               retry=None, delay_xmit=None):
+    def _send_ipmi_net_payload(self, netfn=None, command=None, data=None, code=0, bridge_request=None,
+                               retry=None, delay_xmit=None, timeout=None):
         if data is None:
             data = []
         if retry is None:
@@ -223,7 +224,6 @@ class FakeSession(Session):
             payload.append(tail_csum)
         return payload
 
-
     def _aespad(self, data):
         newdata = list(data)
         currlen = len(data) + 1
@@ -237,7 +237,8 @@ class FakeSession(Session):
         newdata.append(neededpad)
         return newdata
 
-    def send_payload(self, payload=(), payload_type=None, retry=True, delay_xmit=None, needskeepalive=False):
+    def send_payload(self, payload=(), payload_type=None, retry=True, delay_xmit=None, needskeepalive=False,
+                     timeout=None):
         if payload and self.lastpayload:
             self.pendingpayloads.append((payload, payload_type, retry))
             return
@@ -318,7 +319,7 @@ class FakeSession(Session):
             data = []
         self._send_ipmi_net_payload(data=data, code=code)
 
-    def _xmit_packet(self, retry=True, delay_xmit=None):
+    def _xmit_packet(self, retry=True, delay_xmit=None, timeout=None):
         if self.sequencenumber:
             self.sequencenumber += 1
         if delay_xmit is not None:

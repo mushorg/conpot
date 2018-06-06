@@ -20,25 +20,26 @@ from gevent.server import DatagramServer
 
 import struct
 import os
-
-import logging
-
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
-
 import uuid
 import hmac
 import hashlib
 import collections
-
 from lxml import etree
-
-from .fakebmc import FakeBmc
-from .fakesession import FakeSession
-
+from conpot.protocols.ipmi.fakebmc import FakeBmc
+from conpot.protocols.ipmi.fakesession import FakeSession
+import codecs
 import conpot.core as conpot_core
+import logging
+logger = logging.getLogger(__name__)
+# import logging as logger
+# import sys
+# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
-logger = logging.getLogger()
+
+def decode_byte_string(pkt):
+    return [hex(ord(i.to_bytes(1, byteorder='big'))) for i in list(codecs.decode(pkt, 'unicode_escape').encode('latin-1'))]
 
 
 class IpmiServer(object):
@@ -47,29 +48,22 @@ class IpmiServer(object):
         dom = etree.parse(template)
         databus = conpot_core.get_databus()
         self.device_name = databus.get_value(dom.xpath('//ipmi/device_info/device_name/text()')[0])
-        self.host = ''
-        self.port = 623
-        if hasattr(args, 'port'):
-            self.port = args.port
         self.sessions = dict()
-
+        self.sock = None
+        self.host = None
+        self.port = None
         self.uuid = uuid.uuid4()
         self.kg = None
-
+        self.server = None  # Initialize later
         self.authdata = collections.OrderedDict()
-
+        self.session = None
         lanchannel = 1
         authtype = 0b10000000
         authstatus = 0b00000100
         chancap = 0b00000010
         oemdata = (0, 0, 0, 0)
+        self.session = None
         self.authcap = struct.pack('BBBBBBBBB', 0, lanchannel, authtype, authstatus, chancap, *oemdata)
-
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(1)
-        self.sock.bind(('', self.port))
         self.bmc = self._configure_users(dom)
         logger.info('Conpot IPMI initialized using %s template', template)
 
@@ -78,19 +72,15 @@ class IpmiServer(object):
         authdata_name = dom.xpath('//ipmi/user_list/user/user_name/text()')
         authdata_passwd = dom.xpath('//ipmi/user_list/user/password/text()')
         self.authdata = collections.OrderedDict(list(zip(authdata_name, authdata_passwd)))
-
         authdata_priv = dom.xpath('//ipmi/user_list/user/privilege/text()')
         if False in [0 < int(k) <= 4 for k in authdata_priv]:
             raise ValueError("Privilege level must be between 1 and 4")
         authdata_priv = [int(k) for k in authdata_priv]
         self.privdata = collections.OrderedDict(list(zip(authdata_name, authdata_priv)))
-
         activeusers = dom.xpath('//ipmi/user_list/user/active/text()')
         self.activeusers = [1 if x == 'true' else 0 for x in activeusers]
-
         fixedusers = dom.xpath('//ipmi/user_list/user/fixed/text()')
         self.fixedusers = [1 if x == 'true' else 0 for x in fixedusers]
-
         self.channelaccessdata = collections.OrderedDict(list(zip(authdata_name, activeusers)))
 
         return FakeBmc(self.authdata, self.port)
@@ -102,7 +92,9 @@ class IpmiServer(object):
         csum &= 0xff
         return csum
 
-    def handle(self, data, address):
+    def handle(self, pkt, address):
+        # make sure data is in the correct format
+        data = decode_byte_string(pkt)
         # make sure self.session exists
         if not address[0] in list(self.sessions.keys()) or not hasattr(self, 'session'):
             # new session for new source
@@ -128,19 +120,21 @@ class IpmiServer(object):
         if len(data) < 22:
             self.close_server_session()
             return
-        if not (data[0] == '\x06' and data[2:4] == '\xff\x07'):
+        if not (data[0] == b'\x06' and
+                data[2] == b'\xff' and
+                data[3] == b'\x07'):
             # check rmcp version, sequencenumber and class;
             self.close_server_session()
             return
-        if data[4] == '\x06':
+        if data[4] == b'\x06':
             # ipmi v2
             session.ipmiversion = 2.0
             session.authtype = 6
             payload_type = data[5]
-            if payload_type not in ('\x00', '\x10'):
+            if payload_type not in (b'\x00', b'\x10'):
                 self.close_server_session()
                 return
-            if payload_type == '\x10':
+            if payload_type == b'\x10':
                 # new session to handle conversation
                 serversession.ServerSession(self.authdata, self.kg, session.sockaddr,
                                             self.sock, data[16:], self.uuid, bmc=self)
@@ -239,7 +233,7 @@ class IpmiServer(object):
                         0, 0, 0, 8, 1, 0, 0, 0,  # auth
                         1, 0, 0, 8, 1, 0, 0, 0,  # integrity
                         2, 0, 0, 8, 1, 0, 0, 0,  # privacy
-        ])
+                    ])
         logger.info('IPMI open session request')
         self.session.send_payload(response, constants.payload_types['rmcpplusopenresponse'], retry=False)
 
@@ -436,10 +430,32 @@ class IpmiServer(object):
             logger.info('IPMI response sent (Invalid Command) to %s', self.session.sockaddr)
 
     def start(self, host, port):
+        self.host = host
+        self.port = port
         connection = (host, port)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setblocking(1)
+        self.sock.bind((self.host, self.port))
         self.server = DatagramServer(connection, self.handle)
         logger.info('IPMI server started on: %s', connection)
         self.server.serve_forever()
 
     def stop(self):
         self.server.stop()
+
+
+if __name__ == '__main__':
+    TCP_IP = '127.0.0.1'
+    TCP_PORT = 50001
+    import os
+    import conpot
+    dir_name = os.path.dirname(conpot.__file__)
+    conpot_core.get_databus().initialize(dir_name + '/templates/default/template.xml')
+    server = IpmiServer(dir_name + '/templates/default/ipmi/ipmi.xml', dir_name + '/templates/default/',
+                        None)
+    try:
+        server.start(TCP_IP, TCP_PORT)
+    except KeyboardInterrupt:
+        server.stop()

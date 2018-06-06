@@ -46,9 +46,9 @@ class CommandResponder(object):
 
     def respond(self, request):
         if request.communication_address != self.communication_address:
-            logger.warning(
-                'Kamstrup request received with wrong communication address, got %s but expected %s.',
-                request.communication_address, self.communication_address)
+            logger.warning('Kamstrup request received with wrong communication address, got {} but expected {}.'.format(
+                request.communication_address, self.communication_address
+            ))
             return None
         elif isinstance(request, messages.KamstrupRequestGetRegisters):
             response = messages.KamstrupResponseRegister(self.communication_address)

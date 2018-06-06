@@ -33,7 +33,7 @@ import conpot.core as conpot_core
 import gevent
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class HTTPServer(http.server.BaseHTTPRequestHandler):
@@ -515,7 +515,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         if not hasattr(self, 'headers'):
             self.headers = self.MessageClass(self.rfile, 0)
 
-        trace_data_length = self.headers.getheader('content-length')
+        trace_data_length = self.headers.get('content-length')
         unsupported_request_data = None
 
         if trace_data_length:
@@ -551,6 +551,8 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # decide upon sending content as a whole or chunked
         if chunks == '0':
             # send payload as a whole to the client
+            if type(payload) != bytes:
+                payload = payload.encode()
             self.wfile.write(payload)
         else:
             # send payload in chunks to the client
@@ -558,7 +560,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # loggers
         self.log(self.request_version, self.command, self.client_address, (self.path,
-                                                                           self.headers.headers,
+                                                                           self.headers._headers,
                                                                            unsupported_request_data), status)
 
     def do_TRACE(self):
@@ -575,7 +577,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        trace_data_length = self.headers.getheader('content-length')
+        trace_data_length = self.headers.get('content-length')
         trace_data = None
 
         if trace_data_length:
@@ -614,20 +616,22 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # send payload (the actual content) to client
+        if type(payload) != bytes:
+            payload = payload.encode()
         self.wfile.write(payload)
 
         # loggers
         self.log(self.request_version,
                  self.command,
                  self.client_address,
-                 (self.path, self.headers.headers, trace_data),
+                 (self.path, self.headers._headers, trace_data),
                  status)
 
     def do_HEAD(self):
         """Handle HEAD requests."""
 
         # fetch configuration dependent variables from server instance
-        headers = []
+        headers = list()
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
         docpath = self.server.docpath
@@ -637,7 +641,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        head_data_length = self.headers.getheader('content-length')
+        head_data_length = self.headers.get('content-length')
         head_data = None
 
         if head_data_length:
@@ -660,7 +664,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             # try to find a configuration item for this GET request
             entity_xml = configuration.xpath(
                 '//http/htdocs/node[@name="'
-                + self.path.partition('?')[0].decode('utf8') + '"]'
+                + self.path.partition('?')[0] + '"]'
             )
 
             if entity_xml:
@@ -693,7 +697,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.log(self.request_version,
                  self.command,
                  self.client_address,
-                 (self.path, self.headers.headers, head_data),
+                 (self.path, self.headers._headers, head_data),
                  status)
 
     def do_OPTIONS(self):
@@ -710,7 +714,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        options_data_length = self.headers.getheader('content-length')
+        options_data_length = self.headers.get('content-length')
         options_data = None
 
         if options_data_length:
@@ -769,7 +773,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.log(self.request_version,
                  self.command,
                  self.client_address,
-                 (self.path, self.headers.headers, options_data),
+                 (self.path, self.headers._headers, options_data),
                  status)
 
     def do_GET(self):
@@ -843,13 +847,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         """Handle POST requests"""
 
         # fetch configuration dependent variables from server instance
-        headers = []
+        headers = list()
         headers.extend(self.server.global_headers)
         configuration = self.server.configuration
         docpath = self.server.docpath
 
         # retrieve POST data ( important to flush request buffers )
-        post_data_length = self.headers.getheader('content-length')
+        post_data_length = self.headers.get('content-length')
         post_data = None
 
         if post_data_length:
@@ -857,7 +861,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # try to find a configuration item for this POST request
         entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0].decode('utf8') + '"]'
+            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
         )
 
         if entity_xml:
@@ -891,6 +895,8 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # decide upon sending content as a whole or chunked
         if chunks == '0':
             # send payload as a whole to the client
+            if type(payload) != bytes:
+                payload = payload.encode()
             self.wfile.write(payload)
         else:
             # send payload in chunks to the client
@@ -900,7 +906,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.log(self.request_version,
                  self.command,
                  self.client_address,
-                 (self.path, self.headers.headers, post_data),
+                 (self.path, self.headers._headers, post_data),
                  status)
 
 
@@ -974,6 +980,7 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 class SubHTTPServer(ThreadedHTTPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
+    daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass, template, docpath):
         http.server.HTTPServer.__init__(self, server_address, RequestHandlerClass)
@@ -1108,6 +1115,10 @@ class CommandResponder(object):
     def serve_forever(self):
         self.httpd.serve_forever()
 
-    def stop(self):
-        logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
-        self.httpd.shutdown()
+    def stop(self, force=False):
+        if not force:
+            logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
+            self.httpd.shutdown()
+        else:
+            logging.info("HTTP server will shut down forcefully")
+            self.httpd.socket.close()

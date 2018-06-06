@@ -17,7 +17,7 @@
 
 import logging
 import binascii
-
+from conpot.helpers import chr_py3
 import crc16
 from . import kamstrup_constants
 import conpot.core as conpot_core
@@ -90,7 +90,7 @@ class KamstrupResponseBase(KamstrupProtocolBase):
             final_message.append(c)
 
         # generate and append checksum
-        crc = crc16.crc16xmodem(''.join([chr(item) for item in final_message[1:]]))
+        crc = crc16.crc16xmodem(b''.join([chr_py3(item) for item in final_message[1:]]))
         final_message.append(crc >> 8)
         final_message.append(crc & 0xff)
 

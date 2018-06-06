@@ -15,18 +15,21 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
 import socket
 import binascii
 import random
 import conpot
 from gevent.server import StreamServer
 import gevent
-
+from conpot.helpers import chr_py3
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 
+# import logging as logger
+# import sys
+# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+import logging
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +71,7 @@ class KamstrupServer(object):
                     break
 
                 for x in raw_request:
-                    parser.add_byte(x)
+                    parser.add_byte(chr_py3(x))
 
                 while True:
                     request = parser.get_request()

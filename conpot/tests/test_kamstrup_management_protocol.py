@@ -53,7 +53,7 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
         # get the conpot directory
         self.dir_name = os.path.dirname(conpot.__file__)
         self.kamstrup_management_server = KamstrupManagementServer(
-            self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml', None, None
+            self.dir_name + '/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml', None, None
         )
         self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 50100)
 

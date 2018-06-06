@@ -24,7 +24,7 @@ import os
 from lxml import etree
 import gevent
 import requests
-
+from gevent import socket
 from conpot.protocols.http import web_server
 import conpot.core as conpot_core
 
@@ -41,13 +41,15 @@ class TestHTTPServer(unittest.TestCase):
                                                  self.dir_name + '/templates/default/',
                                                  args)
         self.http_worker = gevent.spawn(self.http_server.start, '127.0.0.1', 0)
-        gevent.sleep(0.5)
         # initialize the databus
         self.databus = conpot_core.get_databus()
         self.databus.initialize(self.dir_name + '/templates/default/template.xml')
+        gevent.sleep(1)
 
     def tearDown(self):
+        # force quit the http_server for testing ..
         self.http_server.stop()
+        gevent.joinall([self.http_worker])
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
@@ -104,14 +106,54 @@ class TestHTTPServer(unittest.TestCase):
                 "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(tarpit_delay, dt_req_delta.seconds)
             )
         else:
-            raise Exception("Assertion failed. Tarpit delay not found in HTTP template.")
+            raise AssertionError("Assertion failed. Tarpit delay not found in HTTP template.")
 
     def test_http_subselect_trigger(self):
         """
         Objective: Test if http subselect triggers work correctly
         """
-        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(self.http_server.server_port))
+        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+            self.http_server.server_port))
         self.assertIn('SUCCESSFUL', ret.text, "Trigger missed. An unexpected page was delivered.")
+
+    def test_do_TRACE(self):
+        """
+        Objective: Test the web server with a trace request
+        """
+        # TODO: requests has no trace method.. So resorting to the good'ol socket - sending raw data
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.http_server.server_port))
+        s.sendall(b'TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        data = s.recv(1024)
+        s.close()
+        # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
+        self.assertIn(b'HTTP/1.1 200 OK', data)
+
+    def test_do_OPTIONS(self):
+        """
+        Objective: Test the web server by sending a valid OPTIONS HTTP request
+        """
+        ret = requests.options("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+            self.http_server.server_port))
+        self.assertEqual((ret.headers['allow']), 'GET,HEAD,POST,OPTIONS,TRACE')
+
+    def test_do_HEAD(self):
+        """
+        Objective: Test the web server by sending a HTTP HEAD request.
+        Should be responded back by the valid HTTP headers
+        """
+        ret = requests.head("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+            self.http_server.server_port))
+        self.assertTrue(ret.status_code == 200 and ret.headers['Content-Length'] == '370')
+
+    def test_do_POST(self):
+        """
+        Objective: send a POST request to a invalid URI. Should get a 404 response
+        """
+        payload = {'key1': 'value1', 'key2': 'value2'}
+        ret = requests.post("http://127.0.0.1:{0}/tests/demo.html".format(
+            self.http_server.server_port), data=payload)
+        self.assertEqual(ret.status_code, 404)
 
 
 if __name__ == '__main__':

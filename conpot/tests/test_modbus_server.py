@@ -17,17 +17,17 @@
 
 from gevent import monkey
 import os
-from functools import reduce
 import unittest
 from datetime import datetime
 from collections import namedtuple
 from gevent.queue import Queue
 import conpot
 from gevent.server import StreamServer
+from conpot.protocols.modbus.slave import MBSlave
 from modbus_tk.exceptions import ModbusInvalidResponseError, ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
-
+from gevent import socket
 from conpot.protocols.modbus import modbus_server
 import conpot.core as conpot_core
 monkey.patch_all()
@@ -89,9 +89,9 @@ class TestModbusServer(unittest.TestCase):
         master.set_timeout(1.0)
         set_bits = [1, 0, 0, 1, 0, 0, 1, 1]
 
-        #write 8 bits
+        # write 8 bits
         master.execute(slave=self.target_slave_id, function_code=cst.WRITE_MULTIPLE_COILS, starting_address=1, output_value=set_bits)
-        #read 8 bit
+        # read 8 bit
         actual_bit = master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
 
         self.assertSequenceEqual(set_bits, actual_bit)
@@ -125,10 +125,10 @@ class TestModbusServer(unittest.TestCase):
         master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
         master.set_timeout(1.0)
 
-        #issue request to modbus server
+        # issue request to modbus server
         master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
 
-        #extract the generated log entries
+        # extract the generated log entries
         log_queue = conpot_core.get_sessionManager().log_queue
 
         conn_log_item = log_queue.get(True, 2)
@@ -143,13 +143,35 @@ class TestModbusServer(unittest.TestCase):
         self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
         self.assertEqual('modbus', modbus_log_item['data_type'])
 
-        req = ('000100000006%s0100010080' % ('01' if self.target_slave_id == 1  else 'ff')).encode()
+        req = ('000100000006%s0100010080' % ('01' if self.target_slave_id == 1 else 'ff')).encode()
         # testing the actual modbus data
         modbus_expected_payload = {'function_code': 1, 'slave_id': self.target_slave_id,
                                    'request': req,
                                    'response': b'0110ffffffffffffffffffffffffffffffff'}
 
         self.assertDictEqual(modbus_expected_payload, modbus_log_item['data'])
+
+    def test_report_slave_id(self):
+        """
+        Objective: Test conpot for function code 17.
+        """
+        # Function 17 is not currently supported by modbus_tk
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.modbus_server.server_port))
+        s.sendall(b'\x00\x00\x00\x00\x00\x02\x01\x11')
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b'\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff')
+
+    # TODO: add test for function 43
+    @unittest.skip('Test for function 43')
+    def test_device_info(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.modbus_server.server_port))
+        s.sendall(b'\x00\x00\x00\x00\x00\x06\x01\x2b\x0e\x01\x00\x00')
+        data = s.recv(1024)
+        s.close()
+        self.assertTrue(b'\x00\x00\x00\x00\x00' in data)
 
 
 if __name__ == '__main__':

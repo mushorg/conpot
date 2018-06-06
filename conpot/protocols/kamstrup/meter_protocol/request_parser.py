@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class KamstrupRequestParser(object):
     def __init__(self):
-        self.bytes = []
+        self.bytes = list()
         self.parsing = False
         self.data_escaped = False
         self.done = False
