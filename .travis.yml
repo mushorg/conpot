@@ -37,9 +37,10 @@ install:
 - pip install coveralls
 before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
+- chmod +x "$REPO/bin/conpot"
 script:
 - coverage run --timid --source=conpot setup.py test
-- "/home/travis/virtualenv/python2.7.9/bin/conpot"
+- "$REPO/bin/conpot -f"
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls

@@ -1,10 +1,11 @@
 # Conpot
 
-[![Travis CI](https://img.shields.io/travis/mushorg/conpot/master.svg)](https://travis-ci.org/mushorg/conpot)
+[![Build Status](https://travis-ci.org/mushorg/conpot.svg?branch=master)](https://travis-ci.org/mushorg/conpot)
 [![Code Health](https://landscape.io/github/mushorg/conpot/master/landscape.png)](https://landscape.io/github/mushorg/conpot/master)
-[![Downloads Counter](https://img.shields.io/pypi/dm/conpot.svg)](https://pypi.python.org/pypi/Conpot/) 
-[![Version](https://img.shields.io/pypi/v/conpot.svg)](https://pypi.python.org/pypi/Conpot/)
-
+[![Python Version](https://img.shields.io/pypi/pyversions/conpot.svg)](https://pypi.python.org/pypi/Conpot) 
+[![PyPI version](https://badge.fury.io/py/Conpot.svg)](https://badge.fury.io/py/Conpot)
+[![Docs](https://readthedocs.org/projects/conpot/badge/?version=latest)](https://conpot.readthedocs.io/en/latest/)
+[![Coverage Status](https://coveralls.io/repos/github/mushorg/conpot/badge.svg?branch=master)](https://coveralls.io/github/mushorg/conpot?branch=master)
 
 ## About
 
@@ -13,7 +14,7 @@ methods of adversaries targeting industrial control systems
 
 ## Documentation
 
-The build of the documentations [source](https://github.com/mushorg/conpot/tree/master/docs/source) can be found [here](http://mushorg.github.io/conpot/). There you will also find the instructions on how to [install](http://mushorg.github.io/conpot/installation/ubuntu.html) conpot and the [FAQ](http://mushorg.github.io/conpot/faq.html).
+The build of the documentations [source](https://github.com/mushorg/conpot/tree/master/docs/source) can be found [here](https://conpot.readthedocs.io/en/latest/). There you will also find the instructions on how to [install](https://conpot.readthedocs.io/en/latest/installation/ubuntu.html) conpot and the [FAQ](https://conpot.readthedocs.io/en/latest/faq.html).
 
 ## Easy install using Docker
 
@@ -22,7 +23,7 @@ The build of the documentations [source](https://github.com/mushorg/conpot/tree/
 1. Install [Docker](https://docs.docker.com/engine/installation/)
 2. Run `docker pull honeynet/conpot`
 3. Run `docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge honeynet/conpot:latest /bin/sh`
-4. Finally run `conpot --template default`
+4. Finally run `conpot -f --template default`
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
@@ -42,18 +43,6 @@ Navigate to `http://MY_IP_ADDRESS` to confirm the setup.
 3. Build the image with `docker-compose build`
 4. Test if everything is running correctly with `docker-compose up`
 5. Permanently run as a daemon with `docker-compose up -d`
-
-## HPFEEDS
-
-The honeypot has hpfeeds, our central logging feature disabled by
-default. By sending your data via hpfeeds you agree that your data
-might be shared with 3rd parties. If you are interested in the data
-collected by Conpot instances, please contact Lukas at
-glaslos@gmail.com
-
-## Support
-
-Thanks to JetBrains for free PyCharm licenses!
 
 ## Sample output
 
