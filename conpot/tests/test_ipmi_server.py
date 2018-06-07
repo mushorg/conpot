@@ -15,15 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
+import gevent.monkey
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 import conpot.core as conpot_core
-
 import unittest
 from collections import namedtuple
-
-import gevent.monkey
-
 gevent.monkey.patch_all()
 
 
@@ -36,8 +32,8 @@ class TestIPMI(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize('conpot/templates/ipmi/template.xml')
-	args = namedtuple('FakeArgs', 'port')
-	args.port = 0
+        args = namedtuple('FakeArgs', 'port')
+        args.port = 0
         self.ipmi_server = IpmiServer(
             self.template_path,
             'conpot/templates/ipmi/',
@@ -54,4 +50,4 @@ class TestIPMI(unittest.TestCase):
         """
         Objective: Test the IPMI server
         """
-        self.assertTrue(self.ipmi_server != None)
+        self.assertTrue(self.ipmi_server is not None)

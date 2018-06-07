@@ -4,7 +4,7 @@
 
 from struct import *
 import struct
-
+from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import ParseException
 
 
@@ -29,12 +29,12 @@ class COTP(object):
             #           x bytes     TRAILER (optional!), most probably containing S7.
 
     def pack(self):
-
         if self.tpdu_type == 0xf0:
-            return pack('!BBB', self.packet_length, self.tpdu_type, self.opt_field) + str(self.payload) + \
-                   str(self.trailer)
+            return pack('!BBB', self.packet_length, self.tpdu_type, self.opt_field) + str_to_bytes(self.payload) + \
+                   str_to_bytes(self.trailer)
         else:
-            return pack('!BB', self.packet_length, self.tpdu_type) + str(self.payload) + str(self.trailer)
+            return pack('!BB', self.packet_length, self.tpdu_type) + str_to_bytes(self.payload) +\
+                   str_to_bytes(self.trailer)
 
     def parse(self, packet):
 
@@ -58,7 +58,7 @@ class COTP(object):
 
 
 # COTP Connection Request or Connection Confirm packet (ISO on TCP). RFC 1006
-class COTPConnectionPacket(object):
+class COTPConnectionPacket:
     def __init__(self, dst_ref=0, src_ref=0, opt_field=0, src_tsap=0, dst_tsap=0, tpdu_size=0):
         self.dst_ref = dst_ref
         self.src_ref = src_ref
@@ -130,6 +130,7 @@ class COTP_ConnectionConfirm(COTPConnectionPacket):
         self.src_tsap = src_tsap
         self.dst_tsap = dst_tsap
         self.tpdu_size = tpdu_size
+        super(COTPConnectionPacket, self).__init__()
 
     def assemble(self):
         return pack('!HHBBBHBBH', self.dst_ref, self.src_ref, self.opt_field,
@@ -149,6 +150,7 @@ class COTP_ConnectionRequest(COTPConnectionPacket):
         self.src_tsap = src_tsap
         self.dst_tsap = dst_tsap
         self.tpdu_size = tpdu_size
+        super(COTPConnectionPacket, self).__init__()
 
     def assemble(self):
         return pack('!HHBBBHBBHBBB', self.dst_ref, self.src_ref, self.opt_field,

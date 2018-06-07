@@ -15,13 +15,10 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import conpot.utils.ext_ip
-
-from gevent.wsgi import WSGIServer
+from gevent.pywsgi import WSGIServer
 import gevent
 
 
@@ -31,7 +28,7 @@ class TestExtIPUtil(unittest.TestCase):
         def application(environ, start_response):
             headers = [('Content-Type', 'text/html')]
             start_response('200 OK', headers)
-            return ['127.0.0.1']
+            return [b'127.0.0.1']
 
         self.server = WSGIServer(('localhost', 8000), application)
         gevent.spawn(self.server.serve_forever)
@@ -43,8 +40,11 @@ class TestExtIPUtil(unittest.TestCase):
         self.assertTrue(conpot.utils.ext_ip._verify_address("127.0.0.1") is True)
 
     def test_ext_util(self):
-        ip_address = conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000", ])
+        ip_address = str(conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000", ]))
         self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
+
+    def test_fetch_ext_ip(self):
+        self.assertIsNotNone(conpot.utils.ext_ip.get_ext_ip(urls=["https://api.ipify.org"]))
 
 
 if __name__ == '__main__':

@@ -56,7 +56,7 @@ class StixTransformer(object):
             http=80,
             s7comm=102,
         )
-        port_path_list = map(lambda x: '//conpot_template/protocols/'+x+'/@port', self.protocol_to_port_mapping.keys())
+        port_path_list = ['//conpot_template/protocols/'+x+'/@port' for x in list(self.protocol_to_port_mapping.keys())]
         for port_path in port_path_list:
             try:
                 protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
@@ -125,11 +125,11 @@ class StixTransformer(object):
         network_connection = NetworkConnection.from_dict(
             {'source_socket_address': source_address.to_dict(),
              'destination_socket_address': dest_address.to_dict(),
-             'layer3_protocol': u"IPv4",
-             'layer4_protocol': u"TCP",
+             'layer3_protocol': "IPv4",
+             'layer4_protocol': "TCP",
              'layer7_protocol': event['data_type'],
-             'source_tcp_state': u"ESTABLISHED",
-             'destination_tcp_state': u"ESTABLISHED",
+             'source_tcp_state': "ESTABLISHED",
+             'destination_tcp_state': "ESTABLISHED",
              }
         )
         indicator.add_observable(Observable(network_connection))

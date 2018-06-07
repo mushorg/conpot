@@ -15,18 +15,21 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
 import socket
 import binascii
 import random
-
+import conpot
 from gevent.server import StreamServer
 import gevent
-
+from conpot.helpers import chr_py3
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
-from command_responder import CommandResponder
+from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 
+# import logging as logger
+# import sys
+# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+import logging
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +71,7 @@ class KamstrupServer(object):
                     break
 
                 for x in raw_request:
-                    parser.add_byte(x)
+                    parser.add_byte(chr_py3(x))
 
                 while True:
                     request = parser.get_request()
@@ -100,7 +103,20 @@ class KamstrupServer(object):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info('Kamstrup protocol server started on: %s', connection)
-        self.server.start()
+        self.server.serve_forever()
 
     def stop(self):
         self.server.stop()
+
+
+if __name__ == '__main__':
+    TCP_IP = '127.0.0.1'
+    TCP_PORT = 1025
+    import os
+    dir_name = os.path.dirname(conpot.__file__)
+    conpot_core.get_databus().initialize(dir_name + '/templates/kamstrup_382/template.xml')
+    server = KamstrupServer(dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml', None, None)
+    try:
+        server.start(TCP_IP, TCP_PORT)
+    except KeyboardInterrupt:
+        server.stop()

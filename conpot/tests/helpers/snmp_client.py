@@ -41,13 +41,13 @@ class SNMPClient(object):
         if errorIndication:
             print(errorIndication)
         elif errorStatus:
-            print('%s at %s' % (
+            print(('%s at %s' % (
                 errorStatus.prettyPrint(),
                 errorIndex and varBindTable[-1][int(errorIndex) - 1] or '?')
-            )
+            ))
         else:
             for oid, val in varBindTable:
-                print('%s = %s' % (oid.prettyPrint(), val.prettyPrint()))
+                print(('%s = %s' % (oid.prettyPrint(), val.prettyPrint())))
 
     def get_command(self, OID=((1, 3, 6, 1, 2, 1, 1, 1, 0), None), callback=None):
         if not callback:

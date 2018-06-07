@@ -17,9 +17,9 @@
 
 import logging
 import binascii
-
+from conpot.helpers import chr_py3
 import crc16
-import kamstrup_constants
+from . import kamstrup_constants
 import conpot.core as conpot_core
 
 
@@ -68,7 +68,7 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
         register_count = self.message_bytes[0]
         if len(self.message_bytes[1:]) * 2 < register_count:
             raise Exception('Invalid register count in register request')
-        for count in xrange(register_count):
+        for count in range(register_count):
             register = self.message_bytes[1 + count * 2] * 256 + self.message_bytes[2 + count * 2]
             self.registers.append(register)
 
@@ -90,7 +90,7 @@ class KamstrupResponseBase(KamstrupProtocolBase):
             final_message.append(c)
 
         # generate and append checksum
-        crc = crc16.crc16xmodem(''.join([chr(item) for item in final_message[1:]]))
+        crc = crc16.crc16xmodem(b''.join([chr_py3(item) for item in final_message[1:]]))
         final_message.append(crc >> 8)
         final_message.append(crc & 0xff)
 

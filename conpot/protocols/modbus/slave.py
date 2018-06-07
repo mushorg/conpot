@@ -5,7 +5,7 @@ from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError, Inva
                              InvalidModbusBlockError, OverlapModbusBlockError
 from modbus_tk import defines, utils
 
-from modbus_block_databus_mediator import ModbusBlockDatabusMediator
+from .modbus_block_databus_mediator import ModbusBlockDatabusMediator
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ class MBSlave(Slave):
         with self._data_lock:  # thread-safe
             try:
                 # get the function code
-                (self.function_code, ) = struct.unpack(">B", request_pdu[0])
+                (self.function_code, ) = struct.unpack(">B", request_pdu[:1])
 
                 # check if the function code is valid. If not returns error response
                 if not self.function_code in self._fn_code_map:
@@ -130,10 +130,10 @@ class MBSlave(Slave):
             # it means that only 1 block per type must correspond to a given address
             # for example: it must not have 2 holding registers at address 100
             index = 0
-            for i in xrange(len(self._memory[block_type])):
+            for i in range(len(self._memory[block_type])):
                 block = self._memory[block_type][i]
                 if block.is_in(starting_address, size):
-                    raise OverlapModbusBlockError, "Overlap block at %d size %d" % (block.starting_address, block.size)
+                    raise OverlapModbusBlockError("Overlap block at %d size %d" % (block.starting_address, block.size))
                 if block.starting_address > starting_address:
                     index = i
                     break

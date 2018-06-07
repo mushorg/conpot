@@ -18,6 +18,7 @@
 import logging
 
 import gevent
+from gevent import event
 import conpot.core as conpot_core
 
 

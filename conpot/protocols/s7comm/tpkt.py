@@ -1,6 +1,6 @@
 from struct import *
 import struct
-
+from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import ParseException
 
 
@@ -19,11 +19,10 @@ class TPKT:
         self.packet_length = len(payload) + 4
 
     def pack(self):
-
-        return pack('!BBH', self.version, self.reserved, self.packet_length) + str(self.payload)
+        return pack('!BBH', self.version, self.reserved, self.packet_length) + str_to_bytes(self.payload)
 
     def parse(self, packet):
-
+        # packet = cleanse_byte_string(packet)
         try:
             # try to extract the header by pattern to find malformed header data
             header = unpack('!BBH', packet[:4])
@@ -35,5 +34,4 @@ class TPKT:
         self.reserved = header[1]
         self.packet_length = header[2]
         self.payload = packet[4:4 + header[2]]
-
         return self

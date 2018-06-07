@@ -16,12 +16,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
 from conpot.protocols.IEC104.IEC104 import IEC104
-from frames import *
+from .frames import *
 import logging
 import conpot.core as conpot_core
 from gevent.server import StreamServer
 import gevent
-from errors import *
+from .errors import *
 
 logger = logging.getLogger(__name__)
 
@@ -66,19 +66,19 @@ class IEC104Server(object):
                             request += new_byte
 
                         # check if IEC 104 packet or for the first occurrence of the indication 0x68 for IEC 104
-                        for elem in request:
-                            if 0x68 == ord(elem):
+                        for elem in list(request):
+                            if 0x68 == elem:
                                 index = request.index(elem)
 
                                 iec_request = request[index:]
                                 timeout_t3.cancel()
                                 response = None
                                 # check which frame type
-                                if not (ord(iec_request[2]) & 0x01):  # i_frame
+                                if not (iec_request[2] & 0x01):  # i_frame
                                     response = iec104_handler.handle_i_frame(iec_request)
-                                elif ord(iec_request[2]) & 0x01 and not(ord(iec_request[2]) & 0x02):  # s_frame
+                                elif iec_request[2] & 0x01 and not(iec_request[2] & 0x02):  # s_frame
                                     response = iec104_handler.handle_s_frame(iec_request)
-                                elif ord(iec_request[2]) & 0x03:  # u_frame
+                                elif iec_request[2] & 0x03:  # u_frame
                                     response = iec104_handler.handle_u_frame(iec_request)
                                 else:
                                     logger.warning("%s ---> No valid IEC104 type (%s)", address, session.id)
@@ -87,7 +87,7 @@ class IEC104Server(object):
                                     for resp_packet in response:
                                         if resp_packet:
                                             sock.send(resp_packet)
-                                            # response_string = (" ".join(hex(ord(n)) for n in resp_packet))
+                                            # response_string = (" ".join(hex(n) for n in resp_packet))
 
                                 break
 
@@ -106,7 +106,7 @@ class IEC104Server(object):
         except socket.timeout:
             logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
             session.add_event({'type': 'CONNECTION_LOST'})
-        except socket.error, err:
+        except socket.error as err:
             if isinstance(err.args, tuple):
                 if err[0] == errno.EPIPE:
                     # remote peer disconnected
@@ -116,7 +116,7 @@ class IEC104Server(object):
                     # determine and handle different error
                     pass
             else:
-                print "socket error ", err
+                print(("socket error ", err))
             iec104_handler.disconnect()
 
     def start(self, host, port):

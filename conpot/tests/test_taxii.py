@@ -18,10 +18,10 @@
 import os
 import uuid
 from datetime import datetime
-from StringIO import StringIO
+from io import StringIO
 
 import unittest
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from lxml import etree
 
 from conpot.core.loggers.taxii_log import TaxiiLogger

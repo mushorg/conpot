@@ -31,5 +31,5 @@ class TestMakeDocs(unittest.TestCase):
     def test_make_docs(self):
         cmd = "make -C docs/ html"
         process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
-        output = process.communicate()[0]
+        output = process.communicate()[0].decode()
         self.assertIn("Build finished. The HTML pages are in build/html.", output)

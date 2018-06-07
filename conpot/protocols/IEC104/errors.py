@@ -25,7 +25,7 @@ class InvalidFieldValueException(ValueError):
         self.args = args
 
 
-class FrameError(StandardError):
+class FrameError(Exception):
 
     """This error is raised if the IEC104 frame is wrong or ain't a IEC104 packet at all
     """

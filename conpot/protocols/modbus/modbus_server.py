@@ -5,7 +5,7 @@ import socket
 import time
 import logging
 import sys
-
+import codecs
 from lxml import etree
 from gevent.server import StreamServer
 
@@ -117,8 +117,9 @@ class ModbusServer(modbus.Server):
                 # logdata is a dictionary containing request, slave_id,
                 # function_code and response
                 response, logdata = self._databank.handle_request(
-                    query, request, self.mode)
-                logdata['request'] = request.encode('hex')
+                    query, request, self.mode
+                )
+                logdata['request'] = codecs.encode(request, 'hex')
                 session.add_event(logdata)
 
                 logger.info(
@@ -133,7 +134,7 @@ class ModbusServer(modbus.Server):
                     # response could be None under several different cases
 
                     # MB serial connection addressing UID=0
-                    if (self.mode == 'serial' and logdata['slave_id'] == 0):
+                    if (self.mode == 'serial') and (logdata['slave_id'] == 0):
                         # delay is in milliseconds
                         time.sleep(self.delay / 1000)
                         logger.debug(

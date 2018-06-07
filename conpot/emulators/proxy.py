@@ -18,7 +18,7 @@
 import logging
 import select
 import socket as _socket
-
+import codecs
 import gevent
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
@@ -132,7 +132,8 @@ class Proxy(object):
         sock.close()
 
     def handle_in_data(self, data, sock, session):
-        hex_data = data.encode('hex_codec')
+        # convert the data from bytes to hex string
+        hex_data = codecs.encode(data, 'hex_codec')
         session.add_event({'raw_request': hex_data, 'raw_response': ''})
         logger.debug('Received %s bytes from outside to proxied service: %s', len(data), hex_data)
         if self.decoder:
@@ -143,7 +144,7 @@ class Proxy(object):
         sock.send(data)
 
     def handle_out_data(self, data, sock, session):
-        hex_data = data.encode('hex_codec')
+        hex_data = codecs.encode(data, 'hex_codec')
         session.add_event({'raw_request': '', 'raw_response': hex_data})
         logger.debug('Received %s bytes from proxied service: %s', len(data), hex_data)
         if self.decoder:

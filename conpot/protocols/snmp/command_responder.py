@@ -160,5 +160,5 @@ class CommandResponder(object):
 
 if __name__ == "__main__":
     server = CommandResponder()
-    print 'Starting echo server on port 161'
+    print('Starting echo server on port 161')
     server.serve_forever()

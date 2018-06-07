@@ -18,12 +18,16 @@
 
 from struct import *
 from optparse import OptionGroup
-
+from conpot.helpers import chr_py3, str_to_bytes
 import struct
 import socket
 import string
+# from conpot.protocols.s7comm.tpkt import cleanse_byte_string
 
-__FILTER = "".join([' '] + [' ' if chr(x) not in string.printable or chr(x) in string.whitespace else chr(x) for x in range(1, 256)])
+__FILTER = "".join([' '] + [' ' if chr(x) not in string.printable or chr(x) in string.whitespace else chr(x)
+                            for x in range(1, 256)])
+
+
 def StripUnprintable(msg):
     return msg.translate(__FILTER)
 
@@ -32,14 +36,14 @@ class TPKTPacket:
     """ TPKT packet. RFC 1006
     """
     def __init__(self, data=''):
-        self.data = str(data)
+        self.data = data
 
     def pack(self):
         return pack('!BBH',
-                    3,                  # version
-                    0,                  # reserved
-                    len(self.data)+4    # packet size
-                    ) + str(self.data)
+                    3,                         # version
+                    0,                         # reserved
+                    len(bytes(self.data))+4    # packet size
+                    ) + str_to_bytes(bytes(self.data))
 
     def unpack(self, packet):
         try:
@@ -74,9 +78,6 @@ class COTPConnectionPacket:
                     0xc2, 2, self.dst_tsap,
                     0xc0, 1, self.tpdu_size)
 
-    def __str__(self):
-        return self.pack()
-
     def unpack(self, packet):
         """ parse Connection Confirm Packet (header only)
         """
@@ -88,8 +89,10 @@ class COTPConnectionPacket:
             raise S7ProtocolError("Wrong CC packet size")
         if pdu_type != 0xd0:
             raise S7ProtocolError("Not a CC packet")
-
         return self
+
+    def __bytes__(self):
+        return self.pack()
 
 
 class COTPDataPacket:
@@ -102,13 +105,13 @@ class COTPDataPacket:
         return pack('!BBB',
                     2,                      # header len
                     0xf0,                   # data packet
-                    0x80) + str(self.data)
+                    0x80) + str_to_bytes(bytes(self.data))
 
     def unpack(self, packet):
-        self.data = packet[ord(packet[0])+1:]
+        self.data = packet[packet[0]+1:]
         return self
 
-    def __str__(self):
+    def __bytes__(self):
         return self.pack()
 
 
@@ -132,23 +135,23 @@ class S7Packet:
                      self.req_id,            # request id
                      len(self.parameters),   # parameters length
                      len(self.data)) +       # data length
-                self.parameters +
-                self.data)
+                str_to_bytes(self.parameters) +
+                str_to_bytes(self.data))
 
     def unpack(self, packet):
         try:
-            if ord(packet[1]) in [3, 2]:   # pdu-type = response
+            if packet[1] in [3, 2]:   # pdu-type = response
                 header_size = 12
                 magic0x32, self.type, reserved, self.req_id, parameters_length, data_length, self.error = \
                     unpack('!BBHHHHH', packet[:header_size])
                 if self.error:
                     raise S7Error(self.error)
-            elif ord(packet[1]) in [1, 7]:
+            elif packet[1] in [1, 7]:
                 header_size = 10
                 magic0x32, self.type, reserved, self.req_id, parameters_length, data_length = \
                     unpack('!BBHHHH', packet[:header_size])
             else:
-                raise S7ProtocolError("Unknown pdu type (%d)" % ord(packet[1]))
+                raise S7ProtocolError("Unknown pdu type (%d)" % packet[1])
         except struct.error:
             raise S7ProtocolError("Wrong S7 packet format")
 
@@ -157,7 +160,7 @@ class S7Packet:
 
         return self
 
-    def __str__(self):
+    def __bytes__(self):
         return self.pack()
 
 
@@ -213,8 +216,8 @@ class s7:
     def Connect(self):
         """ Establish ISO on TCP connection and negotiate PDU
         """
-        #sleep(1)
-        #self.src_ref = randint(1, 20)
+        # sleep(1)
+        # self.src_ref = randint(1, 20)
         self.src_ref = 10
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(self.timeout)
@@ -312,8 +315,8 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 7: 'Basic Firmware'
             },
             'packer': {
-                (1, 6): lambda(packet): "{0:s} v.{2:d}.{3:d}".format(*unpack('!20sHBBH', packet)),
-                (7,): lambda(packet): "{0:s} v.{3:d}.{4:d}.{5:d}".format(*unpack('!20sHBBBB', packet))
+                (1, 6): lambda packet: "{0:s} v.{2:d}.{3:d}".format(*unpack('!20sHBBH', packet)),
+                (7,): lambda packet: "{0:s} v.{3:d}.{4:d}.{5:d}".format(*unpack('!20sHBBBB', packet))
             }
         },
         0x1c: {
@@ -332,9 +335,9 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 11: 'Location designation of a module'
             },
             'packer': {
-                (1, 2, 5): lambda(packet): "%s" % packet[:24],
-                (3, 7, 8): lambda(packet): "%s" % packet[:32],
-                (4,): lambda(packet): "%s" % packet[:26]
+                (1, 2, 5): lambda packet: "%s" % packet[:24],
+                (3, 7, 8): lambda packet: "%s" % packet[:32],
+                (4,): lambda packet: "%s" % packet[:26]
             }
         }
     }
@@ -342,7 +345,7 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
     con = s7(ip, port, src_tsap, dst_tsap)
     con.Connect()
 
-    for szl_id in szl_dict.keys():
+    for szl_id in list(szl_dict.keys()):
         try:
             entities = con.ReadSZL(szl_id)
         except S7Error:
@@ -357,7 +360,7 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 item = item[2:]
 
                 try:
-                    packers_keys = [i for i in packers.keys() if n in i]
+                    packers_keys = [i for i in list(packers.keys()) if n in i]
                     formated_item = packers[packers_keys[0]](item).strip('\x00')
                 except (struct.error, IndexError):
                     formated_item = StripUnprintable(item).strip('\x00')
@@ -372,13 +375,13 @@ def Scan(ip, port):
     try:
         res = BruteTsap(ip, port)
     except socket.error as e:
-        print "%s:%d %s" % (ip, port, e)
+        print("%s:%d %s" % (ip, port, e))
 
     if not res:
-        print " MEH!"
+        print(" MEH!")
         return False
 
-    print "%s:%d S7comm (src_tsap=0x%x, dst_tsap=0x%x)" % (ip, port, res[0], res[1])
+    print("%s:%d S7comm (src_tsap=0x%x, dst_tsap=0x%x)" % (ip, port, res[0], res[1]))
 
     # sometimes unexpected exceptions occur, so try to get identity several time
     identities = []
@@ -387,7 +390,7 @@ def Scan(ip, port):
             identities = GetIdentity(ip, port, res[0], res[1])
             break
         except (S7ProtocolError, socket.error) as e:
-            print "Attempt {0}:  {1}".format(attempt, e)
+            print("Attempt {0}:  {1}".format(attempt, e))
 
     return identities
 

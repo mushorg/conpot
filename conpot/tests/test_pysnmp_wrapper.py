@@ -15,22 +15,31 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import tempfile
 import shutil
+import conpot
 import os
-
 from conpot.protocols.snmp.build_pysnmp_mib_wrapper import mib2pysnmp, find_mibs, compile_mib
 from conpot.protocols.snmp import command_responder
 
 
-class TestBase(unittest.TestCase):
+def check_content(pyfile):
+    ret = False
+    with open(pyfile) as f:
+        for l in f.readlines():
+            if 'mibBuilder.exportSymbols("VOGON-POEM-MIB"' in l:
+                ret = True
+                break
+    return ret
+
+
+class TestPySNMPWrapper(unittest.TestCase):
 
     def setUp(self):
-        self.mib_file = reduce(os.path.join, 'conpot/tests/data/VOGON-POEM-MIB.mib'.split('/'))
+        self.dir_name = os.path.dirname(conpot.__file__)
+        self.mib_file = os.path.join(self.dir_name + '/tests/data/VOGON-POEM-MIB.mib')
 
     def test_wrapper_processing(self):
         """
@@ -38,18 +47,8 @@ class TestBase(unittest.TestCase):
         """
         tmpdir = tempfile.mkdtemp()
         result = mib2pysnmp(self.mib_file, tmpdir)
-        self.assertTrue(result and self.check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
+        self.assertTrue(result and check_content(os.path.join(tmpdir, 'VOGON-POEM-MIB.py')),
                         'mib2pysnmp2 did not generate the expected output.')
-
-    def check_content(self, pyfile):
-        ret = False
-        with open(pyfile) as f:
-            for l in f.readlines():
-                if 'mibBuilder.exportSymbols("VOGON-POEM-MIB"' in l:
-                    ret = True
-                    break
-
-        return ret
 
     def test_wrapper_output(self):
         """
@@ -100,3 +99,7 @@ class TestBase(unittest.TestCase):
         finally:
             shutil.rmtree(input_dir)
             shutil.rmtree(output_dir)
+
+
+if __name__ == '__main__':
+    unittest.main()

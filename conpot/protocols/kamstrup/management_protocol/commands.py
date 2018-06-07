@@ -32,7 +32,6 @@ class BaseCommand(object):
         " Ie: H !SC\r\n"
     )
 
-
     def help(self):
         return self.HELP_MESSAGE
 
@@ -78,7 +77,7 @@ class HelpCommand(BaseCommand):
             return self.CMD_OUTPUT
 
         c = params[0:3]
-        if c in self.commands.keys():
+        if c in list(self.commands.keys()):
             return self.commands[c].help()
 
         return self.INVALID_PARAMETER
@@ -768,7 +767,7 @@ def parse_ip(ip_string):
     for octet in octets:
         if int(octet) < 0 or int(octet) > 255:
             return default
-    return ".".join(octets)
+    return ".".join(list(map(str, octets)))
 
 
 def parse_port(port_string):

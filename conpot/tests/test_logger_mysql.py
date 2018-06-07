@@ -16,11 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-import gevent
-
-from conpot.core.loggers.mysql_log import MySQLlogger
+# from conpot.core.loggers.mysql_log import MySQLlogger
 
 
+@unittest.skip("switch for a more generic db solution in py3")
 class Test_MySQLlogger(unittest.TestCase):
     def test_mysqllogger(self):
         """
@@ -40,7 +39,7 @@ class Test_MySQLlogger(unittest.TestCase):
         mysqllogger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
         # create a test event
-        test_event = {}
+        test_event = dict()
         test_event['id'] = 1337
         test_event['remote'] = "127.0.0.2"
         test_event['data_type'] = "unittest"

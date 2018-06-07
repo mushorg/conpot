@@ -8,19 +8,23 @@ beautifulsoup4
 requests
 sphinx
 libtaxii>=1.1.0
-MySQL-python
+# MySQL-python
 xlrd
 crc16
 natsort
 scapy
 enum34
-hpfeeds
+hpfeeds3
 modbus-tk
 stix-validator
 stix
+pycrypto # IPMI requirement
 cybox
-bacpypes==0.16.1
+bacpypes==0.17.0
 pyghmi
 mixbox
 modbus-tk
 cpppo
+pytest
+fs
+slugify

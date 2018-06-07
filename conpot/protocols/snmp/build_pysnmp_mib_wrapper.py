@@ -40,6 +40,7 @@ compiled_mibs = []
 # key = mib name, value = full path to the file
 file_map = {}
 
+
 def mib2pysnmp(mib_file, output_dir):
     """
     The 'build-pysnmp-mib' script we previously used is no longer available
@@ -114,19 +115,20 @@ def find_mibs(raw_mibs_dirs, recursive=True):
         for _file in _get_files(raw_mibs_dir, recursive):
             files_scanned += 1
             # making sure we don't start parsing some epic file
-            if os.path.getsize(_file) > '1048576':
+            if os.path.getsize(_file) > int('1048576'):
                 continue
-            data = open(_file).read()
-            # 2048 - just like a rock star.
-            mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:2048], re.IGNORECASE)
-            if mib_search:
-                mib_name = mib_search.group('mib_name')
-                file_map[mib_name] = _file
-                generate_dependencies(data, mib_name)
-    logging.debug('Done scanning for mib files, recursive scan was initiated from {0} directories and found {1} '
-                  'MIB files of {2} scanned files.'
-                  .format(len(raw_mibs_dirs), len(file_map), files_scanned))
-    return file_map.keys()
+            with open(_file) as _mibfile:
+                data = _mibfile.read()
+                # 2048 - just like a rock star.
+                mib_search = re.search('(?P<mib_name>[\w-]+) DEFINITIONS ::= BEGIN', data[0:2048], re.IGNORECASE)
+                if mib_search:
+                    mib_name = mib_search.group('mib_name')
+                    file_map[mib_name] = _file
+                    generate_dependencies(data, mib_name)
+        logging.debug('Done scanning for mib files, recursive scan was initiated from {0} directories and found {1} '
+                      'MIB files of {2} scanned files.'
+                      .format(len(raw_mibs_dirs), len(file_map), files_scanned))
+    return list(file_map.keys())
 
 
 def compile_mib(mib_name, output_dir):

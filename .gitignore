@@ -49,3 +49,10 @@ docs/source/conpot_version.py
 .log
 
 log/
+conpot.log
+.cache/
+.tox
+.pytest_cache/
+
+# 2to3 backup files
+*.bak
