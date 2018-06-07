@@ -67,7 +67,7 @@ class Databus(object):
 
     def observe_value(self, key, callback):
         assert hasattr(callback, '__call__')
-        assert len(inspect.getargspec(callback)[0])
+        assert len(inspect.getargspec(callback)[0])  # depreciated in py3.5, un-depreciated in py3.6
         if key not in self._observer_map:
             self._observer_map[key] = []
         self._observer_map[key].append(callback)

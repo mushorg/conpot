@@ -74,7 +74,7 @@ class TestKamstrup(unittest.TestCase):
                   + chr_py3(0x18) + chr_py3(0x6d) + chr_py3(0x0d))
         data = s.recv(1024)
         s.close()
-        # FIXME: verify bytes received from server - ask jonny?
+        # FIXME: verify bytes received from server - ask jkv?
         pkt = [hex(data[i]) for i in range(len(data))]
         self.assertTrue(('0x40' in pkt) and ('0x3f' in pkt) and ('0xd' in pkt))
 

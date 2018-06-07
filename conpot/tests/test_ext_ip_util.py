@@ -43,6 +43,9 @@ class TestExtIPUtil(unittest.TestCase):
         ip_address = str(conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000", ]))
         self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
 
+    def test_fetch_ext_ip(self):
+        self.assertIsNotNone(conpot.utils.ext_ip.get_ext_ip(urls=["https://api.ipify.org"]))
+
 
 if __name__ == '__main__':
     unittest.main()
