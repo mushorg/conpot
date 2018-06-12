@@ -28,11 +28,11 @@ from cpppo.server import network
 from cpppo.server.enip import logix
 from cpppo.server.enip import parser
 from cpppo.server.enip import device
-
+from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
 
 
-
+@conpot_protocol
 class EnipConfig(object):
     """
     Configurations parsed from template

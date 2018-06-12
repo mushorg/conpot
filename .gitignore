@@ -56,3 +56,6 @@ conpot.log
 
 # 2to3 backup files
 *.bak
+
+# for fs testing
+fs_test/

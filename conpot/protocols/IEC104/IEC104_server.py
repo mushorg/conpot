@@ -22,10 +22,11 @@ import conpot.core as conpot_core
 from gevent.server import StreamServer
 import gevent
 from .errors import *
-
+from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class IEC104Server(object):
 
     def __init__(self, template, template_directory, args):

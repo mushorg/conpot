@@ -16,8 +16,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from .session_manager import SessionManager
+from .virtual_fs import VirtualFS
+from .internal_interface import Interface
 
 sessionManager = SessionManager()
+virtualFS = VirtualFS()
+core_interface = Interface()
 
 
 def get_sessionManager():
@@ -31,3 +35,10 @@ def get_databus():
 def get_session(*args, **kwargs):
     return sessionManager.get_session(*args, **kwargs)
 
+
+def create_vfs(*args, **kwargs):
+    return virtualFS.create_protocol_fs(*args, **kwargs)
+
+
+def get_interface():
+    return globals()['core_interface']

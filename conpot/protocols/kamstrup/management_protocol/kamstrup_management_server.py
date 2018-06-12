@@ -22,10 +22,12 @@ import conpot
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.management_protocol.command_responder import CommandResponder
 from conpot.helpers import str_to_bytes
+from conpot.core.protocol_wrapper import conpot_protocol
 
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class KamstrupManagementServer(object):
     def __init__(self, template, template_directory, args, timeout=0):
         self.template = template

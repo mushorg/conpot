@@ -56,6 +56,7 @@ from conpot.utils import mac_addr
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
+core_interface = conpot_core.get_interface()
 
 
 def logo():
@@ -185,7 +186,8 @@ def main():
 
     setup_logging(args.logfile, args.verbose)
 
-    config = ConfigParser(os.environ)
+    core_interface.config = ConfigParser(os.environ)
+    config = core_interface.config
 
     # Loading default config if config not set.
     if args.force:
@@ -311,7 +313,7 @@ def main():
             protocol_name, server_class = protocol
             protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
             if os.path.isfile(protocol_template):
-                xsd_file = os.path.join(os.path.dirname(inspect.getfile(server_class)), '{0}.xsd'.format(protocol_name))
+                xsd_file = os.path.join(package_directory, 'protocols', protocol_name, '{0}.xsd'.format(protocol_name))
                 validate_template(protocol_template, xsd_file)
                 dom_protocol = etree.parse(protocol_template)
                 if dom_protocol.xpath('//{0}'.format(protocol_name)):
@@ -328,7 +330,7 @@ def main():
                         greenlet = gevent.spawn(server.start, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
                         servers.append(server)
-                        logger.info('Found and enabled %s protocol.', protocol)
+                        logger.info('Found and enabled %s protocol.', (protocol[0], server))
                 else:
                     logger.info('%s available but disabled by configuration.', protocol_name)
             else:

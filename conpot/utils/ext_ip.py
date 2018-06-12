@@ -39,7 +39,7 @@ def _fetch_data(urls):
     logging.getLogger("requests").setLevel(logging.WARNING)
     for url in urls:
         try:
-            req = requests.get(url, timeout=3)
+            req = requests.get(url, timeout=5)
             if req.status_code == 200:
                 data = req.text.strip()
                 if data is None or not _verify_address(data):
@@ -65,4 +65,4 @@ def get_ext_ip(config=None, urls=None):
 
 
 if __name__ == "__main__":
-    print((get_ext_ip(urls=["http://queryip.net/ip/", "http://ifconfig.me/ip", "http://127.0.0.1:8000"])))
+    print((get_ext_ip(urls=["https://api.ipify.org", "http://127.0.0.1:8000"])))

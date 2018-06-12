@@ -14,13 +14,14 @@ from modbus_tk import modbus
 
 # Following imports are required for modbus template evaluation
 import modbus_tk.defines as mdef
-
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.modbus import slave_db
 import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class ModbusServer(modbus.Server):
 
     def __init__(self, template, template_directory, args, timeout=5):

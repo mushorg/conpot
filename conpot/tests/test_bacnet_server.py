@@ -53,7 +53,7 @@ class TestBACnetServer(unittest.TestCase):
         gevent.sleep(1)
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/guardian_ast/template.xml')
+        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
 
     def tearDown(self):
         self.bacnet_server.stop()

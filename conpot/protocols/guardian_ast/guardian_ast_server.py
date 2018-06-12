@@ -26,6 +26,7 @@ import random
 import conpot
 import conpot.core as conpot_core
 import sys
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.helpers import str_to_bytes
 
 import logging
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 AST_ERROR = "9999FF1B\n"
 
 
+@conpot_protocol
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
         self.server = None

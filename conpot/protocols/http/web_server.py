@@ -18,9 +18,11 @@
 import os
 from conpot.protocols.http.command_responder import CommandResponder
 import logging
+from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class HTTPServer(object):
     def __init__(self, template, template_directory, args):
         self.template = template

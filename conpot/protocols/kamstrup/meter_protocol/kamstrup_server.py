@@ -25,7 +25,7 @@ from conpot.helpers import chr_py3
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
-
+from conpot.core.protocol_wrapper import conpot_protocol
 # import logging as logger
 # import sys
 # logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
@@ -33,6 +33,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class KamstrupServer(object):
     def __init__(self, template, template_directory, args, timeout=0):
         self.timeout = timeout
