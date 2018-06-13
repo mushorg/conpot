@@ -163,15 +163,13 @@ class TestModbusServer(unittest.TestCase):
         s.close()
         self.assertEqual(data, b'\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff')
 
-    # TODO: add test for function 43
-    @unittest.skip('Test for function 43')
-    def test_device_info(self):
+    def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.modbus_server.server_port))
-        s.sendall(b'\x00\x00\x00\x00\x00\x06\x01\x2b\x0e\x01\x00\x00')
+        s.sendall(b'\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02')
         data = s.recv(1024)
         s.close()
-        self.assertTrue(b'\x00\x00\x00\x00\x00' in data)
+        self.assertTrue(b'SIMATIC' in data and b'Siemens' in data)
 
 
 if __name__ == '__main__':

@@ -54,15 +54,15 @@ class AbstractFS(object):
     AbstractFS distinguishes between "real" filesystem paths and "virtual" ftp paths emulating a UNIX chroot jail
     where the user can not escape its home directory (example: real "/home/user" path will be seen as "/" by the client)
 
-        - Use AbstractFS.home_fs object to access the chroot jail FS
-        - Use AbstractFS.root_fs object to access the global '/' FS
+        - Use AbstractFS.home_fs attribute to access the chroot jail FS
+        - Use AbstractFS.root_fs attribute to access the global '/' FS
 
     This class exposes common fs wrappers around all os.* calls involving operations against the filesystem like
     creating files or removing directories (such as listdir etc.)
     Finally it would also store the uploads in a respective data_fs sub-directory. For later storage and analysis.
 
-    NOTE: Every protocol must have an instance of this class. If protocol_src_dir is 'common' b/w protocols, they can
-    share resources. All changes are reflected; Resetting of FS is done automatically with restart of Conpot.
+    NOTE: Every protocol must have an instance of this class. All changes are reflected;  Resetting of FS is done
+    automatically with restart of Conpot.
     :param: (tempfs.TempFS) - Protocol fs root
     :param: (str) - Name of the protocol for which we are creating the vfs
     :param: (str) - Path to which the fs has to be initialized. This would be the real "user" home directory or root.

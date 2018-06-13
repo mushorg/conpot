@@ -47,7 +47,6 @@ class TestHTTPServer(unittest.TestCase):
         gevent.sleep(1)
 
     def tearDown(self):
-        # force quit the http_server for testing ..
         self.http_server.stop()
         gevent.joinall([self.http_worker])
         # tidy up (again)...
@@ -120,22 +119,19 @@ class TestHTTPServer(unittest.TestCase):
         """
         Objective: Test the web server with a trace request
         """
-        # TODO: requests has no trace method.. So resorting to the good'ol socket - sending raw data
+        # requests has no trace method.. So resorting to the good'ol socket - sending raw data
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.http_server.server_port))
         s.sendall(b'TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
         data = s.recv(1024)
-        s.close()
         # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
         self.assertIn(b'HTTP/1.1 200 OK', data)
-
-    def test_do_OPTIONS(self):
-        """
-        Objective: Test the web server by sending a valid OPTIONS HTTP request
-        """
-        ret = requests.options("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
-            self.http_server.server_port))
-        self.assertEqual((ret.headers['allow']), 'GET,HEAD,POST,OPTIONS,TRACE')
+        # test for 501 - Disable TRACE method
+        self.http_server.cmd_responder.httpd.disable_method_trace = True
+        s.sendall(b'TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b'501', data)
 
     def test_do_HEAD(self):
         """
@@ -146,6 +142,33 @@ class TestHTTPServer(unittest.TestCase):
             self.http_server.server_port))
         self.assertTrue(ret.status_code == 200 and ret.headers['Content-Length'] == '370')
 
+        # Test for 404
+        ret = requests.head("http://127.0.0.1:{0}/tests/random_page_does_not_exists.html".format(
+            self.http_server.server_port
+        ))
+        self.assertEqual(ret.status_code, 404)
+
+        # test for 501 - Disable HEAD method
+        self.http_server.cmd_responder.httpd.disable_method_head = True
+        ret = requests.head("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+            self.http_server.server_port))
+        self.assertEqual(ret.status_code, 501)
+
+    def test_do_OPTIONS(self):
+        """
+        Objective: Test the web server by sending a valid OPTIONS HTTP request
+        """
+        ret = requests.options("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+            self.http_server.server_port))
+        self.assertEqual((ret.headers['allow']), 'GET,HEAD,POST,OPTIONS,TRACE')
+        # test for 501 - Disable OPTIONS method
+        self.http_server.cmd_responder.httpd.disable_method_options = True
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.http_server.server_port))
+        s.sendall(b'OPTIONS /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        data = s.recv(1024)
+        self.assertIn(b'501', data)
+
     def test_do_POST(self):
         """
         Objective: send a POST request to a invalid URI. Should get a 404 response
@@ -154,6 +177,15 @@ class TestHTTPServer(unittest.TestCase):
         ret = requests.post("http://127.0.0.1:{0}/tests/demo.html".format(
             self.http_server.server_port), data=payload)
         self.assertEqual(ret.status_code, 404)
+
+    def test_not_implemented_method(self):
+        """
+        Objective: PUT HTTP method is not implemented in Conpot, should raise 501
+        """
+        payload = b'PUT /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n'
+        ret = requests.put("http://127.0.0.1:{0}/tests/demo.html".format(
+            self.http_server.server_port), data=payload)
+        self.assertEqual(ret.status_code, 501)
 
 
 if __name__ == '__main__':

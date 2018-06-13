@@ -17,13 +17,13 @@
 
 import gevent
 from gevent import monkey; gevent.monkey.patch_all()
-
 import unittest
 from gevent import socket
 import os
 import conpot
 import conpot.core as conpot_core
 from collections import namedtuple
+import re
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 
 
@@ -61,7 +61,7 @@ class TestGuardianAST(unittest.TestCase):
     def test_I20100(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
-        s.sendall(b'\x01I20100\r\n')
+        s.send(b'\x01I20100\r\n')
         data = s.recv(1024)
         s.close()
         # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
@@ -70,7 +70,7 @@ class TestGuardianAST(unittest.TestCase):
     def test_I20200(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
-        s.sendall(b'\x01I20200\r\n')
+        s.send(b'\x01I20200\r\n')
         data = s.recv(1024)
         s.close()
         self.assertEqual(data[:8] + data[24:181], DATA['I20200'][:8] + DATA['I20200'][24:181])
@@ -78,7 +78,7 @@ class TestGuardianAST(unittest.TestCase):
     def test_I20300(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
-        s.sendall(b'\x01I20300\r\n')
+        s.send(b'\x01I20300\r\n')
         data = s.recv(1024)
         s.close()
         self.assertEqual(data[:8] + data[24:], DATA['I20300'][:8] + DATA['I20300'][24:])
@@ -86,7 +86,7 @@ class TestGuardianAST(unittest.TestCase):
     def test_I20400(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
-        s.sendall(b'\x01I20400\r\n')
+        s.send(b'\x01I20400\r\n')
         data = s.recv(1024)
         s.close()
         self.assertEqual(data[:8] + data[24:202], DATA['I20400'][:8] + DATA['I20400'][24:202])
@@ -94,10 +94,89 @@ class TestGuardianAST(unittest.TestCase):
     def test_I20500(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
-        s.sendall(b'\x01I20500\r\n')
+        s.send(b'\x01I20500\r\n')
         data = s.recv(1024)
         s.close()
         self.assertEqual(data[:8] + data[24:], DATA['I20500'][:8] + DATA['I20500'][24:])
+
+    def test_ast_error(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S6020\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b'9999FF1B\n')
+
+    def test_S60201(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S60201NONSUPER\r\n')
+        try:
+            _ = s.recv(1024)
+        except socket.timeout:
+            pass
+        s.send(b'\x01I20100\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b'NONSUPER', data)
+
+    def test_S60202(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S60202TESTLEAD\r\n')
+        try:
+            _ = s.recv(1024)
+        except socket.timeout:
+            pass
+        s.send(b'\x01I20100\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b'TESTLEAD', data)
+
+    def test_S60203(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S60203TESTDIESEL\r\n')
+        try:
+            _ = s.recv(1024)
+        except socket.timeout:
+            pass
+        s.send(b'\x01I20100\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b'TESTDIESEL', data)
+
+    def test_S60204(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S60204TESTPREMIUM\r\n')
+        try:
+            _ = s.recv(1024)
+        except socket.timeout:
+            pass
+        s.send(b'\x01I20100\r\n')
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b'TESTPREMIUM', data)
+
+    def test_S60200(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.5)
+        s.connect(('127.0.0.1', self.guardian_ast_server.server.server_port))
+        s.send(b'\x01S60200ULTIMATETEST\r\n')
+        try:
+            _ = s.recv(1024)
+        except socket.timeout:
+            pass
+        s.send(b'\x01I20100\r\n')
+        data = s.recv(1024)
+        s.close()
+        count = len(re.findall('(?=ULTIMATETEST)', data.decode()))
+        self.assertEqual(count, 4)
 
 
 if __name__ == '__main__':
