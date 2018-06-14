@@ -53,7 +53,7 @@ class TestFTPServer(unittest.TestCase):
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
-    @unittest.skip
+    @unittest.skip(reason='FTP Not Implemented')
     def test_arg_cmds(self):
         # Test commands requiring an argument.
         expected = b'501 Syntax error: command needs an argument.'
@@ -64,7 +64,7 @@ class TestFTPServer(unittest.TestCase):
             resp = client_send_receive(cmd, ftp_server=self.ftp_server)
             self.assertEqual(resp, expected)
 
-    @unittest.skip
+    @unittest.skip(reason='FTP Not Implemented')
     def test_no_arg_cmds(self):
         # Test commands accepting no arguments.
         expected = b'501 Syntax error: command does not accept arguments.'
@@ -74,12 +74,12 @@ class TestFTPServer(unittest.TestCase):
             resp = client_send_receive(cmd + ' arg', ftp_server=self.ftp_server)
             self.assertEqual(resp, expected)
 
-    @unittest.skip
+    @unittest.skip(reason='FTP Not Implemented')
     def test_auth_cmds(self):
         # Test those commands requiring client to be authenticated.
         pass
 
-    @unittest.skip
+    @unittest.skip(reason='FTP Not Implemented')
     def test_no_auth_cmds(self):
         # Test those commands that do not require client to be authenticated.
         pass
