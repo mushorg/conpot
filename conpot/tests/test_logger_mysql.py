@@ -22,6 +22,7 @@ from conpot.core.loggers.mysql_log import MySQLlogger
 
 
 class Test_MySQLlogger(unittest.TestCase):
+    @unittest.skip
     def test_mysqllogger(self):
         """
         Objective: Test if events can be stored to and retrieved from mysql properly.
