@@ -7,7 +7,7 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 
 # Install dependencies
 RUN apt-get update -y -qq && apt-get install -y -qq \
-        libmysqlclient-dev \
+        default-libmysqlclient-dev \
         libxslt1-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
