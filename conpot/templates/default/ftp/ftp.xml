@@ -1,0 +1,11 @@
+<ftp enabled="True" host="0.0.0.0" port="502">
+    <device_info>
+        <DeviceType>Siemens</DeviceType>
+        <Path>~/home/ftp</Path>  <!-- Path to be served as root of FTP server -->
+        <Banner>Sofrel S500 SN 19-497-50817  ready. </Banner>
+        <max_login_attempts>3</max_login_attempts>
+        <anonymous_login>True</anonymous_login>
+    </device_info>
+    <enabled_commands>
+    </enabled_commands>
+</ftp>

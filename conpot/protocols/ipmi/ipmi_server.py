@@ -17,7 +17,7 @@
 
 from gevent import socket
 from gevent.server import DatagramServer
-
+from conpot.core.protocol_wrapper import conpot_protocol
 import struct
 import os
 import pyghmi.ipmi.private.constants as constants
@@ -42,6 +42,7 @@ def decode_byte_string(pkt):
     return [hex(ord(i.to_bytes(1, byteorder='big'))) for i in list(codecs.decode(pkt, 'unicode_escape').encode('latin-1'))]
 
 
+@conpot_protocol
 class IpmiServer(object):
 
     def __init__(self, template, template_directory, args):

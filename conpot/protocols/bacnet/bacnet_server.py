@@ -30,11 +30,12 @@ from bacpypes.pdu import PDU
 from bacpypes.errors import DecodingError
 import conpot.core as conpot_core
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
-
+from conpot.core.protocol_wrapper import conpot_protocol
 import logging
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class BacnetServer(object):
     def __init__(self, template, template_directory, args):
         self.dom = etree.parse(template)

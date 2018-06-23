@@ -226,11 +226,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             # retrieve payload directly from filesystem, if possible.
             # If this is not possible, return an empty, zero sized string.
             try:
-                with open(os.path.join(docpath, 'statuscodes', str(status) + '.status'), 'rb') as f:
+                if not isinstance(status, int):
+                    status = status.value
+                with open(os.path.join(docpath, 'statuscodes', str(int(status)) + '.status'), 'rb') as f:
                     payload = f.read()
 
             except IOError as e:
-                logger.error('%s', e)
+                logger.exception('%s', e)
                 payload = ''
 
             # there might be template data that can be substituted within the
@@ -1115,10 +1117,6 @@ class CommandResponder(object):
     def serve_forever(self):
         self.httpd.serve_forever()
 
-    def stop(self, force=False):
-        if not force:
-            logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
-            self.httpd.shutdown()
-        else:
-            logging.info("HTTP server will shut down forcefully")
-            self.httpd.socket.close()
+    def stop(self):
+        logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
+        self.httpd.shutdown()

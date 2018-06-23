@@ -4,7 +4,7 @@ import logging
 from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError, InvalidArgumentError, DuplicatedKeyError,\
                              InvalidModbusBlockError, OverlapModbusBlockError
 from modbus_tk import defines, utils
-
+from conpot.helpers import str_to_bytes
 from .modbus_block_databus_mediator import ModbusBlockDatabusMediator
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ class MBSlave(Slave):
             response += struct.pack(">B", i)
             # Object length
             response += struct.pack(">B", len(device_info[i]))
-            response += device_info[i]
+            response += str_to_bytes(device_info[i])
         return response
 
     def handle_request(self, request_pdu, broadcast=False):

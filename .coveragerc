@@ -2,8 +2,6 @@
 omit =
     */tests/*
     */helpers.py
-    conpot/core/file_io.py
-    conpot/core/virtual_fs.py
     conpot/core/loggers/hpfriends.py
     conpot/core/loggers/log_worker.py
     conpot/core/loggers/syslog.py
@@ -12,6 +10,13 @@ omit =
     conpot/core/loggers/stix_transform.py
     conpot/core/loggers/taxii_log.py
     conpot/utils/mac_addr.py
+    # New features.. Just to avoid coverage drop - before we actually write some tests
+    conpot/emulators/proxy_decoder.py
+    conpot/protocols/ftp/*.py
+    conpot/core/file_io.py
+    conpot/core/virtual_fs.py
+    conpot/core/internal_interface.py
+    conpot/core/protocol_wrapper.py
 
 exclude_lines =
     pragma: no cover

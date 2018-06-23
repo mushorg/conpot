@@ -27,6 +27,7 @@ from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
 from conpot.protocols.s7comm.cotp import COTP_ConnectionConfirm
 from conpot.protocols.s7comm.s7 import S7
 import conpot.core as conpot_core
+from conpot.core.protocol_wrapper import conpot_protocol
 from lxml import etree
 
 import logging
@@ -37,7 +38,7 @@ def cleanse_byte_string(packet):
     new_packet = packet.decode('latin-1').replace('b', '')
     return new_packet.encode('latin-1')
 
-
+@conpot_protocol
 class S7Server(object):
     def __init__(self, template, template_directory, args):
 

@@ -25,7 +25,7 @@ import datetime
 import random
 import conpot
 import conpot.core as conpot_core
-import sys
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.helpers import str_to_bytes
 
 import logging
@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 AST_ERROR = "9999FF1B\n"
 
 
+@conpot_protocol
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
         self.server = None
@@ -197,14 +198,14 @@ class GuardianASTServer(object):
                     # change the tank name
                     if cmd.startswith("S60201"):
                         # split string into two, the command, and the data
-                        TEMP = request.split('S60201')
+                        TEMP = request.split(b'S60201')
                         # if length is less than two, print error
                         if len(TEMP) < 2:
                             response = AST_ERROR
                         # Else the command was entered correctly and continue
                         else:
                             # Strip off the carrage returns and new lines
-                            TEMP1 = TEMP[1].rstrip("\r\n")
+                            TEMP1 = TEMP[1].rstrip(b'\r\n').decode()
                             # if Length is less than 22
                             if len(TEMP1) < 22:
                                 # pad the result to have 22 chars
@@ -218,11 +219,11 @@ class GuardianASTServer(object):
                         logger.info('S60201: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60202"):
-                        TEMP = request.split('S60202')
+                        TEMP = request.split(b'S60202')
                         if len(TEMP) < 2:
                             response = AST_ERROR
                         else:
-                            TEMP1 = TEMP[1].rstrip("\r\n")
+                            TEMP1 = TEMP[1].rstrip(b'\r\n').decode()
                             if len(TEMP1) < 22:
                                 product2 = TEMP1.ljust(22)
                             elif len(TEMP1) > 22:
@@ -232,11 +233,11 @@ class GuardianASTServer(object):
                         logger.info('S60202: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60203"):
-                        TEMP = request.split('S60203')
+                        TEMP = request.split(b'S60203')
                         if len(TEMP) < 2:
                             response = AST_ERROR
                         else:
-                            TEMP1 = TEMP[1].rstrip("\r\n")
+                            TEMP1 = TEMP[1].rstrip(b'\r\n').decode()
                             if len(TEMP1) < 22:
                                 product3 = TEMP1.ljust(22)
                             elif len(TEMP1) > 22:
@@ -246,11 +247,11 @@ class GuardianASTServer(object):
                         logger.info('S60203: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60204"):
-                        TEMP = request.split('S60204')
+                        TEMP = request.split(b'S60204')
                         if len(TEMP) < 2:
                             response = AST_ERROR
                         else:
-                            TEMP1 = TEMP[1].rstrip("\r\n")
+                            TEMP1 = TEMP[1].rstrip(b'\r\n').decode()
                             if len(TEMP1) < 22:
                                 product4 = TEMP1.ljust(22)
                             elif len(TEMP1) > 22:
@@ -260,11 +261,11 @@ class GuardianASTServer(object):
                         logger.info('S60204: %s command attempt %s:%d. (%s)', TEMP1, addr[0], addr[1], session.id)
                     # Follows format for S60201 for comments
                     elif cmd.startswith("S60200"):
-                        TEMP = request.split('S60200')
+                        TEMP = request.split(b'S60200')
                         if len(TEMP) < 2:
                             response = AST_ERROR
                         else:
-                            TEMP1 = TEMP[1].rstrip("\r\n")
+                            TEMP1 = TEMP[1].rstrip(b'\r\n').decode()
                             if len(TEMP1) < 22:
                                 product1 = TEMP1.ljust(22)
                                 product2 = TEMP1.ljust(22)

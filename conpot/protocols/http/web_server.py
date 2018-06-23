@@ -18,9 +18,11 @@
 import os
 from conpot.protocols.http.command_responder import CommandResponder
 import logging
+from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class HTTPServer(object):
     def __init__(self, template, template_directory, args):
         self.template = template
@@ -35,12 +37,9 @@ class HTTPServer(object):
         self.server_port = self.cmd_responder.server_port
         self.cmd_responder.serve_forever()
 
-    def stop(self, force=False):
-        if not force:
-            if self.cmd_responder:
-                self.cmd_responder.stop()
-        else:
-            self.cmd_responder.stop(force=True)
+    def stop(self):
+        if self.cmd_responder:
+            self.cmd_responder.stop()
 
 
 if __name__ == '__main__':
