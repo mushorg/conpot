@@ -19,7 +19,6 @@ from gevent import socket
 from gevent.server import DatagramServer
 from conpot.core.protocol_wrapper import conpot_protocol
 import struct
-import os
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
 import uuid
@@ -32,6 +31,7 @@ from conpot.protocols.ipmi.fakesession import FakeSession
 import codecs
 import conpot.core as conpot_core
 import logging
+from conpot.helpers import chr_py3
 logger = logging.getLogger(__name__)
 # import logging as logger
 # import sys
@@ -88,9 +88,9 @@ class IpmiServer(object):
 
     def _checksum(self, *data):
         csum = sum(data)
-        csum ^= 0xff
-        csum += 1
-        csum &= 0xff
+        csum ^= chr_py3(0xff)
+        csum += chr_py3(1)
+        csum &= chr_py3(0xff)
         return csum
 
     def handle(self, pkt, address):
@@ -121,21 +121,21 @@ class IpmiServer(object):
         if len(data) < 22:
             self.close_server_session()
             return
-        if not (data[0] == b'\x06' and
-                data[2] == b'\xff' and
-                data[3] == b'\x07'):
+        if not (data[0] == chr_py3(0x06) and
+                data[2] == chr_py3(0xff) and
+                data[3] == chr_py3(0x07)):
             # check rmcp version, sequencenumber and class;
             self.close_server_session()
             return
-        if data[4] == b'\x06':
+        if data[4] == chr_py3(0x06):
             # ipmi v2
             session.ipmiversion = 2.0
             session.authtype = 6
             payload_type = data[5]
-            if payload_type not in (b'\x00', b'\x10'):
+            if payload_type not in (chr_py3(0x00), chr_py3(0x10)):
                 self.close_server_session()
                 return
-            if payload_type == b'\x10':
+            if payload_type == chr_py3(0x10):
                 # new session to handle conversation
                 serversession.ServerSession(self.authdata, self.kg, session.sockaddr,
                                             self.sock, data[16:], self.uuid, bmc=self)
@@ -162,7 +162,7 @@ class IpmiServer(object):
                 self.send_auth_cap(myaddr, mylun, clientaddr, clientlun, session.sockaddr)
 
     def send_auth_cap(self, myaddr, mylun, clientaddr, clientlun, sockaddr):
-        header = '\x06\x00\xff\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10'
+        header = b'\x06\x00\xff\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10'
 
         headerdata = (clientaddr, clientlun | (7 << 2))
         headersum = self._checksum(*headerdata)

@@ -46,8 +46,8 @@ class TestIPMI(unittest.TestCase):
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
-    def test_something(self):
+    def test_checksum(self):
         """
-        Objective: Test the IPMI server
+        Objective: Verify that the server is correctly producing the checksum
         """
         self.assertTrue(self.ipmi_server is not None)
