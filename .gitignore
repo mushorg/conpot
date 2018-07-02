@@ -59,3 +59,4 @@ conpot.log
 
 # for fs testing
 fs_test/
+conpot/protocols/ftp/ftp_data/

@@ -1,8 +1,16 @@
 from datetime import datetime
 from slugify import slugify
-from fs import open_fs, tempfs, mirror
-
+import fs
+from fs import open_fs, tempfs, mirror, errors
+import time
 import logging
+import stat
+from stat import filemode
+import grp
+import pwd
+from os import scandir
+from conpot.protocols.ftp.ftp_utils import command_alias, months_map
+
 logger = logging.getLogger(__name__)
 
 
@@ -15,7 +23,7 @@ def sanitize_file_name(name):
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' - ' + slugify(name)
 
 
-class FilesystemError(Exception):
+class FilesystemError(fs.errors.FSError):
     """Custom class for filesystem-related exceptions."""
 
 
@@ -89,6 +97,14 @@ class AbstractFS(object):
         # delete the osfs instance since no longer required
         del temp_fs
 
+    def __getattr__(self, item):
+        # Dirty hack to expose fs.tempfs.TempFS().* methods in our FS
+        item = command_alias[item] if item in command_alias.keys() else item
+        if hasattr(self.home_fs, item):
+            return getattr(self.home_fs, item)
+        else:
+            raise FilesystemError('FileSystem attribute does not exist')
+
     @property
     def root(self):
         """The user root directory."""
@@ -111,7 +127,19 @@ class AbstractFS(object):
 
     def chdir(self, path):
         """Change the current directory."""
-        raise NotImplementedError
+        # TODO: check permissions
+        try:
+            assert path, isinstance(path, str)
+            if self.home_fs.isdir(path=self._cwd + path):
+                self._cwd += path
+            else:
+                fs.errors.FSError('Directory {} does not exist.'.format(path))
+        except AssertionError:
+            raise
+
+    def getcwd(self):
+        """Get the current working directory"""
+        return self.cwd
 
     def listdirinfo(self, path):
         """List the content of a directory."""
@@ -122,8 +150,18 @@ class AbstractFS(object):
         raise NotImplementedError
 
     def stat(self, path):
-        """Perform a stat() system call on the given path."""
-        raise NotImplementedError
+        """Perform a stat() system call on the given path.
+        :param path: (str) must be protocol relative path
+        """
+        assert path, isinstance(path, str)
+        return self.home_fs.getinfo(path, namespaces='stat').raw['stat']
+
+    def readlink(self, path):
+        """Perform a readlink() system call. Return a string representing the path to which a symbolic link points.
+        :param path: (str) must be protocol relative path
+        """
+        assert path, isinstance(path, str)
+        return self.home_fs.getinfo('.', namespaces=['link']).raw['link']['target']
 
     def utime(self, path, timeval):
         """Perform a utime() call on the given path"""
@@ -133,7 +171,23 @@ class AbstractFS(object):
         """Return the last modified time as a number of seconds since the epoch."""
         raise NotImplementedError
 
-    def format_list(self, path):
+    def override_perms(self):
+        """Override permissions for a given directory."""
+        pass
+
+    def has_permissions(self):
+        """returns bool w.r.t  the a user has permissions to read/write/execute a file"""
+        pass
+
+    def get_permissions(self):
+        """Get permissions for a particular user on a particular file"""
+        pass
+
+    def set_permissions(self):
+        """Set permissions for a particular user on a particular file"""
+        pass
+
+    def format_list(self, basedir, listing):
         """
         Return an iterator object that yields the entries of given directory emulating the "/bin/ls -lA" UNIX command
         output.
@@ -141,5 +195,43 @@ class AbstractFS(object):
         -rw-rw-rw-   1 owner   group    7045120 Sep 02  3:47 music.mp3
         drwxrwxrwx   1 owner   group          0 Aug 31 18:50 e-books
         -rw-rw-rw-   1 owner   group        380 Sep 02  3:40 module.py
+
+        :param basedir: (str) must be protocol relative path
+        :param listing: (list) list of files
         """
-        raise NotImplementedError
+        assert isinstance(basedir, str), basedir
+        now = time.time()
+        for basename in listing:
+            file = basedir + basename  # for e.g. basedir = '/' and basename = test.png. So file is '/test.png'
+            try:
+                st = self.stat(file)
+            except (OSError, FilesystemError):
+                raise
+            permission = filemode(st['st_mode'])
+            nlinks = st['st_nlink']
+            size = st['st_size']  # file-size
+            # TODO: change user_name to something else --
+            # this can get seriously tricky! -> Should we expose the username of the actual user?
+            # Going with dummy values for now. Need to consult this with others. This could potentially blow our cover!!
+            uname = 'owner'
+            # uname = pwd.getpwuid(st['st_uid']).pw_name   |-> would fetch the user_name of the actual owner of these
+            # files.
+            gname = 'group'
+            # gname = grp.getgrgid(st['st_gid']).gr_name   |-> would fetch the user_name of the actual of these files.
+            mtime = time.gmtime(st['st_mtime'])
+            SIX_MONTHS = 180 * 24 * 60 * 60
+            if (now - st[['st_mtime']]) > SIX_MONTHS:
+                fmtstr = "%d  %Y"
+            else:
+                fmtstr = "%d %H:%M"
+            mtimestr = "%s %s" % (months_map[mtime.tm_mon], time.strftime(fmtstr, mtime))
+            if (st['st_mode'] & 61440) == stat.S_IFLNK:
+                # if the file is a symlink, resolve it, e.g.  "symlink -> realfile"
+                try:
+                    basename = basename + " -> " + self.readlink(file)
+                except (OSError, FilesystemError):
+                    raise
+                # formatting is matched with proftpd ls output
+                line = "%s %3s %-8s %-8s %8s %s %s\r\n" % (permission, nlinks, uname, gname, size, mtimestr, basename)
+                yield line
+

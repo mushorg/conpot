@@ -17,6 +17,8 @@ omit =
     conpot/core/virtual_fs.py
     conpot/core/internal_interface.py
     conpot/core/protocol_wrapper.py
+    conpot/core/auth.py
+
 
 exclude_lines =
     pragma: no cover

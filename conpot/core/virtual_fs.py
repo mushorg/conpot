@@ -16,8 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-
-from fs import mountfs, tempfs, osfs
+import os
+import sys
+import fs
+from fs import open_fs, mountfs, tempfs, errors
 from conpot.core.file_io import AbstractFS
 
 logger = logging.getLogger(__name__)
@@ -41,15 +43,37 @@ class VirtualFS(object):
                                  |-- http
                                  |-- snmp
                                  `-- ftp etc.
+    :param: (open_fs) Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the fs folders
+    made by all the individual protocols.
     """
-    def __init__(self):
-        self.data_fs = osfs.OSFS(root_path='')  # Specify the place where you would place the uploads
-        self.protocol_fs = tempfs.TempFS()
+    def __init__(self, fs_path=None):
+        self._protocol_vfs = {}   # dictionary to keep all the protocol vfs instances.
+        if fs_path is None:
+            try:
+                self.data_fs = open_fs('tar:/' + os.getcwd() + '/data.tar', writeable=True, create=True)
+                # TODO: Make sure data_fs closes gracfully even when Conpot crashes.
+            except fs.errors.FSError:
+                logger.exception('Unable to create persistent storage for Conpot. Exiting')
+                sys.exit(3)
+        else:
+            try:
+                assert fs_path, isinstance(fs_path, str)
+                self.data_fs = open_fs(fs_path)  # Specify the place where you would place the uploads
+            except AssertionError:
+                logger.exception('Incorrect FS url specified. Please check documentation for more details.')
+                sys.exit(3)
+            except fs.errors.CreateFailed:
+                logger.exception('Unexpected error occurred while creating Conpot FS.')
+                sys.exit(3)
+        self.protocol_fs = tempfs.TempFS(identifier='__conpot__')
         self._conpot_vfs = mountfs.MountFS()  # Just for convenience sake
         self._conpot_vfs.mount('data', self.data_fs)
         self._conpot_vfs.mount('protocols', self.protocol_fs)
 
-    def create_protocol_fs(self, protocol_name, protocol_fs_dir, data_fs_subdir):
+    def init_data_fs(self, path):
+        return self.__init__(fs_path=path)
+
+    def create_protocol_fs(self, protocol_name, protocol_src_dir, data_fs_subdir):
         """
         Method that would be used by protocols to initialize vfs. Called by each protocol individually.
         :param: (str) name of the protocol for which VFS is being created.
@@ -58,12 +82,20 @@ class VirtualFS(object):
         :return: fs object
         """
         assert isinstance(protocol_name, str), protocol_name
-        assert isinstance(protocol_fs_dir, str), protocol_fs_dir
+        assert isinstance(protocol_src_dir, str), protocol_src_dir
         assert isinstance(data_fs_subdir, str), data_fs_subdir
-        # TODO: check if the string protocol_fs_dir is a valid path
-
+        if not os.path.isdir(protocol_src_dir):
+            logger.exception('Protocol directory is not a valid directory.')
+            sys.exit(3)
         logger.info('Creating persistent data store for protocol: {}'.format(protocol_name))
         # create a sub directory for persistent storage.
-        sub_data_fs = self.data_fs.opendir(path=data_fs_subdir)
-
-        return AbstractFS(self.protocol_fs, protocol_name, protocol_fs_dir, sub_data_fs)
+        if self.data_fs.isdir(data_fs_subdir):
+            sub_data_fs = self.data_fs.opendir(path=data_fs_subdir)
+        else:
+            sub_data_fs = self.data_fs.makedir(path=data_fs_subdir)
+        if protocol_name not in self._protocol_vfs.keys():
+            sub_protocol_fs = AbstractFS(self.protocol_fs, protocol_name, protocol_src_dir, sub_data_fs)
+            self._protocol_vfs[protocol_name] = sub_protocol_fs
+            return sub_protocol_fs
+        else:
+            return self._protocol_vfs[protocol_name]

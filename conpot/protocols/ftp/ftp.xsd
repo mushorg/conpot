@@ -9,11 +9,12 @@
                             <xs:element type="xs:string" name="DeviceType"/>
                             <xs:element type="xs:string" name="Path"/>
                             <xs:element type="xs:string" name="Banner"/>
-                            <xs:element type="xs:unsignedShort" name="max_login_attempts"/>
-                            <xs:element type="xs:boolean" name="anonymous_login"/>
+                            <xs:element type="xs:unsignedShort" name="MaxLoginAttempts"/>
+                            <xs:element type="xs:boolean" name="AnonymousLogin"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
+                <xs:element type="xs:string" name="path"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

@@ -23,6 +23,8 @@ sessionManager = SessionManager()
 virtualFS = VirtualFS()
 core_interface = Interface()
 
+# databus related  --
+
 
 def get_sessionManager():
     return sessionManager
@@ -35,9 +37,22 @@ def get_databus():
 def get_session(*args, **kwargs):
     return sessionManager.get_session(*args, **kwargs)
 
+# file-system related  --
+
+
+def init_data_fs(*args, **kwargs):
+    return virtualFS.init_data_fs(*args, **kwargs)
+
 
 def create_vfs(*args, **kwargs):
     return virtualFS.create_protocol_fs(*args, **kwargs)
+
+
+def get_vfs():
+    return virtualFS._conpot_vfs
+
+
+# internal-interface related   --
 
 
 def get_interface():
