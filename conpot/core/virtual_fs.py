@@ -81,9 +81,9 @@ class VirtualFS(object):
         :param: (str) sub-folder name within data_fs that would be storing the uploads for later analysis
         :return: fs object
         """
-        assert isinstance(protocol_name, str), protocol_name
-        assert isinstance(protocol_src_dir, str), protocol_src_dir
-        assert isinstance(data_fs_subdir, str), data_fs_subdir
+        assert isinstance(protocol_name, str) and protocol_name
+        assert isinstance(protocol_src_dir, str) and protocol_src_dir
+        assert isinstance(data_fs_subdir, str) and data_fs_subdir
         if not os.path.isdir(protocol_src_dir):
             logger.exception('Protocol directory is not a valid directory.')
             sys.exit(3)
