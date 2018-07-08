@@ -6,7 +6,6 @@ import typing
 import tempfile
 import shutil
 from datetime import datetime
-from slugify import slugify
 from typing import Optional, Union, Text, Any
 from fs import open_fs, mirror, errors, subfs, permissions
 from fs.time import datetime_to_epoch
@@ -34,17 +33,6 @@ logger = logging.getLogger(__name__)
 #   - Write bit = Grants the capability to modify, or remove the content of the file.
 #   - Execute bit = User with execute permissions can run a file as a program.
 # ---------------------------------------------------
-
-
-def sanitize_file_name(name):
-    """
-    Ensure that file_name is legal. Slug the filename and store it onto the server.
-    This would ensure that there are no duplicates as far as writing a file is concerned.
-    :param name: Name of the file
-    :type name: str
-    """
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' - ' + slugify(name)
-
 
 class FilesystemError(fs.errors.FSError):
     """Custom class for filesystem-related exceptions."""
@@ -98,7 +86,6 @@ class AbstractFS(WrapFS):
         self.temp_dir = temp_dir
         self._cleaned = False
         self._built_cache = False
-        self._protocol_fs = {}   # dictionary to maintain easy access for individual mounted protocols with paths
         # Create our file system
         self._temp_dir = tempfile.mkdtemp(
             prefix=(self.identifier or "ConpotTempFS"),
@@ -152,6 +139,7 @@ class AbstractFS(WrapFS):
                 mirror.mirror(src_fs=src_fs, dst_fs=self.vfs)
                 self._cache.update({path: info for path, info in self.walk.info(namespaces=['basic', 'access', 'details',
                                                                                             'stat'])})
+                self._cache['/'] = self._wrap_fs.getinfo('/', namespaces=['basic', 'access', 'details', 'stat', 'link'])
                 self.chown('/', self.default_uid, self.default_gid, recursive=True)
                 self.chmod('/', self.default_perms, recursive=True)
                 self._built_cache = True   # FS has been built. Now all info must be accessed from cache.
@@ -292,10 +280,7 @@ class AbstractFS(WrapFS):
     # -----------------------------------------------------------
 
     def opendir(self, path, factory=SubAbstractFS):
-        try:
-            return self._wrap_fs.opendir(self.norm_path(path), factory=factory)
-        finally:
-            self.setinfo(self.norm_path(path), {})
+        return super(AbstractFS, self).opendir(path, factory=factory)
 
     def getinfo(self, path: str, get_actual: bool = False, namespaces=None):
         if get_actual or (not self._built_cache):
@@ -332,7 +317,7 @@ class AbstractFS(WrapFS):
     def listdir(self, path):
         logger.debug('Listing contents from directory'.format(self.norm_path(path)))
         try:
-            return self._wrap_fs.listdir(self.norm_path(path))
+            return super(AbstractFS, self).listdir(self.norm_path(path))
         finally:
             self.setinfo(self.norm_path(path), {})
 
@@ -514,15 +499,26 @@ class AbstractFS(WrapFS):
         """Return the last modified time as a number of seconds since the epoch."""
         return self.getinfo(path, namespaces=['details']).modified
 
-    def has_permissions(self, path, uid=None, required_perms=None):
+    def has_permissions(self, path: str, name_or_id: Union[int, str]=None, required_perms: str=None):
         """returns bool w.r.t  the a user/group has permissions to read/write/execute a file"""
-        # TODO: Manage through the group permissions.
+        # TODO: Currently users can't belong to groups. Manage through the group permissions.
         _path = self.norm_path(path)
         _perms = self.getinfo(_path, namespaces=['access']).permissions
         _uid = self.getinfo(_path, namespaces=['access']).uid
-        if _uid == uid:
-            # provided user is the owner
-            return all([_perms.check('u_' + i) for i in list(required_perms)])
+        _gid = self.getinfo(_path, namespaces=['access']).gid
+        if isinstance(name_or_id, str):
+            # must be username or group name
+            # fetch the uid/gid of that uname/gname
+            [_id] = [k for k, v in self._users.items() if v == {'user': name_or_id}]
+            if _id is not None:
+                if _id == _uid:
+                    # provided id is the owner
+                    return all([_perms.check('u_' + i) for i in list(required_perms)])
+            else:
+                [_id] = [k for k, v in self._grps.items() if v == {'group': name_or_id}]
+                if _id == _gid:
+                    # provided id is the group
+                    return all([_perms.check('g_' + i) for i in list(required_perms)])
         else:
             # check other permissions
             return all([_perms.check('o_' + i) for i in list(required_perms)])
@@ -557,8 +553,9 @@ class AbstractFS(WrapFS):
         else:
             self.setinfo(path, chmod_cache_info)
 
-    def mount_fs(self, fs_url: str,
+    def mount_fs(self,
                  dst_path: str,
+                 fs_url: str = None,
                  owner_uid: Optional[int] = 0,
                  group_gid: Optional[int] = 0,
                  perms: Optional[Permissions] = 0o755
@@ -572,24 +569,21 @@ class AbstractFS(WrapFS):
         :param group_gid: The group 'group` to which the directory beings. Defaults to root.
         :param perms: Permission UMASK
         """
-        temp_fs = open_fs(fs_url=fs_url)
-        # next, create a sub folder for the protocol
-        path = '/'.join(self.validatepath(dst_path).split('/')[:-1])
-        if not self.exists(path=path):
-            raise fs.errors.DirectoryExpected('{} path does not exists'.format(path))
-        else:
-            # path exists. check whether the directory exists or not.
-            if not self.exists(self.norm_path(dst_path)):
-                # TODO: Enter the permissions of the folder here!? These permissions would ensure that nothing gets executed.
-                # |^ Must be handled in mkdir
-                self.makedir(dst_path)
+        path = self.norm_path('/'.join(self.validatepath(dst_path).split('/')[:-1]))
+        if self.exists(path) and self.isdir(path):
+            if not fs_url:
+                return self.create_jail(path)
+            else:
+                temp_fs = open_fs(fs_url=fs_url)
                 with temp_fs.lock():
-                    new_dir = self.opendir(self.norm_path(dst_path), factory=SubAbstractFS)
-                    mirror.mirror(src_fs=temp_fs, dst_fs=new_dir)
-                    self.chown(new_dir.getcwd(), uid=owner_uid, gid=group_gid, recursive=True)
-                    self.chmod(new_dir.getcwd(), mode=perms, recursive=True)
-                    del temp_fs  # delete the instance since no longer required
-                    return new_dir
+                        new_dir = self.opendir(self.norm_path(dst_path), factory=SubAbstractFS)
+                        mirror.mirror(src_fs=temp_fs, dst_fs=new_dir)
+                        self.chown(new_dir.getcwd(), uid=owner_uid, gid=group_gid, recursive=True)
+                        self.chmod(new_dir.getcwd(), mode=perms, recursive=True)
+                        del temp_fs  # delete the instance since no longer required
+                        return new_dir
+        else:
+            raise fs.errors.DirectoryExpected('{} path does not exists'.format(path))
 
     def __getattribute__(self, attr):
         # Restrict access to methods that are implemented in AbstractFS class - Calling methods from base class but may

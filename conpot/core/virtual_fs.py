@@ -47,7 +47,8 @@ class VirtualFS(object):
     made by all the individual protocols.
     """
     def __init__(self, fs_path=None):
-        self._protocol_vfs = {}   # dictionary to keep all the protocol vfs instances.
+        self._protocol_vfs = {}   # dictionary to keep all the protocol vfs instances, maintain easy access for
+        # individual mounted protocols with paths
         if fs_path is None:
             try:
                 self.data_fs = open_fs('tar:/' + os.getcwd() + '/data.tar', writeable=True, create=True)
@@ -65,26 +66,28 @@ class VirtualFS(object):
             except fs.errors.CreateFailed:
                 logger.exception('Unexpected error occurred while creating Conpot FS.')
                 sys.exit(3)
-        self.protocol_fs = tempfs.TempFS(identifier='__conpot__')
+        self.protocol_fs = None
         self._conpot_vfs = mountfs.MountFS()  # Just for convenience sake
+
+    def initialize_vfs(self, path, data_fs_path):
+        self.__init__(fs_path=data_fs_path)
         self._conpot_vfs.mount('data', self.data_fs)
+        self.protocol_fs = AbstractFS(src_path=path)
         self._conpot_vfs.mount('protocols', self.protocol_fs)
 
-    def init_data_fs(self, path):
-        return self.__init__(fs_path=path)
-
-    def create_protocol_fs(self, protocol_name, protocol_src_dir, data_fs_subdir):
+    def add_protocol(self, protocol_name: str, data_fs_subdir: str, vfs_dst_path: str, src_path: str = None):
         """
         Method that would be used by protocols to initialize vfs. Called by each protocol individually.
-        :param: (str) name of the protocol for which VFS is being created.
-        :param: (str) path to which the fs has to be initialized
-        :param: (str) sub-folder name within data_fs that would be storing the uploads for later analysis
+        :param protocol_name: name of the protocol for which VFS is being created.
+        :param data_fs_subdir: sub-folder name within data_fs that would be storing the uploads for later analysis
+        :param vfs_dst_path:  protocol specific sub-folder path in the fs.
+        :param src_path: Source from where the files are to copied.
         :return: fs object
         """
         assert isinstance(protocol_name, str) and protocol_name
-        assert isinstance(protocol_src_dir, str) and protocol_src_dir
+        assert isinstance(src_path, str) and src_path
         assert isinstance(data_fs_subdir, str) and data_fs_subdir
-        if not os.path.isdir(protocol_src_dir):
+        if not os.path.isdir(src_path):
             logger.exception('Protocol directory is not a valid directory.')
             sys.exit(3)
         logger.info('Creating persistent data store for protocol: {}'.format(protocol_name))
@@ -94,8 +97,8 @@ class VirtualFS(object):
         else:
             sub_data_fs = self.data_fs.makedir(path=data_fs_subdir)
         if protocol_name not in self._protocol_vfs.keys():
-            sub_protocol_fs = AbstractFS(self.protocol_fs, protocol_name, protocol_src_dir, sub_data_fs)
-            self._protocol_vfs[protocol_name] = sub_protocol_fs
+            sub_protocol_fs = self.protocol_fs.mount_fs(vfs_dst_path, src_path)
+            self._protocol_vfs[protocol_name] = (sub_protocol_fs, sub_data_fs)
             return sub_protocol_fs
         else:
-            return self._protocol_vfs[protocol_name]
+            return self._protocol_vfs[protocol_name][0]

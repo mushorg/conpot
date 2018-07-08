@@ -1,8 +1,18 @@
 """
 Some python3 fixtures - helper methods for handy conversions + fix ssl
 """
-import os
-import struct
+from datetime import datetime
+from slugify import slugify
+
+
+def sanitize_file_name(name):
+    """
+    Ensure that file_name is legal. Slug the filename and store it onto the server.
+    This would ensure that there are no duplicates as far as writing a file is concerned.
+    :param name: Name of the file
+    :type name: str
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S") + ' - ' + slugify(name)
 
 
 # py3 chr

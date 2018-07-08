@@ -40,12 +40,12 @@ def get_session(*args, **kwargs):
 # file-system related  --
 
 
-def init_data_fs(*args, **kwargs):
-    return virtualFS.init_data_fs(*args, **kwargs)
+def initialize_vfs(*args, **kwargs):
+    return virtualFS.initialize_vfs(*args, **kwargs)
 
 
-def create_vfs(*args, **kwargs):
-    return virtualFS.create_protocol_fs(*args, **kwargs)
+def add_protocol(*args, **kwargs):
+    return virtualFS.add_protocol(*args, **kwargs)
 
 
 def get_vfs():
