@@ -49,7 +49,7 @@ def add_protocol(*args, **kwargs):
 
 
 def get_vfs():
-    return virtualFS._conpot_vfs
+    return virtualFS.protocol_fs
 
 
 # internal-interface related   --

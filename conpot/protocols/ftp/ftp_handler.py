@@ -194,10 +194,6 @@ class FTPCommandChannel(FTPHandlerBase):
                     # RFC 959 recommends the listing to be sorted.
                     listing.sort()
                     iterator = self.config.ftp_fs.format_list(path, listing)
-                else:
-                    basedir, filename = path.split('/')
-                    self.config.ftp_fs.lstat(path)  # raise exc in case of problems
-                    iterator = self.config.ftp_fs.format_list(basedir, [filename])
         except (OSError, fs.errors.FSError) as err:
             self.respond(b'550 %a.' % self._log_err(err))
 
