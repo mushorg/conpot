@@ -17,6 +17,7 @@
 
 from .session_manager import SessionManager
 from .virtual_fs import VirtualFS
+from typing import Tuple, Union, Optional
 from .internal_interface import Interface
 
 sessionManager = SessionManager()
@@ -44,12 +45,19 @@ def initialize_vfs(*args, **kwargs):
     return virtualFS.initialize_vfs(*args, **kwargs)
 
 
-def add_protocol(*args, **kwargs):
-    return virtualFS.add_protocol(*args, **kwargs)
+def add_protocol(protocol_name: str, data_fs_subdir: str, vfs_dst_path: str, src_path=None) -> Tuple:
+    return virtualFS.add_protocol(protocol_name, data_fs_subdir, vfs_dst_path, src_path)
 
 
-def get_vfs():
-    return virtualFS.protocol_fs
+def get_vfs(protocol_name: Optional[str] = None) -> Union[virtual_fs.AbstractFS, Tuple]:
+    """
+    Get the File System.
+    :param protocol_name: Name of the protocol to be fetched
+    """
+    if protocol_name:
+        return virtualFS._conpot_vfs[protocol_name]
+    else:
+        return virtualFS.protocol_fs
 
 
 # internal-interface related   --

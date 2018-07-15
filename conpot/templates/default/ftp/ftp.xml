@@ -1,13 +1,12 @@
-<ftp enabled="True" host="0.0.0.0" port="502">
+<ftp enabled="True" host="0.0.0.0" port="21">
     <device_info>
         <DeviceType>Siemens</DeviceType> <!-- Used in SYST FTP command-->
-        <Path>~/home/ftp</Path>  <!-- Path to be served as root of FTP server -->
         <Banner>Sofrel S500 SN 19-497-50817  ready. </Banner>
         <MaxLoginAttempts>3</MaxLoginAttempts>
         <AnonymousLogin>True</AnonymousLogin>
     </device_info>
     <!-- FTP path that you want protocol to server -->
-    <path>~/projects/dummy-test/conpot/conpot/protocols/ftp/ftp_data/dir</path>
+    <path>/data/ftp/</path>
     <enabled_commands>
     </enabled_commands>
 </ftp>

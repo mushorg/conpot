@@ -113,7 +113,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.stop_data_channel()
             self._active_passive_mode = 'PASV'
         self._data_sock.bind((self.local_ip, 0))   # TODO: masqueraded ip? Check for passive ports. If specified.
-        self._data_sock.listen(1)
+        self._data_sock.listen ()
         ip, port = self._data_sock.getsockname()
         self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')), port >> 8 & 0xFF, port & 0xFF))
         self.cli_ip, self.cli_port = ip, port

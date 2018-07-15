@@ -19,13 +19,14 @@ import logging
 import os
 import sys
 import fs
-from fs import open_fs, mountfs, tempfs, errors
+import conpot
+from typing import Union
+from fs import open_fs, errors
 from conpot.core.file_io import AbstractFS
 
 logger = logging.getLogger(__name__)
 
 
-# TODO: clean-up --
 class VirtualFS(object):
     """
     Conpot's virtual file system. Based on Pyfilesystem2, it would allow us to have
@@ -43,16 +44,17 @@ class VirtualFS(object):
                                  |-- http
                                  |-- snmp
                                  `-- ftp etc.
-    :param: (open_fs) Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the fs folders
-    made by all the individual protocols.
+    :param fs_path: Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the 
+    fs folders made by all the individual protocols.
+    :type fs_path: fs.open_fs
     """
     def __init__(self, fs_path=None):
-        self._protocol_vfs = {}   # dictionary to keep all the protocol vfs instances, maintain easy access for
+        self._conpot_vfs = dict()   # dictionary to keep all the protocol vfs instances, maintain easy access for
         # individual mounted protocols with paths
         if fs_path is None:
             try:
-                self.data_fs = open_fs('tar:/' + os.getcwd() + '/data.tar', writeable=True, create=True)
-                # TODO: Make sure data_fs closes gracfully even when Conpot crashes.
+                self.data_fs = open_fs(os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'tests', 'data',
+                                                    'test_data_fs'))
             except fs.errors.FSError:
                 logger.exception('Unable to create persistent storage for Conpot. Exiting')
                 sys.exit(3)
@@ -67,15 +69,17 @@ class VirtualFS(object):
                 logger.exception('Unexpected error occurred while creating Conpot FS.')
                 sys.exit(3)
         self.protocol_fs = None
-        self._conpot_vfs = mountfs.MountFS()  # Just for convenience sake
 
-    def initialize_vfs(self, path, data_fs_path):
-        self.__init__(fs_path=data_fs_path)
-        self._conpot_vfs.mount('data', self.data_fs)
-        self.protocol_fs = AbstractFS(src_path=path)
-        self._conpot_vfs.mount('protocols', self.protocol_fs)
+    def initialize_vfs(self, fs_path=None, data_fs_path=None):
+        if data_fs_path is not None:
+            logger.info('Opening path {} for persistent storage of files.'.format(data_fs_path))
+            self.__init__(fs_path=data_fs_path)
+        if fs_path is None:
+            fs_path = 'tar://' + os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'data.tar')
+        self.protocol_fs = AbstractFS(src_path=fs_path)
 
-    def add_protocol(self, protocol_name: str, data_fs_subdir: str, vfs_dst_path: str, src_path: str = None):
+    def add_protocol(self, protocol_name: str, data_fs_subdir: str, vfs_dst_path: str,
+                     src_path: Union[str, None] = None):
         """
         Method that would be used by protocols to initialize vfs. Called by each protocol individually.
         :param protocol_name: name of the protocol for which VFS is being created.
@@ -85,20 +89,42 @@ class VirtualFS(object):
         :return: fs object
         """
         assert isinstance(protocol_name, str) and protocol_name
-        assert isinstance(src_path, str) and src_path
         assert isinstance(data_fs_subdir, str) and data_fs_subdir
-        if not os.path.isdir(src_path):
-            logger.exception('Protocol directory is not a valid directory.')
-            sys.exit(3)
+        if src_path:
+            assert isinstance(src_path, str)
+            if not os.path.isdir(src_path):
+                logger.exception('Protocol directory is not a valid directory.')
+                sys.exit(3)
         logger.info('Creating persistent data store for protocol: {}'.format(protocol_name))
         # create a sub directory for persistent storage.
         if self.data_fs.isdir(data_fs_subdir):
             sub_data_fs = self.data_fs.opendir(path=data_fs_subdir)
         else:
             sub_data_fs = self.data_fs.makedir(path=data_fs_subdir)
-        if protocol_name not in self._protocol_vfs.keys():
+        if protocol_name not in self._conpot_vfs.keys():
             sub_protocol_fs = self.protocol_fs.mount_fs(vfs_dst_path, src_path)
-            self._protocol_vfs[protocol_name] = (sub_protocol_fs, sub_data_fs)
-            return sub_protocol_fs
-        else:
-            return self._protocol_vfs[protocol_name][0]
+            self._conpot_vfs[protocol_name] = (sub_protocol_fs, sub_data_fs)
+        return self._conpot_vfs[protocol_name]
+
+    def close(self, force=False):
+        """
+        Close the filesystem properly. Better and more graceful than __del__
+        :param force: Force close. This would close the AbstractFS instance - without close closing data_fs File Systems
+        """
+        if self._conpot_vfs and (not force):
+            for _fs in self._conpot_vfs.keys():
+                try:
+                    # First let us close all the data_fs instances.
+                    self._conpot_vfs[_fs][1].close()
+                    # Let us close the protocol_fs sub dirs for that protocol
+                    self._conpot_vfs[_fs][0].close()
+                except fs.errors.FSError:
+                    logger.exception('Error occurred while closing FS {}'.format(_fs))
+                finally:
+                    del self._conpot_vfs[_fs][0]
+        del self.protocol_fs
+
+    def __del__(self):
+        if self.protocol_fs:
+            del self.protocol_fs
+

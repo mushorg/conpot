@@ -91,7 +91,7 @@ if __name__ == '__main__':
     TCP_IP = '127.0.0.1'
     TCP_PORT = 10001
     import os
-    conpot_core.init_data_fs('./ftp_data/data')       # Place where all ftp related uploads would be stored
+    conpot_core.initialize_vfs()
     test_template = os.getcwd() + '/../../templates/default/ftp/ftp.xml'
     server = FTPServer(test_template)
     try:
