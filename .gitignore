@@ -60,4 +60,3 @@ conpot.log
 # for fs testing
 fs_test/
 conpot/tests/data/data_temp_fs/
-test.txt
