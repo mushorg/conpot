@@ -27,13 +27,13 @@ from gevent.server import DatagramServer
 import conpot.core as conpot_core
 from gevent import event
 from tftpy import TftpException, TftpTimeout
-# import logging
-# logger = logging.getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 # For debugging --
-import logging as logger
-import sys
-logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+# import logging as logger
+# import sys
+# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class TftpServer(object):
@@ -77,17 +77,17 @@ class TftpServer(object):
                 self.root_path, self.data_fs._sub_dir
             ))
         logger.debug('TFTP serving list of files : {}'.format(', '.join(self.vfs.listdir('.'))))
-        self.root = self.vfs.getcwd()  # Setup root dir.
+        self.root = '/'  # Setup root dir.
         # check for permissions etc.
-        logger.debug("TFTP root %s is a directory" % self.root)
+        logger.debug("TFTP root {} is a directory".format(self.vfs.getcwd() + self.root))
         if self.vfs.access(self.root, 0, os.R_OK):
-            logger.debug("TFTP root %s is readable" % self.root)
+            logger.debug("TFTP root {} is readable".format(self.vfs.getcwd() + self.root))
         else:
             raise TftpException("The TFTP root must be readable")
         if self.vfs.access(self.root, 0, os.W_OK):
-            logger.debug("TFTP root %s is writable" % self.root)
+            logger.debug("TFTP root {} is writable".format(self.vfs.getcwd() + self.root))
         else:
-            logger.warning("The TFTP root %s is not writable" % self.root)
+            logger.warning("The TFTP root {} is not writable".format(self.vfs.getcwd() + self.root))
 
     def handle(self, buffer, client_addr):
         session = conpot_core.get_session('tftp', client_addr[0], client_addr[1])

@@ -48,7 +48,7 @@ class TFTPServerState(TFTPState):
             sendoack = True
         # FIXME - only octet mode is supported at this time.
         if pkt.mode != 'octet':
-            logger.warning("Received non-octet mode request. I'll reply with binary data.")
+            logger.info("Received non-octet mode request. Replying with binary data.")
 
         # test host/port of client end
         if self.context.host != raddress or self.context.port != rport:
@@ -66,7 +66,7 @@ class TFTPServerState(TFTPState):
             full_path = os.path.join(self.context.root, pkt.filename.decode().lstrip('/'))
         try:
             logger.info("Full path of file to be uploaded is {}".format(full_path))
-            self.full_path = full_path.replace(self.context.vfs.getcwd(), '')
+            self.full_path = full_path
         except fs.errors.FSError:
             logger.warning("requested file is not within the server root - bad")
             self.sendError(TftpErrors.IllegalTftpOp)
@@ -125,6 +125,7 @@ class TFTPStateServerRecvWRQ(TFTPServerState):
         subdirectories leading up to the file to the written."""
         # Pull off everything below the root.
         subpath = self.full_path[len(self.context.root):]
+        subpath = subpath.decode() if isinstance(subpath, bytes) else subpath
         logger.debug("make_subdirs: subpath is %s", subpath)
         # Split on directory separators, but drop the last one, as it should
         # be the filename.
@@ -137,7 +138,7 @@ class TFTPStateServerRecvWRQ(TFTPServerState):
                 if self.context.vfs.isdir(current):
                     logger.debug("%s is already an existing directory", current)
                 else:
-                    self.context.vfs.mkdir(current, 0o700)
+                    self.context.vfs.makedir(current, 0o700)
 
     def handle(self, pkt, raddress, rport):
         """Handle an initial WRQ packet as a server."""
@@ -145,6 +146,7 @@ class TFTPStateServerRecvWRQ(TFTPServerState):
         sendoack = self.serverInitial(pkt, raddress, rport)
         path = self.full_path
         self.context.file_path = path
+        path = path.decode() if isinstance(path, bytes) else path
         logger.info("Opening file %s for writing" % path)
         if self.context.vfs.exists(path):
             logger.warning("File %s exists already, overwriting..." % (
@@ -183,6 +185,8 @@ class TFTPStateServerStart(TFTPState):
 class TFTPContextServer(tftpy.TftpContexts.TftpContextServer):
     """Simple TFTP server handler wrapper. Use conpot's filesystem wrappers rather than os.*"""
     file_path = None
+    _already_uploaded = False  # Since with UDP, we can't differentiate between when a user disconnected
+    # after successful upload and when the client timed out, we would allow file copy on data_fs only once
 
     def __int__(self, host, port, timeout, root, dyn_file_func, upload_open):
         tftpy.TftpContexts.TftpContextServer.__init__(self, host=host, port=port, timeout=timeout, root=root,
@@ -213,16 +217,18 @@ class TFTPContextServer(tftpy.TftpContexts.TftpContextServer):
         if self.fileobj is not None and not self.fileobj.closed:
             logger.debug("self.fileobj is open - closing")
             self.fileobj.close()
-        if not self.state:
+        if not self.state and (not self._already_uploaded):
             if self.file_path:
                 # Return None only when transfer is complete!
                 logger.info('TFTP : Transfer Complete!')
-                _data_fs_filename = sanitize_file_name(self.file_path)
+                _file_path = self.file_path if isinstance(self.file_path, str) else self.file_path.decode()
+                _data_fs_filename = sanitize_file_name(''.join(_file_path.split('/')[-1:]), self.host, self.port)
                 logger.info('Opening {} for data_fs writing.'.format(_data_fs_filename))
-                with self.vfs.open(self.file_path, "rb") as _vfs_file:
-                    with self.data_fs.open(sanitize_file_name(_data_fs_filename), "wb") as _data_file:
+                with self.vfs.open(_file_path, "rb") as _vfs_file:
+                    with self.data_fs.open(_data_fs_filename, "wb") as _data_file:
                         content = _vfs_file.read()
                         _data_file.write(content)
+            self._already_uploaded = True
         self.metrics.end_time = time.time()
         logger.debug("Set metrics.end_time to %s", self.metrics.end_time)
         self.metrics.compute()

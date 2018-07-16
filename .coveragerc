@@ -13,8 +13,6 @@ omit =
     # New features.. Just to avoid coverage drop - before we actually write some tests
     conpot/emulators/proxy_decoder.py
     conpot/protocols/ftp/*.py
-    conpot/core/file_io.py
-    conpot/core/virtual_fs.py
     conpot/core/internal_interface.py
     conpot/core/protocol_wrapper.py
     conpot/core/auth.py

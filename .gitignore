@@ -29,6 +29,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+.coverage.*
 nosetests.xml
 
 # Translations
@@ -59,4 +60,4 @@ conpot.log
 
 # for fs testing
 fs_test/
-conpot/tests/data/data_temp_fs/
+data_temp_fs/

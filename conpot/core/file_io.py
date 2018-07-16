@@ -9,12 +9,13 @@ import shutil
 from datetime import datetime
 from os import F_OK, R_OK, W_OK
 from typing import Optional, Union, Text, Any
-from fs import open_fs, mirror, errors, subfs, permissions
+from fs import open_fs, mirror, errors, subfs
 from fs.time import datetime_to_epoch
 from fs.subfs import SubFS
 from fs.wrapfs import WrapFS
 from fs.permissions import Permissions
 from fs.osfs import Info
+from fs.error_tools import unwrap_errors
 from conpot.protocols.ftp.ftp_utils import months_map
 from types import FunctionType
 _F = typing.TypeVar('_F', bound='FS', covariant=True)
@@ -47,7 +48,22 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
     """
     def __init__(self, parent_fs, path):
         self.parent_fs = parent_fs
+        self.default_uid, self.default_gid = parent_fs.default_uid, parent_fs.default_gid
+        self.utime = self.settimes
         super(SubAbstractFS, self).__init__(parent_fs, path)
+
+    def getinfo(self, path: str, get_actual: bool = False, namespaces=None):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.getinfo(_path, get_actual=get_actual, namespaces=namespaces)
+
+    @property
+    def default_user(self):
+        return self.parent_fs._users[self.default_uid]['user']
+
+    @property
+    def default_group(self):
+        return self.parent_fs._grps[self.default_gid]['group']
 
     def getcwd(self):
         return self._sub_dir
@@ -56,8 +72,49 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
     def root(self):
         return self.parent_fs.root + self.getcwd()
 
+    def getmtime(self, path):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.getmtime(_path)
+
+    def format_list(self, basedir, listing):
+        _fs, _path = self.delegate_path(basedir)
+        with unwrap_errors(basedir):
+            return _fs.format_list(_path, listing)
+
+    def chown(self, fs_path: str, uid: int, gid: int, recursive: Optional[bool]=False):
+        _fs, _path = self.delegate_path(fs_path)
+        with unwrap_errors(fs_path):
+            return _fs.chown(_path, uid, gid, recursive)
+
+    def chmod(self, path: str, mode: oct, recursive: bool = False) -> None:
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.chmod(_path, mode, recursive)
+
+    def access(self, path: str, name_or_id: Union[int, str]=None, required_perms: str=None):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.access(_path, name_or_id, required_perms)
+
+    def stat(self, path):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.stat(_path)
+
+    def readlink(self, path):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.readlink(_path)
+
+    def get_permissions(self, path):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.get_permissions(_path)
+
     def __getattr__(self, item):
-        if hasattr(self.parent_fs, item):
+        if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
+                                                      'norm_path'}:
             return getattr(self.parent_fs, item)
         else:
             raise NotImplementedError('Conpot\'s File System does not currently support method: {}'.format(item))
@@ -102,11 +159,7 @@ class AbstractFS(WrapFS):
         # Copy all files from src_path into our file system
         logger.info('Initializing Virtual File System at {}. Source specified : {}\n Please wait while the '
                     'system copies all specified files'.format(self._temp_dir, src_path))
-        # There are some fs native file system methods that are very useful and are safe for use in our FS - as is.
-        # We would set them here,
-        # self.validatepath = super(AbstractFS, self).validatepath
-        # self.exists = super(AbstractFS, self).exists
-        # self.close = super(AbstractFS, self).close
+        self.utime = self.settimes  # utime maps to settimes
         # keep records related to users and groups
         self.default_uid = 0
         self.default_gid = 0
@@ -119,9 +172,8 @@ class AbstractFS(WrapFS):
         }
         self._initialize_fs(src_path=src_path)
 
-    def norm_path(self, path):
-        path = '/' if path == '.' else path
-        _path = self.validatepath(self._cwd + path) if self._cwd not in path else self.validatepath(path)
+    def abs_path(self, path):
+        _path = self.norm_path(path)
         try:
             if _path is not '/':
                 assert self._cache[_path]
@@ -129,14 +181,10 @@ class AbstractFS(WrapFS):
         except (KeyError, AssertionError):
             raise FilesystemError('Invalid Path: {}'.format(_path))
 
-    def check_exists(self, path):
+    def norm_path(self, path):
         path = '/' if path == '.' else path
-        try:
-            if path is not '/':
-                assert self._cache[path]
-                return path
-        except (KeyError, AssertionError):
-            raise FilesystemError('Invalid Path: {}'.format(path))
+        _path = self.validatepath(self._cwd + path) if self._cwd not in path else self.validatepath(path)
+        return _path
 
     def _initialize_fs(self, src_path: str) -> None:
             """
@@ -154,6 +202,7 @@ class AbstractFS(WrapFS):
                 self.chown('/', self.default_uid, self.default_gid, recursive=True)
                 self.chmod('/', self.default_perms, recursive=True)
                 self._built_cache = True   # FS has been built. Now all info must be accessed from cache.
+                src_fs.close()
             del src_fs
 
     def __str__(self):
@@ -167,7 +216,8 @@ class AbstractFS(WrapFS):
     # -----------------------------------------------------------
     def setinfo(self, path, info):
         """
-        Higher level function to directly change values in the file system.
+        Higher level function to directly change values in the file system. Dictionary specified here changes cache
+        values.
         :param path: path of the file that is to be changed
         :param info: Raw Info object. Please check pyfilesystem2's docs for more info.
         """
@@ -182,18 +232,13 @@ class AbstractFS(WrapFS):
             finally:
                 try:
                     assert self._cache[path]
-                except AssertionError:
+                except (AssertionError, KeyError):
                     # This is the first time we have seen this file. Let us create this entry.
                     logger.debug('Creating cache for file/directory : {}'.format(path))
                     self._cache[path] = self._wrap_fs.getinfo(path, namespaces=['basic', 'access', 'details', 'stat',
                                                                                 'link'])
                 # update the 'accessed' and 'modified' time.
-                self._cache[path].raw['details']['accessed'] = fs.time.datetime_to_epoch(
-                    self._wrap_fs.getinfo(path, namespaces=['details']).accessed
-                )
-                self._cache[path].raw['details']['modified'] = fs.time.datetime_to_epoch(
-                    self._wrap_fs.getinfo(path, namespaces=['details']).modified
-                )
+                self.settimes(path)
                 if 'access' in info:
                     access = info['access']
                     if 'permissions' in access:
@@ -231,7 +276,7 @@ class AbstractFS(WrapFS):
                             else:
                                 # Must be 'gid' that is available.
                                 self._cache[path].raw['access']['gid'] = access['gid']
-                                self._cache[path].raw['access']['group'] = self._users[int(access['gid'])]['group']
+                                self._cache[path].raw['access']['group'] = self._grps[int(access['gid'])]['group']
                                 self._cache[path].raw['details']['metadata_changed'] = fs.time.datetime_to_epoch(
                                     datetime.now()
                                 )
@@ -242,12 +287,15 @@ class AbstractFS(WrapFS):
 
     def makedir(self,
                 path,               # type: Text
-                perms=None,         # type: Optional[int]
-                recreate=False      # type: bool
+                permissions=None,   # type: Optional[int]
+                recreate=True       # type: bool
                 ):
         # make a directory in the file system. Also, update the cache about the directory.
         _path = self.norm_path(path)
-        self._wrap_fs.makedir(_path)
+        # we always want to overwrite a directory if it already exists.
+        recreate = True if recreate is False else recreate
+        perms = permissions
+        self._wrap_fs.makedir(_path, permissions=None, recreate=recreate)
         dir_perms = perms if perms else self.default_perms
         dir_cache = {
             'access': {
@@ -256,27 +304,22 @@ class AbstractFS(WrapFS):
                 'gid': self.default_gid
             }
         }
+        logger.debug('Created directory {}'.format(_path))
         self.setinfo(_path, info=dir_cache)
 
-    def rmdir(self, path):
+    def removedir(self, path):
         # removing a directory and finally block would clear the local cache.
-        try:
-            return self._wrap_fs.removedir(path)
-        except fs.errors.FSError:
-            raise
-        finally:
-            rm_dir = self._cache.pop(path)
-            logger.debug('Removed directory {}'.format(rm_dir))
+        _path = self.norm_path(path)
+        self._wrap_fs.removedir(_path)
+        rm_dir = self._cache.pop(_path)
+        logger.debug('Removed directory {}'.format(rm_dir))
 
     def remove(self, path):
         """Remove a file from the file system."""
-        try:
-            return self._wrap_fs.remove(path)
-        except fs.errors.FSError:
-            raise
-        finally:
-            rm_file = self._cache.pop(self._cwd + path)
-            logger.debug('Remove file {}'.format(rm_file))
+        _path = self.norm_path(path)
+        self._wrap_fs.remove(_path)
+        rm_file = self._cache.pop(_path)
+        logger.debug('Remove file {}'.format(rm_file))
 
     def open(self,
              path,                      # type: Text
@@ -297,7 +340,7 @@ class AbstractFS(WrapFS):
             raise
         finally:
             if (not any(sys.exc_info())) and ('w' in mode or 'a' in mode):
-                self._cache.update({path: self.getinfo(path, get_actual = True,
+                self._cache.update({path: self.getinfo(path, get_actual=True,
                                                        namespaces=['basic', 'access', 'details', 'stat'])})
                 self.chown(path, self.default_uid, self.default_gid)
                 self.chmod(path, self.default_perms)
@@ -310,6 +353,13 @@ class AbstractFS(WrapFS):
 
     def opendir(self, path, factory=SubAbstractFS):
         return super(AbstractFS, self).opendir(path, factory=factory)
+
+    def settimes(self, path, accessed=None, modified=None):
+        super(AbstractFS, self).settimes(path, accessed, modified)
+        self._cache[path].raw['details']['accessed'] = \
+            fs.time.datetime_to_epoch(self._wrap_fs.getinfo(path, namespaces=['details']).accessed)
+        self._cache[path].raw['details']['modified'] = \
+            fs.time.datetime_to_epoch(self._wrap_fs.getinfo(path, namespaces=['details']).modified)
 
     def getinfo(self, path: str, get_actual: bool = False, namespaces=None):
         if get_actual or (not self._built_cache):
@@ -345,14 +395,13 @@ class AbstractFS(WrapFS):
 
     def listdir(self, path):
         logger.debug('Listing contents from directory'.format(self.norm_path(path)))
-        try:
-            return super(AbstractFS, self).listdir(self.norm_path(path))
-        finally:
-            self.setinfo(self.norm_path(path), {})
+        self.setinfo(self.norm_path(path), {})
+        return super(AbstractFS, self).listdir(self.norm_path(path))
 
     def getfile(self, path, file, chunk_size=None, **options):
         # check where there exists a copy in the cache
         if self.exists(self.norm_path(path)) and self.norm_path(path) in self._cache.keys():
+            self.setinfo(self.norm_path(path), {})
             return self._wrap_fs.getfile(self.norm_path(path), file, chunk_size, **options)
         else:
             raise FilesystemError('Can\'t get. File does not exist!')
@@ -384,11 +433,18 @@ class AbstractFS(WrapFS):
         """Store all user related data for the file system."""
         assert name and isinstance(name, str)
         self._users[uid] = {'user': name}
+        # let us check for duplicate usernames/group names
+        if len(set([v['user'] for k, v in self._users.items()])) != len(self._users.keys()):
+            _uname = self._users.pop(uid)['user']
+            raise FilesystemError('Can\'t add users with duplicate uname: {}.'.format(_uname))
 
     def create_group(self,  name: str, gid: int) -> None:
         """Store all group related data for the file system."""
         assert name and isinstance(name, str)
         self._grps[gid] = {'group': name}
+        if len(set([v['group'] for k, v in self._grps.items()])) != len(self._grps.keys()):
+            _gname = self._grps.pop(gid)
+            raise FilesystemError('Can\'t create groups with duplicate names: {}.'.format(_gname))
 
     def chown(self, fs_path: str, uid: int, gid: int, recursive: Optional[bool]=False) -> None:
         """Change the owner of a specified file. Wrapper for os.chown
@@ -423,7 +479,6 @@ class AbstractFS(WrapFS):
                     self.setinfo(path, chown_cache)
                 sub_dir = self.opendir(path)
                 for _path, _ in sub_dir.walk.info():
-
                     assert self._cache[self.norm_path(path + _path)]
                     self.setinfo(path + _path, chown_cache)
                 sub_dir.close()
@@ -436,11 +491,11 @@ class AbstractFS(WrapFS):
 
     def clean(self):
         """Clean (delete) temporary files created by this filesystem."""
-        logger.info('Shutting down File System. Cleaning directories at {}'.format(self._temp_dir))
         if self._cleaned:
             return
 
         try:
+            logger.info('Shutting down File System. Cleaning directories at {}'.format(self._temp_dir))
             shutil.rmtree(self._temp_dir)
         except Exception as error:
             if not self._ignore_clean_errors:
@@ -455,25 +510,12 @@ class AbstractFS(WrapFS):
         """The root directory - where the filesystem is stored"""
         return self._temp_dir
 
-    def chdir(self, path):
-        """Change the current directory."""
-        # TODO: check permissions
-        try:
-            assert path, isinstance(path, str)
-            if self.isdir(path=self.getcwd() + path):
-                self._cwd += path
-            else:
-                raise fs.errors.FSError('Directory {} does not exist.'.format(path))
-        except AssertionError:
-            raise
-        except fs.errors.IllegalBackReference:
-            raise
-
     def stat(self, path):
         """Perform a stat() system call on the given path.
         :param path: (str) must be protocol relative path
         """
         assert path, isinstance(path, str)
+        self.setinfo(self.norm_path(path), {})
         return self.getinfo(path, namespaces=['stat']).raw['stat']
 
     def readlink(self, path):
@@ -481,7 +523,8 @@ class AbstractFS(WrapFS):
         :param path: (str) must be protocol relative path
         """
         assert path, isinstance(path, str)
-        return self.getinfo(path, namespaces=['link']).raw['link']['target']
+        self.setinfo(self.norm_path(path), {})
+        return self.getinfo(path, get_actual=True, namespaces=['link']).raw['link']['target']
 
     def format_list(self, basedir, listing):
         """
@@ -499,7 +542,7 @@ class AbstractFS(WrapFS):
         basedir += '/' if basedir[-1:] != '/' else basedir
         now = time.time()
         for basename in listing:
-            file = basedir + basename  # for e.g. basedir = '/' and basename = test.png. So file is '/test.png'
+            file = self.norm_path(basedir + basename)  # for e.g. basedir = '/' and basename = test.png. So file is '/test.png'
             try:
                 st = self.stat(file)
             except (fs.errors.FSError, FilesystemError):
@@ -526,6 +569,7 @@ class AbstractFS(WrapFS):
 
     def getmtime(self, path):
         """Return the last modified time as a number of seconds since the epoch."""
+        self.setinfo(self.norm_path(path), {})
         return self.getinfo(path, namespaces=['details']).modified
 
     # FIXME: refactor to os.access. Mode is missing from the params
@@ -540,52 +584,71 @@ class AbstractFS(WrapFS):
         _perms = self.getinfo(_path, namespaces=['access']).permissions
         _uid = self.getinfo(_path, namespaces=['access']).uid
         _gid = self.getinfo(_path, namespaces=['access']).gid
-        if isinstance(required_perms, int):
-            if required_perms == F_OK:
-                return True
-            elif required_perms == R_OK:
-                required_perms = 'r'
-            elif required_perms == W_OK:
-                required_perms = 'w'
-        if isinstance(name_or_id, str):
-            # must be username or group name
-            # fetch the uid/gid of that uname/gname
-            [_id] = [k for k, v in self._users.items() if v == {'user': name_or_id}]
-            if _id is not None:
+        try:
+            if isinstance(required_perms, int):
+                if required_perms == F_OK:
+                    return True
+                elif required_perms == R_OK:
+                    required_perms = 'r'
+                elif required_perms == W_OK:
+                    required_perms = 'w'
+            if isinstance(name_or_id, str):
+                # must be username or group name
+                # fetch the uid/gid of that uname/gname
+                [_id] = [k for k, v in self._users.items() if v == {'user': name_or_id}]
+                if _id is not None:
+                    if _id == _uid:
+                        # provided id is the owner
+                        return all([_perms.check('u_' + i) for i in list(required_perms)])
+                else:
+                    [_id] = [k for k, v in self._grps.items() if v == {'group': name_or_id}]
+                    if _id == _gid:
+                        # provided id is the group
+                        return all([_perms.check('g_' + i) for i in list(required_perms)])
+                    else:
+                        # id not equal to either in uid/gid
+                        # check other permissions
+                        return all([_perms.check('o_' + i) for i in list(required_perms)])
+            elif isinstance(name_or_id, int):
+                _id = name_or_id
                 if _id == _uid:
                     # provided id is the owner
                     return all([_perms.check('u_' + i) for i in list(required_perms)])
-            else:
-                [_id] = [k for k, v in self._grps.items() if v == {'group': name_or_id}]
-                if _id == _gid:
+                elif _id == _gid:
                     # provided id is the group
                     return all([_perms.check('g_' + i) for i in list(required_perms)])
-        else:
-            # check other permissions
-            return all([_perms.check('o_' + i) for i in list(required_perms)])
+                else:
+                    # id not equal to either in uid/gid
+                    # check other permissions
+                    return all([_perms.check('o_' + i) for i in list(required_perms)])
+        except (ValueError, AssertionError, KeyError, fs.errors.FSError):
+            return False
 
     def get_permissions(self, path):
         """Get permissions for a particular user on a particular file/directory in 'rwxrx---' format"""
         _path = self.norm_path(path)
+        self.setinfo(self.norm_path(path), {})
         _perms = self.getinfo(_path, namespaces=['access']).permissions
         return _perms.as_str()
 
-    def chmod(self, path: str, mode, recursive: bool = False) -> None:
+    def chmod(self, path: str, mode: oct, recursive: bool = False) -> None:
         """Change file/directory mode.
         :param path: Path to be modified.
-        :param mode: Operating-system mode bitfield.
-        :param recursive: If the path is directory, setting recursive to true would change permissions to subfolders
+        :param mode: Operating-system mode bitfield. Must be in octal's form.
+        Eg: chmod with (mode=0o755) = Permissions(user='rwx', group='rx', other='rx')
+        :param recursive: If the path is directory, setting recursive to true would change permissions to sub folders
         and contained files.
         :type recursive: bool
         """
         assert isinstance(mode, int)
         chmod_cache_info = {
                     'access': {
-                        'permissions': permissions.Permissions.create(mode)
+                        'permissions': Permissions.create(mode)
                     }
                 }
         if self.isdir(path) and recursive:
-            # self.setinfo(path, chmod_cache_info)
+            if path is not '/':
+                self.setinfo(path, chmod_cache_info)
             # create a walker
             sub_dir = self.opendir(path)
             for _path, _ in sub_dir.walk.info():
@@ -599,7 +662,7 @@ class AbstractFS(WrapFS):
                  fs_url: str = None,
                  owner_uid: Optional[int] = 0,
                  group_gid: Optional[int] = 0,
-                 perms: Optional[Permissions] = 0o755
+                 perms: Optional[Union[Permissions, int]] = 0o755
                  ) -> subfs.SubFS:
         """
         To be called to mount individual filesystems.
@@ -619,8 +682,12 @@ class AbstractFS(WrapFS):
                 with temp_fs.lock():
                         new_dir = self.opendir(self.norm_path(dst_path), factory=SubAbstractFS)
                         mirror.mirror(src_fs=temp_fs, dst_fs=new_dir)
-                        self.chown(new_dir.getcwd(), uid=owner_uid, gid=group_gid, recursive=True)
-                        self.chmod(new_dir.getcwd(), mode=perms, recursive=True)
+                        self._cache.update({path: info for path, info in self.walk.info(namespaces=['basic', 'access',
+                                                                                                    'details',
+                                                                                                    'stat'])})
+                        self.chown('/', uid=owner_uid, gid=group_gid, recursive=True)
+                        self.chmod('/', mode=perms, recursive=True)
+                        new_dir.default_uid, new_dir.default_gid = owner_uid, group_gid
                         del temp_fs  # delete the instance since no longer required
                         return new_dir
         else:
@@ -630,6 +697,8 @@ class AbstractFS(WrapFS):
         # Restrict access to methods that are implemented in AbstractFS class - Calling methods from base class but may
         # not be safe to use.
         # FIXME: Need to fix these for only allow methods that are defined here.
+        if not WrapFS:
+            return
         method_list = [x for x, y in WrapFS.__dict__.items() if type(y) == FunctionType]
         if attr in method_list:
             if attr in super(AbstractFS, self).__getattribute__('__dict__').keys() or \
@@ -640,43 +709,3 @@ class AbstractFS(WrapFS):
                 raise NotImplementedError('The method requested is not supported by Conpot\'s VFS')
         else:
             return super(AbstractFS, self).__getattribute__(attr)
-
-
-if __name__ == '__main__':
-    import os
-    test_dir = os.getcwd() + '/../../../../conpot23/ftp'
-    os.chdir(test_dir)
-    test = AbstractFS('.')
-    print(test.norm_path('abhinav'))
-    jail = test.create_jail('/abhinav')
-    print('Jail :: ', jail.getcwd(), jail.root)
-    print(test.root)
-    print(test.listdir('.'))
-    print(test._cache)
-    print(test._cache['/test.py'].raw)
-    print('Permissions for file \'/abhinav\': {}'.format(test.get_permissions('/abhinav')))
-    print('---------------------')
-    print('Check for owners/group change ')
-    print('---------------------')
-    [print(path, ' : ', test.getinfo(path, namespaces=['access']).user) for path in test.walk.files()]
-    [print(path, ' : ', test.getinfo(path, namespaces=['access']).user) for path in test.walk.dirs()]
-    # change them using chmod
-    test.register_user('daniel', 2000)
-    test.create_group('daniel', 3000)
-    test.chown('/abhinav', uid=2000, gid=3000, recursive=True)
-    print('Permissions: {} '.format(test.access('/abhinav', 2000, 'rwx')))
-    test._cache['/test.py'].raw['access']['user'] = 'test_user'
-    # view them to get a good idea of results.
-    print('after owner change')
-    [print(path, ' : ', test.getinfo(path, namespaces=['access']).user) for path in test.walk.files()]
-    [print(path, ' : ', test.getinfo(path, namespaces=['access']).user) for path in test.walk.dirs()]
-    # do chmod
-    print('Permissions: {} '.format(test.access('/abhinav', 0, 'rwx')))
-    # create a file - with user 'daniel'
-    # create a directory with user 'daniel'
-    # check the current permissions.
-    print('---------------------')
-    print('Formatted List of files : {}'.format(test.format_list('/abhinav', test.listdir('/abhinav'))))
-    [print(i) for i in test.format_list('/abhinav', test.listdir('/abhinav'))]
-    print(test.getmtime('/abhinav'))
-    del test
