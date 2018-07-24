@@ -2,6 +2,13 @@
 Central Authentication mechanism. To maintain consistencies b/w users, groups and
 """
 
+# FIXME: must use context manager - __enter__() and __exit__() for vfs. Something like
+#   with run_with_access(user='', grp='', perms=''):
+#     with vfs.open('file.txt', mode='w') as _file:
+#         _file.write('Hello!')
+# It should automatically create files - do chmod and chown - raise PermissionsException and other exceptions,
+# update the cache including accessed and modified time - and close the file after use.
+
 
 class AuthUserDB(object):
     """
@@ -11,6 +18,7 @@ class AuthUserDB(object):
         module and verify the user/pass pairs. This ensures that all users within Conpot reflect the same
         permissions/users etc.
     """
+
     def __int__(self):
         pass
 

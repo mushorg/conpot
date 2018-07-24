@@ -30,3 +30,4 @@ fs
 python-slugify
 tftpy
 freezegun
+git+https://github.com/mushorg/telnetsrvlib.git

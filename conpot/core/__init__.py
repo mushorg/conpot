@@ -45,8 +45,14 @@ def initialize_vfs(*args, **kwargs):
     return virtualFS.initialize_vfs(*args, **kwargs)
 
 
-def add_protocol(protocol_name: str, data_fs_subdir: str, vfs_dst_path: str, src_path=None) -> Tuple:
-    return virtualFS.add_protocol(protocol_name, data_fs_subdir, vfs_dst_path, src_path)
+def add_protocol(protocol_name: str,
+                 data_fs_subdir: str,
+                 vfs_dst_path: str,
+                 src_path=None,
+                 owner_uid: Optional[int] = 0,
+                 group_gid: Optional[int] = 0,
+                 perms: Optional[oct] = 0o755) -> Tuple:
+    return virtualFS.add_protocol(protocol_name, data_fs_subdir, vfs_dst_path, src_path, owner_uid, group_gid, perms)
 
 
 def get_vfs(protocol_name: Optional[str] = None) -> Union[virtual_fs.AbstractFS, Tuple]:

@@ -20,9 +20,9 @@ import os
 import sys
 import fs
 import conpot
-from typing import Union
-from fs import open_fs, errors
-from conpot.core.file_io import AbstractFS
+from typing import Union, Optional
+from fs import open_fs, errors, subfs
+from conpot.core.file_io import AbstractFS, SubAbstractFS
 
 logger = logging.getLogger(__name__)
 
@@ -78,18 +78,33 @@ class VirtualFS(object):
             fs_path = 'tar://' + os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'data.tar')
         self.protocol_fs = AbstractFS(src_path=fs_path)
 
-    def add_protocol(self, protocol_name: str, data_fs_subdir: str, vfs_dst_path: str,
-                     src_path: Union[str, None] = None):
+    def add_protocol(self,
+                     protocol_name: str,
+                     data_fs_subdir: str,
+                     vfs_dst_path: str,
+                     src_path=None,
+                     owner_uid=0,
+                     group_gid=0,
+                     perms=0o755) -> (SubAbstractFS, subfs.SubFS):
         """
-        Method that would be used by protocols to initialize vfs. Called by each protocol individually.
+        Method that would be used by protocols to initialize vfs. May be called by each protocol individually. This
+        creates a chroot jail sub file system env which makes easier handling. It also creates a data_fs sub file system
+        for managing protocol specific uploads.
         :param protocol_name: name of the protocol for which VFS is being created.
         :param data_fs_subdir: sub-folder name within data_fs that would be storing the uploads for later analysis
         :param vfs_dst_path:  protocol specific sub-folder path in the fs.
         :param src_path: Source from where the files are to copied.
+        :param owner_uid: UID of a registered user. This is the default owner in the sub file system
+        :param group_gid: GID of a existing group.
+        :param perms: Default permissions of the sub file system.
         :return: fs object
+
+        **Note:** The owner_uid and group_gid must be already registered with the fs. Otherwise an exception
+        would be raised.
         """
         assert isinstance(protocol_name, str) and protocol_name
         assert isinstance(data_fs_subdir, str) and data_fs_subdir
+        assert isinstance(vfs_dst_path, str) and vfs_dst_path
         if src_path:
             assert isinstance(src_path, str)
             if not os.path.isdir(src_path):
@@ -102,7 +117,11 @@ class VirtualFS(object):
         else:
             sub_data_fs = self.data_fs.makedir(path=data_fs_subdir)
         if protocol_name not in self._conpot_vfs.keys():
-            sub_protocol_fs = self.protocol_fs.mount_fs(vfs_dst_path, src_path)
+            sub_protocol_fs = self.protocol_fs.mount_fs(vfs_dst_path,
+                                                        src_path,
+                                                        owner_uid,
+                                                        group_gid,
+                                                        perms)
             self._conpot_vfs[protocol_name] = (sub_protocol_fs, sub_data_fs)
         return self._conpot_vfs[protocol_name]
 
@@ -120,11 +139,9 @@ class VirtualFS(object):
                     self._conpot_vfs[_fs][0].close()
                 except fs.errors.FSError:
                     logger.exception('Error occurred while closing FS {}'.format(_fs))
-                finally:
                     del self._conpot_vfs[_fs][0]
         del self.protocol_fs
 
     def __del__(self):
         if self.protocol_fs:
             del self.protocol_fs
-

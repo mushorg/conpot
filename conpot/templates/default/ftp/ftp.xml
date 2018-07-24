@@ -1,12 +1,45 @@
 <ftp enabled="True" host="0.0.0.0" port="21">
     <device_info>
-        <DeviceType>Siemens</DeviceType> <!-- Used in SYST FTP command-->
-        <Banner>Sofrel S500 SN 19-497-50817  ready. </Banner>
-        <MaxLoginAttempts>3</MaxLoginAttempts>
-        <AnonymousLogin>True</AnonymousLogin>
+        <device_type>Siemens</device_type> <!-- Used in SYST FTP command-->
+        <banner>FTP server ready.</banner>
+        <max_login_attempts>3</max_login_attempts>
     </device_info>
-    <!-- FTP path that you want protocol to server -->
-    <path>/data/ftp/</path>
+    <users>
+        <user uid="13">
+            <uname>nobody</uname>
+            <group>45:nobody</group>  <!-- Format of the group is gid:gname. If no gid with that group exists,
+            one would be created.-->
+            <password>nobody</password>
+        </user>
+        <user uid="10">
+            <uname>test_user</uname>
+            <group>13:test_grp</group>  <!-- Format of the group is gid:gname. If no gid with that group exists,
+            one would be created.-->
+            <password>test</password>
+        </user>
+    </users>
+    <!-- All VFS related information -->
+    <vfs>
+        <path>/data/ftp/</path>  <!-- path in the VFS you want FTP server to serve -->
+        <add_src></add_src>  <!-- If you with to add some additional files from your system to the ftp_vfs,
+        add dir path here. Otherwise keep it blank. -->
+        <data_fs_subdir>ftp</data_fs_subdir> <!-- Data fs sub directory name. This would be the directory where FTP
+        related uploads would be kept -->
+        <default_owner>13</default_owner>  <!-- user uid 13 is the default user -->
+        <default_grp>45</default_grp>  <!-- group with gid 45 is the default group -->
+        <default_perms>0o777</default_perms> <!-- default permissions of every file in the ftp filesystem -->
+        <file path="/data/ftp/file_test.txt">
+            <owner_uid></owner_uid>
+            <grp_gid></grp_gid>
+            <perms></perms>
+        </file>
+        <file path="/data/ftp/another_file_test.txt">
+            <owner_uid></owner_uid>
+            <grp_gid></grp_gid>
+            <perms></perms>
+        </file>
+    </vfs>
+    <anon_login>True</anon_login>
     <enabled_commands>
     </enabled_commands>
 </ftp>

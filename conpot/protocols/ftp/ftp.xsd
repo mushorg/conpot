@@ -14,7 +14,57 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-                <xs:element type="xs:string" name="path"/>
+                <xs:element name="vfs">
+
+                </xs:element>
+                <xs:element name="users">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="user" maxOccurs="unbounded" minOccurs="0">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="blocks">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="block"
+                                                                maxOccurs="unbounded"
+                                                                minOccurs="0">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element type="xs:string"
+                                                                            name="type"
+                                                                            minOccurs="1"
+                                                                            maxOccurs="1">
+                                                                </xs:element>
+                                                                <xs:element type="xs:int"
+                                                                            name="starting_address"
+                                                                            minOccurs="1"
+                                                                            maxOccurs="1"/>
+                                                                <xs:element type="xs:short"
+                                                                            name="size"
+                                                                            minOccurs="1"
+                                                                            maxOccurs="1"/>
+                                                                <xs:element type="xs:string"
+                                                                            name="content"
+                                                                            minOccurs="1"
+                                                                            maxOccurs="1"/>
+                                                            </xs:sequence>
+                                                            <xs:attribute type="xs:string"
+                                                                          name="name"
+                                                                          use="required"/>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:short" name="id" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element type="xs:string" name="anon_login"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

@@ -1,87 +1,281 @@
 import gevent
 from gevent import monkey; gevent.monkey.patch_all()
-
 import unittest
-from gevent import socket
 import os
 import conpot
+from freezegun import freeze_time
+from conpot.protocols.ftp.ftp_utils import ftp_commands
 import conpot.core as conpot_core
 from conpot.protocols.ftp.ftp_server import FTPServer
-import ftplib
-# Use ftplib's client for more authentic testing
-
-
-def client_send_receive(command, ftp_server):
-    """
-    Send a command to the ftp server and collect the response.
-    :param command: FTP command
-    :param ftp_server: conpot.protocols.ftp.ftp_server.FTPServer instance
-    :return: response from the server
-    """
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', ftp_server.server.server_port))
-    _ = s.recv(1024)  # receive the banner
-    s.sendall(command)  # send the command
-    cmd_rsp = s.recv(1024)
-    s.close()
-    return cmd_rsp
+import ftplib      # Use ftplib's client for more authentic testing
 
 
 class TestFTPServer(unittest.TestCase):
 
     """
         All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
-        response.
+        response. The following commands would be tested for appropriate response:
+        'USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST'
     """
 
     def setUp(self):
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-
+        # Initialize the file system
+        conpot_core.initialize_vfs()
         # get the current directory
         self.dir_name = os.path.dirname(conpot.__file__)
         self.ftp_server = FTPServer(self.dir_name + '/templates/default/ftp/ftp.xml')
         self.server_greenlet = gevent.spawn(self.ftp_server.start, '127.0.0.1', 0)
+        self.client = ftplib.FTP()
         gevent.sleep(1)
-        # initialize the databus
-        self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
 
     def tearDown(self):
+        if self.client:
+            try:
+                self.client.close()
+            except ftplib.all_errors:
+                pass
         self.ftp_server.stop()
-        gevent.joinall([self.server_greenlet])
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        self.server_greenlet.kill()
 
-    @unittest.skip(reason='FTP Not Implemented')
-    def test_arg_cmds(self):
-        # Test commands requiring an argument.
-        expected = b'501 Syntax error: command needs an argument.'
-        arg_cmds = ['allo', 'appe', 'dele', 'eprt', 'mdtm', 'mfmt', 'mode', 'mkd', 'opts',
-                    'port', 'rest', 'retr', 'rmd', 'rnfr', 'rnto', 'site', 'size', 'stor',
-                    'stru', 'type', 'user', 'xmkd', 'xrmd', 'site chmod']
-        for cmd in arg_cmds:
-            resp = client_send_receive(cmd, ftp_server=self.ftp_server)
-            self.assertEqual(resp, expected)
+    def refresh_client(self):
+        """
+        Disconnect and reconnect a client
+        """
+        if self.client:
+            self.client.quit()
+            del self.client
+        self.client = ftplib.FTP()
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
 
-    @unittest.skip(reason='FTP Not Implemented')
-    def test_no_arg_cmds(self):
-        # Test commands accepting no arguments.
-        expected = b'501 Syntax error: command does not accept arguments.'
-        arg_cmds = ['abor', 'cdup', 'feat', 'noop', 'pasv', 'pwd', 'quit',
-                    'rein', 'syst', 'xcup', 'xpwd']
-        for cmd in arg_cmds:
-            resp = client_send_receive(cmd + ' arg', ftp_server=self.ftp_server)
-            self.assertEqual(resp, expected)
+    def test_auth(self):
+        """Test for user, pass and quit commands."""
+        # test with anonymous
+        self.assertEqual(self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port),
+                         '200 FTP server ready.')
+        self.assertEqual(self.client.login(), '230 Log in Successful.')
+        self.refresh_client()
+        # test with registered user nobody:nobody
+        self.assertEqual(self.client.login(user='nobody', passwd='nobody'), '230 Log in Successful.')
+        # testing with incorrect password
+        # testing with incorrect username
+        # try to access a command that requires auth with being authenticated.
+        self.assertEqual(self.client.quit(), '221 Bye.')
 
-    @unittest.skip(reason='FTP Not Implemented')
-    def test_auth_cmds(self):
-        # Test those commands requiring client to be authenticated.
+    def test_help(self):
+        # TODO: test help before login and after login.
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        cmds = self.ftp_server.handler.config.enabled_commands
+        [cmds.remove(i) for i in ('SITE HELP', 'SITE CHMOD') if i in cmds]
+        help_text = self.client.sendcmd('help')
+        self.assertTrue(all([True if i in help_text else False for i in cmds]))
+        # test command specific help
+        cmds_help = {ftp_commands[k]['help'] for k in cmds}
+        self.assertTrue(all([True for i in cmds if self.client.sendcmd('help {}'.format(i)) and i != 'HELP' in
+                             cmds_help]))
+        # test unrecognized command
+        self.assertRaisesRegex(ftplib.error_perm, '501 Unrecognized command.', self.client.sendcmd, 'help ABCD')
+
+    def test_noop(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('noop'), '200 I successfully done nothin\'.')
+
+    def test_allo(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('allo 250'), '202 No storage allocation necessary.')
+
+    def test_syst(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('syst'), '215 UNIX Type: L8')
+
+    def test_mode(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertRaisesRegex(ftplib.error_perm, '501 Syntax error: command needs an argument', self.client.sendcmd,
+                               'mode')
+        self.assertEqual(self.client.sendcmd('mode S'), '200 Transfer mode set to: S')
+        self.assertRaisesRegex(ftplib.error_perm, '504 Unimplemented MODE type.', self.client.sendcmd, 'mode B')
+
+    def test_site(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertRaisesRegex(ftplib.error_perm, '501 Syntax error: command needs an argument', self.client.sendcmd,
+                               'site')
+
+    def test_site_help(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertIn('Help SITE command successful.', self.client.sendcmd('site help'))
+        self.assertIn('HELP', self.client.sendcmd('site help'))
+        # FIXME: add for chmod.
+
+    def test_type(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('type I'), '200 Type set to: Binary.')
+        self.assertEqual(self.client.sendcmd('type L8'), '200 Type set to: Binary.')
+        self.assertEqual(self.client.sendcmd('type A'), '200 Type set to: ASCII.')
+        self.assertEqual(self.client.sendcmd('type L7'), '200 Type set to: ASCII.')
+        self.assertRaises(ftplib.error_perm, self.client.sendcmd, 'type 234')
+
+    def test_size(self):
+        # TODO: test for a user who does not has permissions for size
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertRaisesRegex(ftplib.error_perm, '550 SIZE not allowed in ASCII mode.', self.client.sendcmd,
+                               'size ftp_data.txt')
+        # change to mode to binary
+        _ = self.client.sendcmd('type I')
+        self.assertEqual(self.client.sendcmd('size ftp_data.txt'), '213 49')
+        self.assertRaisesRegex(ftplib.error_perm, '550 is not retrievable.', self.client.sendcmd,
+                               'size file_does_not_exist')
+
+    def test_pwd(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('pwd'), '257 "/data/ftp" is the current directory.')
+
+    def test_mkd(self):
+        # TODO: test for a user who does not has permissions to make directory
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('mkd testing'), '257 "/data/ftp/testing" directory created.')
+        self.assertRaisesRegex(ftplib.error_perm,
+                               "550 'mkd /../../testing/testing' points to a path which is "
+                               "outside the user's root directory.", self.client.sendcmd, 'mkd /../../testing/testing')
+        _ = self.client.sendcmd('mkd testing/testing')
+        self.assertEqual(self.client.sendcmd('mkd testing/testing/../demo'),
+                         '257 "/data/ftp/testing/demo" directory created.')
+
+    def test_cwd(self):
+        #  TODO: test for a user who does not has permissions to change directory
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # create a directory to cwd to.
+        self.ftp_server.handler.config.vfs.makedir('testing')
+        self.assertEqual(self.client.sendcmd('cwd testing'), '250 "/data/ftp/testing" is the current directory.')
+        # check consistency with pwd
+        self.assertEqual(self.client.sendcmd('pwd'), '257 "/data/ftp/testing" is the current directory.')
+        # test for cdup.
+        self.assertEqual(self.client.sendcmd('cdup'), '250 "/data/ftp" is the current directory.')
+        # make sure that user does not go - out of the root path.
+        self.assertRaisesRegex(ftplib.error_perm, "550 'cwd ../' points to a path which is outside the user's "
+                                                  "root directory.", self.client.sendcmd, 'cwd ../')
+
+    def test_rmd(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # let us create a temp dir for deleting
+        self.ftp_server.handler.config.vfs.makedir('tmp')
+        self.assertEqual(self.client.sendcmd('rmd tmp'), '250 Directory removed.')
+        self.assertRaisesRegex(ftplib.error_perm, '550 Remove directory operation failed.', self.client.sendcmd,
+                               'rmd tmp')
+        # TODO: Test with user that has no or little permissions.
+        # test for a user trying to delete '/'
+        self.assertRaisesRegex(ftplib.error_perm, '550 Can\'t remove root directory.', self.client.sendcmd,
+                               'rmd /')
+        self.assertRaisesRegex(ftplib.error_perm,
+                               "550 'rmd ../../' points to a path which is outside the user's root directory.",
+                               self.client.sendcmd, 'rmd ../../')
+
+    @freeze_time('2018-07-15 17:51:17')
+    def test_mdtm(self):
+        # TODO : test for user that does not have permissions for mdtm
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # test for a file that already exists
+        self.assertEqual(self.client.sendcmd('mdtm ftp_data.txt'), '213 20180715175117')
+        self.assertRaisesRegex(ftplib.error_perm, "550 /this_file_does_not_exist.txt is not retrievable",
+                               self.client.sendcmd, 'mdtm this_file_does_not_exist.txt')
+
+    def test_dele(self):
+        # TODO: check for a user who does not have permissions to delete a file!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # let us create a temp file just for deleting.
+        with self.ftp_server.handler.config.vfs.open('/temp_file', mode='w') as _tmp:
+            _tmp.write('This is just a temp file for testing rm')
+        # delete that file
+        self.assertEqual(self.client.sendcmd('dele temp_file'), '250 File removed.')
+        # check for errors
+        self.assertRaisesRegex(ftplib.error_perm, '550 Failed to delete file.', self.client.sendcmd, 'dele temp_file')
+
+    def test_file_rename(self):
+        # TODO: check for a user who does not have permissions to rename a file!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # First we would do everything for a valid file and all valid params
+        # check with invalid rnfr params
+        self.assertRaisesRegex(ftplib.error_perm, "550 Can't rename home directory.", self.client.sendcmd, 'rnfr /')
+        self.assertRaisesRegex(ftplib.error_perm, '550 No such file or directory.', self.client.sendcmd,
+                               'rnfr file_DNE')
+        self.assertRaisesRegex(ftplib.error_perm, "503 Bad sequence of commands: use RNFR first.", self.client.sendcmd,
+                               'rnto /random_path')
+        # create a custom file to play with.
+        with self.ftp_server.handler.config.vfs.open('/test_rename_file.txt', mode='w') as _test:
+            _test.write('This is just a test file for rename testing of FTP server')
+        # do a rnfr to rename file ftp_data.txt
+        self.assertEqual(self.client.sendcmd('rnfr test_rename_file.txt'), '350 Ready for destination name.')
+        self.assertEqual(self.client.sendcmd('rnto new_data.txt'), '250 Renaming ok.')
+        # try for a case that would fail --
+        self.assertEqual(self.client.sendcmd('rnfr new_data.txt'), '350 Ready for destination name.')
+        self.assertRaisesRegex(ftplib.error_perm, '501 can\'t decode command.', self.client.sendcmd,
+                               'rnto Very / Unsafe / file\nname hähä \n\r .txt')
+        self.ftp_server.handler.config.vfs.remove('new_data.txt')
+
+    def test_site_chmod(self):
+        # TODO: check for a user who does not have permissions to do chmod!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # change permissions
+        self.client.sendcmd('site chmod 644 ftp_data.txt')
+        self.assertEqual(self.ftp_server.handler.config.vfs.get_permissions('ftp_data.txt'), 'rw-r--r--')
+
+    def test_stat(self):
+        # TODO: check for a user who does not have permissions to do stat!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # do stat without args
+        self.assertIn('ftp_data.txt', self.client.sendcmd('stat'))
+
+    # ------ Data channel related. -----
+
+    @unittest.skip
+    def test_abor(self):
         pass
 
-    @unittest.skip(reason='FTP Not Implemented')
-    def test_no_auth_cmds(self):
-        # Test those commands that do not require client to be authenticated.
+    def test_list(self):
+        # TODO: check for a user who does not have permissions to do stat!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # Do a list of directory
+        self.assertIn('ftp_data.txt', self.client.sendcmd('list'))
+
+    @unittest.skip
+    def test_nlist(self):
+        pass
+
+    @unittest.skip
+    def test_stou(self):
+        pass
+
+    @unittest.skip
+    def test_appe(self):
+        pass
+
+    @unittest.skip
+    def test_retr(self):
+        pass
+
+    @unittest.skip
+    def test_stor(self):
+        pass
+
+    @unittest.skip
+    def test_rein(self):
         pass
 
 

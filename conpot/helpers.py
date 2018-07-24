@@ -35,6 +35,10 @@ def pack_short_int(x): return x if isinstance(x, bytes) else x.to_bytes(2, byteo
 def unpack_short_int(x): return int.from_bytes(x,  byteorder='big')
 
 
+months_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+              11: 'Nov', 12: 'Dec'}
+
+
 # https://www.bountysource.com/issues/4335201-ssl-broken-for-python-2-7-9
 # Kudos to Eugene for this workaround!
 def fix_sslwrap():

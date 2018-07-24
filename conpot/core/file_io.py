@@ -5,6 +5,7 @@ import sys
 import stat
 import typing
 import tempfile
+import glob
 import shutil
 from datetime import datetime
 from os import F_OK, R_OK, W_OK
@@ -16,12 +17,14 @@ from fs.wrapfs import WrapFS
 from fs.permissions import Permissions
 from fs.osfs import Info
 from fs.error_tools import unwrap_errors
-from conpot.protocols.ftp.ftp_utils import months_map
+from conpot.helpers import months_map
 from types import FunctionType
 _F = typing.TypeVar('_F', bound='FS', covariant=True)
 
 logger = logging.getLogger(__name__)
 
+
+# TODO: Implement the following functionalities: move, copy, openbin, gettext, touch, settext, rmtree.
 
 # ---------------------------------------------------
 # Regarding Permissions:
@@ -49,6 +52,7 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
     def __init__(self, parent_fs, path):
         self.parent_fs = parent_fs
         self.default_uid, self.default_gid = parent_fs.default_uid, parent_fs.default_gid
+        self.default_perms = self.parent_fs.default_perms
         self.utime = self.settimes
         super(SubAbstractFS, self).__init__(parent_fs, path)
 
@@ -111,6 +115,35 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         _fs, _path = self.delegate_path(path)
         with unwrap_errors(path):
             return _fs.get_permissions(_path)
+
+    def rename_file(self, path, name, new_name):
+        _fs, _path = self.delegate_path(path)
+        with unwrap_errors(path):
+            return _fs.rename_file(_path, name, new_name)
+
+    def open(self,
+             path,                      # type: Text
+             mode='r',                  # type: Text
+             buffering=-1,              # type: int
+             encoding=None,             # type: Optional[Text]
+             newline='',                # type: Text
+             line_buffering=False,      # type: bool
+             **options                  # type: Any
+             ):
+        _fs, _path = self.delegate_path(path)
+        try:
+            with unwrap_errors(path):
+                return _fs.open(path=_path, mode=mode, buffering=buffering, encoding=encoding,
+                                newline=newline, line_buffering=line_buffering, **options)
+        except (FilesystemError, fs.errors.FSError):
+            raise
+        finally:
+            if (not any(sys.exc_info())) and ('w' in mode or 'a' in mode):
+                self._cache.update({path: self.getinfo(path, get_actual=True,
+                                                       namespaces=['basic', 'access', 'details', 'stat'])})
+                self.chown(path, self.default_uid, self.default_gid)
+                self.chmod(path, self.default_perms)
+                logger.debug('Updating modified/access time')
 
     def __getattr__(self, item):
         if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
@@ -318,8 +351,9 @@ class AbstractFS(WrapFS):
         """Remove a file from the file system."""
         _path = self.norm_path(path)
         self._wrap_fs.remove(_path)
-        rm_file = self._cache.pop(_path)
-        logger.debug('Remove file {}'.format(rm_file))
+        if _path in self._cache:
+            rm_file = self._cache.pop(_path)
+            logger.debug('Remove file {}'.format(rm_file))
 
     def open(self,
              path,                      # type: Text
@@ -339,6 +373,7 @@ class AbstractFS(WrapFS):
         except fs.errors.FSError:
             raise
         finally:
+            # FIXME: this is erroneous
             if (not any(sys.exc_info())) and ('w' in mode or 'a' in mode):
                 self._cache.update({path: self.getinfo(path, get_actual=True,
                                                        namespaces=['basic', 'access', 'details', 'stat'])})
@@ -365,33 +400,39 @@ class AbstractFS(WrapFS):
         if get_actual or (not self._built_cache):
             return self._wrap_fs.getinfo(path, namespaces)
         else:
-            info = {'basic': self._cache[path].raw['basic']}
-            if namespaces is not None:
-                if 'details' in namespaces:
-                    info['details'] = self._cache[path].raw['details']
-                if 'stat' in namespaces:
-                    stat_cache = {
-                        'st_uid': self._cache[path].raw['access']['uid'],
-                        'st_gid': self._cache[path].raw['access']['gid'],
-                        'st_mode':  self._cache[path].raw['access']['permissions'].mode,
-                        'st_atime': self._cache[path].raw['details']['accessed'],
-                        'st_mtime': self._cache[path].raw['details']['modified'],
-                        # TODO: Fix these to appropriate values
-                        'st_mtime_ns': None,
-                        'st_ctime_ns': None,
-                        'st_ctime': None,
-                    }
-                    self._cache[path].raw['stat'].update(stat_cache)
-                    info['stat'] = self._cache[path].raw['stat']
-                    # Note that we won't be keeping tabs on 'lstat'
-                if 'lstat' in namespaces:
-                    info['lstat'] = self._cache[path].raw['lstat']
-                    info['lstat'] = self._cache[path].raw['lstat']
-                if 'link' in namespaces:
-                    info['link'] = self._cache[path].raw['link']
-                if 'access' in namespaces:
-                    info['access'] = self._cache[path].raw['access']
-            return Info(info)
+            try:
+                info = {'basic': self._cache[path].raw['basic']}
+                if namespaces is not None:
+                    if 'details' in namespaces:
+                        info['details'] = self._cache[path].raw['details']
+                    if 'stat' in namespaces:
+                        stat_cache = {
+                            'st_uid': self._cache[path].raw['access']['uid'],
+                            'st_gid': self._cache[path].raw['access']['gid'],
+                            'st_atime': self._cache[path].raw['details']['accessed'],
+                            'st_mtime': self._cache[path].raw['details']['modified'],
+                            # TODO: Fix these to appropriate values
+                            'st_mtime_ns': None,
+                            'st_ctime_ns': None,
+                            'st_ctime': None,
+                        }
+                        if isinstance(self._cache[path].raw['access']['permissions'], list):
+                            stat_cache['st_mode'] = Permissions(self._cache[path].raw['access']['permissions']).mode
+                        else:
+                            stat_cache['st_mode'] = self._cache[path].raw['access']['permissions'].mode
+                        self._cache[path].raw['stat'].update(stat_cache)
+                        info['stat'] = self._cache[path].raw['stat']
+                        # Note that we won't be keeping tabs on 'lstat'
+                    if 'lstat' in namespaces:
+                        info['lstat'] = self._cache[path].raw['lstat']
+                        info['lstat'] = self._cache[path].raw['lstat']
+                    if 'link' in namespaces:
+                        info['link'] = self._cache[path].raw['link']
+                    if 'access' in namespaces:
+                        info['access'] = self._cache[path].raw['access']
+                return Info(info)
+            except KeyError:
+                raise FilesystemError
 
     def listdir(self, path):
         logger.debug('Listing contents from directory'.format(self.norm_path(path)))
@@ -419,6 +460,18 @@ class AbstractFS(WrapFS):
         """Returns chroot jail sub system for a path"""
         logger.debug('Creating jail for path: {}'.format(path))
         return self.opendir(path)
+
+    def rename_file(self, path, name, new_name):
+        try:
+            # FIXME: using os.path.split would be a better option. base_dir, _file = os.path.split(path)
+            _file = self.norm_path('/'.join([path, name]))
+            _new_file = self.norm_path('/'.join([path, new_name]))
+            assert (glob.has_magic(_new_file) is False)
+            logger.debug('Renaming file at path: {}'.format(_file))
+            self.getinfo(_file, namespaces=['details']).raw['basic']['name'] = _new_file
+            self.move(_file, _new_file)
+        except AssertionError:
+            raise FilesystemError('Cannot rename file. Bad file_name supplied {}'.format(new_name))
 
     def getcwd(self):
         return '/'
@@ -662,8 +715,7 @@ class AbstractFS(WrapFS):
                  fs_url: str = None,
                  owner_uid: Optional[int] = 0,
                  group_gid: Optional[int] = 0,
-                 perms: Optional[Union[Permissions, int]] = 0o755
-                 ) -> subfs.SubFS:
+                 perms: Optional[Union[Permissions, int]] = 0o755) -> subfs.SubFS:
         """
         To be called to mount individual filesystems.
         :param fs_url: Location/URL for the file system that is to be mounted.
@@ -704,8 +756,14 @@ class AbstractFS(WrapFS):
             if attr in super(AbstractFS, self).__getattribute__('__dict__').keys() or \
                     attr not in ['match']:
                 # These methods have been overwritten and are safe to use.
-                return super(AbstractFS, self).__getattribute__(attr)
+                try:
+                    return super(AbstractFS, self).__getattribute__(attr)
+                except KeyError as ke:
+                    raise FilesystemError('Invalid Path : {}'.format(ke))
             else:
                 raise NotImplementedError('The method requested is not supported by Conpot\'s VFS')
         else:
-            return super(AbstractFS, self).__getattribute__(attr)
+            try:
+                return super(AbstractFS, self).__getattribute__(attr)
+            except KeyError as ke:
+                raise FilesystemError('Invalid Path : {}'.format(ke))

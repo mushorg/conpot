@@ -1,130 +1,158 @@
 """
-Conpot FTP Handlers.
--  FTPCommandChannel : For handling FTP commands
--  FTPDataTransferChannel: For handling Data Transfer - Active/Passive Mode.
+This module is based on the original work done by pyftpdlib authors. This is customized version that supports
+Conpot's virtual file system os.* wrappers and gevent support.
 """
 from conpot.protocols.ftp.base_handler import FTPHandlerBase
 import logging
 import fs
-import glob
+import os
+import gevent
+from gevent import socket
 from fs import errors
+from conpot.core.file_io import FilesystemError
+from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException, get_data_from_iter
 logger = logging.getLogger(__name__)
 
-# -----------------------------------------------------------------
-# Methods that do not require any kind of user to be authenticated
-# -----------------------------------------------------------------
-# Methods that *require* authentication but no permissions
-# -----------------------------------------------------------------
-# Methods that *require* authentication and specific permissions
-# ------------------------------------------------------------------
-# Methods that *require* authentication and specific permissions
-# ------------------------------------------------------------------
 
-# all commands:
-ftp_commands = {
-   'ABOR': {
-        'auth': True,                              # <-| Does the command require any kind of auth
-        'perm': None,                              # <-| What kind of permissions are required to execute this command
-        'args': False,                             # <-| Whether command requires any arguments
-        'help': 'Syntax: ABOR (abort transfer).'   # <-| Valid command syntax. For help.
-    },
-   'CDUP': dict(perm='e', auth=True, arg=False, help='Syntax: CDUP (go to parent directory).'),
-   'CWD': dict(perm='e', auth=True, arg=None, help='Syntax: CWD [<SP> dir-name] (change working directory).'),
-   'DELE': dict(perm='d', auth=True, arg=True, help='Syntax: DELE <SP> file-name (delete file).'),
-   'HELP': dict(perm=None, auth=False, arg=None, help='Syntax: HELP [<SP> cmd] (show help).'),
-   'LIST': dict(perm='l', auth=True, arg=None, help='Syntax: LIST [<SP> path] (list files).'),
-   'MDTM': dict(perm='l', auth=True, arg=True, help='Syntax: MDTM [<SP> path] (file last modification time).'),
-   'MODE': dict(perm=None, auth=True, arg=True, help='Syntax: MODE <SP> mode (noop; set data transfer mode).'),
-   'MKD': dict(perm='m', auth=True, arg=True, help='Syntax: MKD <SP> path (create directory).'),
-   'NLST': dict(perm='l', auth=True, arg=None, help='Syntax: NLST [<SP> path] (list path in a compact form).'),
-   'NOOP': dict(perm=None, auth=False, arg=False, help='Syntax: NOOP (just do nothing).'),
-   'PASS': dict(perm=None, auth=False, arg=None, help='Syntax: PASS [<SP> password] (set user password).'),
-   'PASV': dict(perm=None, auth=True, arg=False, help='Syntax: PASV (open passive data connection).'),
-   'PORT': dict(perm=None, auth=True, arg=True, help='Syntax: PORT <sp> h,h,h,h,p,p (open active data connection).'),
-   'PWD': dict(perm=None, auth=True, arg=False, help='Syntax: PWD (get current working directory).'),
-   'QUIT': dict(perm=None, auth=False, arg=False, help='Syntax: QUIT (quit current session).'),
-   'REIN': dict(perm=None, auth=True, arg=False, help='Syntax: REIN (flush account).'),
-   'RETR': dict(perm='r', auth=True, arg=True, help='Syntax: RETR <SP> file-name (retrieve a file).'),
-   'RMD': dict(perm='d', auth=True, arg=True, help='Syntax: RMD <SP> dir-name (remove directory).'),
-   'RNFR': dict(perm='f', auth=True, arg=True, help='Syntax: RNFR <SP> file-name (rename (source name)).'),
-   'RNTO': dict(perm='f', auth=True, arg=True, help='Syntax: RNTO <SP> file-name (rename (destination name)).'),
-   'SITE': dict(perm=None, auth=False, arg=True, help='Syntax: SITE <SP> site-command (execute SITE command).'),
-   'SITE HELP': dict(perm=None, auth=False, arg=None, help='Syntax: SITE HELP [<SP> cmd] (show SITE command help).'),
-   'SITE CHMOD': dict(perm='M', auth=True, arg=True, help='Syntax: SITE CHMOD <SP> mode path (change file mode).'),
-   'SIZE': dict(perm='l', auth=True, arg=True, help='Syntax: SIZE <SP> file-name (get file size).'),
-   'STAT': dict(perm='l', auth=False, arg=None, help='Syntax: STAT [<SP> path name] (server stats [list files]).'),
-   'STOR': dict(perm='w', auth=True, arg=True, help='Syntax: STOR <SP> file-name (store a file).'),
-   'STOU': dict(perm='w', auth=True, arg=None, help='Syntax: STOU [<SP> name] (store a file with a unique name).'),
-   'STRU': dict(perm=None, auth=True, arg=True, help='Syntax: STRU <SP> type (noop; set file structure).'),
-   'SYST': dict(perm=None, auth=False, arg=False, help='Syntax: SYST (get operating system type).'),
-   'TYPE': dict(perm=None, auth=True, arg=True, help='Syntax: TYPE <SP> [A | I] (set transfer type).'),
-   'USER': dict(perm=None, auth=False, arg=True, help='Syntax: USER <SP> user-name (set username).'),
-   'XCUP': dict(perm='e', auth=True, arg=False, help='Syntax: XCUP (obsolete; go to parent directory).'),
-   'XCWD': dict(perm='e', auth=True, arg=None, help='Syntax: XCWD [<SP> dir-name] (obsolete; change directory).'),
-   'XMKD': dict(perm='m', auth=True, arg=True, help='Syntax: XMKD <SP> dir-name (obsolete; create directory).'),
-   'XPWD': dict(perm=None, auth=True, arg=False, help='Syntax: XPWD (obsolete; get current dir).'),
-   'XRMD': dict(perm='d', auth=True, arg=True, help='Syntax: XRMD <SP> dir-name (obsolete; remove directory).'),
-}
-
+# Regarding Permissions:
+# To change a directory as current directory we need permissions : rwx (CWD)| Also it has to be a directory. |
+# To read a file we need : r permissions - It has to be a file | list files (LIST, NLST, STAT, MLSD, MLST, SIZE, MDTM
+# RETR commands)
+# To store a file to the server we need 'w' permissions - (STOR, STOU commands)
+# To rename file or directory we need 'w' permissions (RNFR, RNTO)
+# To delete file or directory we need 'w' permissions (DELE, RMD commands)
+# To append data to an existing file (APPE command) we need 'w' permissions
 
 class FTPCommandChannel(FTPHandlerBase):
     """
-        FTP Command Responder. Partial implementation of RFC 959.
+    FTP Command Responder. Implementation of RFC 959.
     """
-    # TODO: FTP over SSL?
-    # only commands that are enabled should be assigned here to commands! To be configured in the Server class.
-    commands = ftp_commands
-    local_ip = '120.0.0.1'
-    passive_port_restriction = False
-    passive_ports = []    # User might need to have some restriction with what and how many ports would be allowed.
 
-    # -----------------------------------------------------------------
-    # Some not implemented commands
-    # -----------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # There are some commands that do not require any kind of auth and permissions to run.
+    # These also do not require us to have an established data channel. So let us get rid of those first.
+    # Btw: These are - USER, PASS, HELP, NOOP, SYST, QUIT, SITE HELP
 
-    def ftp_RNFR(self):
-        pass
+    # The USER command is used to verify users as they try to login.
+    def do_USER(self, arg):
+        """
+        USER FTP command. If the user is already logged in, return 530 else 331 for the PASS command
+        :param arg: username specified by the client/attacker
+        """
+        # first we need to check if the user is authenticated?
+        if self.authenticated:
+            self.respond(b'530 Cannot switch to another user.')
+        else:
+            self.username = arg
+            self.respond(b'331 Now specify the Password.')
 
-    def ftp_RNTO(self):
-        pass
+    def do_PASS(self, arg):
+        if self.authenticated:
+            self.respond(b"503 User already authenticated.")
+        if not self.username:
+            self.respond(b"503 Login with USER first.")
+        if self.authentication_ok(user_pass=arg):
+            self.respond(b'230 Log in Successful.')
+        else:
+            self.invalid_login_attempt += 1
+            self.respond(b'530 Authentication Failed.')
 
-    def ftp_STAT(self):
-        pass
+    def do_HELP(self, arg):
+        """Return help text to the client."""
+        if arg:
+            line = arg.upper()
+            if line in self.config.COMMANDS:
+                self.respond(b'214 %a' % self.config.COMMANDS[line]['help'])
+            else:
+                self.respond(b'501 Unrecognized command.')
+        else:
+            # provide a compact list of recognized commands
+            def formatted_help():
+                cmds = []
+                keys = sorted([x for x in self.config.COMMANDS.keys()
+                               if not x.startswith('SITE ')])
+                while keys:
+                    elems = tuple((keys[0:8]))
+                    cmds.append(b' %-6a' * len(elems) % elems + b'\r\n')
+                    del keys[0:8]
+                return b''.join(cmds)
 
-    def ftp_REIN(self, arg):
-        pass
+            _buffer = b'214-The following commands are recognized:\r\n'
+            _buffer += formatted_help()
+            self.respond(_buffer + b'214 Help command successful.')
 
-    def ftp_MDTM(self):
-        pass
+    def do_NOOP(self, arg):
+        """Do nothing. No params required. No auth required and no permissions required."""
+        self.respond(b'200 I successfully done nothin\'.')
 
-    def ftp_STOU(self):
-        pass
+    def do_SYST(self, arg):
+        """Return system type (always returns UNIX type: L8)."""
+        # This command is used to find out the type of operating system
+        # at the server.  The reply shall have as its first word one of
+        # the system names listed in RFC-943.
+        # Since that we always return a "/bin/ls -lA"-like output on
+        # LIST we  prefer to respond as if we would on Unix in any case.
+        self.respond(b'215 UNIX Type: L8')
 
-    # -----------------------------------------------------------------
-    # Active and Passive Mode
-    # -----------------------------------------------------------------
+    def do_QUIT(self, arg):
+        self.respond(b'221 Bye.')
+        self.disconnect_client = True
 
-    def ftp_PASV(self):
+    def do_SITE_HELP(self, line):
+        """Return help text to the client for a given SITE command."""
+        if line:
+            line = line.upper()
+            if line in self.config.COMMANDS:
+                self.respond(b'214 %a' % self.config.COMMANDS[line]['help'])
+            else:
+                self.respond(b'501 Unrecognized SITE command.')
+        else:
+            _buffer = b'214-The following SITE commands are recognized:\r\n'
+            site_cmds = []
+            for cmd in sorted(self.config.COMMANDS.keys()):
+                if cmd.startswith('SITE '):
+                    site_cmds.append(b' %a\r\n' % cmd[5:])
+            _buffer_cmds = b''.join(site_cmds)
+            self.respond(_buffer + _buffer_cmds + b'214 Help SITE command successful.')
+
+    def do_PASV(self, arg):
         """
             Starts a Passive Data Channel using IPv4. We don't actually need to start the full duplex connection here.
             Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
-        if self._active_passive_mode is not None:
+        if self._data_channel:
             self.stop_data_channel()
-            self._active_passive_mode = 'PASV'
-        self._data_sock.bind((self.local_ip, 0))   # TODO: masqueraded ip? Check for passive ports. If specified.
-        self._data_sock.listen ()
-        ip, port = self._data_sock.getsockname()
-        self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')), port >> 8 & 0xFF, port & 0xFF))
-        self.cli_ip, self.cli_port = ip, port
+        self.active_passive_mode = 'PASV'
+        # We are in passive mode. Here we would create a simple socket listener.
+        self._data_listener_sock = gevent.socket.socket()
+        self._data_sock = gevent.socket.socket()
+        self._data_listener_sock.bind((self._local_ip, 0))
+        ip, port = self._data_listener_sock.getsockname()
+        self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')), port >> 8 & 0xFF,
+                                                                port & 0xFF))
+        try:
+            self._data_listener_sock.listen(1)
+            self._data_listener_sock.settimeout(5)  # Timeout for ftp client to send info
+            logger.info('Client {} entering FTP passive mode'.format(self.client_address))
+            self._data_sock, (self.cli_ip, self.cli_port) = self._data_listener_sock.accept()
+            logger.info('Client {} provided IP {} and Port {} for PASV connection.'.format(
+                self.client_address, self.cli_ip, self.cli_port)
+            )
+            logger.info('FTP: starting data channel for client {}'.format(self.client_address))
+            self._data_listener_sock.close()
+        except (socket.error, socket.timeout) as se:
+            logger.info('Can\'t switch to PASV mode.  Error occurred: {}'.format(str(se)))
+            if self._data_channel:
+                self.stop_data_channel()
 
-    def ftp_PORT(self, arg):
+    def do_PORT(self, arg):
         """
-            Starts an active data channel by using IPv4.
+            Starts an active data channel by using IPv4. We don't actually need to start the full duplex connection here.
+            Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
-        if self._active_passive_mode is not None:
+        if self._data_channel:
             self.stop_data_channel()
-            self._active_passive_mode = 'PORT'
+        self.active_passive_mode = 'PORT'
         try:
             addr = list(map(int, arg.split(',')))
             if len(addr) != 6:
@@ -140,33 +168,292 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond("501 Invalid PORT format.")
             return
         self.cli_ip, self.cli_port = ip, port
-        self.respond(b'200 PORT Command Successful.')
+        self._data_sock = gevent.socket.socket()
+        try:
+            self._data_sock.connect((self.cli_ip, self.cli_port))
+            logger.info('Client {} entered FTP active mode'.format(self.client_address))
+            logger.info('Client {} provided IP {} and Port for PORT connection.'.format(
+                self.client_address, self.cli_ip, self.cli_port)
+            )
+            self.respond(b'200 PORT Command Successful.')
+            logger.info('FTP: starting data channel for client {}'.format(self.client_address))
+        except socket.error:
+            logger.info('Can\'t switch to Active(PORT) mode. Error occurred: {}'.format(str(se)))
+            if self._data_channel:
+                self.stop_data_channel()
 
-        # make sure we are not hitting the max connections limit
-        # if not self.server._accept_new_cons():
-        #     msg = "425 Too many connections. Can't open data channel."
-        #     self.respond(msg)
+    def do_MODE(self, line):
+        """Set data transfer mode ("S" is the only one supported (noop))."""
+        mode = line.upper()
+        if mode == 'S':
+            self.respond(b'200 Transfer mode set to: S')
+        elif mode in ('B', 'C'):
+            self.respond(b'504 Unimplemented MODE type.')
+        else:
+            self.respond(b'501 Unrecognized MODE type.')
 
-    # -----------------------------------------------------------------
-    # Methods that do not require any kind of user authentication
-    # ------------------------------------------------------------------
+    def do_PWD(self, arg):
+        """Return the name of the current working directory to the client."""
+        pwd = self.config.vfs.norm_path(self.root + self.working_dir)
+        try:
+            assert isinstance(pwd, str), pwd
+            _pwd = '257 "{}" is the current directory.'.format(pwd)
+            self.respond(_pwd.encode())
+        except AssertionError:
+            logger.info('FTP CWD specified is not unicode. {}'.format(pwd))
+            self.respond(b'FTP CWD not unicode.')
 
-    # - more common commands
-    def ftp_ABOR(self, arg):
+    def do_TYPE(self, line):
+        """Set current type data type to binary/ascii"""
+        data_type = line.upper().replace(' ', '')
+        if data_type in ("A", "L7"):
+            self.respond(b'200 Type set to: ASCII.')
+            self._current_type = 'a'
+        elif data_type in ("I", "L8"):
+            self.respond(b'200 Type set to: Binary.')
+            self._current_type = 'i'
+        else:
+            self.respond(b'504 Unsupported type "%a".' % line)
+
+    def do_SITE_CHMOD(self, path, mode):
+        """Change file mode. On success return a (file_path, mode) tuple."""
+        try:
+            # Note: although most UNIX servers implement it, SITE CHMOD is not
+            # defined in any official RFC.
+            # TODO: check whether a user has permissions to do a chmod?!
+            assert len(mode) in (3, 4)
+            for x in mode:
+                assert 0 <= int(x) <= 7
+            mode = int(mode, 8)
+            # To do a chmod user needs to be the owner of the file.
+            self.config.vfs.chmod(path, mode)
+            self.respond(b'200 SITE CHMOD successful.')
+        except (AssertionError, ValueError):
+            self.respond(b"501 Invalid SITE CHMOD format.")
+        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 SITE CHMOD command failed.')
+
+    def do_MDTM(self, path):
+        """Return last modification time of file to the client as an ISO
+        3307 style timestamp (YYYYMMDDHHMMSS) as defined in RFC-3659.
+        On success return the file path, else None.
+        """
+        try:
+            # FIXME: check whether the current user has the permissions for MDTM
+            if not self.config.vfs.isfile(path):
+                _msg = '550 {} is not retrievable'.format(path)
+                self.respond(_msg.encode())
+                return
+            m_time = '213 {}'.format(self.config.vfs.getmtime(path).strftime("%Y%m%d%H%M%S"))
+            self.respond(m_time.encode())
+        except (ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            # It could happen if file's last modification time
+            # happens to be too old (prior to year 1900)
+            self.respond('550 Can\'t determine file\'s last modification time.')
+
+    def do_SIZE(self, path):
+        """Return size of file in a format suitable for using with RESTart as defined in RFC-3659."""
+        try:
+            # FIXME: check whether the current user has the permissions for SIZE
+            path = self.config.vfs.norm_path(path)
+            if self._current_type == 'a':
+                self.respond(b'550 SIZE not allowed in ASCII mode.')
+                return
+            # If the file is a sym-link i.e. not readable, send not retrievable
+            if not self.config.vfs.isfile(path):
+                self.respond(b'550 is not retrievable.')
+                return
+            else:
+                size = self.config.vfs.getsize(path)
+                self.respond(b'213 %a' % size)
+        except (OSError, fs.errors.FSError) as err:
+            self.respond(b'550 %a.' % self._log_err(err))
+
+    def do_MKD(self, path):
+        """
+        Create the specified directory. On success return the directory path, else None.
+        """
+        try:
+            # In order to create a directory the current user must have 'w' permissions for the parent directory
+            # of current path.
+            self.check_perms(perms='w', path=self.working_dir)
+            self.config.vfs.makedir(path)
+            _mkd = '257 "{}" directory created.'.format(self.root + path)
+            self.respond(_mkd)
+        except (FilesystemError, fs.errors.FSError, FTPPrivilegeException):
+            self.respond(b'550 Create directory operation failed.')
+
+    def do_RMD(self, path):
+        """Remove the specified directory. On success return the directory path, else None.
+        """
+        if path == self.working_dir or path == '/':
+            self.respond(b'550 Can\'t remove root directory.')
+            return
+        try:
+            _path = self.working_dir + path
+            # In order to create a directory the current user must have 'w' permissions for the current directory
+            self.check_perms(perms='w', path=_path)
+            self.config.vfs.removedir(_path)
+            self.respond(b'250 Directory removed.')
+        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 Remove directory operation failed.')
+
+    def do_CWD(self, path):
+        """Change the current working directory."""
+        # Temporarily join the specified directory to see if we have permissions to do so, then get back to original
+        # process's current working directory.
+        try:
+            init_cwd = self.working_dir
+            # make sure the current user has permissions to the new dir. To change the directory, user needs to have
+            # executable permissions for the directory
+            self.check_perms(perms='x', path=path)
+            self.working_dir = self.config.vfs.norm_path(path)
+            logger.info('Changing current directory {} to {}'.format(init_cwd, self.working_dir))
+            _cwd = '250 "{}" is the current directory.'.format(self.config.vfs.norm_path(self.root +
+                                                                                         self.working_dir))
+            self.respond(_cwd.encode())
+        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 Failed to change directory.')
+
+    def do_CDUP(self, arg):
+        """Change into the parent directory.
+        On success return the new directory, else None.
+        """
+        # Note: RFC-959 says that code 200 is required but it also says
+        # that CDUP uses the same codes as CWD.
+        return self.do_CWD(path='/'.join([self.config.vfs.norm_path(self.working_dir), '../']))
+
+    def do_DELE(self, path):
+        """Delete the specified file."""
+        try:
+            # FIXME: check whether the current user has the permissions for DELE
+            self.config.vfs.remove(path)
+            self.respond(b'250 File removed.')
+        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 Failed to delete file.')
+
+    def do_ALLO(self, arg):
+        """Allocate bytes for storage (noop)."""
+        # not necessary (always respond with 202)
+        self.respond(b'202 No storage allocation necessary.')
+
+    def do_RNFR(self, path):
+        """Rename the specified (only the source name is specified
+        here, see RNTO command)"""
+        try:
+            assert isinstance(path, str)
+            assert self.config.vfs.exists(path)
+            if self.config.vfs.norm_path(path) == '/':
+                self.respond(b"550 Can't rename home directory.")
+            else:
+                self._rnfr = path
+                self.respond(b"350 Ready for destination name.")
+        except (AssertionError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 No such file or directory.')
+
+    def do_RNTO(self, dst_path):
+        """Rename file (destination name only, source is specified with RNFR)."""
+        try:
+            # TODO: check for rename permissions
+            assert isinstance(dst_path, str)
+            if not self._rnfr:
+                self.respond(b"503 Bad sequence of commands: use RNFR first.")
+                return
+            src = self._rnfr
+            self._rnfr = None
+            # currently ony support rename of files - not folders.
+            if self.config.vfs.isdir(src):
+                raise FilesystemError
+            assert self.working_dir in src
+            assert self.working_dir in dst_path
+            # FIXME: use os.path.split : _basedir, _file = os.path.split()
+            _path, _file = self.working_dir, src.replace(self.working_dir, '/')
+            _dst_file = dst_path.replace(self.working_dir, '/')
+            if _file != _dst_file:
+                logger.info('Renaming file from {} to {}'.format(self.root + _path + _file,
+                                                                 self.root + _path + _dst_file))
+                self.config.vfs.rename_file(self.config.vfs.norm_path(_path), _file, _dst_file)
+            self.respond(b"250 Renaming ok.")
+        except (ValueError, AssertionError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+            self.respond(b'550 File rename operation failed.')
+
+    def do_STAT(self, path):
+        """If invoked without parameters, returns general status information about the FTP server process.
+        If a parameter is given, acts like the LIST command, except that data is sent over the command
+        channel (no PORT or PASV command is required).
+        """
+        # return STATus information about ftp data connection
+        if not path:
+            s = list()
+            s.append('Connected to: %s:%s' % self.request.getsockname()[:2])
+            if self.authenticated:
+                s.append('Logged in as: %s' % self.username)
+            else:
+                if not self.username:
+                    s.append("Waiting for username.")
+                else:
+                    s.append("Waiting for password.")
+            if self._current_type == 'a':
+                _type = 'ASCII'
+            else:
+                _type = 'Binary'
+            s.append("TYPE: %s; STRUcture: File; MODE: Stream" % _type)
+            # FIXME: add this when data channel is running.
+            # if self._data_sock is not None:
+            #     s.append('Passive data channel waiting for connection.')
+            # elif self._data_channel is not None:
+            #     bytes_sent = self.data_channel.tot_bytes_sent
+            #     bytes_recv = self.data_channel.tot_bytes_received
+            #     elapsed_time = self.data_channel.get_elapsed_time()
+            #     s.append('Data connection open:')
+            #     s.append('Total bytes sent: %s' % bytes_sent)
+            #     s.append('Total bytes received: %s' % bytes_recv)
+            #     s.append('Transfer elapsed time: %s secs' % elapsed_time)
+            # else:
+            #     s.append('Data connection closed.')
+
+            self.respond('211-FTP server status:\r\n')
+            self.respond(''.join([' %s\r\n' % item for item in s]))
+            self.respond('211 End of status.')
+        # return directory LISTing over the command channel
+        else:
+            line = self.config.vfs.norm_path(path)
+            try:
+                if self.config.vfs.isdir(path):
+                    listing = self.config.vfs.listdir(path)
+                    # RFC 959 recommends the listing to be sorted.
+                    listing.sort()
+                    iterator = self.config.vfs.format_list(path, listing)
+                else:
+                    basedir, filename = os.path.split(path)
+                    self.config.stat(path)
+                    iterator = self.config.vfs.format_list(basedir, [filename])
+                _status = '213-Status of "{}":\r\n'.format(line)
+                _status += get_data_from_iter(iterator)
+                _status += '213 End of status.'
+                self.respond(_status.encode())
+            except (OSError, FilesystemError, AssertionError, fs.errors.FSError, FTPPrivilegeException):
+                self.respond(b'550 STAT command failed.')
+
+    # -- Data Channel related commands --
+
+    def do_STRU(self, arg):
+        pass
+
+    def do_ABOR(self, arg):
         """
             Aborts a file transfer currently in progress.
         """
         # There are 3 cases here.
         # case 1: ABOR while no data channel is opened : return 225
-        if (self._active_passive_mode is None and
+        if (self.active_passive_mode is None and
                 self._data_sock is None):
             self.respond(b'225 No transfer to abort.')
-            return
         else:
             # a PASV or PORT was received but connection wasn't made yet
-            if self._active_passive_mode is not None or self._data_sock is not None:
-                    self.stop_data_channel()
-                    self.respond(b'225 ABOR command successful; data channel closed.')
+            if self.active_passive_mode is not None or self._data_sock is not None:
+                self.abort = True
+                self.respond(b'225 ABOR command successful; data channel closed.')
             # If a data transfer is in progress the server must first
             # close the data connection, returning a 426 reply to
             # indicate that the transfer terminated abnormally, then it
@@ -177,64 +464,77 @@ class FTPCommandChannel(FTPHandlerBase):
             if self._data_sock is not None:
                 if not self.abort:
                     self.abort = True
-                    self.stop_data_channel()
                     self.respond(b'426 Transfer aborted via ABOR.')
                     self.respond(b'226 ABOR command successful.')
                 else:
                     self.abort = True
-                    self.stop_data_channel()
                     self.respond(b'225 ABOR command successful; data channel closed.')
 
-    def ftp_LIST(self, path):
-        self.start_data_channel()
+    def do_LIST(self, path):
         try:
-            if self.config.ftp_fs.isfile(self.working_dir + path):
-                listing = self.config.ftp_fs.listdir(self.working_dir + path)
+            if self.config.vfs.isfile(self.working_dir + path):
+                listing = self.config.vfs.listdir(self.working_dir + path)
                 if isinstance(listing, list):
                     # RFC 959 recommends the listing to be sorted.
                     listing.sort()
-                    iterator = self.config.ftp_fs.format_list(path, listing)
-        except (OSError, fs.errors.FSError) as err:
-            self.respond(b'550 %a.' % self._log_err(err))
+                    iterator = self.config.vfs.format_list(path, listing)
+                    _list_data = get_data_from_iter(iterator)
+                    self.start_data_channel()
+                    self.push_data(_list_data)
+                    self.stop_data_channel()
+        except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
+            self._log_err(err)
+            self.respond(b'550 LIST command failed.')
 
-    def ftp_NLST(self, path):
+    def do_NLST(self, path):
         """Return a list of files in the specified directory in a compact form to the client."""
         try:
-            if self.config.ftp_fs.isdir(path):
-                listing = self.config.ftp_fs.listdir(self.working_dir + path)
+            if self.config.vfs.isdir(path):
+                listing = self.config.vfs.listdir(self.working_dir + path)
             else:
                 # if path is a file we just list its name
-                self.config.ftp_fs.lstat(path)  # raise exc in case of problems
+                self.config.vfs.stat(path)  # raise exc in case of problems
                 listing = [self.working_dir + path]
-        except (OSError, fs.errors.FSError) as err:
-            self.respond(b'550 %a.' % self._log_err(err))
-        else:
             data = ''
             if listing:
                 listing.sort()
                 data = '\r\n'.join(listing) + '\r\n'
-            data = data.encode('utf8')
-            self._data_channel_output_q.put({'type': 'raw_data', 'data': data})
+            self.push_data(data=data)
+        except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
+            self._log_err(err)
+            self.respond(b'550 NLST command failed.')
 
-    def ftp_RETR(self, arg):
+    def do_RETR(self, arg):
         """
         Fetch and send a file.
         :param arg: Filename that is to be retrieved
         """
         filename = self.working_dir + arg
-        if self.config.ftp_fs.isfile(filename):
+        if self.config.vfs.isfile(filename):
             self.start_data_channel()
-            self._data_channel_output_q.put({'type': 'file', 'file': filename})
+            self.send_file(file_name=filename)
         else:
             self.respond(b'550 The system cannot find the file specified.')
 
-    def ftp_SITE_CHMOD(self, arg):
+    def do_APPE(self, arg):
         pass
 
-    def ftp_APPE(self):
-        pass
+    def do_REIN(self, arg):
+        """Reinitialize user's current session."""
+        # From RFC-959:
+        # REIN command terminates a USER, flushing all I/O and account
+        # information, except to allow any transfer in progress to be
+        # completed.  All parameters are reset to the default settings
+        # and the control connection is left open.  This is identical
+        # to the state in which a user finds themselves immediately after
+        # the control connection is opened.
+        self.stop_data_channel()
+        self.username = ''
+        # Note: RFC-959 erroneously mention "220" as the correct response
+        # code to be given in this case, but this is wrong...
+        self.respond(b"230 Ready for new user.")
 
-    def ftp_STOR(self, file, mode='w'):
+    def do_STOR(self, file, mode='w'):
         """Store a file (transfer from the client to the server).
         On success return the file path, else None.
         """
@@ -252,7 +552,7 @@ class FTPCommandChannel(FTPHandlerBase):
         if rest_pos:
             mode = 'r+'
         try:
-            fd = self.config.ftp_fs.open(file, mode + 'b')
+            fd = self.config.vfs.open(file, mode + 'b')
         except fs.errors.FSError as err:
             self.respond(b'550 %a.' % self._log_err(err))
             return
@@ -266,7 +566,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 # specified in the REST.
                 ok = 0
                 try:
-                    if rest_pos > self.config.ftp_fs.getsize(file):
+                    if rest_pos > self.config.vfs.getsize(file):
                         raise ValueError
                     fd.seek(rest_pos)
                     ok = 1
@@ -282,398 +582,26 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(b'150 File status okay. About to open data connection.')
                 self._in_dtp_queue = (fd, cmd)
             return file
-        except Exception:
+        except fs.errors.FSError:
             fd.close()
             raise
 
-    def ftp_SIZE(self, path):
-        """Return size of file in a format suitable for using with RESTart as defined in RFC-3659."""
-        line = self.config.fs2ftp(path)
-        if self._current_type == 'a':
-            self.respond(b'550 SIZE not allowed in ASCII mode.')
-        # If the file is a sym-link i.e. not readable, send not retrievable
-        if not self.config.ftp_fs.isfile(self.config.ftp_fs.realpath(path)):
-            self.respond(b'550 is not retrievable.')
-        try:
-            assert isinstance(path, str)
-            size = self.config.ftp_fs.getsize(path)
-        except (OSError, fs.errors.FSError) as err:
-            self.respond(b'550 %a.' % self._log_err(err))
-        else:
-            self.respond(b'213 %a' % size)
-
-    def ftp_HELP(self, line):
-        """Return help text to the client."""
-        if line:
-            line = line.upper()
-            if line in self.commands:
-                self.respond(b'214 %a' % self.commands[line]['help'])
-            else:
-                self.respond(b'501 Unrecognized command.')
-        else:
-            # provide a compact list of recognized commands
-            def formatted_help():
-                cmds = []
-                keys = sorted([x for x in self.commands.keys()
-                               if not x.startswith('SITE ')])
-                while keys:
-                    elems = tuple((keys[0:8]))
-                    cmds.append(b' %-6a' * len(elems) % elems + b'\r\n')
-                    del keys[0:8]
-                return b''.join(cmds)
-
-            _buffer = b'214-The following commands are recognized:\r\n'
-            _buffer += formatted_help()
-            self.respond(_buffer + b'214 Help command successful.')
-
-    def ftp_SITE_HELP(self, line):
-        """Return help text to the client for a given SITE command."""
-        if line:
-            line = line.upper()
-            if line in self.commands:
-                self.respond(b'214 %a' % self.commands[line]['help'])
-            else:
-                self.respond(b'501 Unrecognized SITE command.')
-        else:
-            _buffer = b'214-The following SITE commands are recognized:\r\n'
-            site_cmds = []
-            for cmd in sorted(self.commands.keys()):
-                if cmd.startswith('SITE '):
-                    site_cmds.append(b' %a\r\n' % cmd[5:])
-            _buffer_cmds = b''.join(site_cmds)
-            self.respond(_buffer + _buffer_cmds)
-            self.respond(b'214 Help SITE command successful.')
-
-    def ftp_MKD(self, path):
-        """Create the specified directory. On success return the directory path, else None.
-        """
-        # line = self.config.fs2ftp(path)
-        try:
-            self.config.ftp_fs.mkdir(path)
-        except (OSError, fs.errors.FSError) as err:
-            self.respond(b'550 %a.' % self._log_err(err))
-        else:
-            # The 257 response is supposed to include the directory
-            # name and in case it contains embedded double-quotes
-            # they must be doubled (see RFC-959, chapter 7, appendix 2).
-            self.respond(b'257 "%a" directory created.' % path.replace('"', '""'))
-
-    def ftp_RMD(self, path):
-        """Remove the specified directory. On success return the directory path, else None.
-        """
-        if self.config.ftp_fs.realpath(path) == self.config.realpath(self.config.ftp_home):
-            self.respond(b'550 Can\'t remove root directory.')
-        try:
-            self.config.ftp_fs.rmdir(path)
-        except (OSError, fs.errors.FSError) as err:
-            self.respond(b'550 %a.' % self._log_err(err))
-        else:
-            self.respond(b'250 Directory removed.')
-
-    def ftp_CDUP(self, path):
-        """Change into the parent directory.
-        On success return the new directory, else None.
-        """
-        # Note: RFC-959 says that code 200 is required but it also says
-        # that CDUP uses the same codes as CWD.
-        return self.ftp_CWD(path)
-
-    def ftp_PWD(self, arg):
-        """Return the name of the current working directory to the client."""
-        cwd = self.config.ftp_fs.getcwd()
-        try:
-            assert isinstance(cwd, str), cwd
-        except AssertionError:
-            logger.info('FTP CWD not unicode.')
-        finally:
-            self.respond(b'257 "%a" is the current directory.' % cwd.replace('"', '""'))
-
-    def ftp_CWD(self, path):
-        """Change the current working directory."""
-        # Temporarily join the specified directory to see if we have permissions to do so, then get back to original
-        # process's current working directory.
-        init_cwd = self.config.ftp_fs.getcwd()
-        try:
-            assert path, isinstance(path, str)
-            self.config.ftp_fs.chdir(path)
-        except AssertionError as err:
-            logger.info('Client {} requested non-unicode path: {} for CWD'.format(self.client_address, path))
-            self.respond(b'550 %a.' % self._log_err(err))
-        except fs.errors.FSError as fs_err:
-            logger.info('Client {} requested path: {} does not exists'.format(self.client_address, path))
-            self.respond(b'550 %a.' % self._log_err(fs_err))
-        except (fs.errors.PermissionDenied, fs.errors.IllegalBackReference):
-            # TODO: log user as well.
-            logger.info('Client {} requested path: {} trying to access directory to which it has no access to.'.format(
-                self.client_address, path)
-            )
-            self.respond(b'500 Permission denied')
-        else:
-            logger.info('Changing current directory {} to {}'.format(init_cwd, init_cwd+path))
-            self.respond(b'250 "%s" is the current directory.' % path)
-
-    def ftp_DELE(self, path):
-        """Delete the specified file."""
-        try:
-            self.config.ftp_fs.remove(path)
-        except (OSError, fs.errors.FSError) as err:
-            why = self._log_err(err)
-            # FIXME: This could potentially tell the user that we are a honeypot.
-            self.respond(b'550 %a.' % why)
-        else:
-            self.respond(b'250 File removed.')
-
-    def ftp_ALLO(self, line):
-        """Allocate bytes for storage (noop)."""
-        # not necessary (always respond with 202)
-        self.respond(b'202 No storage allocation necessary.')
-
-    def ftp_NOOP(self, line):
-        """Do nothing."""
-        self.respond(b'200 I successfully done nothin\'.')
-
-    def ftp_MODE(self, line):
-        """Set data transfer mode ("S" is the only one supported (noop))."""
-        mode = line.upper()
-        if mode == 'S':
-            self.respond(b'200 Transfer mode set to: S')
-        elif mode in ('B', 'C'):
-            self.respond(b'504 Unimplemented MODE type.')
-        else:
-            self.respond(b'501 Unrecognized MODE type.')
-
-    def ftp_TYPE(self, line):
-        """Set current type data type to binary/ascii"""
-        data_type = line.upper().replace(' ', '')
-        if data_type in ("A", "L7"):
-            self.respond(b'200 Type set to: ASCII.')
-            self._current_type = 'a'
-        elif data_type in ("I", "L8"):
-            self.respond(b'200 Type set to: Binary.')
-            self._current_type = 'i'
-        else:
-            self.respond(b'504 Unsupported type "%a".' % line)
-
-    def ftp_QUIT(self, arg):
-        self.respond(b'221 Bye.')
-        self.disconnect_client = True
-
-    def ftp_SYST(self):
-        """Return system type (always returns UNIX type: L8)."""
-        # This command is used to find out the type of operating system
-        # at the server.  The reply shall have as its first word one of
-        # the system names listed in RFC-943.
-        # Since that we always return a "/bin/ls -lA"-like output on
-        # LIST we  prefer to respond as if we would on Unix in any case.
-        if not self.config.device_type:
-            self.respond(b'215 UNIX Type: L8')
-        else:
-            self.respond(b'215 %a ' % self.config.device_type)
-
-    def ftp_USER(self, arg):
-        """
-        USER FTP command. If the user is already logged in, return 530 else 331 for the PASS command
-        :param arg: username specified by the client/attacker
-        """
-        # first we need to check if the user is authenticated?
-        if self.authenticated:
-            self.respond(b'530 Cannot switch to another user.')
-        else:
-            self.username = arg
-            self.respond(b'331 Now specify the Password.')
-
-    def ftp_PASS(self, arg):
-        if self.authenticated:
-            self.respond(b"503 User already authenticated.")
-            return
-        if not self.username:
-            self.respond(b"503 Login with USER first.")
-            return
-        if self.authentication_ok(user_pass=arg):
-            self.respond(b'230 Log in Successful.')
-            return
-        else:
-            self.invalid_login_attempt += 1
-            self.respond(b'530 Authentication Failed.')
-            return
-
+    def do_STOU(self, arg):
+        pass
     # -----------------------------------------------------------------
     # Depreciated/alias commands
-    # -----------------------------------------------------------------
-
     # RFC-1123 requires that the server treat XCUP, XCWD, XMKD, XPWD and XRMD commands as synonyms for CDUP, CWD, MKD,
     # LIST and RMD. Such commands are obsoleted but some ftp clients (e.g. Windows ftp.exe) still use them.
 
-    def ftp_XCUP(self, arg):
-        """Change to the parent directory. Synonym for CDUP. Deprecated."""
-        return self.ftp_CDUP(arg)
-
-    def ftp_XCWD(self, arg):
-        """Change the current working directory. Synonym for CWD. Deprecated."""
-        return self.ftp_CWD(arg)
-
-    def ftp_XMKD(self, arg):
-        """Create the specified directory. Synonym for MKD. Deprecated."""
-        return self.ftp_MKD(arg)
-
-    def ftp_XPWD(self, arg):
-        """Return the current working directory. Synonym for PWD. Deprecated."""
-        return self.ftp_PWD(arg)
-
-    def ftp_XRMD(self, arg):
-        """Remove the specified directory. Synonym for RMD. Deprecated."""
-        return self.ftp_RMD(arg)
-
-    def ftp_BYE(self, arg):
-        """Quit and end the current ftp session. Synonym for QUIT"""
-        return self.ftp_QUIT(arg)
-
-    # -----------------------------------------------------------------
-    # Helper methods and Command Processors.
-    # -----------------------------------------------------------------
-
-    def _log_err(self, err):
-        """
-        Log errors and send an unexpected response standard message to the client.
-        :param err: Exception object
-        :return: 500 msg to be sent to the client.
-        """
-        logger.info('FTP error occrred. Client: {} error {}'.format(self.client_address, str(err)))
-        return '500 Unexpected error occurred.'
-
-    # clean things, sanity checks and more
-    def _pre_process_cmd(self, line, cmd, arg):
-        kwargs = {}
-        if cmd == "SITE" and arg:
-            cmd = "SITE %s" % arg.split(' ')[0].upper()
-            arg = line[len(cmd) + 1:]
-
-        logger.info('Received command {} : {} from FTP client {}: {}'.format(cmd, line, self.client_address,
-                                                                             self.session.id))
-
-        # Recognize those commands having a "special semantic". They
-        # should be sent by following the RFC-959 procedure of sending
-        # Telnet IP/Synch sequence (chr 242 and 255) as OOB data but
-        # since many ftp clients don't do it correctly we check the
-        # last 4 characters only.
-        if cmd not in self.commands:
-            if cmd[-4:] in ('ABOR', 'STAT', 'QUIT'):
-                cmd = cmd[-4:]
-            else:
-                self.respond(b'500 Command %a not understood' % cmd)
-                return
-
-        # - checking for valid arguments
-        if not arg and self.commands[cmd]['arg'] == True:  # NOQA
-            self.respond(b"501 Syntax error: command needs an argument")
-            return
-        if arg and self.commands[cmd]['arg'] == False:  # NOQA
-            self.respond(b'501 Syntax error: command does not accept arguments.')
-            return
-
-        if not self.authenticated:
-            if self.commands[cmd]['auth'] or (cmd == 'STAT' and arg):
-                self.respond(b'530 Log in with USER and PASS first.')
-                return
-            else:
-                # call the proper ftp_* method
-                self._process_command(cmd, arg)
-                return
-        else:
-            if (cmd == 'STAT') and not arg:
-                self.ftp_STAT()
-                return
-
-            # for file-system related commands check whether real path
-            # destination is valid
-            if self.commands[cmd]['perm'] and (cmd != 'STOU'):
-                if cmd in ('CWD', 'XCWD'):
-                    arg = self.config.ftp_fs.validatepath(arg or '/')
-                elif cmd in ('CDUP', 'XCUP'):
-                    try:
-                        arg = self.config.ftp_fs.validatepath('..')
-                    except fs.errors.IllegalBackReference:
-                        # Trying to access the directory which the current user has no access to
-                        # TODO: what to respond here? For now just terminate the session
-                        self.disconnect_client = True
-                        return
-                elif cmd == 'LIST':
-                    if arg.lower() in ('-a', '-l', '-al', '-la'):
-                        arg = self.config.ftp2fs(self.config.cwd)
-                    else:
-                        arg = self.config.ftp2fs(arg or self.config.cwd)
-                    return
-                elif cmd == 'STAT':
-                    if glob.has_magic(arg):
-                        self.respond(b'550 Globbing not supported.')
-                        return
-                    arg = self.config.ftp2fs(arg or self.config.cwd)
-                elif cmd == 'SITE CHMOD':
-                    if ' ' not in arg:
-                        self.respond(b'501 Syntax error: command needs two arguments.')
-                        return
-                    else:
-                        mode, arg = arg.split(' ', 1)
-                        arg = self.config.ftp2fs(arg)
-                        kwargs = dict(mode=mode)
-                else:
-                    arg = self.config.ftp2fs(arg or self.config.cwd)
-                    # FIXME: hack for MKD
-                    arg = line.split(' ', 1)[1] if arg is None else arg
-
-                if not self.config.ftp_fs.validatepath(arg):
-                    line = self.config.fs2ftp(arg)
-                    self.respond(b'550 %a points to a path which is outside the user\'s root directory.' % line)
-                    return
-
-            # check permission
-            perm = self.commands[cmd]['perm']
-            if perm is not None and cmd != 'STOU':
-                if not self.config.authorizer_has_perm(self.username, perm, arg):
-                    self.respond(b'550 Not enough privileges.')
-                    return
-
-            # call the proper ftp_* method
-            self._process_command(cmd, arg, **kwargs)
-
-    def _process_command(self, cmd, *args, **kwargs):
-        """Process command by calling the corresponding ftp_* class method (e.g. for received command "MKD pathname",
-        ftp_MKD() method is called with "pathname" as the argument).
-        """
-        if self.invalid_login_attempt > self.max_login_attempts:
-            self.respond(b'550 Permission denied. (Exceeded maximum permitted login attempts)')
-            self.disconnect_client = True
-        else:
-            method = getattr(self, 'ftp_' + cmd.replace(' ', '_'))
-            self._last_command = cmd
-            method(*args, **kwargs)
-            if self._last_response:
-                code = int(self._last_response[:3])
-                resp = self._last_response[4:]
-                logger.debug('Last response {}:{} Client {}:{}'.format(code, resp, self.client_address, self.session.id))
-
-    # - main command processor
-    def process_ftp_command(self):
-        """
-        Handle an incoming handle request - pick and item from the input_q, reads the contents of the message and
-        dispatch contents to the appropriate ftp_* method.
-        :param: (bytes) line - incoming request
-        :return: (bytes) response - reply in respect to the request
-        """
-        try:
-            # decoding should be done using utf-8
-            line = self._command_channel_input_q.get().decode()
-            # Remove any CR+LF if present
-            line = line[:-2] if line[-2:] == '\r\n' else line
-            if line:
-                cmd = line.split(' ')[0].upper()
-                arg = line[len(cmd) + 1:]
-                try:
-                    self._pre_process_cmd(line, cmd, arg)
-                except UnicodeEncodeError:
-                    # FIXME: "501 can't decode path (server filesystem encoding "is %s)" % sys.getfilesystemencoding()
-                    self.respond(b'501 can\'t decode path (server filesystem encoding _ ')
-
-        except UnicodeDecodeError:
-            # RFC-2640 doesn't mention what to do in this case. So we'll just return 501
-            self.respond(b"501 can't decode command.")
+    # Change to the parent directory. Synonym for CDUP. Deprecated.
+    do_XCUP = do_CDUP
+    # Change the current working directory. Synonym for CWD. Deprecated.
+    do_XCWD = do_CWD
+    # Create the specified directory. Synonym for MKD. Deprecated.
+    do_XMKD = do_MKD
+    # Return the current working directory. Synonym for PWD. Deprecated.
+    do_XPWD = do_PWD
+    # Remove the specified directory. Synonym for RMD. Deprecated.
+    do_XRMD = do_RMD
+    # Quit and end the current ftp session. Synonym for QUIT
+    do_BYE = do_QUIT
