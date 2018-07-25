@@ -1,0 +1,5 @@
+# This directory is where all testing related uploads would be store. We don't want to keep those.
+# Ignore everything in this directory
+*
+*/
+!.gitignore

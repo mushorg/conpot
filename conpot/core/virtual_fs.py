@@ -44,9 +44,9 @@ class VirtualFS(object):
                                  |-- http
                                  |-- snmp
                                  `-- ftp etc.
-    :param fs_path: Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the 
+    :param data_fs_path: Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the
     fs folders made by all the individual protocols.
-    :type fs_path: fs.open_fs
+    :type data_fs_path: fs.open_fs
     """
     def __init__(self, data_fs_path=None):
         self._conpot_vfs = dict()   # dictionary to keep all the protocol vfs instances, maintain easy access for

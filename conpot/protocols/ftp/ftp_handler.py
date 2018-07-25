@@ -489,7 +489,6 @@ class FTPCommandChannel(FTPHandlerBase):
             filename = self.config.vfs.norm_path(self.working_dir + arg)
             if self.config.vfs.isfile(filename):
                 self.send_file(file_name=filename)
-                self.start_data_channel()
             else:
                 raise FilesystemError('cmd: RETR. Path requested {} is not a file.')
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:

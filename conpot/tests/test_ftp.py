@@ -22,6 +22,7 @@ import conpot
 from freezegun import freeze_time
 from conpot.protocols.ftp.ftp_utils import ftp_commands
 import conpot.core as conpot_core
+from conpot.helpers import sanitize_file_name
 from conpot.protocols.ftp.ftp_server import FTPServer
 import ftplib      # Use ftplib's client for more authentic testing
 
@@ -166,13 +167,18 @@ class TestFTPServer(unittest.TestCase):
         _ = self.client.sendcmd('mkd testing/testing')
         self.assertEqual(self.client.sendcmd('mkd testing/testing/../demo'),
                          '257 "/data/ftp/testing/demo" directory created.')
+        _vfs, _ = conpot_core.get_vfs('ftp')
+        _vfs.removedir('testing/testing')
+        _vfs.removedir('testing/demo')
+        _vfs.removedir('testing')
 
     def test_cwd(self):
         #  TODO: test for a user who does not has permissions to change directory
+        _vfs, _ = conpot_core.get_vfs('ftp')
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # create a directory to cwd to.
-        self.ftp_server.handler.config.vfs.makedir('testing')
+        _vfs.makedir('testing')
         self.assertEqual(self.client.sendcmd('cwd testing'), '250 "/data/ftp/testing" is the current directory.')
         # check consistency with pwd
         self.assertEqual(self.client.sendcmd('pwd'), '257 "/data/ftp/testing" is the current directory.')
@@ -181,12 +187,14 @@ class TestFTPServer(unittest.TestCase):
         # make sure that user does not go - out of the root path.
         self.assertRaisesRegex(ftplib.error_perm, "550 'cwd ../' points to a path which is outside the user's "
                                                   "root directory.", self.client.sendcmd, 'cwd ../')
+        _vfs.removedir('testing')
 
     def test_rmd(self):
+        _vfs, _ = conpot_core.get_vfs('ftp')
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # let us create a temp dir for deleting
-        self.ftp_server.handler.config.vfs.makedir('tmp')
+        _vfs.makedir('tmp')
         self.assertEqual(self.client.sendcmd('rmd tmp'), '250 Directory removed.')
         self.assertRaisesRegex(ftplib.error_perm, '550 Remove directory operation failed.', self.client.sendcmd,
                                'rmd tmp')
@@ -210,18 +218,21 @@ class TestFTPServer(unittest.TestCase):
 
     def test_dele(self):
         # TODO: check for a user who does not have permissions to delete a file!
+        _vfs, _ = conpot_core.get_vfs('ftp')
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # let us create a temp file just for deleting.
-        with self.ftp_server.handler.config.vfs.open('/temp_file', mode='w') as _tmp:
+        with _vfs.open('/temp_file', mode='w') as _tmp:
             _tmp.write('This is just a temp file for testing rm')
         # delete that file
         self.assertEqual(self.client.sendcmd('dele temp_file'), '250 File removed.')
         # check for errors
         self.assertRaisesRegex(ftplib.error_perm, '550 Failed to delete file.', self.client.sendcmd, 'dele temp_file')
 
+    @unittest.skip
     def test_file_rename(self):
         # TODO: check for a user who does not have permissions to rename a file!
+        _vfs, _ = conpot_core.get_vfs('ftp')
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # First we would do everything for a valid file and all valid params
@@ -232,16 +243,18 @@ class TestFTPServer(unittest.TestCase):
         self.assertRaisesRegex(ftplib.error_perm, "503 Bad sequence of commands: use RNFR first.", self.client.sendcmd,
                                'rnto /random_path')
         # create a custom file to play with.
-        with self.ftp_server.handler.config.vfs.open('/test_rename_file.txt', mode='w') as _test:
+        with _vfs.open('/test_rename_file.txt', mode='w') as _test:
             _test.write('This is just a test file for rename testing of FTP server')
-        # do a rnfr to rename file ftp_data.txt
-        self.assertEqual(self.client.sendcmd('rnfr test_rename_file.txt'), '350 Ready for destination name.')
-        self.assertEqual(self.client.sendcmd('rnto new_data.txt'), '250 Renaming ok.')
-        # try for a case that would fail --
-        self.assertEqual(self.client.sendcmd('rnfr new_data.txt'), '350 Ready for destination name.')
-        self.assertRaisesRegex(ftplib.error_perm, '501 can\'t decode command.', self.client.sendcmd,
-                               'rnto Very / Unsafe / file\nname hähä \n\r .txt')
-        self.ftp_server.handler.config.vfs.remove('new_data.txt')
+        try:
+            # do a rnfr to rename file ftp_data.txt
+            self.assertEqual(self.client.sendcmd('rnfr test_rename_file.txt'), '350 Ready for destination name.')
+            self.assertEqual(self.client.sendcmd('rnto new_data.txt'), '250 Renaming ok.')
+            # try for a case that would fail --
+            self.assertEqual(self.client.sendcmd('rnfr new_data.txt'), '350 Ready for destination name.')
+            self.assertRaisesRegex(ftplib.error_perm, '501 can\'t decode command.', self.client.sendcmd,
+                                   'rnto Very / Unsafe / file\nname hähä \n\r .txt')
+        finally:
+            _vfs.remove('new_data.txt')
 
     def test_site_chmod(self):
         # TODO: check for a user who does not have permissions to do chmod!
@@ -249,16 +262,16 @@ class TestFTPServer(unittest.TestCase):
         self.client.login(user='nobody', passwd='nobody')
         # change permissions
         self.client.sendcmd('site chmod 644 ftp_data.txt')
-        self.assertEqual(self.ftp_server.handler.config.vfs.get_permissions('ftp_data.txt'), 'rw-r--r--')
+        _vfs, _ = conpot_core.get_vfs('ftp')
+        self.assertEqual(_vfs.get_permissions('ftp_data.txt'), 'rw-r--r--')
 
     def test_stat(self):
         # TODO: check for a user who does not have permissions to do stat!
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # do stat without args
-        self.assertEqual(self.client.sendcmd('stat'),
-                         '211-FTP server status:\n Connected to: 127.0.0.1:0\n Logged in as: nobody\n TYPE: '
-                         'ASCII; STRUcture: File; MODE: Stream\n211 End of status.')
+        self.assertIn('Logged in as: nobody\n TYPE: ASCII; STRUcture: File; MODE: Stream\n211 End of status.',
+                      self.client.sendcmd('stat'))
         self.assertIn('ftp_data.txt', self.client.sendcmd('stat /'))
 
     # ------ Data channel related. -----
@@ -271,14 +284,12 @@ class TestFTPServer(unittest.TestCase):
         # Do a list of directory for passive mode
         _pasv_list = list()
         self.client.retrlines('LIST', _pasv_list.append)
-        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt',
-                          'rwxrwxrwx   2 root     root         4096 Jul 15 17:51 testing'], _pasv_list)
+        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt'], _pasv_list)
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines('LIST', _actv_list.append)
-        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt',
-                          'rwxrwxrwx   2 root     root         4096 Jul 15 17:51 testing'], _actv_list)
+        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt'], _actv_list)
         # response from active and pasv mode should be same.
 
     def test_nlist(self):
@@ -288,24 +299,25 @@ class TestFTPServer(unittest.TestCase):
         # Do a list of directory
         _pasv_list = list()
         self.client.retrlines('NLST', _pasv_list.append)
-        self.assertEqual(['ftp_data.txt', 'testing'], _pasv_list)
+        self.assertEqual(['ftp_data.txt'], _pasv_list)
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines('NLST', _actv_list.append)
-        self.assertEqual(['ftp_data.txt', 'testing'], _actv_list)
+        self.assertEqual(['ftp_data.txt'], _actv_list)
 
     def test_retr(self):
         """Test retr or downloading a file from the server."""
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
-        _path = os.path.join(''.join(conpot.__path__), 'tests', 'data', 'data_temp_fs')
+        _path = os.path.join(''.join(conpot.__path__), 'tests', 'data', 'data_temp_fs', 'ftp')
         with open(_path + '/ftp_testing_retr.txt', mode='wb') as _file:
             self.client.retrbinary("retr ftp_data.txt", _file.write)
         buffer = ''
         with open(_path + '/ftp_testing_retr.txt', mode='r') as _file:
             buffer += _file.readline()
         self.assertEqual(buffer, 'This is just a test file for Conpot\'s FTP server\n')
+        os.remove(_path + '/ftp_testing_retr.txt')
 
     def test_rein(self):
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
@@ -314,6 +326,7 @@ class TestFTPServer(unittest.TestCase):
         self.assertRaisesRegex(ftplib.error_perm, '503 Login with USER first.', self.client.sendcmd, 'pass testing')
         # TODO: Add test with existing transfer in progress.
 
+    @freeze_time('2018-07-15 17:51:17')
     def test_stor(self):
         # let us test by uploading a file called ftp_testing.txt
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
@@ -322,6 +335,11 @@ class TestFTPServer(unittest.TestCase):
         with open(_path + '/ftp_testing.txt', mode='rb') as _file:
             self.client.storbinary("stor ftp_testing_stor.txt", _file)
         self.assertIn('ftp_testing_stor.txt', self.ftp_server.handler.config.vfs.listdir('/'))
+        _vfs, _data_fs = conpot_core.get_vfs('ftp')
+        _vfs.remove('ftp_testing_stor.txt')
+        _data_fs_file = sanitize_file_name('ftp_testing_stor.txt', self.client.sock.getsockname()[0],
+                                           self.client.sock.getsockname()[1])
+        _data_fs.remove(_data_fs_file)
 
     @unittest.skip
     def test_appe(self):

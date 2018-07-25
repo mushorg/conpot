@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 #     def __int__(self):
 #         self.start_time = datetime.now()
 #         self.end_time = None
+#         # basically we need a timeout time composite of timeout for
+#         # data_sock and client_sock. Let us say that timeout of 5 sec for data_sock
+#         # and
 #
 #     def get_command_channel_metrics(self):
 #         pass
@@ -193,6 +196,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     log_data['response'] = response
                     self.client_sock.send(response)
             if 'request' in log_data or 'response' in log_data:
+                # we can check timeout here.
                 logger.info('FTP traffic to {}: {} ({})'.format(self.client_address, log_data, self.session.id))
                 self.session.add_event(log_data)
         except socket.timeout:
@@ -277,7 +281,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         # Consumes data from the data channel output queue. Log it and sends it across to the client.
                         # If a file needs to be send, pass the file name directly as file parameter. sendfile is used
                         # in this case.
-                        data = self._data_channel_output_q.get(block=True)
+                        data = self._data_channel_output_q.get()
                         if data['type'] == 'raw_data':
                             logger.info('Send data {} at {}:{} for client : {}'.format(
                                 data['data'], self.cli_ip, self.cli_port, self.client_address)
@@ -296,6 +300,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
                             # no more data to send. Close the data channel
+                            self.respond(b'226 Transfer complete.')
                             self._data_channel_send.set()
                 elif not self._data_channel_recv.is_set():
                     # must be a receiving event. Get data from socket and add it to input_q
@@ -317,10 +322,11 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         # we have received all data. Time to finish this process.
                         # set the writing event to True - so that we can write this data to files.
                         self._data_channel_recv.set()
-                # assume that the read/write event has finished
-                # send a nice resp to the client saying everything has finished.
-                # set the self._data_channel(_recv/_send) markers.
-                self.stop_data_channel(reason='Transfer has completed!.')
+                else:
+                    # assume that the read/write event has finished
+                    # send a nice resp to the client saying everything has finished.
+                    # set the self._data_channel(_recv/_send) markers.
+                    self.stop_data_channel(reason='Transfer has completed!.')
             except (socket.error, socket.timeout) as se:
                 # TODO: send appropriate response
                 # Flush contents of the data channel
@@ -389,8 +395,6 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         """Handy utility to push some data using the data channel"""
         # ensure data is encoded in bytes
         data = data.encode('utf8') if not isinstance(data, bytes) else data
-        if self._data_channel:
-            self.respond("125 Data connection already open. Transfer starting.")
         self._data_channel_output_q.put({'type': 'raw_data', 'data': data})
 
     def send_file(self, file_name):
@@ -400,6 +404,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         else:
             self.respond("150 File status okay. About to open data connection.")
         self._data_channel_output_q.put({'type': 'file', 'file': file_name})
+        self.start_data_channel()
 
     # ----------------------- FTP Authentication and other unities --------------------
 
