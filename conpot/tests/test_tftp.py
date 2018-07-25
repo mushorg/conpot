@@ -47,7 +47,7 @@ class TestTFTPServer(unittest.TestCase):
         _data_fs.remove(_file)
 
     def test_tftp_download(self):
-        _dst_path = '/'.join(conpot.__path__ + ['tests/data/test_data_fs/test.txt'])
+        _dst_path = '/'.join(conpot.__path__ + ['tests/data/data_temp_fs/tftp/download_test.txt'])
         client = tftpy.TftpClient('127.0.0.1', self.tftp_server.server.server_port)
         client.download('tftp_data.txt', _dst_path)
         gevent.sleep(3)

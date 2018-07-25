@@ -24,11 +24,11 @@ from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
 
-# import logging
-# logger = logging.getLogger(__name__)
-import sys
-import logging as logger
-logger.basicConfig(stream=sys.stdout, level=logger.INFO)
+import logging
+logger = logging.getLogger(__name__)
+# import sys
+# import logging as logger
+# logger.basicConfig(stream=sys.stdout, level=logger.INFO)
 
 
 class FTPConfig(object):
@@ -38,9 +38,10 @@ class FTPConfig(object):
         self.banner = dom.xpath('//ftp/device_info/banner/text()')[0]
         self.max_login_attempts = int(dom.xpath('//ftp/device_info/max_login_attempts/text()')[0])
         self.anon_auth = bool(dom.xpath('//ftp/anon_login/text()')[0])
+        # Implementation Note: removing a command from here would make it unrecognizable in FTP server.
         self.enabled_commands = ['USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST', 'TYPE', 'PASV',
                                  'PORT', 'ALLO', 'MODE', 'SIZE', 'PWD', 'MKD', 'RMD', 'CWD', 'CDUP', 'MDTM', 'DELE',
-                                 'SITE CHMOD', 'RNFR', 'RNTO', 'STAT', 'LIST', 'NLST']
+                                 'SITE CHMOD', 'RNFR', 'RNTO', 'STAT', 'LIST', 'NLST', 'RETR', 'REIN', 'ABOR', 'STOR']
         # Restrict FTP to only enabled FTP commands
         self.COMMANDS = {i: ftp_commands[i] for i in self.enabled_commands}
         # VFS related.
@@ -127,6 +128,7 @@ class FTPConfig(object):
                                                           owner_uid=self.default_owner,
                                                           group_gid=self.default_group,
                                                           perms=self.default_perms)
+        # FIXME: Do chown/chmod here just to be sure.
         if self.add_src:
             logger.info('FTP Serving File System from {} at {} in vfs. FTP data_fs sub directory: {}'.format(
                 self.add_src, self.root_path, self.data_fs._sub_dir
@@ -161,7 +163,8 @@ class FTPServer(object):
         self.handler.config = FTPConfig(self.template)
 
     def start(self, host, port):
-        connection = (host, port)
+        self.handler.host, self.handler.port = host, port
+        connection = (self.handler.host, self.handler.port)
         self.server = StreamServer(connection, self.handler.stream_server_handle)
         logger.info('FTP server started on: {}'.format(connection))
         self.server.serve_forever()

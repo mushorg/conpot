@@ -13,7 +13,7 @@ class FTPPrivilegeException(FTPException):
 
 # all commands:
 ftp_commands = {
-   'ABOR': dict(auth=True, perm=None, args=False, help='Syntax: ABOR (abort transfer).'),
+   'ABOR': dict(auth=True, perm=None, arg=False, help='Syntax: ABOR (abort transfer).'),
    'ALLO': dict(perm=None, auth=True, arg=True, help='Syntax: ALLO <SP> bytes (noop; allocate storage).'),
    'CDUP': dict(perm='e', auth=True, arg=False, help='Syntax: CDUP (go to parent directory).'),
    'CWD': dict(perm='e', auth=True, arg=None, help='Syntax: CWD [<SP> dir-name] (change working directory).'),

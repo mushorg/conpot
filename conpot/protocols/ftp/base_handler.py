@@ -8,45 +8,36 @@ from conpot.core.file_io import FilesystemError
 import logging
 import errno
 import fs
-import glob
 from fs import errors
+from conpot.helpers import sanitize_file_name
 from gevent import event
-import sys
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
 from datetime import datetime
 from gevent import socket
 logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------
-# DTP channel that would have two queues for Input and Output. Separate producer and consumer.
+# Implementation Note: DTP channel that would have two queues for Input and Output. Separate producer and consumer.
 # There would be 3 threads (greenlets) in place. One for handling the command_channel, one for handling the input/
-# output of the data_channel and one that would copy uploads from from the data channel from the persistent file storage
-#  - The FTP commands are kept in a separate class so that when we migrate to async-io only contents of the base class
-# would require modifications. Commands class is independent of the **green drama**
-# -----------------------------------------------------------
-# Since FTP operations are usually I/O heavy, we would like to process the input from the client and the
-# output concurrently yet separately. For this would use 2 green threads that could:
-#   - read the socket, add any output to the _input_q
-#   - write the socket, if we have any processed command/data available in the _output_q.
-# Since we have 2 **dedicated full duplex channels** as per RFC-959 i.e. the command channel and the data channel,
-# we need 2 x 2 = 4 green threads.
+# output of the data_channel and one that would run the command processor.
+# Commands class is independent of the **green drama**
 # -----------------------------------------------------------
 
 
-class FTPMetrics(object):
-    """Simple class to track total bytes transferred, login attempts etc."""
-    def __int__(self):
-        self.start_time = datetime.now()
-        self.end_time = None
-
-    def get_command_channel_metrics(self):
-        pass
-
-    def get_data_channel_metrics(self):
-        pass
-
-    def get_elasped_time(self):
-        pass
+# class FTPMetrics(object):
+#     """Simple class to track total bytes transferred, login attempts etc."""
+#     def __int__(self):
+#         self.start_time = datetime.now()
+#         self.end_time = None
+#
+#     def get_command_channel_metrics(self):
+#         pass
+#
+#     def get_data_channel_metrics(self):
+#         pass
+#
+#     def get_elasped_time(self):
+#         pass
 
 
 # The requirements of the data_channel and the command_channel are as follows:
@@ -56,6 +47,7 @@ class FTPMetrics(object):
 class FTPHandlerBase(socketserver.BaseRequestHandler):
     """Base class for a full duplex connection"""
     config = None                # Config of FTP server. FTPConfig class instance.
+    host, port = None, None      # FTP Sever's host and port.
     _local_ip = '127.0.0.1'      # IP to bind the _data_listener_sock with.
     _ac_in_buffer_size = 4096    # incoming data buffer size (defaults 65536)
     _ac_out_buffer_size = 4096   # outgoing data buffer size (defaults 65536)
@@ -92,23 +84,24 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         # keep state of the last command/response
         self._last_command = None
         self._last_response = None
-        # stream, block or compressed
-        self._transfer_mode = 'stream'
+        # Note: From stream, block or compressed - only stream is supported.
+        self._transfer_mode = None   # For APPE and REST commands
+        self._restart_position = 0   # For APPE and REST commands
         # binary ('i') or ascii mode ('a')
         self._current_type = 'a'
         # buffer-size for FTP **commands**, send error if this is exceeded
         self.buffer_limit = 2048   # command channel would not accept more data than this for one command.
         self.active_passive_mode = None  # Flag to check the current mode. Would be set to 'PASV' or 'PORT'
 
-        self._data_channel = gevent.event.Event()  # check whether the data channel is running or not. This would trigger
+        self._data_channel = False  # check whether the data channel is running or not. This would trigger
         # the start and end of the data channel.
-        self.cli_ip, self.cli_port = None, None     # IP and port received from client for active/passive mode.
+        self._data_channel_send = gevent.event.Event()  # Event when we are trying to send a file.
+        self._data_channel_recv = gevent.event.Event()  # Event for receiving a file.
+        self.cli_ip, self.cli_port = None, None     # IP and port received from client in active/passive mode.
         self._data_sock = None
         self._data_listener_sock = None
         # socket for accepting cli_ip and cli_port in passive mode.
 
-        self.abort = False
-        self.transfer_complete = False
         self._rnfr = None  # For RNFR and RNTO
 
         # Input and output queues.
@@ -185,15 +178,10 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 # put the data in the _input_q for processing
                 if data and data != b'':
                     log_data['request'] = data
-                    logger.info('FTP traffic to {}: {} ({})'.format(self.client_address, log_data,
-                                                                    self.session.id))
-                    self.session.add_event(log_data)
                     if self._command_channel_input_q.qsize() > self.buffer_limit:
                         # Flush buffer if it gets too long (possible DOS condition). RFC-959 specifies that
                         # 500 response should be given in such cases.
-                        logger.info('FTP command input exceeded buffer from client {}'.format(
-                            self.client_address)
-                        )
+                        logger.info('FTP command input exceeded buffer from client {}'.format(self.client_address))
                         self.respond(b'500 Command too long.')
                     else:
                         self._command_channel_input_q.put(data)
@@ -201,14 +189,12 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             elif self.client_sock in socket_write and (not self._command_channel_output_q.empty()):
                 response = self._command_channel_output_q.get()
                 if response is not None:
-                    log_data = dict()
                     logger.debug('Sending packet {} to client {}'.format(self.client_address, response))
                     log_data['response'] = response
                     self.client_sock.send(response)
-                    logger.info('FTP traffic to {}: {} ({})'.format(self.client_address, log_data, self.session.id))
-                    self.session.add_event(log_data)
-            else:
-                gevent.sleep(0)
+            if 'request' in log_data or 'response' in log_data:
+                logger.info('FTP traffic to {}: {} ({})'.format(self.client_address, log_data, self.session.id))
+                self.session.add_event(log_data)
         except socket.timeout:
             logger.info('Socket timeout, remote: {}. ({})'.format(self.client_address, self.session.id))
             self.session.add_event({'type': 'CONNECTION_TIMEOUT'})
@@ -220,169 +206,45 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 logger.info('Socket error, remote: {}. ({}). Error {}'.format(self.client_address, self.session.id, se))
                 self.session.add_event({'type': 'CONNECTION_LOST'})
                 self.finish()
-    
+
     def respond(self, response):
         """Send processed command/data as reply to the client"""
         response = response.encode('utf-8') if not isinstance(response, bytes) else response
         response = response + self.terminator if response[-2:] != self.terminator else response
         self._command_channel_output_q.put(response)
 
-    # Helper methods and Command Processors.
-    def _log_err(self, err):
-        """
-        Log errors and send an unexpected response standard message to the client.
-        :param err: Exception object
-        :return: 500 msg to be sent to the client.
-        """
-        logger.info('FTP error occurred. Client: {} error {}'.format(self.client_address, str(err)))
-
-    # clean things, sanity checks and more
-    def _pre_process_cmd(self, line, cmd, arg):
-        kwargs = {}
-        if cmd == "SITE" and arg:
-            cmd = "SITE %s" % arg.split(' ')[0].upper()
-            arg = line[len(cmd) + 1:]
-
-        logger.info('Received command {} : {} from FTP client {}: {}'.format(cmd, line, self.client_address,
-                                                                             self.session.id))
-        if cmd not in self.config.COMMANDS:
-            if cmd[-4:] in ('ABOR', 'STAT', 'QUIT'):
-                cmd = cmd[-4:]
-            else:
-                self.respond(b'500 Command %a not understood' % cmd)
-                return
-
-        # - checking for valid arguments
-        if not arg and self.config.COMMANDS[cmd]['arg'] is True:
-            self.respond(b"501 Syntax error: command needs an argument")
-            return
-        if arg and self.config.COMMANDS[cmd]['arg'] is False:
-            self.respond(b'501 Syntax error: command does not accept arguments.')
-            return
-
-        if not self.authenticated:
-            if self.config.COMMANDS[cmd]['auth'] or (cmd == 'STAT' and arg):
-                self.respond(b'530 Log in with USER and PASS first.')
-                return
-            else:
-                # call the proper do_* method
-                self._process_command(cmd, arg)
-                return
-        else:
-            # if (cmd == 'STAT') and not arg:
-            #     self.do_STAT()
-            #     return
-
-            # for file-system related commands check whether real path
-            # destination is valid
-            if self.config.COMMANDS[cmd]['perm'] and (cmd != 'STOU'):
-                if cmd in ('CWD', 'XCWD'):
-                    if arg and self.working_dir != '/':
-                        arg = '/'.join([self.config.vfs.norm_path(self.working_dir), arg])
-                    else:
-                        arg = self.config.vfs.norm_path(arg or '/')
-                elif cmd in ('CDUP', 'XCUP'):
-                    arg = ''
-                elif cmd == 'LIST':
-                    if arg.lower() in ('-a', '-l', '-al', '-la'):
-                        arg = self.config.vfs.norm_path(self.working_dir)
-                    else:
-                        arg = self.config.vfs.norm_path(arg or self.working_dir)
-                    return
-                elif cmd == 'STAT':
-                    if glob.has_magic(arg):
-                        self.respond(b'550 Globbing not supported.')
-                        return
-                    arg = self.config.vfs.norm_path(arg or self.working_dir)
-                elif cmd == 'SITE CHMOD':
-                    if ' ' not in arg:
-                        self.respond(b'501 Syntax error: command needs two arguments.')
-                        return
-                    else:
-                        mode, arg = arg.split(' ', 1)
-                        arg = self.config.vfs.norm_path(arg)
-                        kwargs = dict(mode=mode)
-                else:
-                    if glob.has_magic(arg):
-                        self.respond(b'550 Globbing not supported.')
-                        return
-                    else:
-                        arg = glob.escape(arg)
-                        arg = self.config.vfs.norm_path(arg or self.working_dir)
-                        arg = line.split(' ', 1)[1] if arg is None else arg
-
-            # call the proper do_* method
-            self._process_command(cmd, arg, **kwargs)
-
-    def _process_command(self, cmd, *args, **kwargs):
-        """Process command by calling the corresponding do_* class method (e.g. for received command "MKD pathname",
-        do_MKD() method is called with "pathname" as the argument).
-        """
-        if self.invalid_login_attempt > self.max_login_attempts:
-            self.respond(b'550 Permission denied. (Exceeded maximum permitted login attempts)')
-            self.disconnect_client = True
-        else:
-            try:
-                method = getattr(self, 'do_' + cmd.replace(' ', '_'))
-                self._last_command = cmd
-                method(*args, **kwargs)
-                if self._last_response:
-                    code = int(self._last_response[:3])
-                    resp = self._last_response[4:]
-                    logger.debug('Last response {}:{} Client {}:{}'.format(code, resp, self.client_address,
-                                                                           self.session.id))
-            except (fs.errors.FSError, FilesystemError):
-                raise
-
-    # - main command processor
     def process_ftp_command(self):
-        """
-        Handle an incoming handle request - pick and item from the input_q, reads the contents of the message and
-        dispatch contents to the appropriate do_* method.
-        :param: (bytes) line - incoming request
-        :return: (bytes) response - reply in respect to the request
-        """
-        try:
-            if not self._command_channel_input_q.empty():
-                # decoding should be done using utf-8
-                line = self._command_channel_input_q.get().decode()
-                # Remove any CR+LF if present
-                line = line[:-2] if line[-2:] == '\r\n' else line
-                if line:
-                    cmd = line.split(' ')[0].upper()
-                    arg = line[len(cmd) + 1:]
-                    try:
-                        self._pre_process_cmd(line, cmd, arg)
-                    except UnicodeEncodeError:
-                        self.respond(b'501 can\'t decode path (server filesystem encoding is %a)' %
-                                     sys.getfilesystemencoding())
-                    except fs.errors.PermissionDenied:
-                        # TODO: log user as well.
-                        logger.info('Client {} requested path: {} trying to access directory to which it has '
-                                    'no access to.'.format(self.client_address, line))
-                        self.respond(b'500 Permission denied')
-                    except fs.errors.IllegalBackReference:
-                        # Trying to access the directory which the current user has no access to
-                        self.respond(b'550 %a points to a path which is outside the user\'s root directory.' %
-                                     line)
-                    except FTPPrivilegeException:
-                        self.respond(b'550 Not enough privileges.')
-                    except (fs.errors.FSError, FilesystemError) as fe:
-                        logger.info('FTP client {} Unexpected error occurred : {}'.format(self.client_address, fe))
-                        # TODO: what to respond here? For now just terminate the session
-                        self.disconnect_client = True
-            else:
-                gevent.sleep(0)
-
-        except UnicodeDecodeError:
-            # RFC-2640 doesn't mention what to do in this case. So we'll just return 501
-            self.respond(b"501 can't decode command.")
+        raise NotImplementedError
 
     # ----------------------- FTP Data Channel --------------------
 
-    def start_data_channel(self):
-        if not self._data_channel.ready():
-            self._data_channel.set()
+    def start_data_channel(self, send_recv='send'):
+        """
+        Starts the data channel. To be called from the command process greenlet. 
+        :param send_recv: Whether the event is a send event or recv event. When set to 'send' data channel's socket
+        writes data in the output queues else when set to 'read' data channel's socket reads data into the input queue.
+        :type send_recv: str
+        """
+        try:
+            assert self.cli_port and self.cli_port and self._data_sock
+            if self._data_channel is True:
+                logger.debug('Already sending some data that has to finish first.')
+                # waait till that process finishes.
+                self._data_channel_send.wait()
+                self._data_channel_recv.wait()
+            if send_recv is 'send':
+                # we just want to do send and not receive
+                self._data_channel_send.clear()
+                self._data_channel_recv.set()
+            else:
+                # we just want to do receive and not send
+                self._data_channel_recv.clear()
+                self._data_channel_send.set()
+            self._data_channel = True
+        except AssertionError:
+            self.respond(b'425 Use PORT or PASV first.')
+            logger.info('Can\'t initiate {} mode since either of IP or Port supplied by the '
+                        'client are None'.format(self.active_passive_mode))
 
     def stop_data_channel(self, abort=False, purge=False, reason=None):
         if reason:
@@ -390,9 +252,11 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         if (not self._data_channel_output_q.empty()) or (not self._command_channel_input_q.empty()):
             if not abort:
                 # Wait for all transfers to complete.
-                self._data_channel.wait()
-            else:
-                self._data_channel.clear()
+                self._data_channel_send.wait()
+                self._data_channel_recv.wait()
+        self._data_channel = False
+        if self._data_sock and self._data_sock.fileno() != -1:
+            self._data_sock.close()
         if purge:
             self.cli_ip = None
             self.cli_port = None
@@ -401,97 +265,140 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 _ = self._data_channel_input_q.get()
             while self._data_channel_output_q.qsize() != 0:
                 _ = self._data_channel_output_q.get()
-            if self._data_sock and self._data_sock.fileno() != -1:
-                self._data_sock.close()
 
     def handle_data_channel(self):
-        if self._data_channel.ready():
+        if self._data_channel:
             try:
-                assert self.cli_ip and self.cli_port
-                socket_read, socket_write, socket_err = gevent.select.select([self._data_sock], [self._data_sock],
-                                                                             [self._data_sock], 1)
-                if len(socket_err) > 0 or (self.transfer_complete or self.abort or self.disconnect_client):
-                    self.stop_data_channel(abort=True, purge=True, reason='Exception occurred.')
-                else:
-                    if self._data_sock in socket_read:
-                        self.data_channel_recv_data()
-                    elif self._data_sock in socket_write:
-                        self.data_channel_send_data()
-            except AssertionError:
-                self.respond(b'425 Use PORT or PASV first.')
-                self.stop_data_channel(reason='Can\'t initiate {} mode since either of IP or Port supplied by the '
-                                              'client are None'.format(self.active_passive_mode))
-            except socket.timeout:
+                # Need to know what kind of event are we expecting.
+                if not self._data_channel_send.is_set():
+                    # must be a sending event. Get from the output_q and write it to socket.
+                    # pick an item from the _data_channel_output_q and send it to the requisite socket
+                    if not self._data_channel_output_q.empty():
+                        # Consumes data from the data channel output queue. Log it and sends it across to the client.
+                        # If a file needs to be send, pass the file name directly as file parameter. sendfile is used
+                        # in this case.
+                        data = self._data_channel_output_q.get(block=True)
+                        if data['type'] == 'raw_data':
+                            logger.info('Send data {} at {}:{} for client : {}'.format(
+                                data['data'], self.cli_ip, self.cli_port, self.client_address)
+                            )
+                            self._data_sock.send(data=data['data'])
+                        elif data['type'] == 'file':
+                            file_name = data['file']
+                            if self.config.vfs.isfile(file_name):
+                                logger.info('Sending file {} to client {} at {}:{}'.format(
+                                    file_name, self.client_address, self.cli_ip, self.cli_port)
+                                )
+                                try:
+                                    with self.config.vfs.open(file_name, mode='rb') as file_:
+                                        self._data_sock.sendfile(file_, 0)
+                                except (fs.errors.FSError, FilesystemError):
+                                    raise
+                        if self._data_channel_output_q.qsize() == 0:
+                            # no more data to send. Close the data channel
+                            self._data_channel_send.set()
+                elif not self._data_channel_recv.is_set():
+                    # must be a receiving event. Get data from socket and add it to input_q
+                    # Receive data, log it and add it to the data channel input queue.
+                    self.respond(b'125 Transfer starting.')
+                    data = self._data_sock.recv(self._ac_in_buffer_size)
+                    if data and data != b'':
+                        # There is some data -- could be a file.
+                        logger.debug('Received {} from client {} on {}:{}'.format(
+                            data, self.client_address, self.cli_ip, self.cli_port)
+                        )
+                        self._data_channel_input_q.put(data)
+                        while data and data != b'':
+                            data = self._data_sock.recv(self._ac_in_buffer_size)
+                            logger.debug('Received {} from client {} on {}:{}'.format(
+                                data, self.client_address, self.cli_ip, self.cli_port)
+                            )
+                            self._data_channel_input_q.put(data)
+                        # we have received all data. Time to finish this process.
+                        # set the writing event to True - so that we can write this data to files.
+                        self._data_channel_recv.set()
+                # assume that the read/write event has finished
+                # send a nice resp to the client saying everything has finished.
+                # set the self._data_channel(_recv/_send) markers.
+                self.stop_data_channel(reason='Transfer has completed!.')
+            except (socket.error, socket.timeout) as se:
+                # TODO: send appropriate response
                 # Flush contents of the data channel
-                # TODO: send appropriate response
-                self.stop_data_channel(abort=True, purge=True,
-                                       reason='FTP data channel {} : connection timed out for '
-                                              '({}:{}).'.format(self.client_address, self.cli_ip, self.cli_port))
-            except socket.error:
-                # There was a socket error while data transfer. Request cli_ip and cli_port again. Also flush contents
-                # of the data channel
-                # TODO: send appropriate response
-                self.stop_data_channel(abort=True, purge=True,
-                                       reason='FTP data channel {} : socket error occurred for '
-                                              '({}:{}).'.format(self.client_address, self.cli_ip, self.cli_port))
+                reason = 'connection timed' if isinstance(se, socket.timeout) else 'socket error'
+                msg = 'Stopping FTP data channel {}:{}. Reason: {}'.format(self.cli_ip, self.cli_port, reason)
+                self.stop_data_channel(abort=True, purge=True, reason=msg)
             except (fs.errors.FSError, FilesystemError, FTPPrivilegeException, FilesystemError) as fe:
+                self.respond(b'550 Transfer failed.')
                 self.stop_data_channel(abort=True, reason='VFS related exception occurred: {}'.format(str(fe)))
-        else:
-            gevent.sleep(0)
 
-    def data_channel_send_data(self):
+    def recv_file(self, _file, _file_pos=0, cmd='STOR'):
         """
-        Consumes data from the data channel output queue. Logs it and sends it across to the client.
-        If a file needs to be send, pass the file name directly as file parameter.
+        Receive a file - to be used with STOR, REST and APPE. A copy would be made on the _data_fs.
+        :param _file: File Name to the file that would be written to fs.
+        :param _file_pos: Seek file to position before receiving.
+        :param cmd: Command used for receiving file.
         """
-        # pick an item from the _data_channel_output_q and send it to the requisite socket
-        if not self._data_channel_output_q.empty():
-            data = self._data_channel_output_q.get(block=self._ac_out_buffer_size)
-            if isinstance(data, dict):
-                if data['type'] == 'raw_data':
-                    logger.info('Send data {} at {}:{} for client : {}'.format(data['data'], self.cli_ip,
-                                                                               self.cli_port,
-                                                                               self.client_address))
-                    self._data_sock.send(data=data['data'])
-                elif data['type'] == 'file':
-                    file_name = data['file']
-                    if self.config.vfs.isfile(file_name):
-                        logger.info('Sending file {} to client {} at {}:{}'.format(file_name,
-                                                                                   self.client_address,
-                                                                                   self.cli_ip,
-                                                                                   self.cli_port))
-                        self.respond(b'150 Initiating transfer.')
-                        file_ = self.config.vfs.open(file_name, mode='r')
-                        self._data_sock.sendfile(file=file_.fileno())
-                        file_.close()
-                        self.respond(b'226 Transfer complete.')
-                else:
-                    logger.info('Can\'t send. Unknown Type {} from data {}'.format(data['type'], data))
+        # FIXME: acquire lock to files - both data_fs and vfs.
+        self.start_data_channel(send_recv='recv')
+        logger.info('Receiving data from {}:{}'.format(self.cli_ip, self.cli_port))
+        _data_fs_file = sanitize_file_name(_file, self.client_address[0], str(self.client_address[1]))
+        _data_fs_d = None
+        _file_d = None
+        # wait till all transfer has finished.
+        self._data_channel_recv.wait()
+        try:
+            # we are blocking on queue for 10 seconds to wait for incoming data.
+            # If there is no data in the queue. We assume that transfer has been completed.
+            _data = self._data_channel_input_q.get()
+            _data_fs_d = self.config.data_fs.open(path=_data_fs_file, mode='wb')
+            if _file_pos == 0 and cmd == 'STOR':
+                # overwrite file or create a new one.
+                # we don't need to seek at all. Normal write process by STOR
+                _file_d = self.config.vfs.open(path=_file, mode='wb')
             else:
-                logger.debug('Invalid Type received: {}'.format(data))
-        else:
-            logger.debug('No data to write. Transfer Complete! Closing data channel.')
-            self._data_channel.clear()
-
-    def data_channel_recv_data(self):
-        """Receives data, logs it and add it to the data channel input queue."""
-        data = self._data_sock.recv(self._ac_in_buffer_size)
-        logger.debug('Received {} from client {} on {}:{}'.format(data, self.client_address, self.cli_ip,
-                                                                  self.cli_port))
-        self._data_channel_input_q.put(data)
+                assert _file_pos != 0
+                # must seek file. This is done in append or rest(resume transfer) command.
+                # in that case, we should create a duplicate copy of this file till that seek position.
+                with self.config.vfs.open(path=_file, mode='rb') as _file_d:
+                    _data_fs_d.write(_file_d.read(_file_pos))
+                # finally we should let the file to be written as requested.
+                if cmd == 'APPE':
+                    _file_d = self.config.vfs.open(path=_file, mode='ab')
+                else:
+                    # cmd is REST
+                    _file_d = self.config.vfs.open(path=_file, mode='rb+')
+                    _file_d.seek(_file_pos)
+            _file_d.write(_data)
+            _data_fs_d.write(_data)
+            while not self._data_channel_input_q.empty():
+                _data = self._data_channel_input_q.get()
+                _file_d.write(_data)
+                _data_fs_d.write(_data)
+            self.respond(b'226 Transfer complete.')
+            logger.info('Files {} and {} written successfully to disk'.format(_file, _data_fs_file))
+        except (AssertionError, IOError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as fe:
+                self.stop_data_channel(abort=True, reason=str(fe))
+                self.respond('554 {} command failed.'.format(cmd))
+        finally:
+            if _file_d and _file_d.fileno() != -1:
+                _file_d.close()
+            if _data_fs_d and _data_fs_d.fileno() != -1:
+                _data_fs_d.close()
 
     def push_data(self, data):
         """Handy utility to push some data using the data channel"""
         # ensure data is encoded in bytes
         data = data.encode('utf8') if not isinstance(data, bytes) else data
-        if self._data_channel.is_set():
+        if self._data_channel:
             self.respond("125 Data connection already open. Transfer starting.")
-            self._data_channel_output_q.put({'type': 'raw_data', 'data': data})
-        else:
-            self.respond("150 File status okay. About to open data connection.")
+        self._data_channel_output_q.put({'type': 'raw_data', 'data': data})
 
     def send_file(self, file_name):
         """Handy utility to send a file using the data channel"""
+        if self._data_channel:
+            self.respond("125 Data connection already open. Transfer starting.")
+        else:
+            self.respond("150 File status okay. About to open data connection.")
         self._data_channel_output_q.put({'type': 'file', 'file': file_name})
 
     # ----------------------- FTP Authentication and other unities --------------------

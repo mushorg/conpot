@@ -6,6 +6,8 @@ from conpot.protocols.ftp.base_handler import FTPHandlerBase
 import logging
 import fs
 import os
+import glob
+import sys
 import gevent
 from gevent import socket
 from fs import errors
@@ -121,11 +123,10 @@ class FTPCommandChannel(FTPHandlerBase):
             Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
         if self._data_channel:
-            self.stop_data_channel()
+            self.stop_data_channel(purge=True, reason='Switching from PASV mode.')
         self.active_passive_mode = 'PASV'
         # We are in passive mode. Here we would create a simple socket listener.
         self._data_listener_sock = gevent.socket.socket()
-        self._data_sock = gevent.socket.socket()
         self._data_listener_sock.bind((self._local_ip, 0))
         ip, port = self._data_listener_sock.getsockname()
         self.respond('227 Entering Passive Mode (%s,%u,%u).' % (','.join(ip.split('.')), port >> 8 & 0xFF,
@@ -135,15 +136,14 @@ class FTPCommandChannel(FTPHandlerBase):
             self._data_listener_sock.settimeout(5)  # Timeout for ftp client to send info
             logger.info('Client {} entering FTP passive mode'.format(self.client_address))
             self._data_sock, (self.cli_ip, self.cli_port) = self._data_listener_sock.accept()
-            logger.info('Client {} provided IP {} and Port {} for PASV connection.'.format(
+            logger.info('Client {} provided ({}:{}) for PASV connection.'.format(
                 self.client_address, self.cli_ip, self.cli_port)
             )
             logger.info('FTP: starting data channel for client {}'.format(self.client_address))
             self._data_listener_sock.close()
         except (socket.error, socket.timeout) as se:
             logger.info('Can\'t switch to PASV mode.  Error occurred: {}'.format(str(se)))
-            if self._data_channel:
-                self.stop_data_channel()
+            self.respond(b'550 PASV command failed.')
 
     def do_PORT(self, arg):
         """
@@ -151,7 +151,7 @@ class FTPCommandChannel(FTPHandlerBase):
             Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
         if self._data_channel:
-            self.stop_data_channel()
+            self.stop_data_channel(purge=True, reason='Switching from PORT mode.')
         self.active_passive_mode = 'PORT'
         try:
             addr = list(map(int, arg.split(',')))
@@ -164,23 +164,20 @@ class FTPCommandChannel(FTPHandlerBase):
             port = (addr[4] * 256) + addr[5]
             if not 0 <= port <= 65535:
                 raise ValueError
-        except (ValueError, OverflowError):
-            self.respond("501 Invalid PORT format.")
-            return
-        self.cli_ip, self.cli_port = ip, port
-        self._data_sock = gevent.socket.socket()
-        try:
+            self.cli_ip, self.cli_port = ip, port
+            self._data_sock = gevent.socket.socket()
             self._data_sock.connect((self.cli_ip, self.cli_port))
             logger.info('Client {} entered FTP active mode'.format(self.client_address))
-            logger.info('Client {} provided IP {} and Port for PORT connection.'.format(
-                self.client_address, self.cli_ip, self.cli_port)
+            logger.info(
+                'Client {} provided {}:{} for PORT connection.'.format(self.client_address, self.cli_ip, self.cli_port)
             )
-            self.respond(b'200 PORT Command Successful.')
-            logger.info('FTP: starting data channel for client {}'.format(self.client_address))
-        except socket.error:
-            logger.info('Can\'t switch to Active(PORT) mode. Error occurred: {}'.format(str(se)))
-            if self._data_channel:
-                self.stop_data_channel()
+            self.respond(b'200 PORT Command Successful. Consider using PASV.')
+            logger.info('FTP: configured data channel for client {}'.format(self.client_address))
+        except (ValueError, OverflowError):
+            self.respond("501 Invalid PORT format.")
+        except socket.error as se:
+            if self._data_channel.is_set():
+                self.stop_data_channel(reason='Can\'t switch to Active(PORT) mode. Error occurred: {}'.format(str(se)))
 
     def do_MODE(self, line):
         """Set data transfer mode ("S" is the only one supported (noop))."""
@@ -385,9 +382,9 @@ class FTPCommandChannel(FTPHandlerBase):
         # return STATus information about ftp data connection
         if not path:
             s = list()
-            s.append('Connected to: %s:%s' % self.request.getsockname()[:2])
+            s.append('Connected to: {}:{}'.format(self.host, self.port))
             if self.authenticated:
-                s.append('Logged in as: %s' % self.username)
+                s.append('Logged in as: {}'.format(self.username))
             else:
                 if not self.username:
                     s.append("Waiting for username.")
@@ -397,7 +394,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 _type = 'ASCII'
             else:
                 _type = 'Binary'
-            s.append("TYPE: %s; STRUcture: File; MODE: Stream" % _type)
+            s.append("TYPE: {}; STRUcture: File; MODE: Stream".format(_type))
             # FIXME: add this when data channel is running.
             # if self._data_sock is not None:
             #     s.append('Passive data channel waiting for connection.')
@@ -413,7 +410,7 @@ class FTPCommandChannel(FTPHandlerBase):
             #     s.append('Data connection closed.')
 
             self.respond('211-FTP server status:\r\n')
-            self.respond(''.join([' %s\r\n' % item for item in s]))
+            self.respond(''.join([' {}\r\n'.format(item) for item in s]))
             self.respond('211 End of status.')
         # return directory LISTing over the command channel
         else:
@@ -435,53 +432,32 @@ class FTPCommandChannel(FTPHandlerBase):
             except (OSError, FilesystemError, AssertionError, fs.errors.FSError, FTPPrivilegeException):
                 self.respond(b'550 STAT command failed.')
 
-    # -- Data Channel related commands --
-
-    def do_STRU(self, arg):
-        pass
-
-    def do_ABOR(self, arg):
-        """
-            Aborts a file transfer currently in progress.
-        """
-        # There are 3 cases here.
-        # case 1: ABOR while no data channel is opened : return 225
-        if (self.active_passive_mode is None and
-                self._data_sock is None):
-            self.respond(b'225 No transfer to abort.')
+    def do_STRU(self, line):
+        """Set file structure ("F" is the only one supported (noop))."""
+        stru = line.upper()
+        if stru == 'F':
+            self.respond(b'200 File transfer structure set to: F.')
+        elif stru in ('P', 'R'):
+            self.respond(b'504 Unimplemented STRU type.')
         else:
-            # a PASV or PORT was received but connection wasn't made yet
-            if self.active_passive_mode is not None or self._data_sock is not None:
-                self.abort = True
-                self.respond(b'225 ABOR command successful; data channel closed.')
-            # If a data transfer is in progress the server must first
-            # close the data connection, returning a 426 reply to
-            # indicate that the transfer terminated abnormally, then it
-            # must send a 226 reply, indicating that the abort command
-            # was successfully processed.
-            # If no data has been transmitted we just respond with 225
-            # indicating that no transfer was in progress.
-            if self._data_sock is not None:
-                if not self.abort:
-                    self.abort = True
-                    self.respond(b'426 Transfer aborted via ABOR.')
-                    self.respond(b'226 ABOR command successful.')
-                else:
-                    self.abort = True
-                    self.respond(b'225 ABOR command successful; data channel closed.')
+            self.respond(b'501 Unrecognized STRU type.')
+
+    # -- Data Channel related commands --
 
     def do_LIST(self, path):
         try:
-            if self.config.vfs.isfile(self.working_dir + path):
-                listing = self.config.vfs.listdir(self.working_dir + path)
-                if isinstance(listing, list):
-                    # RFC 959 recommends the listing to be sorted.
-                    listing.sort()
-                    iterator = self.config.vfs.format_list(path, listing)
-                    _list_data = get_data_from_iter(iterator)
-                    self.start_data_channel()
-                    self.push_data(_list_data)
-                    self.stop_data_channel()
+            listing = self.config.vfs.listdir(self.working_dir + path)
+            if isinstance(listing, list):
+                # RFC 959 recommends the listing to be sorted.
+                listing.sort()
+                iterator = self.config.vfs.format_list(path, listing)
+                self.respond('150 Here comes the directory listing.')
+                _list_data = get_data_from_iter(iterator)
+                # Push data to the data channel
+                self.push_data(_list_data.encode())
+                # start the command channel
+                self.start_data_channel()
+                self.respond('226 Directory send OK.')
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 LIST command failed.')
@@ -489,17 +465,17 @@ class FTPCommandChannel(FTPHandlerBase):
     def do_NLST(self, path):
         """Return a list of files in the specified directory in a compact form to the client."""
         try:
-            if self.config.vfs.isdir(path):
-                listing = self.config.vfs.listdir(self.working_dir + path)
-            else:
-                # if path is a file we just list its name
-                self.config.vfs.stat(path)  # raise exc in case of problems
-                listing = [self.working_dir + path]
+            listing = self.config.vfs.listdir(self.working_dir + path)
             data = ''
             if listing:
                 listing.sort()
                 data = '\r\n'.join(listing) + '\r\n'
+            self.respond('150 Here comes the directory listing.')
+            # Push data to the data channel
             self.push_data(data=data)
+            # start the command channel
+            self.start_data_channel()
+            self.respond('226 Directory send OK.')
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 NLST command failed.')
@@ -509,85 +485,90 @@ class FTPCommandChannel(FTPHandlerBase):
         Fetch and send a file.
         :param arg: Filename that is to be retrieved
         """
-        filename = self.working_dir + arg
-        if self.config.vfs.isfile(filename):
-            self.start_data_channel()
-            self.send_file(file_name=filename)
-        else:
+        try:
+            filename = self.config.vfs.norm_path(self.working_dir + arg)
+            if self.config.vfs.isfile(filename):
+                self.send_file(file_name=filename)
+                self.start_data_channel()
+            else:
+                raise FilesystemError('cmd: RETR. Path requested {} is not a file.')
+        except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
+            self._log_err(err)
             self.respond(b'550 The system cannot find the file specified.')
-
-    def do_APPE(self, arg):
-        pass
 
     def do_REIN(self, arg):
         """Reinitialize user's current session."""
-        # From RFC-959:
-        # REIN command terminates a USER, flushing all I/O and account
-        # information, except to allow any transfer in progress to be
-        # completed.  All parameters are reset to the default settings
-        # and the control connection is left open.  This is identical
-        # to the state in which a user finds themselves immediately after
-        # the control connection is opened.
         self.stop_data_channel()
-        self.username = ''
-        # Note: RFC-959 erroneously mention "220" as the correct response
-        # code to be given in this case, but this is wrong...
+        self.username = None
+        self.authenticated = False
         self.respond(b"230 Ready for new user.")
 
+    def do_ABOR(self, arg):
+        """Aborts a file transfer currently in progress."""
+        if self.active_passive_mode is None:
+            self.respond(b'225 No transfer to abort.')
+        else:
+            # a PASV or PORT was received but connection wasn't made yet
+            if not self._data_channel.is_set():
+                self.stop_data_channel(abort=True, purge=True, reason='ABOR called.')
+                self.respond(b'225 ABOR command successful; data channel closed.')
+            else:
+                self.stop_data_channel(abort=True, purge=True, reason='ABOR called.')
+                self.respond(b'426 Transfer aborted via ABOR.')
+                self.respond(b'226 ABOR command successful.')
+
     def do_STOR(self, file, mode='w'):
-        """Store a file (transfer from the client to the server).
-        On success return the file path, else None.
-        """
+        """Store a file (transfer from the client to the server)."""
         # A resume could occur in case of APPE or REST commands.
         # In that case we have to open file object in different ways:
         # STOR: mode = 'w'
         # APPE: mode = 'a'
         # REST: mode = 'r+' (to permit seeking on file object)
-        if 'a' in self._transfer_mode:
+        if 'a' in mode:
             cmd = 'APPE'
         else:
             cmd = 'STOR'
-        rest_pos = self._restart_position
-        self._restart_position = 0
-        if rest_pos:
-            mode = 'r+'
         try:
-            fd = self.config.vfs.open(file, mode + 'b')
-        except fs.errors.FSError as err:
-            self.respond(b'550 %a.' % self._log_err(err))
+            rest_pos = self._restart_position
+            self._restart_position = 0
+            if rest_pos:
+                if rest_pos > self.config.vfs.getsize(file):
+                    raise ValueError('Can\'t seek file more than its size.')
+                # rest_pos != 0 and not None. Must be REST cmd
+                cmd = 'REST'
+            else:
+                rest_pos = 0
+            self.recv_file(file, rest_pos, cmd=cmd)
+        except ValueError as err:
+            self._log_err(err)
+            self.respond(b'550 STOR command failed. Can\'t seek file more than its size.')
             return
 
+    def do_REST(self, line):
+        """Restart a file transfer from a previous mark."""
+        if self._current_type == 'a':
+            self.respond('501 Resuming transfers not allowed in ASCII mode.')
+            return
         try:
-            if rest_pos:
-                # Make sure that the requested offset is valid (within the
-                # size of the file being resumed).
-                # According to RFC-1123 a 554 reply may result in case
-                # that the existing file cannot be repositioned as
-                # specified in the REST.
-                ok = 0
-                try:
-                    if rest_pos > self.config.vfs.getsize(file):
-                        raise ValueError
-                    fd.seek(rest_pos)
-                    ok = 1
-                except fs.errors.FSError as err:
-                    if not ok:
-                        fd.close()
-                        self.respond(b'554 %a' % self._log_err(err))
-                        return
-
-            if self._data_sock is not None:
-                self.respond(b'125 Data connection already open. Transfer starting.')
+            marker = int(line)
+            if marker < 0:
+                raise ValueError
             else:
-                self.respond(b'150 File status okay. About to open data connection.')
-                self._in_dtp_queue = (fd, cmd)
-            return file
-        except fs.errors.FSError:
-            fd.close()
-            raise
+                self.respond("350 Restarting at position {}.".format(marker))
+                self._restart_position = marker
+        except (ValueError, OverflowError):
+            self.respond("501 Invalid parameter.")
 
-    def do_STOU(self, arg):
-        pass
+    def do_APPE(self, file):
+        """Append data to an existing file on the server.
+        On success return the file path, else None.
+        """
+        # watch for APPE preceded by REST, which makes no sense.
+        if self._restart_position:
+            self.respond("450 Can't APPE while REST request is pending.")
+        else:
+            return self.do_STOR(file, mode='a')
+
     # -----------------------------------------------------------------
     # Depreciated/alias commands
     # RFC-1123 requires that the server treat XCUP, XCWD, XMKD, XPWD and XRMD commands as synonyms for CDUP, CWD, MKD,
@@ -605,3 +586,154 @@ class FTPCommandChannel(FTPHandlerBase):
     do_XRMD = do_RMD
     # Quit and end the current ftp session. Synonym for QUIT
     do_BYE = do_QUIT
+
+    # -----------------------------------------------------------------
+    # Helper methods and Command Processors.
+    def _log_err(self, err):
+        """
+        Log errors and send an unexpected response standard message to the client.
+        :param err: Exception object
+        :return: 500 msg to be sent to the client.
+        """
+        logger.info('FTP error occurred. Client: {} error {}'.format(self.client_address, str(err)))
+
+    # clean things, sanity checks and more
+    def _pre_process_cmd(self, line, cmd, arg):
+        kwargs = {}
+        if cmd == "SITE" and arg:
+            cmd = "SITE %s" % arg.split(' ')[0].upper()
+            arg = line[len(cmd) + 1:]
+
+        logger.info('Received command {} : {} from FTP client {}: {}'.format(cmd, line, self.client_address,
+                                                                             self.session.id))
+        if cmd not in self.config.COMMANDS:
+            if cmd[-4:] in ('ABOR', 'STAT', 'QUIT'):
+                cmd = cmd[-4:]
+            else:
+                self.respond(b'500 Command %a not understood' % cmd)
+                return
+
+        # - checking for valid arguments
+        if not arg and self.config.COMMANDS[cmd]['arg'] is True:
+            self.respond(b"501 Syntax error: command needs an argument")
+            return
+        if arg and self.config.COMMANDS[cmd]['arg'] is False:
+            self.respond(b'501 Syntax error: command does not accept arguments.')
+            return
+
+        if not self.authenticated:
+            if self.config.COMMANDS[cmd]['auth'] or (cmd == 'STAT' and arg):
+                self.respond(b'530 Log in with USER and PASS first.')
+                return
+            else:
+                # call the proper do_* method
+                self._process_command(cmd, arg)
+                return
+        else:
+            if (cmd == 'STAT') and not arg:
+                self.do_STAT(path=None)
+                return
+
+            # for file-system related commands check whether real path
+            # destination is valid
+            if self.config.COMMANDS[cmd]['perm'] and (cmd != 'STOU'):
+                if cmd in ('CWD', 'XCWD'):
+                    if arg and self.working_dir != '/':
+                        arg = '/'.join([self.config.vfs.norm_path(self.working_dir), arg])
+                    else:
+                        arg = self.config.vfs.norm_path(arg or '/')
+                elif cmd in ('CDUP', 'XCUP'):
+                    arg = ''
+                elif cmd == 'STAT':
+                    if glob.has_magic(arg):
+                        self.respond(b'550 Globbing not supported.')
+                        return
+                    arg = self.config.vfs.norm_path(arg or self.working_dir)
+                elif cmd == 'SITE CHMOD':
+                    if ' ' not in arg:
+                        self.respond(b'501 Syntax error: command needs two arguments.')
+                        return
+                    else:
+                        mode, arg = arg.split(' ', 1)
+                        arg = self.config.vfs.norm_path(arg)
+                        kwargs = dict(mode=mode)
+                else:
+                    if cmd == 'LIST':
+                        if arg.lower() in ('-a', '-l', '-al', '-la'):
+                            arg = self.config.vfs.norm_path(self.working_dir)
+                        else:
+                            arg = self.config.vfs.norm_path(arg or self.working_dir)
+                    if glob.has_magic(arg):
+                        self.respond(b'550 Globbing not supported.')
+                        return
+                    else:
+                        arg = glob.escape(arg)
+                        arg = self.config.vfs.norm_path(arg or self.working_dir)
+                        arg = line.split(' ', 1)[1] if arg is None else arg
+
+            # call the proper do_* method
+            self._process_command(cmd, arg, **kwargs)
+
+    def _process_command(self, cmd, *args, **kwargs):
+        """Process command by calling the corresponding do_* class method (e.g. for received command "MKD pathname",
+        do_MKD() method is called with "pathname" as the argument).
+        """
+        if self.invalid_login_attempt > self.max_login_attempts:
+            self.respond(b'550 Permission denied. (Exceeded maximum permitted login attempts)')
+            self.disconnect_client = True
+        else:
+            try:
+                method = getattr(self, 'do_' + cmd.replace(' ', '_'))
+                self._last_command = cmd
+                method(*args, **kwargs)
+                if self._last_response:
+                    code = int(self._last_response[:3])
+                    resp = self._last_response[4:]
+                    logger.debug('Last response {}:{} Client {}:{}'.format(code, resp, self.client_address,
+                                                                           self.session.id))
+            except (fs.errors.FSError, FilesystemError):
+                raise
+
+    # - main command processor
+    def process_ftp_command(self):
+        """
+        Handle an incoming handle request - pick and item from the input_q, reads the contents of the message and
+        dispatch contents to the appropriate do_* method.
+        :param: (bytes) line - incoming request
+        :return: (bytes) response - reply in respect to the request
+        """
+        try:
+            if not self._command_channel_input_q.empty():
+                # decoding should be done using utf-8
+                line = self._command_channel_input_q.get().decode()
+                # Remove any CR+LF if present
+                line = line[:-2] if line[-2:] == '\r\n' else line
+                if line:
+                    cmd = line.split(' ')[0].upper()
+                    arg = line[len(cmd) + 1:]
+                    try:
+                        self._pre_process_cmd(line, cmd, arg)
+                    except UnicodeEncodeError:
+                        self.respond(b'501 can\'t decode path (server filesystem encoding is %a)' %
+                                     sys.getfilesystemencoding())
+                    except fs.errors.PermissionDenied:
+                        # TODO: log user as well.
+                        logger.info('Client {} requested path: {} trying to access directory to which it has '
+                                    'no access to.'.format(self.client_address, line))
+                        self.respond(b'500 Permission denied')
+                    except fs.errors.IllegalBackReference:
+                        # Trying to access the directory which the current user has no access to
+                        self.respond(b'550 %a points to a path which is outside the user\'s root directory.' %
+                                     line)
+                    except FTPPrivilegeException:
+                        self.respond(b'550 Not enough privileges.')
+                    except (fs.errors.FSError, FilesystemError) as fe:
+                        logger.info('FTP client {} Unexpected error occurred : {}'.format(self.client_address, fe))
+                        # TODO: what to respond here? For now just terminate the session
+                        self.disconnect_client = True
+            else:
+                gevent.sleep(0)
+
+        except UnicodeDecodeError:
+            # RFC-2640 doesn't mention what to do in this case. So we'll just return 501
+            self.respond(b"501 can't decode command.")

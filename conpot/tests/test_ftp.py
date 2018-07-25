@@ -1,3 +1,19 @@
+# Copyright (C) 2018  Abhinav Saxena <xandfury@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import gevent
 from gevent import monkey; gevent.monkey.patch_all()
 import unittest
@@ -14,8 +30,9 @@ class TestFTPServer(unittest.TestCase):
 
     """
         All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
-        response. The following commands would be tested for appropriate response:
-        'USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST'
+        response. Testing is done by sending/receiving files in data channel related commands.
+        Implementation Note: There are no explicit tests for active/passive mode. These are covered in list and nlst
+        tests
     """
 
     def setUp(self):
@@ -239,44 +256,81 @@ class TestFTPServer(unittest.TestCase):
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # do stat without args
-        self.assertIn('ftp_data.txt', self.client.sendcmd('stat'))
+        self.assertEqual(self.client.sendcmd('stat'),
+                         '211-FTP server status:\n Connected to: 127.0.0.1:0\n Logged in as: nobody\n TYPE: '
+                         'ASCII; STRUcture: File; MODE: Stream\n211 End of status.')
+        self.assertIn('ftp_data.txt', self.client.sendcmd('stat /'))
 
     # ------ Data channel related. -----
 
-    @unittest.skip
-    def test_abor(self):
-        pass
-
+    @freeze_time('2018-07-15 17:51:17')
     def test_list(self):
-        # TODO: check for a user who does not have permissions to do stat!
+        # TODO: check for a user who does not have permissions to do list!
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        # Do a list of directory for passive mode
+        _pasv_list = list()
+        self.client.retrlines('LIST', _pasv_list.append)
+        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt',
+                          'rwxrwxrwx   2 root     root         4096 Jul 15 17:51 testing'], _pasv_list)
+        # check list for active mode
+        _actv_list = list()
+        self.client.set_pasv(False)
+        self.client.retrlines('LIST', _actv_list.append)
+        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt',
+                          'rwxrwxrwx   2 root     root         4096 Jul 15 17:51 testing'], _actv_list)
+        # response from active and pasv mode should be same.
+
+    def test_nlist(self):
+        # TODO: check for a user who does not have permissions to do nlst!
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # Do a list of directory
-        self.assertIn('ftp_data.txt', self.client.sendcmd('list'))
+        _pasv_list = list()
+        self.client.retrlines('NLST', _pasv_list.append)
+        self.assertEqual(['ftp_data.txt', 'testing'], _pasv_list)
+        # check list for active mode
+        _actv_list = list()
+        self.client.set_pasv(False)
+        self.client.retrlines('NLST', _actv_list.append)
+        self.assertEqual(['ftp_data.txt', 'testing'], _actv_list)
 
-    @unittest.skip
-    def test_nlist(self):
-        pass
+    def test_retr(self):
+        """Test retr or downloading a file from the server."""
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        _path = os.path.join(''.join(conpot.__path__), 'tests', 'data', 'data_temp_fs')
+        with open(_path + '/ftp_testing_retr.txt', mode='wb') as _file:
+            self.client.retrbinary("retr ftp_data.txt", _file.write)
+        buffer = ''
+        with open(_path + '/ftp_testing_retr.txt', mode='r') as _file:
+            buffer += _file.readline()
+        self.assertEqual(buffer, 'This is just a test file for Conpot\'s FTP server\n')
 
-    @unittest.skip
-    def test_stou(self):
-        pass
+    def test_rein(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('rein'), '230 Ready for new user.')
+        self.assertRaisesRegex(ftplib.error_perm, '503 Login with USER first.', self.client.sendcmd, 'pass testing')
+        # TODO: Add test with existing transfer in progress.
+
+    def test_stor(self):
+        # let us test by uploading a file called ftp_testing.txt
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        _path = os.path.join(''.join(conpot.__path__), 'tests', 'data', 'test_data_fs', 'ftp')
+        with open(_path + '/ftp_testing.txt', mode='rb') as _file:
+            self.client.storbinary("stor ftp_testing_stor.txt", _file)
+        self.assertIn('ftp_testing_stor.txt', self.ftp_server.handler.config.vfs.listdir('/'))
 
     @unittest.skip
     def test_appe(self):
         pass
 
-    @unittest.skip
-    def test_retr(self):
-        pass
-
-    @unittest.skip
-    def test_stor(self):
-        pass
-
-    @unittest.skip
-    def test_rein(self):
-        pass
+    def test_abor(self):
+        self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
+        self.client.login(user='nobody', passwd='nobody')
+        self.assertEqual(self.client.sendcmd('abor'), '225 No transfer to abort.')
 
 
 if __name__ == '__main__':

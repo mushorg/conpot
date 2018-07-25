@@ -121,30 +121,6 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         with unwrap_errors(path):
             return _fs.rename_file(_path, name, new_name)
 
-    def open(self,
-             path,                      # type: Text
-             mode='r',                  # type: Text
-             buffering=-1,              # type: int
-             encoding=None,             # type: Optional[Text]
-             newline='',                # type: Text
-             line_buffering=False,      # type: bool
-             **options                  # type: Any
-             ):
-        _fs, _path = self.delegate_path(path)
-        try:
-            with unwrap_errors(path):
-                return _fs.open(path=_path, mode=mode, buffering=buffering, encoding=encoding,
-                                newline=newline, line_buffering=line_buffering, **options)
-        except (FilesystemError, fs.errors.FSError):
-            raise
-        finally:
-            if (not any(sys.exc_info())) and ('w' in mode or 'a' in mode):
-                self._cache.update({path: self.getinfo(path, get_actual=True,
-                                                       namespaces=['basic', 'access', 'details', 'stat'])})
-                self.chown(path, self.default_uid, self.default_gid)
-                self.chmod(path, self.default_perms)
-                logger.debug('Updating modified/access time')
-
     def __getattr__(self, item):
         if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
                                                       'norm_path'}:

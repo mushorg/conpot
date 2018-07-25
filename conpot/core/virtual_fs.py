@@ -48,20 +48,20 @@ class VirtualFS(object):
     fs folders made by all the individual protocols.
     :type fs_path: fs.open_fs
     """
-    def __init__(self, fs_path=None):
+    def __init__(self, data_fs_path=None):
         self._conpot_vfs = dict()   # dictionary to keep all the protocol vfs instances, maintain easy access for
         # individual mounted protocols with paths
-        if fs_path is None:
+        if data_fs_path is None:
             try:
                 self.data_fs = open_fs(os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'tests', 'data',
-                                                    'test_data_fs'))
+                                                    'data_temp_fs'))
             except fs.errors.FSError:
                 logger.exception('Unable to create persistent storage for Conpot. Exiting')
                 sys.exit(3)
         else:
             try:
-                assert fs_path, isinstance(fs_path, str)
-                self.data_fs = open_fs(fs_path)  # Specify the place where you would place the uploads
+                assert data_fs_path and isinstance(data_fs_path, str)
+                self.data_fs = open_fs(data_fs_path)  # Specify the place where you would place the uploads
             except AssertionError:
                 logger.exception('Incorrect FS url specified. Please check documentation for more details.')
                 sys.exit(3)
@@ -73,7 +73,7 @@ class VirtualFS(object):
     def initialize_vfs(self, fs_path=None, data_fs_path=None):
         if data_fs_path is not None:
             logger.info('Opening path {} for persistent storage of files.'.format(data_fs_path))
-            self.__init__(fs_path=data_fs_path)
+            self.__init__(data_fs_path=data_fs_path)
         if fs_path is None:
             fs_path = 'tar://' + os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'data.tar')
         self.protocol_fs = AbstractFS(src_path=fs_path)
