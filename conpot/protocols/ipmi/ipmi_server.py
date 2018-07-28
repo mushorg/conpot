@@ -17,54 +17,47 @@
 
 from gevent import socket
 from gevent.server import DatagramServer
-from conpot.core.protocol_wrapper import conpot_protocol
 import struct
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
 import uuid
 import hmac
 import hashlib
+import os
+from conpot.helpers import chr_py3
 import collections
 from lxml import etree
 from conpot.protocols.ipmi.fakebmc import FakeBmc
 from conpot.protocols.ipmi.fakesession import FakeSession
-import codecs
+import sys
 import conpot.core as conpot_core
-import logging
-from conpot.helpers import chr_py3
-logger = logging.getLogger(__name__)
-# import logging as logger
-# import sys
-# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+# import logging
+# logger = logging.getLogger(__name__)
+import logging as logger
+logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
-def decode_byte_string(pkt):
-    return [hex(ord(i.to_bytes(1, byteorder='big'))) for i in list(codecs.decode(pkt, 'unicode_escape').encode('latin-1'))]
-
-
-@conpot_protocol
 class IpmiServer(object):
 
     def __init__(self, template, template_directory, args):
         dom = etree.parse(template)
         databus = conpot_core.get_databus()
         self.device_name = databus.get_value(dom.xpath('//ipmi/device_info/device_name/text()')[0])
-        self.sessions = dict()
-        self.sock = None
-        self.host = None
         self.port = None
+        self.sessions = dict()
+
         self.uuid = uuid.uuid4()
         self.kg = None
-        self.server = None  # Initialize later
+        self.sock = None
         self.authdata = collections.OrderedDict()
-        self.session = None
         lanchannel = 1
         authtype = 0b10000000
         authstatus = 0b00000100
         chancap = 0b00000010
         oemdata = (0, 0, 0, 0)
-        self.session = None
         self.authcap = struct.pack('BBBBBBBBB', 0, lanchannel, authtype, authstatus, chancap, *oemdata)
+        self.server = None
+        self.session = None
         self.bmc = self._configure_users(dom)
         logger.info('Conpot IPMI initialized using %s template', template)
 
@@ -72,37 +65,38 @@ class IpmiServer(object):
         # XML parsing
         authdata_name = dom.xpath('//ipmi/user_list/user/user_name/text()')
         authdata_passwd = dom.xpath('//ipmi/user_list/user/password/text()')
-        self.authdata = collections.OrderedDict(list(zip(authdata_name, authdata_passwd)))
+        self.authdata = collections.OrderedDict(zip(authdata_name, authdata_passwd))
+
         authdata_priv = dom.xpath('//ipmi/user_list/user/privilege/text()')
-        if False in [0 < int(k) <= 4 for k in authdata_priv]:
+        if False in map(lambda k: 0 < int(k) <= 4, authdata_priv):
             raise ValueError("Privilege level must be between 1 and 4")
         authdata_priv = [int(k) for k in authdata_priv]
-        self.privdata = collections.OrderedDict(list(zip(authdata_name, authdata_priv)))
+        self.privdata = collections.OrderedDict(zip(authdata_name, authdata_priv))
+
         activeusers = dom.xpath('//ipmi/user_list/user/active/text()')
         self.activeusers = [1 if x == 'true' else 0 for x in activeusers]
+
         fixedusers = dom.xpath('//ipmi/user_list/user/fixed/text()')
         self.fixedusers = [1 if x == 'true' else 0 for x in fixedusers]
-        self.channelaccessdata = collections.OrderedDict(list(zip(authdata_name, activeusers)))
+
+        self.channelaccessdata = collections.OrderedDict(zip(authdata_name, activeusers))
 
         return FakeBmc(self.authdata, self.port)
 
     def _checksum(self, *data):
         csum = sum(data)
-        csum ^= chr_py3(0xff)
-        csum += chr_py3(1)
-        csum &= chr_py3(0xff)
+        csum ^= 0xff
+        csum += 1
+        csum &= 0xff
         return csum
 
-    def handle(self, pkt, address):
-        # make sure data is in the correct format
-        data = decode_byte_string(pkt)
+    def handle(self, data, address):
         # make sure self.session exists
-        if not address[0] in list(self.sessions.keys()) or not hasattr(self, 'session'):
+        if not address[0] in self.sessions.keys() or not hasattr(self, 'session'):
             # new session for new source
             logger.info('New IPMI traffic from %s', address)
             self.session = FakeSession(address[0], "", "", address[1])
             self.session.server = self
-
             self.uuid = uuid.uuid4()
             self.kg = None
 
@@ -121,45 +115,47 @@ class IpmiServer(object):
         if len(data) < 22:
             self.close_server_session()
             return
-        if not (data[0] == chr_py3(0x06) and
-                data[2] == chr_py3(0xff) and
-                data[3] == chr_py3(0x07)):
+        if not (chr_py3(data[0]) == b'\x06' and data[2:4] == b'\xff\x07'):
             # check rmcp version, sequencenumber and class;
             self.close_server_session()
             return
-        if data[4] == chr_py3(0x06):
+        if chr_py3(data[4]) == b'\x06':
             # ipmi v2
             session.ipmiversion = 2.0
             session.authtype = 6
-            payload_type = data[5]
-            if payload_type not in (chr_py3(0x00), chr_py3(0x10)):
+            payload_type = chr_py3(data[5])
+            if payload_type not in (b'\x00', b'\x10'):
                 self.close_server_session()
                 return
-            if payload_type == chr_py3(0x10):
+            if payload_type == b'\x10':
                 # new session to handle conversation
                 serversession.ServerSession(self.authdata, self.kg, session.sockaddr,
                                             self.sock, data[16:], self.uuid, bmc=self)
+                serversession.ServerSession.logged = logger
                 return
-            data = data[13:]
-        myaddr, netfnlun = struct.unpack('2B', data[14:16])
-        netfn = (netfnlun & 0b11111100) >> 2
-        mylun = netfnlun & 0b11
-        if netfn == 6:
-            # application request
-            if data[19] == '\x38':
-                # cmd = get channel auth capabilities
-                verchannel, level = struct.unpack('2B', data[20:22])
-                version = verchannel & 0b10000000
-                if version != 0b10000000:
-                    self.close_server_session()
-                    return
-                channel = verchannel & 0b1111
-                if channel != 0xe:
-                    self.close_server_session()
-                    return
-                (clientaddr, clientlun) = struct.unpack('BB', data[17:19])
-                level &= 0b1111
-                self.send_auth_cap(myaddr, mylun, clientaddr, clientlun, session.sockaddr)
+            # data = data[13:]
+        if len(data[14:16]) < 2:
+            self.close_server_session()
+        else:
+            myaddr, netfnlun = struct.unpack('2B', data[14:16])
+            netfn = (netfnlun & 0b11111100) >> 2
+            mylun = netfnlun & 0b11
+            if netfn == 6:
+                # application request
+                if chr_py3(data[19]) == b'\x38':
+                    # cmd = get channel auth capabilities
+                    verchannel, level = struct.unpack('2B', data[20:22])
+                    version = verchannel & 0b10000000
+                    if version != 0b10000000:
+                        self.close_server_session()
+                        return
+                    channel = verchannel & 0b1111
+                    if channel != 0xe:
+                        self.close_server_session()
+                        return
+                    (clientaddr, clientlun) = struct.unpack('BB', data[17:19])
+                    level &= 0b1111
+                    self.send_auth_cap(myaddr, mylun, clientaddr, clientlun, session.sockaddr)
 
     def send_auth_cap(self, myaddr, mylun, clientaddr, clientlun, sockaddr):
         header = b'\x06\x00\xff\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10'
@@ -169,7 +165,7 @@ class IpmiServer(object):
         header += struct.pack('BBBBBB', *(headerdata + (headersum, myaddr, mylun, 0x38)))
         header += self.authcap
         bodydata = struct.unpack('B' * len(header[17:]), header[17:])
-        header += chr(self._checksum(*bodydata))
+        header += chr_py3(self._checksum(*bodydata))
         self.session.stage += 1
         logger.info('Connection established with %s', sockaddr)
         self.session.send_data(header, sockaddr)
@@ -180,10 +176,8 @@ class IpmiServer(object):
         del self.sessions[self.session.sockaddr[0]]
         del self.session
 
-        pass
-
     def _got_request(self, data, address, session):
-        if data[4] in ('\x00', '\x02'):
+        if chr_py3(data[4]) in (b'\x00', b'\x02'):
             # ipmi 1.5 payload
             session.ipmiversion = 1.5
             remsequencenumber = struct.unpack('<I', data[5:9])[0]
@@ -191,7 +185,7 @@ class IpmiServer(object):
                 self.close_server_session()
                 return
             session.remsequencenumber = remsequencenumber
-            if ord(data[4]) != session.authtype:
+            if ord(chr_py3(data[4])) != session.authtype:
                 self.close_server_session()
                 return
             remsessid = struct.unpack("<I", data[9:13])[0]
@@ -200,7 +194,7 @@ class IpmiServer(object):
                 return
             rsp = list(struct.unpack("!%dB" % len(data), data))
             authcode = False
-            if data[4] == '\x02':
+            if chr_py3(data[4]) == b'\x02':
                 # authcode in ipmi 1.5 packet
                 authcode = data[13:29]
                 del rsp[13:29]
@@ -212,7 +206,7 @@ class IpmiServer(object):
                     self.close_server_session()
                     return
             session._ipmi15(payload)
-        elif data[4] == '\x06':
+        elif chr_py3(data[4]) == b'\x06':
             # ipmi 2.0 payload
             session.ipmiversion = 2.0
             session.authtype = 6
@@ -224,7 +218,7 @@ class IpmiServer(object):
 
     def _got_rmcp_openrequest(self, data):
         request = struct.pack('B' * len(data), *data)
-        clienttag = ord(request[0])
+        clienttag = ord(chr_py3(request[0]))
         self.clientsessionid = list(struct.unpack('4B', request[4:8]))
         self.managedsessionid = list(struct.unpack('4B', os.urandom(4)))
         self.session.privlevel = 4
@@ -234,16 +228,16 @@ class IpmiServer(object):
                         0, 0, 0, 8, 1, 0, 0, 0,  # auth
                         1, 0, 0, 8, 1, 0, 0, 0,  # integrity
                         2, 0, 0, 8, 1, 0, 0, 0,  # privacy
-                    ])
+        ])
         logger.info('IPMI open session request')
         self.session.send_payload(response, constants.payload_types['rmcpplusopenresponse'], retry=False)
 
     def _got_rakp1(self, data):
-        clienttag = data[0]
+        clienttag = chr_py3(data[0])
         self.Rm = data[8:24]
         self.rolem = data[24]
         self.maxpriv = self.rolem & 0b111
-        namepresent = data[27]
+        namepresent = chr_py3(data[27])
         if namepresent == 0:
             self.close_server_session()
             return
@@ -273,8 +267,8 @@ class IpmiServer(object):
         RmRc = struct.pack('B' * len(self.Rm + self.Rc), *(self.Rm + self.Rc))
         self.sik = hmac.new(self.kg, RmRc + struct.pack("2B", self.rolem, len(self.username)) +
                             self.username, hashlib.sha1).digest()
-        self.session.k1 = hmac.new(self.sik, '\x01' * 20, hashlib.sha1).digest()
-        self.session.k2 = hmac.new(self.sik, '\x02' * 20, hashlib.sha1).digest()
+        self.session.k1 = hmac.new(self.sik, b'\x01' * 20, hashlib.sha1).digest()
+        self.session.k2 = hmac.new(self.sik, b'\x02' * 20, hashlib.sha1).digest()
         self.session.aeskey = self.session.k2[0:16]
 
         hmacdata = struct.pack('B' * len(self.Rc), *self.Rc) + struct.pack("4B", *self.clientsessionid) +\
@@ -284,8 +278,8 @@ class IpmiServer(object):
         if expectedauthcode != authcode:
             self.close_server_session()
             return
-        clienttag = data[0]
-        if data[1] != 0:
+        clienttag = chr_py3(data[0])
+        if chr_py3(data[1]) != 0:
             self.close_server_session()
             return
         self.session.localsid = struct.unpack('<I', struct.pack('4B', *self.managedsessionid))[0]
@@ -333,9 +327,9 @@ class IpmiServer(object):
                 returncode = 0xd4
             else:
                 returncode = 0
-            self.usercount = len(list(self.authdata.keys()))
-            self.channelaccess = 0b0000000 | self.privdata[list(self.authdata.keys())[usid - 1]]
-            if self.channelaccessdata[list(self.authdata.keys())[usid - 1]] == 'true':
+            self.usercount = len(self.authdata.keys())
+            self.channelaccess = 0b0000000 | self.privdata[self.authdata.keys()[usid - 1]]
+            if self.channelaccessdata[self.authdata.keys()[usid - 1]] == 'true':
                 # channelaccess: 7=res; 6=callin; 5=link; 4=messaging; 3-0=privilege
                 self.channelaccess |= 0b00110000
 
@@ -350,8 +344,8 @@ class IpmiServer(object):
             # get user name
             userid = request['data'][0]
             returncode = 0
-            username = list(self.authdata.keys())[userid - 1]
-            data = list(map(ord, list(username)))
+            username = self.authdata.keys()[userid - 1]
+            data = map(ord, list(username))
             while len(data) < 16:
                 # filler
                 data.append(0)
@@ -362,14 +356,14 @@ class IpmiServer(object):
             # TODO: fix issue where users can be overwritten
             # python does not support dictionary with duplicate keys
             userid = request['data'][0]
-            username = ''.join(chr(x) for x in request['data'][1:]).strip('\x00')
-            oldname = list(self.authdata.keys())[userid - 1]
+            username = ''.join(chr(x) for x in request['data'][1:]).strip(b'\x00')
+            oldname = self.authdata.keys()[userid - 1]
             # need to recreate dictionary to preserve order
             self.copyauth = collections.OrderedDict()
             self.copypriv = collections.OrderedDict()
             self.copychannel = collections.OrderedDict()
             index = 0
-            for k, v in self.authdata.items():
+            for k, v in self.authdata.iteritems():
                 if index == userid - 1:
                     self.copyauth.update({username: self.authdata[oldname]})
                     self.copypriv.update({username: self.privdata[oldname]})
@@ -390,7 +384,7 @@ class IpmiServer(object):
             # set user passwd
             passwd_length = request['data'][0] & 0b10000000
             userid = request['data'][0] & 0b00111111
-            username = list(self.authdata.keys())[userid - 1]
+            username = self.authdata.keys()[userid - 1]
             operation = request['data'][1] & 0b00000011
             returncode = 0
 
@@ -402,22 +396,22 @@ class IpmiServer(object):
                 passwd = ''.join(chr(x) for x in request['data'][2:18])
             if operation == 0:
                 # disable user
-                if self.activeusers[list(self.authdata.keys()).index(username)]:
-                    self.activeusers[list(self.authdata.keys()).index(username)] = 0
+                if self.activeusers[self.authdata.keys().index(username)]:
+                    self.activeusers[self.authdata.keys().index(username)] = 0
             elif operation == 1:
                 # enable user
-                if not self.activeusers[list(self.authdata.keys()).index(username)]:
-                    self.activeusers[list(self.authdata.keys()).index(username)] = 1
+                if not self.activeusers[self.authdata.keys().index(username)]:
+                    self.activeusers[self.authdata.keys().index(username)] = 1
             elif operation == 2:
                 # set passwd
                 if len(passwd) not in [16, 20]:
                     returncode = 0x81
-                self.authdata[username] = passwd.strip('\x00')
+                self.authdata[username] = passwd.strip(b'\x00')
             else:
                 # test passwd
                 if len(passwd) not in [16, 20]:
                     returncode = 0x81
-                if self.authdata[username] != passwd.strip('\x00'):
+                if self.authdata[username] != passwd.strip(b'\x00'):
                     returncode = 0x80
 
             self.session._send_ipmi_net_payload(code=returncode)
@@ -431,16 +425,16 @@ class IpmiServer(object):
             logger.info('IPMI response sent (Invalid Command) to %s', self.session.sockaddr)
 
     def start(self, host, port):
-        self.host = host
-        self.port = port
         connection = (host, port)
+        self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(1)
-        self.sock.bind((self.host, self.port))
-        self.server = DatagramServer(connection, self.handle)
-        logger.info('IPMI server started on: %s', connection)
+        self.sock.setblocking(True)
+        self.sock.bind(connection)
+        self.server = DatagramServer(self.sock, self.handle)
+        self.server.start()
+        logger.info('IPMI server started on: %s', (host, self.server.server_port))
         self.server.serve_forever()
 
     def stop(self):
@@ -449,13 +443,12 @@ class IpmiServer(object):
 
 if __name__ == '__main__':
     TCP_IP = '127.0.0.1'
-    TCP_PORT = 50001
+    TCP_PORT = 10002
     import os
     import conpot
     dir_name = os.path.dirname(conpot.__file__)
     conpot_core.get_databus().initialize(dir_name + '/templates/default/template.xml')
-    server = IpmiServer(dir_name + '/templates/default/ipmi/ipmi.xml', dir_name + '/templates/default/',
-                        None)
+    server = IpmiServer(dir_name + '/templates/default/ipmi/ipmi.xml', dir_name + '/templates/default/', None)
     try:
         server.start(TCP_IP, TCP_PORT)
     except KeyboardInterrupt:

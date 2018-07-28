@@ -15,39 +15,67 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
+import gevent
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 import conpot.core as conpot_core
+import subprocess
+from gevent import subprocess
+from gevent.subprocess import PIPE
 import unittest
+import os
+import conpot
 from collections import namedtuple
-gevent.monkey.patch_all()
 
 
 class TestIPMI(unittest.TestCase):
     def setUp(self):
-        self.template_path = 'conpot/templates/ipmi/ipmi/ipmi.xml'
-
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
+        # get the current directory
 
-        self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/ipmi/template.xml')
+        dir_name = os.path.dirname(conpot.__file__)
         args = namedtuple('FakeArgs', 'port')
         args.port = 0
-        self.ipmi_server = IpmiServer(
-            self.template_path,
-            'conpot/templates/ipmi/',
-            args
-        )
+        conpot_core.get_databus().initialize(dir_name + '/templates/default/template.xml')
+        self.ipmi_server = IpmiServer(dir_name + '/templates/default/ipmi/ipmi.xml',
+                                      dir_name + '/templates/default/', args)
         self.greenlet = gevent.spawn(self.ipmi_server.start, '127.0.0.1', 0)
+        gevent.sleep(1)
 
     def tearDown(self):
         self.greenlet.kill()
         # tidy up (again)...
         conpot_core.get_sessionManager().purge_sessions()
 
-    def test_checksum(self):
+    def test_boot_device(self):
         """
-        Objective: Verify that the server is correctly producing the checksum
+        Objective: test boot device get and set
         """
-        self.assertTrue(self.ipmi_server is not None)
+        _process = subprocess.Popen(['ipmitool', '-I', 'lanplus', '-H', 'localhost', '-p',
+                                    str(self.ipmi_server.server.server_port), '-R1', '-U', 'Administrator', '-P',
+                                     'Password', 'chassis', 'power', 'status'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        _result_out, _result_err = _process.communicate()
+        rc = _process.returncode
+        self.assertTrue(_result_out)
+
+    def test_reset(self):
+        """
+        Objective: test device reset/cold reset
+        """
+        self.assertTrue(self.ipmi_server != None)
+
+    def test_power_state(self):
+        """
+        Objective: test power on/off/reset/cycle/shutdown
+        """
+        self.assertTrue(self.ipmi_server != None)
+
+    def test_auth(self):
+        # set user pass
+        # set User Name
+        # Session Privilege
+        pass
+
+
+if __name__ == '__main__':
+    unittest.main()
