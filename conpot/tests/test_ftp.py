@@ -154,7 +154,7 @@ class TestFTPServer(unittest.TestCase):
     def test_pwd(self):
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
-        self.assertEqual(self.client.sendcmd('pwd'), '257 "/data/ftp" is the current directory.')
+        self.assertEqual(self.client.sendcmd('pwd'), '257 "/" is the current directory.')
 
     def test_mkd(self):
         # TODO: test for a user who does not has permissions to make directory
@@ -179,11 +179,11 @@ class TestFTPServer(unittest.TestCase):
         self.client.login(user='nobody', passwd='nobody')
         # create a directory to cwd to.
         _vfs.makedir('testing')
-        self.assertEqual(self.client.sendcmd('cwd testing'), '250 "/data/ftp/testing" is the current directory.')
+        self.assertEqual(self.client.sendcmd('cwd testing'), '250 "/testing" is the current directory.')
         # check consistency with pwd
-        self.assertEqual(self.client.sendcmd('pwd'), '257 "/data/ftp/testing" is the current directory.')
+        self.assertEqual(self.client.sendcmd('pwd'), '257 "/testing" is the current directory.')
         # test for cdup.
-        self.assertEqual(self.client.sendcmd('cdup'), '250 "/data/ftp" is the current directory.')
+        self.assertEqual(self.client.sendcmd('cdup'), '250 "/" is the current directory.')
         # make sure that user does not go - out of the root path.
         self.assertRaisesRegex(ftplib.error_perm, "550 'cwd ../' points to a path which is outside the user's "
                                                   "root directory.", self.client.sendcmd, 'cwd ../')
@@ -270,7 +270,7 @@ class TestFTPServer(unittest.TestCase):
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # do stat without args
-        self.assertIn('Logged in as: nobody\n TYPE: ASCII; STRUcture: File; MODE: Stream\n211 End of status.',
+        self.assertIn('Logged in as: nobody\n TYPE: ASCII; STRUcture: File; MODE: Stream\n',
                       self.client.sendcmd('stat'))
         self.assertIn('ftp_data.txt', self.client.sendcmd('stat /'))
 
@@ -284,12 +284,12 @@ class TestFTPServer(unittest.TestCase):
         # Do a list of directory for passive mode
         _pasv_list = list()
         self.client.retrlines('LIST', _pasv_list.append)
-        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt'], _pasv_list)
+        self.assertEqual(['rwxrwxrwx   1 nobody   nobody         49 Jul 15 17:51 ftp_data.txt'], _pasv_list)
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines('LIST', _actv_list.append)
-        self.assertEqual(['rwxrwxrwx   1 root     root           49 Jul 15 17:51 ftp_data.txt'], _actv_list)
+        self.assertEqual(['rwxrwxrwx   1 nobody   nobody         49 Jul 15 17:51 ftp_data.txt'], _actv_list)
         # response from active and pasv mode should be same.
 
     def test_nlist(self):

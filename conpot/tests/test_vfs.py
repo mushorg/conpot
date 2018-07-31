@@ -19,7 +19,7 @@
 Test core features for Conpot's virtual file system
 """
 import conpot.core as conpot_core
-from conpot.core.file_io import SubAbstractFS
+from conpot.core.filesystem import SubAbstractFS
 import unittest
 import conpot
 from freezegun import freeze_time
@@ -135,11 +135,20 @@ class TestFileSystem(unittest.TestCase):
         self.test_vfs.makedirs('demo/demo')
         self.assertTrue(self.test_vfs.get_permissions('/demo/demo'))
 
-    def test_open_file(self):
-        with self.test_vfs.open('new_file', mode='wb') as _file:
+    def test_openbin_file(self):
+        with self.test_vfs.openbin('new_file', mode='wb') as _file:
             _file.write(b'This is just a test')
         self.assertIn('new_file', self.test_vfs.listdir('/'))
         _test = self.test_vfs.gettext('/new_file')
+        self.test_vfs.getinfo('new_file', namespaces=['basic'])
+        self.assertEqual(_test, 'This is just a test')
+
+    def test_open_file(self):
+        with self.test_vfs.open('new_file', mode='w+') as _file:
+            _file.write('This is just a test')
+        self.assertIn('new_file', self.test_vfs.listdir('/'))
+        _test = self.test_vfs.gettext('/new_file')
+        self.test_vfs.getinfo('new_file', namespaces=['basic'])
         self.assertEqual(_test, 'This is just a test')
 
     @freeze_time("2018-07-15 17:51:17", tz_offset=-4)
@@ -163,6 +172,62 @@ class TestFileSystem(unittest.TestCase):
         # create some random group and check permissions for that
         self.test_vfs.create_group('random', 220)
         self.assertFalse(self.test_vfs.access('/data', 'random', required_perms='x'))
+
+    @freeze_time("2028-07-15 17:51:17")
+    def test_movedir(self):
+        # move a directory - retain it's contents
+        _uid = self.test_vfs.getinfo('/data', namespaces=['access']).uid
+        _gid = self.test_vfs.getinfo('/data', namespaces=['access']).gid
+        _perms = self.test_vfs.getinfo('/data', namespaces=['access']).permissions
+        _user = self.test_vfs.getinfo('/data', namespaces=['access']).user
+        _group = self.test_vfs.getinfo('/data', namespaces=['access']).group
+        _accessed = self.test_vfs.getinfo('/data', namespaces=['details']).accessed
+        _modified = self.test_vfs.getinfo('/data', namespaces=['details']).modified
+        self.test_vfs.movedir('/data', '/data_move', create=True)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).uid, _uid)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).gid, _gid)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).permissions, _perms)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).user, _user)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).group, _group)
+        # accessed and modified file must not be the same.
+        self.assertNotEqual(self.test_vfs.getinfo('/data_move', namespaces=['details']).accessed, _accessed)
+        self.assertNotEqual(self.test_vfs.getinfo('/data_move', namespaces=['details']).modified, _modified)
+
+    @freeze_time("2028-07-15 17:51:17")
+    def test_copydir(self):
+        # copy a directory
+        _uid = self.test_vfs.getinfo('/data', namespaces=['access']).uid
+        _gid = self.test_vfs.getinfo('/data', namespaces=['access']).gid
+        _perms = self.test_vfs.getinfo('/data', namespaces=['access']).permissions
+        _user = self.test_vfs.getinfo('/data', namespaces=['access']).user
+        _group = self.test_vfs.getinfo('/data', namespaces=['access']).group
+        self.test_vfs.copydir('/data', '/data_move', create=True)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).uid, _uid)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).gid, _gid)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).permissions, _perms)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).user, _user)
+        self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).group, _group)
+        self.assertEqual(self.test_vfs.listdir('/'), ['data', 'data_move'])
+
+    @freeze_time("2028-07-15 17:51:17")
+    def test_copyfile(self):
+        # create a copy of a file in a separate directory
+        with self.test_vfs.open('test_fs.txt', mode='w+') as _file:
+            _file.write('This is just a test file checking copyfile')
+        self.test_vfs.copy(src_path='test_fs.txt', dst_path='test_fs_copy.txt', overwrite=True)
+        _text = self.test_vfs.gettext('test_fs_copy.txt')
+        self.assertEqual(_text, 'This is just a test file checking copyfile')
+
+    @freeze_time("2028-07-15 17:51:17")
+    def test_movefile(self):
+        # create a copy of a file in a separate directory
+        with self.test_vfs.open('test_fs.txt', mode='w') as _file:
+            _file.write('This is just a test file checking copyfile')
+        _uid = self.test_vfs.getinfo('test_fs.txt', namespaces=['access']).uid
+        self.test_vfs.move('test_fs.txt', 'test_fs_copy.txt', overwrite=True)
+        _text = self.test_vfs.gettext('test_fs_copy.txt')
+        self.assertEqual(self.test_vfs.getinfo('test_fs_copy.txt', namespaces=['access']).uid, _uid)
+        self.assertEqual(_text, 'This is just a test file checking copyfile')
 
 
 class TestSubFileSystem(unittest.TestCase):
@@ -264,6 +329,11 @@ class TestSubFileSystem(unittest.TestCase):
         # create some random group and check permissions for that
         self.test_vfs.create_group('random', 220)
         self.assertFalse(self.test_vfs.access('/vfs.txt', 'random', required_perms='x'))
+        # create a new user called test_access and add it group with gid 13
+        self.test_vfs.register_user('test_access', 45)
+        self.test_vfs.add_users_to_group(13, [45])
+        self.assertTrue(self.test_vfs.access('/vfs.txt', 45, required_perms='rx'))
+        self.assertFalse(self.test_vfs.access('/vfs.txt', 45, required_perms='rwx'))
 
     def test_remove(self):
         self.test_vfs.touch('test_remove.txt')

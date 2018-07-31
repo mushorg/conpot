@@ -50,12 +50,8 @@ class FakeSession(Session):
         self.bmc = bmc
         self.port = port
         self.bmc_handlers = {}
-        try:
-            self.userid = userid.encode('utf-8')
-            self.password = password.encode('utf-8')
-        except AttributeError:
-            self.userid = userid
-            self.password = password
+        self.userid = userid
+        self.password = password
         self._initsession()
         self.sockaddr = (bmc, port)
         self.server = None
@@ -306,8 +302,7 @@ class FakeSession(Session):
                 message.append(7)
                 integdata = message[4:]
                 authcode = hmac.new(self.k1, struct.pack("%dB" % len(integdata), *integdata),
-                                    hashlib.sha1).digest()[:12]  # SHA1-96
-                                    # per RFC2404 truncates to 96 bits
+                                    hashlib.sha1).digest()[:12]  # SHA1-96 - per RFC2404 truncates to 96 bits
                 message += struct.unpack("12B", authcode)
         self.netpacket = struct.pack("!%dB" % len(message), *message)
         self.stage += 1
@@ -350,4 +345,5 @@ class FakeSession(Session):
 
     def send_data(self, packet, address):
         logger.info('IPMI response sent to %s', address)
+        logger.debug('IPMI: Sending response {} to client {}'.format(packet, address))
         self.socket.sendto(packet, address)

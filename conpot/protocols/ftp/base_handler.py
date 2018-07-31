@@ -4,15 +4,15 @@ import gevent
 from gevent import queue
 from gevent import select
 import conpot.core as conpot_core
-from conpot.core.file_io import FilesystemError
+from conpot.core.filesystem import FilesystemError
 import logging
 import errno
+import time
 import fs
 from fs import errors
 from conpot.helpers import sanitize_file_name
 from gevent import event
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
-from datetime import datetime
 from gevent import socket
 logger = logging.getLogger(__name__)
 
@@ -24,27 +24,41 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------
 
 
-# class FTPMetrics(object):
-#     """Simple class to track total bytes transferred, login attempts etc."""
-#     def __int__(self):
-#         self.start_time = datetime.now()
-#         self.end_time = None
-#         # basically we need a timeout time composite of timeout for
-#         # data_sock and client_sock. Let us say that timeout of 5 sec for data_sock
-#         # and
-#
-#     def get_command_channel_metrics(self):
-#         pass
-#
-#     def get_data_channel_metrics(self):
-#         pass
-#
-#     def get_elasped_time(self):
-#         pass
+class FTPMetrics(object):
+    """Simple class to track total bytes transferred, login attempts etc."""
+    def __init__(self):
+        self.start_time = time.time()
+        self.data_channel_bytes_recv = 0
+        self.data_channel_bytes_send = 0
+        self.command_chanel_bytes_send = 0
+        self.command_chanel_bytes_recv = 0
+        self.last_active = None
+        # basically we need a timeout time composite of timeout for
+        # data_sock and client_sock. Let us say that timeout of 5 sec for data_sock
+        # and command_sock is 300.
+        # Implementation note: Data sock is non-blocking. So the connection is closed when there is no data.
 
+    @property
+    def timeout(self):
+        return lambda: int(time.time() - (self.last_active or self.start_time))
 
-# The requirements of the data_channel and the command_channel are as follows:
-# -
+    def get_elapsed_time(self):
+        return self.last_active - self.start_time
+
+    def __repr__(self):
+        tot = self.data_channel_bytes_recv + self.data_channel_bytes_send + self.command_chanel_bytes_recv + \
+              self.command_chanel_bytes_send
+        s = ''' 
+        Total data transferred      : {}  (bytes)
+        Command channel sent        : {}  (bytes)
+        Command channel received    : {}  (bytes)
+        Data channel sent           : {}  (bytes)
+        Data channel received       : {}  (bytes)'''.format(tot,
+                                                            self.command_chanel_bytes_send,
+                                                            self.command_chanel_bytes_recv,
+                                                            self.data_channel_bytes_send,
+                                                            self.data_channel_bytes_recv)
+        return s
 
 
 class FTPHandlerBase(socketserver.BaseRequestHandler):
@@ -106,6 +120,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         # socket for accepting cli_ip and cli_port in passive mode.
 
         self._rnfr = None  # For RNFR and RNTO
+        self.metrics = FTPMetrics()  # track session related metrics.
 
         # Input and output queues.
         self._command_channel_input_q = gevent.queue.Queue()
@@ -155,18 +170,23 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     def finish(self):
         """End this client session"""
-        logger.info('FTP client {} disconnected. ({})'.format(self.client_address, self.session.id))
-        self.stop_data_channel(abort=True, purge=True, reason='Closing connection to {}. Client disconnected'.format(
-            self.client_address
-        ))
-        if self._data_listener_sock:
-            if self._data_listener_sock.fileno() != -1:
-                self._data_sock.close()
-        self.client_sock.close()
-        socketserver.BaseRequestHandler.finish(self)
+        if self.disconnect_client is False:
+            logger.info('FTP client {} disconnected. ({})'.format(self.client_address, self.session.id))
+            self.stop_data_channel(abort=True, purge=True, reason='Closing connection to {}. '
+                                                                  'Client disconnected'.format(self.client_address))
+            if self._data_listener_sock:
+                if self._data_listener_sock.fileno() != -1:
+                    self._data_sock.close()
+            socketserver.BaseRequestHandler.finish(self)
+            self.client_sock.close()
+            logger.info('FTP statistics for client : {}\n{}'.format(self.client_address, repr(self.metrics)))
+            self.disconnect_client = True
+        else:
+            logger.debug('Client {} already disconnected.'.format(self.client_address))
 
     def __del__(self):
-        self.finish()
+        if self.disconnect_client is False:
+            self.finish()
         
     # ------------------------ FTP Command Channel -------------------------
 
@@ -187,6 +207,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         logger.info('FTP command input exceeded buffer from client {}'.format(self.client_address))
                         self.respond(b'500 Command too long.')
                     else:
+                        self.metrics.command_chanel_bytes_recv += len(data)
+                        self.metrics.last_active = time.time()
                         self._command_channel_input_q.put(data)
             # make sure the socket is ready to write
             elif self.client_sock in socket_write and (not self._command_channel_output_q.empty()):
@@ -194,15 +216,13 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 if response is not None:
                     logger.debug('Sending packet {} to client {}'.format(self.client_address, response))
                     log_data['response'] = response
+                    # add len to metrics
+                    self.metrics.command_chanel_bytes_send += len(response)
+                    self.metrics.last_active = time.time()
                     self.client_sock.send(response)
             if 'request' in log_data or 'response' in log_data:
-                # we can check timeout here.
                 logger.info('FTP traffic to {}: {} ({})'.format(self.client_address, log_data, self.session.id))
                 self.session.add_event(log_data)
-        except socket.timeout:
-            logger.info('Socket timeout, remote: {}. ({})'.format(self.client_address, self.session.id))
-            self.session.add_event({'type': 'CONNECTION_TIMEOUT'})
-            self.finish()
         except socket.error as se:
             if se.errno == errno.EWOULDBLOCK:
                 gevent.sleep(0.1)
@@ -286,6 +306,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                             logger.info('Send data {} at {}:{} for client : {}'.format(
                                 data['data'], self.cli_ip, self.cli_port, self.client_address)
                             )
+                            self.metrics.data_channel_bytes_send += len(data)
+                            self.metrics.last_active = time.time()
                             self._data_sock.send(data=data['data'])
                         elif data['type'] == 'file':
                             file_name = data['file']
@@ -296,6 +318,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                 try:
                                     with self.config.vfs.open(file_name, mode='rb') as file_:
                                         self._data_sock.sendfile(file_, 0)
+                                    _size = self.config.vfs.getsize(file_name)
+                                    self.metrics.data_channel_bytes_send += _size
+                                    self.metrics.last_active = time.time()
                                 except (fs.errors.FSError, FilesystemError):
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
@@ -312,16 +337,20 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         logger.debug('Received {} from client {} on {}:{}'.format(
                             data, self.client_address, self.cli_ip, self.cli_port)
                         )
+                        self.metrics.data_channel_bytes_recv += len(data)
+                        self.metrics.last_active = time.time()
                         self._data_channel_input_q.put(data)
                         while data and data != b'':
                             data = self._data_sock.recv(self._ac_in_buffer_size)
                             logger.debug('Received {} from client {} on {}:{}'.format(
                                 data, self.client_address, self.cli_ip, self.cli_port)
                             )
+                            self.metrics.data_channel_bytes_recv += len(data)
+                            self.metrics.last_active = time.time()
                             self._data_channel_input_q.put(data)
-                        # we have received all data. Time to finish this process.
-                        # set the writing event to True - so that we can write this data to files.
-                        self._data_channel_recv.set()
+                    # we have received all data. Time to finish this process.
+                    # set the writing event to set - so that we can write this data to files.
+                    self._data_channel_recv.set()
                 else:
                     # assume that the read/write event has finished
                     # send a nice resp to the client saying everything has finished.
@@ -330,7 +359,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             except (socket.error, socket.timeout) as se:
                 # TODO: send appropriate response
                 # Flush contents of the data channel
-                reason = 'connection timed' if isinstance(se, socket.timeout) else 'socket error'
+                reason = 'connection timed out' if isinstance(se, socket.timeout) else 'socket error'
                 msg = 'Stopping FTP data channel {}:{}. Reason: {}'.format(self.cli_ip, self.cli_port, reason)
                 self.stop_data_channel(abort=True, purge=True, reason=msg)
             except (fs.errors.FSError, FilesystemError, FTPPrivilegeException, FilesystemError) as fe:
@@ -360,7 +389,13 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             if _file_pos == 0 and cmd == 'STOR':
                 # overwrite file or create a new one.
                 # we don't need to seek at all. Normal write process by STOR
-                _file_d = self.config.vfs.open(path=_file, mode='wb')
+                with self.config.vfs.open(path=_file, mode='wb') as _file_d:
+                    _file_d.write(_data)
+                    _data_fs_d.write(_data)
+                    while not self._data_channel_input_q.empty():
+                        _data = self._data_channel_input_q.get()
+                        _file_d.write(_data)
+                        _data_fs_d.write(_data)
             else:
                 assert _file_pos != 0
                 # must seek file. This is done in append or rest(resume transfer) command.
@@ -369,25 +404,29 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     _data_fs_d.write(_file_d.read(_file_pos))
                 # finally we should let the file to be written as requested.
                 if cmd == 'APPE':
-                    _file_d = self.config.vfs.open(path=_file, mode='ab')
+                    with self.config.vfs.open(path=_file, mode='ab') as _file_d:
+                        _file_d.write(_data)
+                        _data_fs_d.write(_data)
+                        while not self._data_channel_input_q.empty():
+                            _data = self._data_channel_input_q.get()
+                            _file_d.write(_data)
+                            _data_fs_d.write(_data)
                 else:
                     # cmd is REST
-                    _file_d = self.config.vfs.open(path=_file, mode='rb+')
-                    _file_d.seek(_file_pos)
-            _file_d.write(_data)
-            _data_fs_d.write(_data)
-            while not self._data_channel_input_q.empty():
-                _data = self._data_channel_input_q.get()
-                _file_d.write(_data)
-                _data_fs_d.write(_data)
+                    with self.config.vfs.open(path=_file, mode='rb+') as _file_d:
+                        _file_d.seek(_file_pos)
+                        _file_d.write(_data)
+                        _data_fs_d.write(_data)
+                        while not self._data_channel_input_q.empty():
+                            _data = self._data_channel_input_q.get()
+                            _file_d.write(_data)
+                            _data_fs_d.write(_data)
             self.respond(b'226 Transfer complete.')
             logger.info('Files {} and {} written successfully to disk'.format(_file, _data_fs_file))
         except (AssertionError, IOError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as fe:
                 self.stop_data_channel(abort=True, reason=str(fe))
                 self.respond('554 {} command failed.'.format(cmd))
         finally:
-            if _file_d and _file_d.fileno() != -1:
-                _file_d.close()
             if _data_fs_d and _data_fs_d.fileno() != -1:
                 _data_fs_d.close()
 

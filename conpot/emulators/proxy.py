@@ -16,18 +16,29 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import select
-import socket as _socket
+from gevent import select
+from gevent import socket as _socket
 import codecs
 import gevent
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
 from gevent.server import StreamServer
-
+import abc
 import conpot.core as conpot_core
 
 
 logger = logging.getLogger(__name__)
+
+
+class ProxyDecoder(abc.ABC):
+
+    @abc.abstractmethod
+    def decode_in(self, data):
+        """Decode data that goes into the proxied device"""
+
+    @abc.abstractmethod
+    def decode_out(self, data):
+        """Decode data that goes out from the proxied device to the connected client(attacker)."""
 
 
 class Proxy(object):
@@ -41,10 +52,14 @@ class Proxy(object):
         self.keyfile = keyfile
         self.certfile = certfile
         if decoder:
-            namespace, _classname = decoder.rsplit('.', 1)
-            module = __import__(namespace, fromlist=[_classname])
-            _class = getattr(module, _classname)
-            self.decoder = _class()
+            try:
+                namespace, _classname = decoder.rsplit('.', 1)
+                module = __import__(namespace, fromlist=[_classname])
+                _class = getattr(module, _classname)
+                self.decoder = _class()
+                assert isinstance(self.decoder, ProxyDecoder)
+            except AssertionError:
+                logger.fatal('Invalid decoder: decoder must be an instance of ProxyDecoder.')
         else:
             self.decoder = None
 
@@ -73,14 +88,15 @@ class Proxy(object):
 
         try:
             proxy_socket.connect((self.proxy_host, self.proxy_port))
-        except _socket.error as ex:
-            logger.error('Error while connecting to proxied service at (%s, %s): %s', self.proxy_host, self.proxy_port, ex)
+        except _socket.error:
+            logger.exception('Error while connecting to proxied service at ({}, {})'.format(self.proxy_host,
+                             self.proxy_port))
             self._close([proxy_socket, sock])
             return
 
         sockets = [proxy_socket, sock]
         while len(sockets) == 2:
-            gevent.sleep()
+            gevent.sleep(0)
             sockets_read, _, sockets_err = select.select(sockets, [], sockets, 10)
 
             if len(sockets_err) > 0:
@@ -98,7 +114,7 @@ class Proxy(object):
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
                         logging.warning(
-                            'Closing proxied socket while receiving (%s, %s): %s.', 
+                            'Closing proxied socket while receiving (%s, %s): %s.',
                             self.proxy_host, self.proxy_port, socket_close_reason)
                         sockets = []
                         break

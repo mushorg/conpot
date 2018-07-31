@@ -11,7 +11,7 @@ import sys
 import gevent
 from gevent import socket
 from fs import errors
-from conpot.core.file_io import FilesystemError
+from conpot.core.filesystem import FilesystemError
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException, get_data_from_iter
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,11 @@ class FTPCommandChannel(FTPHandlerBase):
     """
     FTP Command Responder. Implementation of RFC 959.
     """
+
+    def ftp_path(self, path):
+        _path = self.config.vfs.norm_path(os.path.join(path))
+        _path.replace(self.root, '/')
+        return _path
 
     # -----------------------------------------------------------------------
     # There are some commands that do not require any kind of auth and permissions to run.
@@ -191,7 +196,7 @@ class FTPCommandChannel(FTPHandlerBase):
 
     def do_PWD(self, arg):
         """Return the name of the current working directory to the client."""
-        pwd = self.config.vfs.norm_path(self.root + self.working_dir)
+        pwd = self.ftp_path(self.working_dir)
         try:
             assert isinstance(pwd, str), pwd
             _pwd = '257 "{}" is the current directory.'.format(pwd)
@@ -252,7 +257,7 @@ class FTPCommandChannel(FTPHandlerBase):
         """Return size of file in a format suitable for using with RESTart as defined in RFC-3659."""
         try:
             # FIXME: check whether the current user has the permissions for SIZE
-            path = self.config.vfs.norm_path(path)
+            path = self.ftp_path(path)
             if self._current_type == 'a':
                 self.respond(b'550 SIZE not allowed in ASCII mode.')
                 return
@@ -296,7 +301,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(b'550 Remove directory operation failed.')
 
     def do_CWD(self, path):
-        """Change the current working directory."""
+        """Change the current working directory. We would get """
         # Temporarily join the specified directory to see if we have permissions to do so, then get back to original
         # process's current working directory.
         try:
@@ -304,10 +309,9 @@ class FTPCommandChannel(FTPHandlerBase):
             # make sure the current user has permissions to the new dir. To change the directory, user needs to have
             # executable permissions for the directory
             self.check_perms(perms='x', path=path)
-            self.working_dir = self.config.vfs.norm_path(path)
+            self.working_dir = self.ftp_path(path)
             logger.info('Changing current directory {} to {}'.format(init_cwd, self.working_dir))
-            _cwd = '250 "{}" is the current directory.'.format(self.config.vfs.norm_path(self.root +
-                                                                                         self.working_dir))
+            _cwd = '250 "{}" is the current directory.'.format(self.working_dir)
             self.respond(_cwd.encode())
         except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 Failed to change directory.')
@@ -318,14 +322,17 @@ class FTPCommandChannel(FTPHandlerBase):
         """
         # Note: RFC-959 says that code 200 is required but it also says
         # that CDUP uses the same codes as CWD.
-        return self.do_CWD(path='/'.join([self.config.vfs.norm_path(self.working_dir), '../']))
+        return self.do_CWD(path='/'.join([self.ftp_path(self.working_dir), '../']))
 
     def do_DELE(self, path):
         """Delete the specified file."""
         try:
             # FIXME: check whether the current user has the permissions for DELE
-            self.config.vfs.remove(path)
-            self.respond(b'250 File removed.')
+            if not self.config.vfs.isfile(path):
+                self.respond(b'550 Failed to delete file.')
+            else:
+                self.config.vfs.remove(path)
+                self.respond(b'250 File removed.')
         except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 Failed to delete file.')
 
@@ -340,7 +347,7 @@ class FTPCommandChannel(FTPHandlerBase):
         try:
             assert isinstance(path, str)
             assert self.config.vfs.exists(path)
-            if self.config.vfs.norm_path(path) == '/':
+            if self.ftp_path(path) == '/':
                 self.respond(b"550 Can't rename home directory.")
             else:
                 self._rnfr = path
@@ -369,7 +376,7 @@ class FTPCommandChannel(FTPHandlerBase):
             if _file != _dst_file:
                 logger.info('Renaming file from {} to {}'.format(self.root + _path + _file,
                                                                  self.root + _path + _dst_file))
-                self.config.vfs.rename_file(self.config.vfs.norm_path(_path), _file, _dst_file)
+                self.config.vfs.rename_file(self.ftp_path(_path), _file, _dst_file)
             self.respond(b"250 Renaming ok.")
         except (ValueError, AssertionError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 File rename operation failed.')
@@ -395,26 +402,25 @@ class FTPCommandChannel(FTPHandlerBase):
             else:
                 _type = 'Binary'
             s.append("TYPE: {}; STRUcture: File; MODE: Stream".format(_type))
-            # FIXME: add this when data channel is running.
-            # if self._data_sock is not None:
-            #     s.append('Passive data channel waiting for connection.')
-            # elif self._data_channel is not None:
-            #     bytes_sent = self.data_channel.tot_bytes_sent
-            #     bytes_recv = self.data_channel.tot_bytes_received
-            #     elapsed_time = self.data_channel.get_elapsed_time()
-            #     s.append('Data connection open:')
-            #     s.append('Total bytes sent: %s' % bytes_sent)
-            #     s.append('Total bytes received: %s' % bytes_recv)
-            #     s.append('Transfer elapsed time: %s secs' % elapsed_time)
-            # else:
-            #     s.append('Data connection closed.')
+            if self._data_sock is not None and self._data_channel is False:
+                s.append('Passive data channel waiting for connection.')
+            elif self._data_channel is True:
+                bytes_sent = self.metrics.data_channel_bytes_send + self.metrics.command_chanel_bytes_send
+                bytes_recv = self.metrics.command_chanel_bytes_recv + self.metrics.data_channel_bytes_recv
+                elapsed_time = self.metrics.get_elapsed_time()
+                s.append('Data connection open:')
+                s.append('Total bytes sent: {}'.format(bytes_sent))
+                s.append('Total bytes received: {}'.format(bytes_recv))
+                s.append('Transfer elapsed time: {} secs'.format(elapsed_time))
+            else:
+                s.append('Data connection closed.')
 
             self.respond('211-FTP server status:\r\n')
             self.respond(''.join([' {}\r\n'.format(item) for item in s]))
             self.respond('211 End of status.')
         # return directory LISTing over the command channel
         else:
-            line = self.config.vfs.norm_path(path)
+            line = self.ftp_path(path)
             try:
                 if self.config.vfs.isdir(path):
                     listing = self.config.vfs.listdir(path)
@@ -446,18 +452,18 @@ class FTPCommandChannel(FTPHandlerBase):
 
     def do_LIST(self, path):
         try:
-            listing = self.config.vfs.listdir(self.working_dir + path)
+            listing = self.config.vfs.listdir(self.ftp_path(path))
             if isinstance(listing, list):
                 # RFC 959 recommends the listing to be sorted.
                 listing.sort()
-                iterator = self.config.vfs.format_list(path, listing)
+                iterator = self.config.vfs.format_list(self.ftp_path(path), listing)
                 self.respond('150 Here comes the directory listing.')
                 _list_data = get_data_from_iter(iterator)
                 # Push data to the data channel
                 self.push_data(_list_data.encode())
                 # start the command channel
                 self.start_data_channel()
-                self.respond('226 Directory send OK.')
+                self.respond(b'226 Directory send OK.')
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 LIST command failed.')
@@ -486,7 +492,7 @@ class FTPCommandChannel(FTPHandlerBase):
         :param arg: Filename that is to be retrieved
         """
         try:
-            filename = self.config.vfs.norm_path(self.working_dir + arg)
+            filename = self.ftp_path(self.working_dir + arg)
             if self.config.vfs.isfile(filename):
                 self.send_file(file_name=filename)
             else:
@@ -638,36 +644,36 @@ class FTPCommandChannel(FTPHandlerBase):
             if self.config.COMMANDS[cmd]['perm'] and (cmd != 'STOU'):
                 if cmd in ('CWD', 'XCWD'):
                     if arg and self.working_dir != '/':
-                        arg = '/'.join([self.config.vfs.norm_path(self.working_dir), arg])
+                        arg = '/'.join([self.ftp_path(self.working_dir), arg])
                     else:
-                        arg = self.config.vfs.norm_path(arg or '/')
+                        arg = self.ftp_path(arg or '/')
                 elif cmd in ('CDUP', 'XCUP'):
                     arg = ''
                 elif cmd == 'STAT':
                     if glob.has_magic(arg):
                         self.respond(b'550 Globbing not supported.')
                         return
-                    arg = self.config.vfs.norm_path(arg or self.working_dir)
+                    arg = self.ftp_path(arg or self.working_dir)
                 elif cmd == 'SITE CHMOD':
                     if ' ' not in arg:
                         self.respond(b'501 Syntax error: command needs two arguments.')
                         return
                     else:
                         mode, arg = arg.split(' ', 1)
-                        arg = self.config.vfs.norm_path(arg)
+                        arg = self.ftp_path(arg)
                         kwargs = dict(mode=mode)
                 else:
                     if cmd == 'LIST':
                         if arg.lower() in ('-a', '-l', '-al', '-la'):
-                            arg = self.config.vfs.norm_path(self.working_dir)
+                            arg = self.ftp_path(self.working_dir)
                         else:
-                            arg = self.config.vfs.norm_path(arg or self.working_dir)
+                            arg = self.ftp_path(arg or self.working_dir)
                     if glob.has_magic(arg):
                         self.respond(b'550 Globbing not supported.')
                         return
                     else:
                         arg = glob.escape(arg)
-                        arg = self.config.vfs.norm_path(arg or self.working_dir)
+                        arg = self.ftp_path(arg or self.working_dir)
                         arg = line.split(' ', 1)[1] if arg is None else arg
 
             # call the proper do_* method
@@ -702,7 +708,7 @@ class FTPCommandChannel(FTPHandlerBase):
         :return: (bytes) response - reply in respect to the request
         """
         try:
-            if not self._command_channel_input_q.empty():
+            if not self._command_channel_input_q.empty() and (self.metrics.timeout() < self.config.timeout):
                 # decoding should be done using utf-8
                 line = self._command_channel_input_q.get().decode()
                 # Remove any CR+LF if present
@@ -730,6 +736,11 @@ class FTPCommandChannel(FTPHandlerBase):
                         logger.info('FTP client {} Unexpected error occurred : {}'.format(self.client_address, fe))
                         # TODO: what to respond here? For now just terminate the session
                         self.disconnect_client = True
+            elif not (self.metrics.timeout() < self.config.timeout) and (not self._data_channel):
+                logger.info('FTP connection timeout, remote: {}. ({}). Disconnecting client'.format(self.client_address,
+                                                                                                    self.session.id))
+                self.session.add_event({'type': 'CONNECTION_TIMEOUT'})
+                self.finish()
             else:
                 gevent.sleep(0)
 

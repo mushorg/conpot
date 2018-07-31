@@ -17,7 +17,6 @@
 
 from os import R_OK, W_OK
 from lxml import etree
-from datetime import datetime
 import conpot.core as conpot_core
 from gevent.server import StreamServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
@@ -61,7 +60,7 @@ class FTPConfig(object):
         self._init_fs()        # Initialize FTP file system.
 
         # FTP metrics related.
-        self.start_time = datetime.now()
+        self.timeout = 30  # set the connection timeout to 300 secs.
 
     def _get_data_channel_metrics(self):
         """Get Data channel related metrics.

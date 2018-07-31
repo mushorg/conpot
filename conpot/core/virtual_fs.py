@@ -20,9 +20,8 @@ import os
 import sys
 import fs
 import conpot
-from typing import Union, Optional
 from fs import open_fs, errors, subfs
-from conpot.core.file_io import AbstractFS, SubAbstractFS
+from conpot.core.filesystem import AbstractFS, SubAbstractFS
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ logger = logging.getLogger(__name__)
 class VirtualFS(object):
     """
     Conpot's virtual file system. Based on Pyfilesystem2, it would allow us to have
-    arbitrary file uploads while sandboxing them - for later analysis. This is how it should look like:
+    arbitrary file uploads while sand boxing them for later analysis. This is how it should look like:
 
                       [_conpot_vfs]
                             |

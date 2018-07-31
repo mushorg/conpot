@@ -27,7 +27,15 @@ class FakeBmc(Bmc):
 
     def __init__(self, authdata, port):
         self.authdata = authdata
-        self.port = 623
+        self.port = port
+        self.deviceid = 0x25
+        self.revision = 0x13
+        self.firmwaremajor = 0x14
+        self.firmwareminor = 0x1
+        self.ipmiversion = 2
+        self.additionaldevices = 0
+        self.mfgid = 0xf
+        self.prodid = 0xe
         self.powerstate = 'off'
         self.bootdevice = 'default'
         logger.info('IPMI BMC initialized.')

@@ -16,12 +16,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-
+from conpot.emulators.proxy import ProxyDecoder
 logger = logging.getLogger(__name__)
 
 
-class AsciiDecoder(object):
-
+class AsciiDecoder(ProxyDecoder):
+    
     def decode_in(self, data):
         return data.decode('utf-8', 'replace').encode('utf-8')
 

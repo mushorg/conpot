@@ -49,11 +49,13 @@ class TestTFTPServer(unittest.TestCase):
     def test_tftp_download(self):
         _dst_path = '/'.join(conpot.__path__ + ['tests/data/data_temp_fs/tftp/download'])
         client = tftpy.TftpClient('127.0.0.1', self.tftp_server.server.server_port)
-        client.download('tftp_data.txt', _dst_path)
-        gevent.sleep(3)
-        self.assertTrue(filecmp.cmp(_dst_path, self._test_file))
-        _, _data_fs = conpot_core.get_vfs('tftp')
-        _data_fs.remove('download')
+        try:
+            client.download('tftp_data.txt', _dst_path)
+            gevent.sleep(3)
+            self.assertTrue(filecmp.cmp(_dst_path, self._test_file))
+        finally:
+            _, _data_fs = conpot_core.get_vfs('tftp')
+            _data_fs.remove('download')
 
 
 if __name__ == '__main__':
