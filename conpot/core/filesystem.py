@@ -15,33 +15,33 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import fs
 import time
-import logging
-import stat
 import typing
+import stat
 import tempfile
+import logging
 import contextlib
 import shutil
+import fs
+from stat import filemode
 from datetime import datetime
 from os import F_OK, R_OK, W_OK
 from typing import Optional, Union, Text, Any, List
 from fs import open_fs, mirror, errors, subfs, base
 from fs.time import datetime_to_epoch
-from fs.subfs import SubFS
+from fs.mode import Mode
 from fs.wrapfs import WrapFS
 from fs.permissions import Permissions
 from fs.osfs import Info
-from fs.error_tools import unwrap_errors
 from conpot.helpers import months_map
 from types import FunctionType
-from fs import iotools
+from conpot.core.fs_utils import _custom_conpot_file, SubAbstractFS, copy_files, FilesystemError
+from conpot.core.fs_utils import FSOperationNotPermitted
+
 _F = typing.TypeVar('_F', bound='FS', covariant=True)
 
 logger = logging.getLogger(__name__)
 
-
-# TODO: Implement the following functionalities: move, copy, openbin, gettext, touch, settext, rename (file/directory).
 
 # ---------------------------------------------------
 # Regarding Permissions:
@@ -56,186 +56,6 @@ logger = logging.getLogger(__name__)
 #   - Write bit = Grants the capability to modify, or remove the content of the file.
 #   - Execute bit = User with execute permissions can run a file as a program.
 # ---------------------------------------------------
-
-class FilesystemError(fs.errors.FSError):
-    """Custom class for filesystem-related exceptions."""
-
-
-class FSOperationNotPermitted(fs.errors.FSError):
-    """Custom class for filesystem-related exceptions."""
-
-
-class _custom_conpot_file(object):
-
-    def __init__(self,
-                 file_system,
-                 parent_fs,
-                 path,
-                 mode,
-                 buffering=-1):
-        self.file_system = file_system
-        self._path = path
-        self.mode = mode
-        self._file = parent_fs.openbin(path=self._path, mode=mode, buffering=buffering)
-
-    def __getattr__(self, item):
-        return getattr(self._file, item)
-
-    def __repr__(self):
-        return '<ConpotFS cached file: {}>'.format(self._file.__repr__())
-
-    __str__ = __repr__
-
-    @property
-    def get_file(self):
-        return self._file
-
-    def close(self):
-        self._file.close()
-        if ('w' in self.mode) or ('a' in self.mode) or (self.file_system.built_cache is False) or ('x' in self.mode):
-            self.file_system._cache.update({self._path: self.file_system.getinfo(self._path, get_actual=True,
-                                                                                 namespaces=['basic', 'access',
-                                                                                             'details', 'stat'])})
-            self.file_system.chown(self._path, self.file_system.default_uid, self.file_system.default_gid)
-            self.file_system.chmod(self._path, self.file_system.default_perms)
-        logger.debug('Updating modified/access time')
-        self.file_system.setinfo(self._path, {})
-
-    def __enter__(self):
-        return self._file
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        logger.debug('Exiting file at : {}'.format(self._path))
-        self.close()
-
-
-class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
-    """
-    Creates a chroot jail sub file system. Each protocol can have an instance of this class. Use AbstractFS's
-    create_jail method to access this. You won't be able to cd into an `up` directory.
-    """
-    def __init__(self, parent_fs, path):
-        self.parent_fs = parent_fs
-        self._default_uid, self._default_gid = parent_fs.default_uid, parent_fs.default_gid
-        self._default_perms = parent_fs.default_perms
-        self.utime = self.settimes
-        super(SubAbstractFS, self).__init__(parent_fs, path)
-
-    def getinfo(self, path: str, get_actual: bool = False, namespaces=None):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.getinfo(_path, get_actual=get_actual, namespaces=namespaces)
-
-    # ------- Setters and getters for default users/grps/perms
-
-    @property
-    def default_perms(self):
-        return self._default_perms
-
-    @default_perms.setter
-    def default_perms(self, perms):
-        try:
-            assert isinstance(perms, Permissions)
-            self._default_perms = perms
-        except AssertionError:
-            raise FilesystemError('Permissions provided must be of valid type (fs.permissions.Permission)')
-
-    @property
-    def default_uid(self):
-        return self._default_uid
-
-    @default_uid.setter
-    def default_uid(self, _uid):
-        if _uid in self.parent_fs._users.keys():
-            self._default_uid = _uid
-        else:
-            raise FilesystemError('User with id {} not registered with fs'.format(_uid))
-
-    @property
-    def default_gid(self):
-        return self._default_gid
-
-    @default_gid.setter
-    def default_gid(self, _gid):
-        if _gid in self.parent_fs._grps.keys():
-            self._default_gid = _gid
-        else:
-            raise FilesystemError('Group with id {} not registered with fs'.format(_gid))
-
-    # ---- Other utilites
-
-    @property
-    def default_user(self):
-        return self.parent_fs._users[self.default_uid]['user']
-
-    @property
-    def default_group(self):
-        return self.parent_fs._grps[self.default_gid]['group']
-
-    def getcwd(self):
-        return self._sub_dir
-
-    @property
-    def root(self):
-        return self.parent_fs.root + self.getcwd()
-
-    def getmtime(self, path):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.getmtime(_path)
-
-    def format_list(self, basedir, listing):
-        _fs, _path = self.delegate_path(basedir)
-        with unwrap_errors(basedir):
-            return _fs.format_list(_path, listing)
-
-    def chown(self, fs_path: str, uid: int, gid: int, recursive: Optional[bool]=False):
-        _fs, _path = self.delegate_path(fs_path)
-        with unwrap_errors(fs_path):
-            return _fs.chown(_path, uid, gid, recursive)
-
-    def chmod(self, path: str, mode: oct, recursive: bool = False) -> None:
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.chmod(_path, mode, recursive)
-
-    def access(self, path: str, name_or_id: Union[int, str]=None, required_perms: str=None):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.access(_path, name_or_id, required_perms)
-
-    def stat(self, path):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.stat(_path)
-
-    def readlink(self, path):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.readlink(_path)
-
-    def get_permissions(self, path):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.get_permissions(_path)
-
-    def removedir(self, path, rf=False):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.removedir(_path)
-
-    def remove(self, path):
-        _fs, _path = self.delegate_path(path)
-        with unwrap_errors(path):
-            return _fs.remove(_path)
-
-    def __getattr__(self, item):
-        if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
-                                                      'norm_path', 'users', 'groups', 'add_users_to_group'}:
-            return getattr(self.parent_fs, item)
-        else:
-            raise NotImplementedError('Conpot\'s File System does not currently support method: {}'.format(item))
-
 
 class AbstractFS(WrapFS):
     """
@@ -341,6 +161,11 @@ class AbstractFS(WrapFS):
     def groups(self):
         return self._grps
 
+    @property
+    def user_groups(self):
+        """gid: {set of uid of users.}"""
+        return self._user_grps
+
     def getmeta(self, namespace="standard"):
         self.check()
         meta = self.delegate_fs().getmeta(namespace=namespace)
@@ -349,6 +174,7 @@ class AbstractFS(WrapFS):
 
     # ------- context managers for easier handling of fs
 
+    @contextlib.contextmanager
     def check_access(self, path=None, user=None, perms=None):
         """
             Checks whether the current user has permissions to do a specific operation. Raises FSOperationNotPermitted
@@ -364,16 +190,15 @@ class AbstractFS(WrapFS):
             >>>     with _vfs.open('/test', mode='wb') as _file:
             >>>         _file.write(b'Hello World!')
         """
-        with contextlib.ExitStack() as cm:
-            if not self.access(path=path, name_or_id=user, required_perms=perms):
-                raise FSOperationNotPermitted('User {} does not have required permission to file/path: {}'.format(
-                    user, path)
-                )
-            else:
-                cm.callback(logger.debug, 'Exiting file: {} after requested access.'.format(path))
-                cm.callback(self.setinfo, path, {})
-                yield
-                logger.debug('File {} has the requested params : {}'.format(path, (user, perms)))
+        if not self.access(path=path, name_or_id=user, required_perms=perms):
+            raise FSOperationNotPermitted('User {} does not have required permission to file/path: {}'.format(
+                user, path)
+            )
+        else:
+            logger.debug('Exiting file: {} after requested access.'.format(path))
+            yield
+            logger.debug('File {} has the requested params : {}'.format(path, (user, perms)))
+            self.setinfo(path, {})
 
     # -----------------------------------------------------------
     # Custom "setter" methods overwriting behaviour FS library methods
@@ -421,7 +246,7 @@ class AbstractFS(WrapFS):
                                 )
                             else:
                                 # Must be 'uid' that is available.
-                                _uid = int(access['uid'])
+                                _uid = int(access['uid'])   # type: ignore
                                 self._cache[path].raw['access']['uid'] = _uid
                                 self._cache[path].raw['access']['user'] = self._users[_uid]['user']
                                 self._cache[path].raw['details']['metadata_changed'] = fs.time.datetime_to_epoch(
@@ -441,7 +266,7 @@ class AbstractFS(WrapFS):
                                 )
                             else:
                                 # Must be 'gid' that is available.
-                                _gid = int(access['gid'])
+                                _gid = int(access['gid'])    # type: ignore
                                 self._cache[path].raw['access']['gid'] = _gid
                                 self._cache[path].raw['access']['group'] = self._grps[_gid]['group']
                                 self._cache[path].raw['details']['metadata_changed'] = fs.time.datetime_to_epoch(
@@ -551,16 +376,19 @@ class AbstractFS(WrapFS):
 
     def openbin(self, path, mode='r', buffering=-1, **options):
         """
-        This method is supposed to be used 'with', context manager. It automatically closes the file/updates cache and
-        raises exceptions.
-        In case you just need a file pointer, and would close the file explicitly - pass option raw = True,
-        **Please note that specifying raw would *not* update fs cache. This is to assume you know
-        what you doing.**
+        Open a file in the ConpotFS in binary mode.
         """
-        logging.debug('Opening file {} with mode {}'.format(path, mode))
+        logger.debug('Opening file {} with mode {}'.format(path, mode))
         _path = self.norm_path(path)
+        _bin_mode = Mode(mode).to_platform_bin()
+        _bin_mode = _bin_mode.replace("t", "")
         _parent_fs = super(AbstractFS, self)
-        binary_file = _custom_conpot_file(file_system=self, parent_fs=_parent_fs, path=_path, mode=mode)
+        self.check()
+        binary_file = _custom_conpot_file(file_system=self,
+                                          parent_fs=_parent_fs,
+                                          path=_path,
+                                          mode=_bin_mode,
+                                          encoding=None)
         return binary_file
 
     def open(self,
@@ -572,20 +400,36 @@ class AbstractFS(WrapFS):
              line_buffering=False,      # type: bool
              **options                  # type: Any
              ):
+        _open_mode = Mode(mode)
         base.validate_open_mode(mode)
-        bin_mode = mode.replace("t", "")
-        bin_file = self.openbin(path, mode=bin_mode, buffering=buffering)
-        io_stream = iotools.make_stream(
-            path,
-            bin_file,
-            mode=mode,
-            buffering=buffering,
-            encoding=encoding or "utf-8",
-            newline=newline,
-            **options
-        )
-        return io_stream
+        self.check()
+        _path = self.norm_path(path)
+        _parent_fs = super(AbstractFS, self)
+        _encoding = encoding or "utf-8"
+        file = _custom_conpot_file(file_system=self,
+                                   parent_fs=_parent_fs,
+                                   path=_path,
+                                   mode=_open_mode.to_platform(),
+                                   buffering=buffering,
+                                   encoding=encoding,
+                                   newline=newline,
+                                   line_buffering=line_buffering)
+        return file
 
+    def setbinfile(self, path, file):
+        with self._lock:
+            with self.openbin(path, "wb") as dst_file:
+                copy_files(file, dst_file)
+
+    def move(self, src_path, dst_path, overwrite=False):
+        if not overwrite and self.exists(dst_path):
+            raise fs.errors.DestinationExists(dst_path)
+        if self.getinfo(src_path).is_dir:
+            raise fs.errors.FileExpected(src_path)
+        with self._lock:
+            with self.open(src_path, "rb") as read_file:
+                self.setbinfile(dst_path, read_file)  # type: ignore
+            self.remove(src_path)
     # -----------------------------------------------------------
     # Custom "getter" methods overwriting behaviour FS library methods
     # Data is retrieved from the cached file-system.
@@ -820,7 +664,13 @@ class AbstractFS(WrapFS):
                 st = self.stat(file)
             except (fs.errors.FSError, FilesystemError):
                 raise
-            permission = Permissions.create(st['st_mode']).as_str()
+            permission = filemode(Permissions.create(st['st_mode']).mode)
+            if self.isdir(file):
+                permission = permission.replace('?', 'd')
+            elif self.isfile(file):
+                permission = permission.replace('?', '-')
+            elif self.islink(file):
+                permission = permission.replace('?', 'l')
             nlinks = st['st_nlink']
             size = st['st_size']  # file-size
             uname = self._users[st['st_uid']]['user']

@@ -17,10 +17,11 @@ from gevent import socket
 logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------
-# Implementation Note: DTP channel that would have two queues for Input and Output. Separate producer and consumer.
+# Implementation Note: DTP channel that would have two queues for Input and Output (separate for producer and consumer.)
 # There would be 3 threads (greenlets) in place. One for handling the command_channel, one for handling the input/
 # output of the data_channel and one that would run the command processor.
-# Commands class is independent of the **green drama**
+# Commands class inheriting this base handler is independent of the **green drama** and may be considered on as is basis
+# when migrating to async/io.
 # -----------------------------------------------------------
 
 
@@ -40,7 +41,10 @@ class FTPMetrics(object):
 
     @property
     def timeout(self):
-        return lambda: int(time.time() - (self.last_active or self.start_time))
+        if self.last_active:
+            return lambda: int(time.time() - self.last_active)
+        else:
+            return lambda: int(time.time() - self.start_time)
 
     def get_elapsed_time(self):
         return self.last_active - self.start_time
@@ -66,8 +70,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
     config = None                # Config of FTP server. FTPConfig class instance.
     host, port = None, None      # FTP Sever's host and port.
     _local_ip = '127.0.0.1'      # IP to bind the _data_listener_sock with.
-    _ac_in_buffer_size = 4096    # incoming data buffer size (defaults 65536)
-    _ac_out_buffer_size = 4096   # outgoing data buffer size (defaults 65536)
+    _ac_in_buffer_size = 4096    # incoming data buffer size (defaults 4096)
+    _ac_out_buffer_size = 4096   # outgoing data buffer size (defaults 4096)
 
     def __init__(self, request, client_address, server):
 
@@ -93,8 +97,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         # max login attempts
         self.max_login_attempts = 3
 
-        # get the current working directory of the current user
+        # ftp absolute path of the file system
         self.root = self.config.vfs.norm_path(self.config.vfs.getcwd() + '/')
+        # get the current working directory of the current user
         self.working_dir = '/'
         # flag to check whether we need to disconnect the client
         self.disconnect_client = False
@@ -131,7 +136,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         socketserver.BaseRequestHandler.__init__(self, request=request, client_address=client_address,
                                                  server=server)
 
-    # ------------------------ Wrappers for gevent StreamServer -------------------------
+    # -- Wrappers for gevent StreamServer -------
 
     class false_request(object):
         def __init__(self):
@@ -188,7 +193,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         if self.disconnect_client is False:
             self.finish()
         
-    # ------------------------ FTP Command Channel -------------------------
+    # -- FTP Command Channel ------------
 
     def handle_cmd_channel(self):
         """Read data from the socket and add it to the _command_channel_input_q for processing"""
@@ -240,7 +245,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
     def process_ftp_command(self):
         raise NotImplementedError
 
-    # ----------------------- FTP Data Channel --------------------
+    # -- FTP Data Channel --------------
 
     def start_data_channel(self, send_recv='send'):
         """
@@ -281,6 +286,10 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self._data_channel = False
         if self._data_sock and self._data_sock.fileno() != -1:
             self._data_sock.close()
+        # don't want to do either send and receive.
+        # Although this is done while sending - we're doing it just to be safe.
+        self._data_channel_recv.set()
+        self._data_channel_send.set()
         if purge:
             self.cli_ip = None
             self.cli_port = None
@@ -306,9 +315,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                             logger.info('Send data {} at {}:{} for client : {}'.format(
                                 data['data'], self.cli_ip, self.cli_port, self.client_address)
                             )
-                            self.metrics.data_channel_bytes_send += len(data)
                             self.metrics.last_active = time.time()
                             self._data_sock.send(data=data['data'])
+                            self.metrics.data_channel_bytes_send += len(data)
                         elif data['type'] == 'file':
                             file_name = data['file']
                             if self.config.vfs.isfile(file_name):
@@ -316,16 +325,17 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                     file_name, self.client_address, self.cli_ip, self.cli_port)
                                 )
                                 try:
+                                    self.metrics.last_active = time.time()
                                     with self.config.vfs.open(file_name, mode='rb') as file_:
                                         self._data_sock.sendfile(file_, 0)
                                     _size = self.config.vfs.getsize(file_name)
                                     self.metrics.data_channel_bytes_send += _size
-                                    self.metrics.last_active = time.time()
                                 except (fs.errors.FSError, FilesystemError):
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
                             # no more data to send. Close the data channel
-                            self.respond(b'226 Transfer complete.')
+                            if self._last_command not in ('LIST', 'NLST'):
+                                self.respond(b'226 Transfer complete.')
                             self._data_channel_send.set()
                 elif not self._data_channel_recv.is_set():
                     # must be a receiving event. Get data from socket and add it to input_q
@@ -333,20 +343,20 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     self.respond(b'125 Transfer starting.')
                     data = self._data_sock.recv(self._ac_in_buffer_size)
                     if data and data != b'':
+                        self.metrics.last_active = time.time()
                         # There is some data -- could be a file.
                         logger.debug('Received {} from client {} on {}:{}'.format(
                             data, self.client_address, self.cli_ip, self.cli_port)
                         )
                         self.metrics.data_channel_bytes_recv += len(data)
-                        self.metrics.last_active = time.time()
                         self._data_channel_input_q.put(data)
                         while data and data != b'':
+                            self.metrics.last_active = time.time()
                             data = self._data_sock.recv(self._ac_in_buffer_size)
                             logger.debug('Received {} from client {} on {}:{}'.format(
                                 data, self.client_address, self.cli_ip, self.cli_port)
                             )
                             self.metrics.data_channel_bytes_recv += len(data)
-                            self.metrics.last_active = time.time()
                             self._data_channel_input_q.put(data)
                     # we have received all data. Time to finish this process.
                     # set the writing event to set - so that we can write this data to files.
@@ -445,52 +455,38 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self._data_channel_output_q.put({'type': 'file', 'file': file_name})
         self.start_data_channel()
 
-    # ----------------------- FTP Authentication and other unities --------------------
+    # -- FTP Authentication and other unities --------
 
     # FIXME: Refactor this. Move this to the auth module.
     def authentication_ok(self, user_pass):
         """
-            Verifies authentication and sets the username of the currently connected client. Returns True or False
-                - Checks user names and passwords pairs. Sets the current user
-                - Getting/Setting user home directory
-                - Checking user permissions when a filesystem read/write event occurs
-                - Creates VFS instances *per* user/pass tuple. Also stores the state of the user (cwd, permissions etc.)
-            If it is not the first time a user has logged in, it would fetch the vfs from existing vfs instances.
+        Verifies authentication and sets the username of the currently connected client. Returns True or False
+        Checks user names and passwords pairs. Sets the current user and uid.
         """
         # if anonymous ftp is enabled - accept any password.
         try:
             if self.username == 'anonymous' and self.config.anon_auth:
                 self.authenticated = True
+                self._uid = self.config.get_uid(self.username)
                 return True
             else:
                 if (self.username, user_pass) in self.config.user_pass:
                     # user/pass match and correct!
                     self.authenticated = True
-                    [self._uid] = [k for k, v in self.config.user_db.items() if self.username in v.values()]
+                    self._uid = self.config.get_uid(self.username)
                     return True
                 return False
         except (KeyError, ValueError):
             return False
-
-    def check_perms(self, perms='r', path=None):
-        # check permission
-        if path is None:
-            _path = self.working_dir
-        else:
-            _path = path
-        if self.config.has_permissions(file_path=_path, uid=self._uid, perms=perms):
-            return True
-        else:
-            raise FTPPrivilegeException
         
-    # ----------------------- Actual FTP Handler --------------------
+    # -- Actual FTP Handler -----------
 
     def handle(self):
         """Actual FTP service to which the user has connected."""
         while not self.disconnect_client:
             try:
                 # These greenlets would be running forever. During the connection.
-                # first two are for duplex command channel. Latter two are for storing files on file-systems.
+                # first two are for duplex command channel. Final one is for storing files on file-system.
                 self.ftp_greenlets = [gevent.spawn(self.handle_cmd_channel),
                                       gevent.spawn(self.process_ftp_command),
                                       gevent.spawn(self.handle_data_channel)]

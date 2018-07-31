@@ -11,7 +11,7 @@ import sys
 import gevent
 from gevent import socket
 from fs import errors
-from conpot.core.filesystem import FilesystemError
+from conpot.core.filesystem import FilesystemError, FSOperationNotPermitted
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException, get_data_from_iter
 logger = logging.getLogger(__name__)
 
@@ -31,14 +31,16 @@ class FTPCommandChannel(FTPHandlerBase):
     """
 
     def ftp_path(self, path):
-        _path = self.config.vfs.norm_path(os.path.join(path))
-        _path.replace(self.root, '/')
+        """Clean and sanitize ftp paths relative fs instance it is hosted in."""
+        _path = self.config.vfs.norm_path(os.path.join(self.working_dir, path))
+        _path = _path.replace(self.root, '/')
         return _path
 
     # -----------------------------------------------------------------------
     # There are some commands that do not require any kind of auth and permissions to run.
     # These also do not require us to have an established data channel. So let us get rid of those first.
     # Btw: These are - USER, PASS, HELP, NOOP, SYST, QUIT, SITE HELP
+    # All commands assume that the path supplied is all cleaned and sanitized.
 
     # The USER command is used to verify users as they try to login.
     def do_USER(self, arg):
@@ -196,7 +198,7 @@ class FTPCommandChannel(FTPHandlerBase):
 
     def do_PWD(self, arg):
         """Return the name of the current working directory to the client."""
-        pwd = self.ftp_path(self.working_dir)
+        pwd = self.working_dir
         try:
             assert isinstance(pwd, str), pwd
             _pwd = '257 "{}" is the current directory.'.format(pwd)
@@ -278,10 +280,12 @@ class FTPCommandChannel(FTPHandlerBase):
         try:
             # In order to create a directory the current user must have 'w' permissions for the parent directory
             # of current path.
-            self.check_perms(perms='w', path=self.working_dir)
-            self.config.vfs.makedir(path)
-            _mkd = '257 "{}" directory created.'.format(self.root + path)
+            with self.config.vfs.check_access(path=self.working_dir, user=self._uid, perms='w'):
+                self.config.vfs.makedir(self.ftp_path(path))
+            _mkd = '257 "{}" directory created.'.format(self.ftp_path(path))
             self.respond(_mkd)
+        except FSOperationNotPermitted:
+            self.respond(b'500 Operation not permitted.')
         except (FilesystemError, fs.errors.FSError, FTPPrivilegeException):
             self.respond(b'550 Create directory operation failed.')
 
@@ -292,33 +296,37 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(b'550 Can\'t remove root directory.')
             return
         try:
-            _path = self.working_dir + path
+            _path = self.ftp_path(self.working_dir + path)
             # In order to create a directory the current user must have 'w' permissions for the current directory
-            self.check_perms(perms='w', path=_path)
-            self.config.vfs.removedir(_path)
+            with self.config.vfs.check_access(path=_path, user=self._uid, perms='w'):
+                self.config.vfs.removedir(_path)
             self.respond(b'250 Directory removed.')
+        except FSOperationNotPermitted:
+            self.respond(b'500 Operation not permitted.')
         except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 Remove directory operation failed.')
 
     def do_CWD(self, path):
-        """Change the current working directory. We would get """
+        """Change the current working directory."""
         # Temporarily join the specified directory to see if we have permissions to do so, then get back to original
         # process's current working directory.
         try:
             init_cwd = self.working_dir
             # make sure the current user has permissions to the new dir. To change the directory, user needs to have
             # executable permissions for the directory
-            self.check_perms(perms='x', path=path)
-            self.working_dir = self.ftp_path(path)
+            with self.config.vfs.check_access(path=path, user=self._uid, perms='x'):
+                self.working_dir = self.ftp_path(path)
             logger.info('Changing current directory {} to {}'.format(init_cwd, self.working_dir))
             _cwd = '250 "{}" is the current directory.'.format(self.working_dir)
             self.respond(_cwd.encode())
+        except FSOperationNotPermitted:
+            self.respond(b'500 Operation not permitted.')
         except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 Failed to change directory.')
 
     def do_CDUP(self, arg):
-        """Change into the parent directory.
-        On success return the new directory, else None.
+        """
+        Change into the parent directory. On success return the new directory, else None.
         """
         # Note: RFC-959 says that code 200 is required but it also says
         # that CDUP uses the same codes as CWD.
@@ -351,7 +359,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(b"550 Can't rename home directory.")
             else:
                 self._rnfr = path
-                self.respond(b"350 Ready for destination name.")
+                self.respond(b'350 Ready for destination name.')
         except (AssertionError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 No such file or directory.')
 
@@ -361,24 +369,21 @@ class FTPCommandChannel(FTPHandlerBase):
             # TODO: check for rename permissions
             assert isinstance(dst_path, str)
             if not self._rnfr:
-                self.respond(b"503 Bad sequence of commands: use RNFR first.")
+                self.respond(b'503 Bad sequence of commands: use RNFR first.')
                 return
             src = self._rnfr
             self._rnfr = None
             # currently ony support rename of files - not folders.
             if self.config.vfs.isdir(src):
                 raise FilesystemError
-            assert self.working_dir in src
-            assert self.working_dir in dst_path
-            # FIXME: use os.path.split : _basedir, _file = os.path.split()
-            _path, _file = self.working_dir, src.replace(self.working_dir, '/')
-            _dst_file = dst_path.replace(self.working_dir, '/')
-            if _file != _dst_file:
-                logger.info('Renaming file from {} to {}'.format(self.root + _path + _file,
-                                                                 self.root + _path + _dst_file))
-                self.config.vfs.rename_file(self.ftp_path(_path), _file, _dst_file)
+            _path, _file = os.path.split(src)
+            _, _dst_file = os.path.split(dst_path)
+            if _path + '/' + _file != _path + '/' + _dst_file:
+                logger.info('Renaming file from {} to {}'.format(_path + '/' + _file,
+                                                                 _path + '/' + _dst_file))
+                self.config.vfs.move(_path + '/' + _file, _path + '/' + _dst_file, overwrite=True)
             self.respond(b"250 Renaming ok.")
-        except (ValueError, AssertionError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except (ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
             self.respond(b'550 File rename operation failed.')
 
     def do_STAT(self, path):
@@ -471,17 +476,17 @@ class FTPCommandChannel(FTPHandlerBase):
     def do_NLST(self, path):
         """Return a list of files in the specified directory in a compact form to the client."""
         try:
-            listing = self.config.vfs.listdir(self.working_dir + path)
+            listing = self.config.vfs.listdir(self.ftp_path(path))
             data = ''
             if listing:
                 listing.sort()
                 data = '\r\n'.join(listing) + '\r\n'
-            self.respond('150 Here comes the directory listing.')
+            self.respond(b'150 Here comes the directory listing.')
             # Push data to the data channel
             self.push_data(data=data)
             # start the command channel
             self.start_data_channel()
-            self.respond('226 Directory send OK.')
+            self.respond(b'226 Directory send OK.')
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 NLST command failed.')
@@ -492,7 +497,7 @@ class FTPCommandChannel(FTPHandlerBase):
         :param arg: Filename that is to be retrieved
         """
         try:
-            filename = self.ftp_path(self.working_dir + arg)
+            filename = self.ftp_path(arg)
             if self.config.vfs.isfile(filename):
                 self.send_file(file_name=filename)
             else:
@@ -505,8 +510,9 @@ class FTPCommandChannel(FTPHandlerBase):
         """Reinitialize user's current session."""
         self.stop_data_channel()
         self.username = None
+        self._uid = None
         self.authenticated = False
-        self.respond(b"230 Ready for new user.")
+        self.respond(b'230 Ready for new user.')
 
     def do_ABOR(self, arg):
         """Aborts a file transfer currently in progress."""
@@ -644,9 +650,9 @@ class FTPCommandChannel(FTPHandlerBase):
             if self.config.COMMANDS[cmd]['perm'] and (cmd != 'STOU'):
                 if cmd in ('CWD', 'XCWD'):
                     if arg and self.working_dir != '/':
-                        arg = '/'.join([self.ftp_path(self.working_dir), arg])
+                        arg = os.path.join(self.working_dir, arg)
                     else:
-                        arg = self.ftp_path(arg or '/')
+                        arg = (arg or '/')
                 elif cmd in ('CDUP', 'XCUP'):
                     arg = ''
                 elif cmd == 'STAT':
@@ -665,15 +671,15 @@ class FTPCommandChannel(FTPHandlerBase):
                 else:
                     if cmd == 'LIST':
                         if arg.lower() in ('-a', '-l', '-al', '-la'):
-                            arg = self.ftp_path(self.working_dir)
+                            arg = self.working_dir
                         else:
-                            arg = self.ftp_path(arg or self.working_dir)
+                            arg = (arg or self.working_dir)
                     if glob.has_magic(arg):
                         self.respond(b'550 Globbing not supported.')
                         return
                     else:
                         arg = glob.escape(arg)
-                        arg = self.ftp_path(arg or self.working_dir)
+                        arg = (arg or self.working_dir)
                         arg = line.split(' ', 1)[1] if arg is None else arg
 
             # call the proper do_* method
@@ -721,7 +727,7 @@ class FTPCommandChannel(FTPHandlerBase):
                     except UnicodeEncodeError:
                         self.respond(b'501 can\'t decode path (server filesystem encoding is %a)' %
                                      sys.getfilesystemencoding())
-                    except fs.errors.PermissionDenied:
+                    except (fs.errors.PermissionDenied, FSOperationNotPermitted):
                         # TODO: log user as well.
                         logger.info('Client {} requested path: {} trying to access directory to which it has '
                                     'no access to.'.format(self.client_address, line))

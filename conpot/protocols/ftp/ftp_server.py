@@ -23,11 +23,11 @@ from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
 
-import logging
-logger = logging.getLogger(__name__)
-# import sys
-# import logging as logger
-# logger.basicConfig(stream=sys.stdout, level=logger.INFO)
+# import logging
+# logger = logging.getLogger(__name__)
+import sys
+import logging as logger
+logger.basicConfig(stream=sys.stdout, level=logger.INFO)
 
 
 class FTPConfig(object):
@@ -62,25 +62,30 @@ class FTPConfig(object):
         # FTP metrics related.
         self.timeout = 30  # set the connection timeout to 300 secs.
 
-    def _get_data_channel_metrics(self):
-        """Get Data channel related metrics.
-        - Total duration for which FTP server has been running.
-        - Total number of uploads.
-        :returns bytes_sent, bytes_recv and elapsed_time for the data_channel.
-        """
-        pass
-
+    # FIXME: move this method to auth module.
     def _init_user_db(self):
         # TODO: Get users from the template.
         self.user_db[13] = {
             'uname': 'nobody',
-            'grp': '45:nobody',
+            'grp': '45:ftp',
             'password': 'nobody'
         }
         self.user_db[10] = {
             'uname': 'test_user',
-            'grp': '13:test_grp',
+            'grp': '45:ftp',
             'password': 'test'
+        }
+        # Toggle enable/disable anonymous user.
+        self.user_db[22] = {
+            'uname': 'anonymous',
+            'grp': '45:ftp',
+            'password': ''
+        }
+        # FIXME: for testing - remove after use
+        self.user_db[3000] = {
+            'uname': 'abhinav',
+            'grp': '34:abhinav',
+            'password': 'abhinav'
         }
         # Let us create groups from the populated users.
         for i in self.user_db.keys():
@@ -95,30 +100,23 @@ class FTPConfig(object):
         self.user_pass = set(zip([v['uname'] for v in self.user_db.values()],
                                  [v['password'] for v in self.user_db.values()]))
 
-    def has_permissions(self, file_path, uid, perms):
-        """
-        Handy utility to check whether a user has access/permissions to files. Implements users belonging to groups
-        functionality.
-        :rtype: bool
-        """
-        # TODO: migrate this utility to auth module.
-        # Basically we need to implement the concept of users belonging to groups. This isn't something taken
-        # care of in the VSF since it doesn't belong there.
-        if self.vfs.access(file_path, name_or_id=uid, required_perms=perms):
-            return True
-        else:
-            # access returned false. We should probably check group permissions.
-            for v in self.grp_db.values():
-                if uid in v['users']:
-                    # do a access on the path a return True if True.
-                    if self.vfs.access(file_path, name_or_id=v['group'], required_perms=perms):
-                        return True
-            return False
+    # FIXME: move this method to auth module.
+    def get_uid(self, user_name):
+        """Get uid from a username"""
+        [_uid] = [k for k, v in self.user_db.items() if user_name in v.values()]
+        return _uid
+
+    # FIXME: move this method to auth module.
+    def get_gid(self, uid):
+        """Get group id of a user from it's uid"""
+        [_gid] = [k for k, v in self.grp_db.items() if uid in v['users']]
+        return _gid
 
     def _init_fs(self):
         # Create/register all necessary users and groups in the file system
         _ = {conpot_core.get_vfs().register_user(uid=k, name=v['uname']) for k, v in self.user_db.items()}
         _ = {conpot_core.get_vfs().create_group(gid=k, name=v['group']) for k, v in self.grp_db.items()}
+        _ = {conpot_core.get_vfs().add_users_to_group(gid=k, uids=list(v['users'])) for k, v in self.grp_db.items()}
         # Initialize file system
         self.vfs, self.data_fs = conpot_core.add_protocol(protocol_name='ftp',
                                                           data_fs_subdir=self.data_fs_subdir,
@@ -128,6 +126,10 @@ class FTPConfig(object):
                                                           group_gid=self.default_group,
                                                           perms=self.default_perms)
         # FIXME: Do chown/chmod here just to be sure.
+        self.default_owner = 3000
+        self.default_group = 34
+        self.vfs.chmod('/', self.default_perms, recursive=True)
+        self.vfs.chown('/', uid=self.default_owner, gid=self.default_group, recursive=True)
         if self.add_src:
             logger.info('FTP Serving File System from {} at {} in vfs. FTP data_fs sub directory: {}'.format(
                 self.add_src, self.root_path, self.data_fs._sub_dir
