@@ -22,95 +22,85 @@ from gevent.server import StreamServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
-
-# import logging
-# logger = logging.getLogger(__name__)
-import sys
-import logging as logger
-logger.basicConfig(stream=sys.stdout, level=logger.INFO)
+from datetime import datetime
+import logging
+logger = logging.getLogger(__name__)
+# import sys
+# import logging as logger
+# logger.basicConfig(stream=sys.stdout, level=logger.INFO)
 
 
 class FTPConfig(object):
     def __init__(self, template):
+        self.user_db = dict()  # user_db[uid] = (user_pass, user_group)
+        self.grp_db = dict()   # grp_db[gid] = {group: 'group_name'. users: set(users_uid))
         dom = etree.parse(template)
+        # First let us get FTP related data
+        self.all_commands = ['USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST', 'TYPE', 'PASV',
+                             'PORT', 'ALLO', 'MODE', 'SIZE', 'PWD', 'MKD', 'RMD', 'CWD', 'CDUP', 'MDTM', 'DELE',
+                             'SITE CHMOD', 'RNFR', 'RNTO', 'STAT', 'LIST', 'NLST', 'RETR', 'REIN', 'ABOR', 'STOR',
+                             'APPE', 'REST', 'STRU', 'STOU']
+        # Implementation Note: removing a command from here would make it unrecognizable in FTP server.
+        self.enabled_commands = \
+            (''.join(dom.xpath('//ftp/device_info/enabled_commands/text()')[0].strip().split())).split(',')
+        self.enabled_commands = [i.replace("'", "") for i in self.enabled_commands]
+        if 'SITEHELP' in self.enabled_commands:
+            self.enabled_commands.remove('SITEHELP')
+            self.enabled_commands.append('SITE HELP')
+        if 'SITECHMOD' in self.enabled_commands:
+            self.enabled_commands.remove('SITECHMOD')
+            self.enabled_commands.append('SITE CHMOD')
+        for i in self.enabled_commands:
+            assert i in self.all_commands
         self.device_type = dom.xpath('//ftp/device_info/device_type/text()')[0]
         self.banner = dom.xpath('//ftp/device_info/banner/text()')[0]
         self.max_login_attempts = int(dom.xpath('//ftp/device_info/max_login_attempts/text()')[0])
-        self.anon_auth = bool(dom.xpath('//ftp/anon_login/text()')[0])
-        # Implementation Note: removing a command from here would make it unrecognizable in FTP server.
-        self.enabled_commands = ['USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST', 'TYPE', 'PASV',
-                                 'PORT', 'ALLO', 'MODE', 'SIZE', 'PWD', 'MKD', 'RMD', 'CWD', 'CDUP', 'MDTM', 'DELE',
-                                 'SITE CHMOD', 'RNFR', 'RNTO', 'STAT', 'LIST', 'NLST', 'RETR', 'REIN', 'ABOR', 'STOR']
+        # set the connection timeout to 300 secs.
+        self.timeout = int(dom.xpath('//ftp/device_info/sever_timeout/text()')[0])
+        if dom.xpath('//ftp/device_info/motd/text()'):
+            self.motd = dom.xpath('//ftp/device_info/motd/text()')[0]
+        else:
+            self.motd = None
+        self.stou_prefix = dom.xpath('//ftp/device_info/stou_prefix/text()')
+        self.stou_suffix = dom.xpath('//ftp/device_info/stou_suffix/text()')
         # Restrict FTP to only enabled FTP commands
         self.COMMANDS = {i: ftp_commands[i] for i in self.enabled_commands}
-        # VFS related.
-        self.root_path = dom.xpath('//ftp/vfs/path/text()')[0]
-        self.data_fs_subdir = dom.xpath('//ftp/vfs/data_fs_subdir/text()')[0]
-        if len(dom.xpath('//ftp/vfs/add_src/text()')) == 0:
+
+        # -- Now that we fetched FTP meta, let us populate users.
+        grp = dom.xpath('//ftp/ftp_users/users')[0].attrib['group']
+        for i in dom.xpath('//ftp/ftp_users/users/*'):
+            self.user_db[int(i.attrib['uid'])] = {
+                'uname': i.xpath('./uname/text()')[0],
+                'grp': grp,
+                'password': i.xpath('./password/text()')[0]
+            }
+        self.anon_auth = bool(dom.xpath('//ftp/ftp_users/anon_login')[0].attrib['enabled'])
+        if self.anon_auth:
+            self.anon_uid = int(dom.xpath('//ftp/ftp_users/anon_login')[0].attrib['uid'])
+            self.user_db[self.anon_uid] = {
+                'uname': dom.xpath('//ftp/ftp_users/anon_login/uname/text()')[0],
+                'grp': grp,
+                'password': ''
+            }
+
+        # As a last step, get VFS related data.
+        self.root_path = dom.xpath('//ftp/ftp_vfs/path/text()')[0]
+        self.data_fs_subdir = dom.xpath('//ftp/ftp_vfs/data_fs_subdir/text()')[0]
+        if len(dom.xpath('//ftp/ftp_vfs/add_src/text()')) == 0:
             self.add_src = None
         else:
-            self.add_src = dom.xpath('//tftp/add_src/text()')[0].lower()
-        self.default_owner = int(dom.xpath('//ftp/vfs/default_owner/text()')[0])
-        self.default_group = int(dom.xpath('//ftp/vfs/default_grp/text()')[0])
-        self.default_perms = dom.xpath('//ftp/vfs/default_perms/text()')[0]
-        # User/Permissions Model related.
-        self.user_db = dict()  # user_db[uid] = (user_pass, user_group)
-        self.grp_db = dict()   # grp_db[gid] = {group: 'group_name'. users: set(users_uid))
+            self.add_src = dom.xpath('//ftp/ftp_vfs/add_src/text()')[0].lower()
+        # default ftp owners and groups
+        self.default_owner = int(dom.xpath('//ftp/ftp_vfs/default_owner/text()')[0])
+        self.default_group = int(grp.split(':')[0])
+
+        self.default_perms = oct(int(dom.xpath('//ftp/ftp_vfs/default_perms/text()')[0], 8))
+        self.file_default_perms = oct(int(dom.xpath('//ftp/ftp_vfs/upload_file_perms/text()')[0], 8))
+        self.dir_default_perms = oct(int(dom.xpath('//ftp/ftp_vfs/upload_file_perms/text()')[0], 8))
+        self._custom_files = dom.xpath('//ftp/ftp_vfs/file')
+        self._custom_dirs = dom.xpath('//ftp/ftp_vfs/dir')
         self._init_user_db()   # Initialize User DB
         self._init_fs()        # Initialize FTP file system.
-
-        # FTP metrics related.
-        self.timeout = 30  # set the connection timeout to 300 secs.
-
-    # FIXME: move this method to auth module.
-    def _init_user_db(self):
-        # TODO: Get users from the template.
-        self.user_db[13] = {
-            'uname': 'nobody',
-            'grp': '45:ftp',
-            'password': 'nobody'
-        }
-        self.user_db[10] = {
-            'uname': 'test_user',
-            'grp': '45:ftp',
-            'password': 'test'
-        }
-        # Toggle enable/disable anonymous user.
-        self.user_db[22] = {
-            'uname': 'anonymous',
-            'grp': '45:ftp',
-            'password': ''
-        }
-        # FIXME: for testing - remove after use
-        self.user_db[3000] = {
-            'uname': 'abhinav',
-            'grp': '34:abhinav',
-            'password': 'abhinav'
-        }
-        # Let us create groups from the populated users.
-        for i in self.user_db.keys():
-            grp = self.user_db[i].pop('grp')
-            _gid, _gname = grp.split(':')
-            _gid = int(_gid)
-            if _gid not in self.grp_db.keys():
-                # It is a new group. Let us create/register this.
-                self.grp_db[_gid] = {'group': _gname, 'users': set()}
-            self.grp_db[_gid]['users'].add(i)
-        # create a simple set of user and pass combinations for easy auth
-        self.user_pass = set(zip([v['uname'] for v in self.user_db.values()],
-                                 [v['password'] for v in self.user_db.values()]))
-
-    # FIXME: move this method to auth module.
-    def get_uid(self, user_name):
-        """Get uid from a username"""
-        [_uid] = [k for k, v in self.user_db.items() if user_name in v.values()]
-        return _uid
-
-    # FIXME: move this method to auth module.
-    def get_gid(self, uid):
-        """Get group id of a user from it's uid"""
-        [_gid] = [k for k, v in self.grp_db.items() if uid in v['users']]
-        return _gid
 
     def _init_fs(self):
         # Create/register all necessary users and groups in the file system
@@ -125,11 +115,6 @@ class FTPConfig(object):
                                                           owner_uid=self.default_owner,
                                                           group_gid=self.default_group,
                                                           perms=self.default_perms)
-        # FIXME: Do chown/chmod here just to be sure.
-        self.default_owner = 3000
-        self.default_group = 34
-        self.vfs.chmod('/', self.default_perms, recursive=True)
-        self.vfs.chown('/', uid=self.default_owner, gid=self.default_group, recursive=True)
         if self.add_src:
             logger.info('FTP Serving File System from {} at {} in vfs. FTP data_fs sub directory: {}'.format(
                 self.add_src, self.root_path, self.data_fs._sub_dir
@@ -150,7 +135,83 @@ class FTPConfig(object):
             logger.debug("FTP root {} is writable".format(self.vfs.getcwd() + self.root))
         else:
             logger.warning("FTP root {} is not writable".format(self.vfs.getcwd() + self.root))
-        # TODO: change permissions for specific files.
+        # Finally apply permissions to specific files.
+        for _file in self._custom_files:
+            _path = _file.attrib['path']
+            _path = _path.replace(self.root_path, self.root)
+            _owner = int(_file.xpath('./owner_uid/text()')[0])
+            _perms = oct(int(_file.xpath('./perms/text()')[0], 8))
+            _accessed = datetime.fromtimestamp(float(_file.xpath('./last_accessed/text()')[0]))
+            _modified = datetime.fromtimestamp(float(_file.xpath('./last_modified/text()')[0]))
+            self.vfs.chown(_path, _owner, self.default_group)
+            self.vfs.chmod(_path, _perms)
+            self.vfs.settimes(_path, _accessed, _modified)
+
+        for _dir in self._custom_dirs:
+            _path = _dir.attrib['path']
+            _recursive = bool(_dir.attrib['recursive'])
+            _path = _path.replace(self.root_path, self.root)
+            _owner = int(_dir.xpath('./owner_uid/text()')[0])
+            _perms = oct(int(_dir.xpath('./perms/text()')[0], 8))
+            _accessed = datetime.fromtimestamp(float(_dir.xpath('./last_accessed/text()')[0]))
+            _modified = datetime.fromtimestamp(float(_dir.xpath('./last_modified/text()')[0]))
+            self.vfs.chown(_path, _owner, self.default_group, _recursive)
+            self.vfs.chmod(_path, _perms)
+            self.vfs.settimes(_path, _accessed, _modified)
+
+        # self.default_owner = 13
+        # self.default_group = 45
+        # self.vfs.chmod('/', self.default_perms, recursive=True)
+        # self.vfs.chown('/', uid=self.default_owner, gid=self.default_group, recursive=True)
+
+    # --------------------------------------------
+    # TODO: move this method to auth module.
+    def _init_user_db(self):
+        """
+        We expect the following dict format to build for every user
+                self.user_db[10] = {
+                    'uname': 'test_user',
+                    'grp': '45:ftp',
+                    'password': 'test'
+                }
+        :return:
+        """
+        # TODO: Get users from the template.
+        self.user_db[13] = {
+            'uname': 'nobody',
+            'grp': '45:ftp',
+            'password': 'nobody'
+        }
+        # Toggle enable/disable anonymous user.
+        self.user_db[22] = {
+            'uname': 'anonymous',
+            'grp': '45:ftp',
+            'password': ''
+        }
+        # Let us create groups from the populated users.
+        for i in self.user_db.keys():
+            grp = self.user_db[i].pop('grp')
+            _gid, _gname = grp.split(':')
+            _gid = int(_gid)
+            if _gid not in self.grp_db.keys():
+                # It is a new group. Let us create/register this.
+                self.grp_db[_gid] = {'group': _gname, 'users': set()}
+            self.grp_db[_gid]['users'].add(i)
+        # create a simple set of user and pass combinations for easy auth
+        self.user_pass = set(zip([v['uname'] for v in self.user_db.values()],
+                                 [v['password'] for v in self.user_db.values()]))
+
+    # TODO: move this method to auth module.
+    def get_uid(self, user_name):
+        """Get uid from a username"""
+        [_uid] = [k for k, v in self.user_db.items() if user_name in v.values()]
+        return _uid
+
+    # TODO: move this method to auth module.
+    def get_gid(self, uid):
+        """Get group id of a user from it's uid"""
+        [_gid] = [k for k, v in self.grp_db.items() if uid in v['users']]
+        return _gid
 
 
 @conpot_protocol

@@ -227,6 +227,12 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         with unwrap_errors(path):
             return _fs.remove(_path)
 
+    def move(self, src_path, dst_path, overwrite=True):
+        _fs, _src_path = self.delegate_path(src_path)
+        _, _dst_path = self.delegate_path(dst_path)
+        with unwrap_errors({_src_path: src_path, _dst_path: dst_path}):
+            return _fs.move(_src_path, _dst_path, overwrite=overwrite)
+
     def __getattr__(self, item):
         if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
                                                       'norm_path', 'users', 'groups', 'add_users_to_group',

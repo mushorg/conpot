@@ -1,3 +1,20 @@
+# Copyright (C) 2018  Abhinav Saxena <xandfury@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
 from gevent import monkey; monkey.patch_all()
 import socketserver
 import gevent
@@ -9,6 +26,8 @@ import logging
 import errno
 import time
 import fs
+from datetime import datetime
+import os
 from fs import errors
 from conpot.helpers import sanitize_file_name
 from gevent import event
@@ -64,6 +83,21 @@ class FTPMetrics(object):
                                                             self.data_channel_bytes_recv)
         return s
 
+    def get_metrics(self, user_name, uid, failed_login_attempts, max_login_attempts, client_address):
+        s = '''
+        FTP statistics for client     : {}
+        ----------------------------------
+        Logged in as user :{} with uid: {}
+        Failed login attempts         : {}/{}
+        Start time                    : {}
+        Last active on                : {}
+        ----------------------------------
+        '''.format(client_address, user_name, uid, failed_login_attempts, max_login_attempts,
+                   datetime.fromtimestamp(self.start_time).ctime(),
+                   datetime.fromtimestamp(self.last_active).ctime())
+        s += self.__repr__()
+        return s
+
 
 class FTPHandlerBase(socketserver.BaseRequestHandler):
     """Base class for a full duplex connection"""
@@ -95,7 +129,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         # tracking login attempts
         self.invalid_login_attempt = 0
         # max login attempts
-        self.max_login_attempts = 3
+        self.max_login_attempts = 3  # fixme: take max login attempts from config.
 
         # ftp absolute path of the file system
         self.root = self.config.vfs.norm_path(self.config.vfs.getcwd() + '/')
@@ -135,6 +169,12 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self.ftp_greenlets = None  # Keep track of all greenlets
         socketserver.BaseRequestHandler.__init__(self, request=request, client_address=client_address,
                                                  server=server)
+
+    def ftp_path(self, path):
+        """Clean and sanitize ftp paths relative fs instance it is hosted in."""
+        _path = self.config.vfs.norm_path(os.path.join(self.working_dir, path))
+        _path = _path.replace(self.root, '/')
+        return _path
 
     # -- Wrappers for gevent StreamServer -------
 
@@ -184,7 +224,13 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     self._data_sock.close()
             socketserver.BaseRequestHandler.finish(self)
             self.client_sock.close()
-            logger.info('FTP statistics for client : {}\n{}'.format(self.client_address, repr(self.metrics)))
+            logger.info('{}'.format(self.metrics.get_metrics(
+                client_address=self.client_address,
+                user_name=self.username,
+                uid=self._uid,
+                failed_login_attempts=self.invalid_login_attempt,
+                max_login_attempts=self.max_login_attempts
+            )))
             self.disconnect_client = True
         else:
             logger.debug('Client {} already disconnected.'.format(self.client_address))
@@ -433,6 +479,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                             _data_fs_d.write(_data)
             self.respond(b'226 Transfer complete.')
             logger.info('Files {} and {} written successfully to disk'.format(_file, _data_fs_file))
+            if cmd == 'STOR':
+                self.config.vfs.chmod(self.ftp_path(_file), self.config.file_default_perms)
+                self.config.vfs.chown(self.ftp_path(_file), uid=self._uid, gid=self.config.get_gid(self._uid))
         except (AssertionError, IOError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as fe:
                 self.stop_data_channel(abort=True, reason=str(fe))
                 self.respond('554 {} command failed.'.format(cmd))
@@ -467,7 +516,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         try:
             if self.username == 'anonymous' and self.config.anon_auth:
                 self.authenticated = True
-                self._uid = self.config.get_uid(self.username)
+                self._uid = self.config.anon_uid
+                self.username = self.config.user_db[self._uid]['uname']
                 return True
             else:
                 if (self.username, user_pass) in self.config.user_pass:

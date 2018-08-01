@@ -217,6 +217,7 @@ class TestFileSystem(unittest.TestCase):
         self.test_vfs.copy(src_path='test_fs.txt', dst_path='test_fs_copy.txt', overwrite=True)
         _text = self.test_vfs.gettext('test_fs_copy.txt')
         self.assertEqual(_text, 'This is just a test file checking copyfile')
+        self.assertTrue(self.test_vfs.getbasic('test_fs_copy.txt'))
 
     @freeze_time("2028-07-15 17:51:17")
     def test_movefile(self):

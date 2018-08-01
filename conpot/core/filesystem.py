@@ -114,6 +114,8 @@ class AbstractFS(WrapFS):
             0: {0}      # --> gid: set(uids)
         }
         self._initialize_fs(src_path=src_path)
+        # fixme: kind of hack-ish. Find the correct way of doing this.
+        self._wrap_fs._meta['supports_rename'] = False
 
     def abs_path(self, path):
         _path = self.norm_path(path)
@@ -277,7 +279,6 @@ class AbstractFS(WrapFS):
         else:
             raise FilesystemError('lstat is not currently supported!')
 
-    @contextlib.contextmanager
     def makedir(self,
                 path,               # type: Text
                 permissions=None,   # type: Optional[int]
@@ -308,7 +309,6 @@ class AbstractFS(WrapFS):
             else:
                 raise fs_err
 
-    @contextlib.contextmanager
     def removedir(self, path, rf=True):
         """Remove a directory from the file system.
         :param path: directory path
@@ -338,7 +338,6 @@ class AbstractFS(WrapFS):
                 else:
                     raise fs_err
 
-    @contextlib.contextmanager
     def remove(self, path):
         """Remove a file from the file system."""
         _path = self.norm_path(path)
@@ -354,26 +353,6 @@ class AbstractFS(WrapFS):
             else:
                 raise fs_err
 
-    @contextlib.contextmanager
-    def _open_file_with_context(self, file, path, mode):
-        fs_err = None
-        try:
-            yield file
-        except fs.errors.FSError as err:
-            fs_err = err
-        finally:
-            file.close()
-            if not fs_err:
-                if ('w' in mode) or ('a' in mode):
-                    self._cache.update({path: self.getinfo(path, get_actual=True,
-                                                           namespaces=['basic', 'access', 'details', 'stat'])})
-                    self.chown(path, self.default_uid, self.default_gid)
-                    self.chmod(path, self.default_perms)
-                logger.debug('Updating modified/access time')
-                self.setinfo(self.norm_path(path), {})
-            else:
-                raise fs_err
-
     def openbin(self, path, mode='r', buffering=-1, **options):
         """
         Open a file in the ConpotFS in binary mode.
@@ -381,8 +360,8 @@ class AbstractFS(WrapFS):
         logger.debug('Opening file {} with mode {}'.format(path, mode))
         _path = self.norm_path(path)
         _bin_mode = Mode(mode).to_platform_bin()
-        _bin_mode = _bin_mode.replace("t", "")
-        _parent_fs = super(AbstractFS, self)
+        _bin_mode = _bin_mode.replace("t", "") if "t" in _bin_mode else _bin_mode
+        _parent_fs = self.delegate_fs()
         self.check()
         binary_file = _custom_conpot_file(file_system=self,
                                           parent_fs=_parent_fs,
@@ -404,7 +383,7 @@ class AbstractFS(WrapFS):
         base.validate_open_mode(mode)
         self.check()
         _path = self.norm_path(path)
-        _parent_fs = super(AbstractFS, self)
+        _parent_fs = self.delegate_fs()
         _encoding = encoding or "utf-8"
         file = _custom_conpot_file(file_system=self,
                                    parent_fs=_parent_fs,
@@ -417,19 +396,29 @@ class AbstractFS(WrapFS):
         return file
 
     def setbinfile(self, path, file):
-        with self._lock:
-            with self.openbin(path, "wb") as dst_file:
-                copy_files(file, dst_file)
+        with self.openbin(path, "wb") as dst_file:
+            copy_files(file, dst_file)
+        self.setinfo(path, {})
 
     def move(self, src_path, dst_path, overwrite=False):
-        if not overwrite and self.exists(dst_path):
-            raise fs.errors.DestinationExists(dst_path)
         if self.getinfo(src_path).is_dir:
             raise fs.errors.FileExpected(src_path)
-        with self._lock:
-            with self.open(src_path, "rb") as read_file:
-                self.setbinfile(dst_path, read_file)  # type: ignore
-            self.remove(src_path)
+        with self.openbin(src_path, "rb") as read_file:
+            with self.openbin(dst_path, "wb") as dst_file:
+                copy_files(read_file, dst_file)
+        self.setinfo(src_path, {})
+        self.setinfo(dst_path, {})
+        self.remove(src_path)
+
+    def copy(self, src_path, dst_path, overwrite=False):
+        if self.getinfo(src_path).is_dir:
+            raise fs.errors.FileExpected(src_path)
+        with self.openbin(src_path, "rb") as read_file:
+            with self.openbin(dst_path, "wb") as dst_file:
+                copy_files(read_file, dst_file)
+        self.setinfo(src_path, {})
+        self.setinfo(dst_path, {})
+
     # -----------------------------------------------------------
     # Custom "getter" methods overwriting behaviour FS library methods
     # Data is retrieved from the cached file-system.
