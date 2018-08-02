@@ -129,7 +129,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         # tracking login attempts
         self.invalid_login_attempt = 0
         # max login attempts
-        self.max_login_attempts = 3  # fixme: take max login attempts from config.
+        self.max_login_attempts = self.config.max_login_attempts
 
         # ftp absolute path of the file system
         self.root = self.config.vfs.norm_path(self.config.vfs.getcwd() + '/')
@@ -208,7 +208,6 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                                                  self.session.id))
         self.session.add_event({'type': 'NEW_CONNECTION'})
         # send 200 + banner -- new client has connected!
-        # TODO: accommodate motd
         self.respond(b'200 ' + self.config.banner.encode())
         #  Is there a delay in command response? < gevent.sleep(0.5) ?
         return socketserver.BaseRequestHandler.setup(self)
@@ -379,9 +378,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                 except (fs.errors.FSError, FilesystemError):
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
-                            # no more data to send. Close the data channel
-                            if self._last_command not in ('LIST', 'NLST'):
-                                self.respond(b'226 Transfer complete.')
+                            logger.debug('No more data to read. Either transfer finished or error occurred.')
                             self._data_channel_send.set()
                 elif not self._data_channel_recv.is_set():
                     # must be a receiving event. Get data from socket and add it to input_q
@@ -410,7 +407,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 else:
                     # assume that the read/write event has finished
                     # send a nice resp to the client saying everything has finished.
-                    # set the self._data_channel(_recv/_send) markers.
+                    # set the self._data_channel(_recv/_send) markers. This would also wait for read write to finish.
                     self.stop_data_channel(reason='Transfer has completed!.')
             except (socket.error, socket.timeout) as se:
                 # TODO: send appropriate response
@@ -430,64 +427,59 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         :param cmd: Command used for receiving file.
         """
         # FIXME: acquire lock to files - both data_fs and vfs.
-        self.start_data_channel(send_recv='recv')
-        logger.info('Receiving data from {}:{}'.format(self.cli_ip, self.cli_port))
-        _data_fs_file = sanitize_file_name(_file, self.client_address[0], str(self.client_address[1]))
-        _data_fs_d = None
-        _file_d = None
-        # wait till all transfer has finished.
-        self._data_channel_recv.wait()
-        try:
-            # we are blocking on queue for 10 seconds to wait for incoming data.
-            # If there is no data in the queue. We assume that transfer has been completed.
-            _data = self._data_channel_input_q.get()
-            _data_fs_d = self.config.data_fs.open(path=_data_fs_file, mode='wb')
-            if _file_pos == 0 and cmd == 'STOR':
-                # overwrite file or create a new one.
-                # we don't need to seek at all. Normal write process by STOR
-                with self.config.vfs.open(path=_file, mode='wb') as _file_d:
+        with self.config.vfs.lock():
+            self.start_data_channel(send_recv='recv')
+            recv_err = None
+            logger.info('Receiving data from {}:{}'.format(self.cli_ip, self.cli_port))
+            _data_fs_file = sanitize_file_name(_file, self.client_address[0], str(self.client_address[1]))
+            _data_fs_d = None
+            _file_d = None
+            # wait till all transfer has finished.
+            self._data_channel_recv.wait()
+            try:
+                # we are blocking on queue for 10 seconds to wait for incoming data.
+                # If there is no data in the queue. We assume that transfer has been completed.
+                _data = self._data_channel_input_q.get()
+                _data_fs_d = self.config.data_fs.open(path=_data_fs_file, mode='wb')
+                if _file_pos == 0 and cmd == 'STOR':
+                    # overwrite file or create a new one.
+                    # we don't need to seek at all. Normal write process by STOR
+                    _file_d = self.config.vfs.open(path=_file, mode='wb')
+                else:
+                    assert _file_pos != 0
+                    # must seek file. This is done in append or rest(resume transfer) command.
+                    # in that case, we should create a duplicate copy of this file till that seek position.
+                    with self.config.vfs.open(path=_file, mode='rb') as _file_d:
+                        _data_fs_d.write(_file_d.read(_file_pos))
+                    # finally we should let the file to be written as requested.
+                    if cmd == 'APPE':
+                        _file_d = self.config.vfs.open(path=_file, mode='ab')
+                    else:
+                        # cmd is REST
+                        _file_d = self.config.vfs.open(path=_file, mode='rb+')
+                        _file_d.seek(_file_pos)
+                _file_d.write(_data)
+                _data_fs_d.write(_data)
+                while not self._data_channel_input_q.empty():
+                    _data = self._data_channel_input_q.get()
                     _file_d.write(_data)
                     _data_fs_d.write(_data)
-                    while not self._data_channel_input_q.empty():
-                        _data = self._data_channel_input_q.get()
-                        _file_d.write(_data)
-                        _data_fs_d.write(_data)
-            else:
-                assert _file_pos != 0
-                # must seek file. This is done in append or rest(resume transfer) command.
-                # in that case, we should create a duplicate copy of this file till that seek position.
-                with self.config.vfs.open(path=_file, mode='rb') as _file_d:
-                    _data_fs_d.write(_file_d.read(_file_pos))
-                # finally we should let the file to be written as requested.
-                if cmd == 'APPE':
-                    with self.config.vfs.open(path=_file, mode='ab') as _file_d:
-                        _file_d.write(_data)
-                        _data_fs_d.write(_data)
-                        while not self._data_channel_input_q.empty():
-                            _data = self._data_channel_input_q.get()
-                            _file_d.write(_data)
-                            _data_fs_d.write(_data)
-                else:
-                    # cmd is REST
-                    with self.config.vfs.open(path=_file, mode='rb+') as _file_d:
-                        _file_d.seek(_file_pos)
-                        _file_d.write(_data)
-                        _data_fs_d.write(_data)
-                        while not self._data_channel_input_q.empty():
-                            _data = self._data_channel_input_q.get()
-                            _file_d.write(_data)
-                            _data_fs_d.write(_data)
-            self.respond(b'226 Transfer complete.')
-            logger.info('Files {} and {} written successfully to disk'.format(_file, _data_fs_file))
-            if cmd == 'STOR':
-                self.config.vfs.chmod(self.ftp_path(_file), self.config.file_default_perms)
-                self.config.vfs.chown(self.ftp_path(_file), uid=self._uid, gid=self.config.get_gid(self._uid))
-        except (AssertionError, IOError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as fe:
+                logger.info('Files {} and {} written successfully to disk'.format(_file, _data_fs_file))
+            except (AssertionError, IOError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as fe:
+                recv_err = fe
                 self.stop_data_channel(abort=True, reason=str(fe))
                 self.respond('554 {} command failed.'.format(cmd))
-        finally:
-            if _data_fs_d and _data_fs_d.fileno() != -1:
-                _data_fs_d.close()
+            finally:
+                if _file_d and _file_d.fileno() != -1:
+                    _file_d.close()
+                if _data_fs_d and _data_fs_d.fileno() != -1:
+                    _data_fs_d.close()
+                if not recv_err:
+                    self.config.vfs.chmod(_file, self.config.file_default_perms)
+                    if cmd == 'STOR':
+                        self.config.vfs.chown(_file, uid=self._uid, gid=self.config.get_gid(self._uid))
+                    self.config.vfs.settimes(_file, accessed=datetime.now(), modified=datetime.now())
+                    self.respond(b'226 Transfer complete.')
 
     def push_data(self, data):
         """Handy utility to push some data using the data channel"""

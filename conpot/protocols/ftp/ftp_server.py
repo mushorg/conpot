@@ -23,11 +23,11 @@ from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
 from datetime import datetime
-import logging
-logger = logging.getLogger(__name__)
-# import sys
-# import logging as logger
-# logger.basicConfig(stream=sys.stdout, level=logger.INFO)
+# import logging
+# logger = logging.getLogger(__name__)
+import sys
+import logging as logger
+logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class FTPConfig(object):

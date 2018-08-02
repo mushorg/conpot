@@ -197,10 +197,15 @@ class AbstractFS(WrapFS):
                 user, path)
             )
         else:
-            logger.debug('Exiting file: {} after requested access.'.format(path))
-            yield
-            logger.debug('File {} has the requested params : {}'.format(path, (user, perms)))
+            logger.debug('File/Dir {} has the requested params : {}'.format(path, (user, perms)))
             self.setinfo(path, {})
+            yield
+            if self.vfs.isfile(path):
+                logger.debug('yield file: {} after requested access.'.format(path))
+            elif self.vfs.isdir(path):
+                logger.debug('yield dir: {} after requested access.'.format(path))
+            else:
+                logger.debug('yield unknown type: {} after requested access.'.format(path))
 
     # -----------------------------------------------------------
     # Custom "setter" methods overwriting behaviour FS library methods
@@ -430,9 +435,9 @@ class AbstractFS(WrapFS):
     def settimes(self, path, accessed=None, modified=None):
         super(AbstractFS, self).settimes(path, accessed, modified)
         self._cache[path].raw['details']['accessed'] = \
-            fs.time.datetime_to_epoch(self._wrap_fs.getinfo(path, namespaces=['details']).accessed)
+            fs.time.datetime_to_epoch(super(AbstractFS, self).getinfo(path, namespaces=['details']).accessed)
         self._cache[path].raw['details']['modified'] = \
-            fs.time.datetime_to_epoch(self._wrap_fs.getinfo(path, namespaces=['details']).modified)
+            fs.time.datetime_to_epoch(super(AbstractFS, self).getinfo(path, namespaces=['details']).modified)
 
     def getinfo(self, path: str, get_actual: bool = False, namespaces=None):
         if get_actual or (not self.built_cache):
@@ -569,7 +574,7 @@ class AbstractFS(WrapFS):
             assert isinstance(uid, int) and isinstance(gid, int)
         except AssertionError:
             logger.exception('Integers expected got {} - {}'.format(uid, gid))
-        if self.exists(path):
+        if self.isdir(path) or self.isfile(path):
             assert self._grps[gid] and self._users[uid]
             chown_cache = {
                 'access': {
@@ -662,11 +667,11 @@ class AbstractFS(WrapFS):
                 permission = permission.replace('?', 'l')
             nlinks = st['st_nlink']
             size = st['st_size']  # file-size
-            uname = self._users[st['st_uid']]['user']
+            uname = self.getinfo(path=file, namespaces=['access']).user
             # |-> pwd.getpwuid(st['st_uid']).pw_name would fetch the user_name of the actual owner of these files.
-            gname = self._grps[st['st_gid']]['group']
+            gname = self.getinfo(path=file, namespaces=['access']).group
             # |-> grp.getgrgid(st['st_gid']).gr_name would fetch the user_name of the actual of these files.
-            mtime = time.gmtime(st['st_mtime'])
+            mtime = time.gmtime(fs.time.datetime_to_epoch(self.getinfo(file, namespaces=['details']).modified))
             if (now - st['st_mtime']) > (180 * 24 * 60 * 60):
                 fmtstr = "%d  %Y"
             else:

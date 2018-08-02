@@ -16,10 +16,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import logging
 import os
 import argparse
@@ -32,7 +29,6 @@ from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import gevent
 from lxml import etree
-
 import conpot
 import conpot.core as conpot_core
 
@@ -49,6 +45,8 @@ from conpot.protocols.bacnet.bacnet_server import BacnetServer
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 from conpot.protocols.IEC104.IEC104_server import IEC104Server
+from conpot.protocols.ftp.ftp_server import FTPServer
+from conpot.protocols.tftp.tftp_server import TftpServer
 
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip

@@ -28,7 +28,8 @@
             </user>
         </users>
         <anon_login enabled="True" uid="32">
-            <uname>ftp</uname>   <!-- this is the user name with which anon would read/write files -->
+            <uname>ftp</uname>   <!-- this is the user name with which anon would read/write files. gid is same as with
+             user group. -->
         </anon_login>
     </ftp_users>
     <!-- All VFS related information -->

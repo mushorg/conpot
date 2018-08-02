@@ -8,6 +8,7 @@ import os
 import glob
 import sys
 import tempfile
+from datetime import datetime
 import gevent
 from gevent import socket
 from fs import errors
@@ -307,6 +308,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(_mkd)
             self.config.vfs.chmod(_dir, self.config.dir_default_perms)
             self.config.vfs.chown(_dir, uid=self._uid, gid=self.config.get_gid(self._uid))
+            self.config.vfs.settimes(_dir, datetime.now(), datetime.now())
         except FSOperationNotPermitted:
             self.respond(b'500 Operation not permitted.')
         except (FilesystemError, fs.errors.FSError, FTPPrivilegeException):
@@ -508,7 +510,7 @@ class FTPCommandChannel(FTPHandlerBase):
         except (ValueError, OverflowError):
             self.respond("501 Invalid PORT format.")
         except socket.error as se:
-            if self._data_channel.is_set():
+            if self._data_channel:
                 self.stop_data_channel(reason='Can\'t switch to Active(PORT) mode. Error occurred: {}'.format(str(se)))
 
     # -- Data Channel related commands --
@@ -534,6 +536,8 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 LIST command failed.')
+        else:
+            self.respond(b'226 Transfer complete.')
 
     def do_NLST(self, path):
         """Return a list of files in the specified directory in a compact form to the client."""
@@ -556,6 +560,8 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 NLST command failed.')
+        else:
+            self.respond(b'226 Transfer complete.')
 
     def do_RETR(self, arg):
         """
@@ -574,6 +580,8 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 The system cannot find the file specified.')
+        else:
+            self.respond(b'226 Transfer complete.')
 
     def do_ABOR(self, arg):
         """Aborts a file transfer currently in progress."""
@@ -581,7 +589,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(b'225 No transfer to abort.')
         else:
             # a PASV or PORT was received but connection wasn't made yet
-            if not self._data_channel.is_set():
+            if not self._data_channel:
                 self.stop_data_channel(abort=True, purge=True, reason='ABOR called.')
                 self.respond(b'225 ABOR command successful; data channel closed.')
             else:
@@ -618,7 +626,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 else:
                     assert cmd == 'STOR'
                     _file_seek = 0
-                self.recv_file(file, _file_seek, cmd=cmd)
+                self.recv_file(os.path.join(self.working_dir, file), _file_seek, cmd=cmd)
         except FSOperationNotPermitted:
             self.respond(b'500 Operation not permitted.')
         except ValueError as err:
