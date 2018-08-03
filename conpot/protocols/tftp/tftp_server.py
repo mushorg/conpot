@@ -25,6 +25,7 @@ from lxml import etree
 from conpot.protocols.tftp import tftp_handler
 from gevent.server import DatagramServer
 import conpot.core as conpot_core
+from conpot.core.protocol_wrapper import conpot_protocol
 from gevent import event
 from tftpy import TftpException, TftpTimeout
 import logging
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 # logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
+@conpot_protocol
 class TftpServer(object):
     """TFTP Server"""
     TIMEOUT_RETRIES = 5

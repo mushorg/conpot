@@ -41,8 +41,8 @@ def get_session(*args, **kwargs):
 # file-system related  --
 
 
-def initialize_vfs(*args, **kwargs):
-    return virtualFS.initialize_vfs(*args, **kwargs)
+def initialize_vfs(fs_path=None, data_fs_path=None, temp_dir=None):
+    return virtualFS.initialize_vfs(fs_path=fs_path, data_fs_path=data_fs_path, temp_dir=temp_dir)
 
 
 def add_protocol(protocol_name: str,

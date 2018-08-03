@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@ import sys
 import pwd
 import grp
 import ast
+from stat import filemode
 import inspect
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
@@ -31,7 +32,6 @@ import gevent
 from lxml import etree
 import conpot
 import conpot.core as conpot_core
-
 from conpot.core.loggers.log_worker import LogWorker
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
@@ -96,7 +96,7 @@ def setup_logging(log_file, verbose):
     root_logger.addHandler(file_log)
 
 
-def drop_privileges(uid_name=None, gid_name=None):
+def drop_privileges(fs_root, uid_name=None, gid_name=None):
     if uid_name is None:
         uid_name = 'nobody'
 
@@ -121,13 +121,29 @@ def drop_privileges(uid_name=None, gid_name=None):
 
     logger.debug('Attempting to drop privileges to "%s:%s"',
                  wanted_user.pw_name, wanted_group.gr_name)
-
+    if fs_root:
+        logger.debug('Conpot path : {}'.format(conpot.__path__[0]))
+        logger.info('Dropping privileges for path: {}'.format(fs_root))
+        logger.debug('------------- Before -----------------')
+        logger.debug('UID: {}, GID: {} , Permissions: {}'.format(
+            os.stat(fs_root).st_uid, os.stat(fs_root).st_gid, filemode(os.stat(fs_root).st_mode)
+        ))
+        os.chmod(fs_root, 0o0777)
+        os.chown(fs_root, wanted_user.pw_uid, wanted_group.gr_gid)
+        for root, dirs, files in os.walk(fs_root):
+            for _directory in dirs:
+                os.chown(os.path.join(root, _directory), wanted_user.pw_uid, wanted_user.pw_uid)
+                os.chmod(fs_root, 0o0777)
+            for _file in files:
+                os.chown(os.path.join(root, _file), wanted_user.pw_uid, wanted_user.pw_uid)
+                os.chmod(fs_root, 0o0777)
+        logger.info('UID: {}, GID: {} , Permissions: {}'.format(
+            os.stat(fs_root).st_uid, os.stat(fs_root).st_gid, filemode(os.stat(fs_root).st_mode)
+        ))
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
-
     new_user = pwd.getpwuid(os.getuid())
     new_group = grp.getgrgid(os.getgid())
-
     logger.info('Privileges dropped, running as "%s:%s"',
                 new_user.pw_name, new_group.gr_name)
 
@@ -179,6 +195,10 @@ def main():
                              "(must be compiled with build-pysnmp-mib)",
                         default=[]
                         )
+    parser.add_argument("--temp_dir",
+                        help="Directory where all conpot vfs related files would be kept.",
+                        default="ConpotTempFS"
+                        )
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
@@ -190,7 +210,7 @@ def main():
     # Loading default config if config not set.
     if args.force:
         args.config = os.path.join(package_directory, 'testing.cfg')
-        logger.info('--force option specified. Using testing configuration')
+        logger.warning('--force option specified. Using testing configuration')
         config.read(args.config)
     else:
         # sanity check: see that both config and template arguments are provided - else exit
@@ -282,6 +302,26 @@ def main():
     session_manager = conpot_core.get_sessionManager()
     session_manager.initialize_databus(template_base)
 
+    # initialize the virtual file system
+    fs_url = config.get('virtual_file_system', 'fs_url')
+    data_fs_url = config.get('virtual_file_system', 'data_fs_url')
+    if os.path.isdir(args.temp_dir):
+        temp_dir = args.temp_dir
+    else:
+        temp_dir = os.path.join(conpot.__path__[0], 'ConpotTempFS')
+        logger.info("Can't find the temp directory. Conpot VFS would be kept at : {}".format(temp_dir))
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+    if fs_url == 'default' or data_fs_url == 'default':
+        if not args.force:
+            logger.error('Can\'t start conpot with default file system')
+            sys.exit(3)
+        else:
+            fs_url, data_fs_url = None, None
+    logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
+    conpot_core.initialize_vfs(fs_url, data_fs_url, temp_dir)
+    fs_root = conpot_core.get_vfs().root
+
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
@@ -298,7 +338,9 @@ def main():
         ('ipmi', IpmiServer),
         ('guardian_ast', GuardianASTServer),
         ('enip', EnipServer),
-        ('IEC104', IEC104Server)
+        ('IEC104', IEC104Server),
+        ('ftp', FTPServer),
+        ('tftp', TftpServer)
     )
 
     # no need to fork process when we don't want to change MAC address
@@ -394,8 +436,7 @@ def main():
                 conpot_group = config.get('daemon', 'group')
             except (NoSectionError, NoOptionError):
                 conpot_group = None
-
-            drop_privileges(conpot_user, conpot_group)
+            drop_privileges(fs_root, conpot_user, conpot_group)
 
             try:
                 if len(servers) > 0:

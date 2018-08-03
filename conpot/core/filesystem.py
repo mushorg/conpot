@@ -117,19 +117,14 @@ class AbstractFS(WrapFS):
         # fixme: kind of hack-ish. Find the correct way of doing this.
         self._wrap_fs._meta['supports_rename'] = False
 
-    def abs_path(self, path):
-        _path = self.norm_path(path)
-        try:
-            if _path is not '/':
-                assert self._cache[_path]
-            return _path
-        except (KeyError, AssertionError):
-            raise FilesystemError('Invalid Path: {}'.format(_path))
-
     def norm_path(self, path):
         path = '/' if path == '.' else path
-        _path = self.validatepath(self._cwd + path) if self._cwd not in path else self.validatepath(path)
-        return _path
+        try:
+            _path = self.validatepath(self._cwd + path) if self._cwd not in path else self.validatepath(path)
+            return _path
+        except fs.errors.FSError:
+            logger.debug('Could not validate path: {}'.format(path))
+            raise FilesystemError('Could not validate path: {}'.format(path))
 
     def _initialize_fs(self, src_path: str) -> None:
             """
@@ -433,7 +428,7 @@ class AbstractFS(WrapFS):
         return super(AbstractFS, self).opendir(path, factory=factory)
 
     def settimes(self, path, accessed=None, modified=None):
-        super(AbstractFS, self).settimes(path, accessed, modified)
+        self.delegate_fs().settimes(path, accessed, modified)
         self._cache[path].raw['details']['accessed'] = \
             fs.time.datetime_to_epoch(super(AbstractFS, self).getinfo(path, namespaces=['details']).accessed)
         self._cache[path].raw['details']['modified'] = \
@@ -481,7 +476,7 @@ class AbstractFS(WrapFS):
                 raise FilesystemError
 
     def listdir(self, path):
-        logger.debug('Listing contents from directory'.format(self.norm_path(path)))
+        logger.debug('Listing contents from directory: {}'.format(self.norm_path(path)))
         self.setinfo(self.norm_path(path), {})
         return super(AbstractFS, self).listdir(self.norm_path(path))
 
@@ -700,11 +695,11 @@ class AbstractFS(WrapFS):
             then we check the group to which this user belongs to. Finally if the user's group also does not meet the
             perms we check for other permissions.
         """
-        _path = self.norm_path(path)
-        _perms = self.getinfo(_path, namespaces=['access']).permissions
-        _uid = self.getinfo(_path, namespaces=['access']).uid
-        _gid = self.getinfo(_path, namespaces=['access']).gid
         try:
+            _path = self.norm_path(path)
+            _perms = self.getinfo(_path, namespaces=['access']).permissions
+            _uid = self.getinfo(_path, namespaces=['access']).uid
+            _gid = self.getinfo(_path, namespaces=['access']).gid
             if isinstance(required_perms, int):
                 if required_perms == F_OK:
                     return True

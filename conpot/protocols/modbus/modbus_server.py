@@ -109,6 +109,10 @@ class ModbusServer(modbus.Server):
                     logger.info('Modbus client quit. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_QUIT'})
                     break
+                if len(request) < 7:
+                    logger.info('Modbus client provided data {} but invalid.'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_TERMINATED'})
+                    break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
                     new_byte = sock.recv(1)

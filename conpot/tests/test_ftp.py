@@ -42,7 +42,7 @@ class TestFTPServer(unittest.TestCase):
         conpot_core.initialize_vfs()
         # get the current directory
         self.dir_name = os.path.dirname(conpot.__file__)
-        self.ftp_server = FTPServer(self.dir_name + '/templates/default/ftp/ftp.xml')
+        self.ftp_server = FTPServer(self.dir_name + '/templates/default/ftp/ftp.xml', None, None)
         self.server_greenlet = gevent.spawn(self.ftp_server.start, '127.0.0.1', 0)
         self.client = ftplib.FTP()
         gevent.sleep(1)

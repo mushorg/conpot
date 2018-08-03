@@ -29,6 +29,7 @@ import fs
 from datetime import datetime
 import os
 from fs import errors
+from fs.path import frombase
 from conpot.helpers import sanitize_file_name
 from gevent import event
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
@@ -132,7 +133,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self.max_login_attempts = self.config.max_login_attempts
 
         # ftp absolute path of the file system
-        self.root = self.config.vfs.norm_path(self.config.vfs.getcwd() + '/')
+        self.root = self.config.vfs.getcwd()
         # get the current working directory of the current user
         self.working_dir = '/'
         # flag to check whether we need to disconnect the client

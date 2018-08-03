@@ -158,7 +158,6 @@ class FTPConfig(object):
             self.vfs.chown(_path, _owner, self.default_group, _recursive)
             self.vfs.chmod(_path, _perms)
             self.vfs.settimes(_path, _accessed, _modified)
-
         # self.default_owner = 13
         # self.default_group = 45
         # self.vfs.chmod('/', self.default_perms, recursive=True)
@@ -216,8 +215,7 @@ class FTPConfig(object):
 
 @conpot_protocol
 class FTPServer(object):
-    def __init__(self, template, timeout=5):
-        self.timeout = timeout
+    def __init__(self, template, template_directory, args):
         self.template = template
         self.server = None  # Initialize later
         # Initialize vfs here..
@@ -245,7 +243,7 @@ if __name__ == '__main__':
     import os
     conpot_core.initialize_vfs()
     test_template = os.getcwd() + '/../../templates/default/ftp/ftp.xml'
-    server = FTPServer(test_template)
+    server = FTPServer(test_template, None, None)
     try:
         server.start(TCP_IP, TCP_PORT)
     except KeyboardInterrupt:

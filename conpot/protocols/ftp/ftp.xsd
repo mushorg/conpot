@@ -1,5 +1,5 @@
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
-           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
     <xs:element name="ftp">
         <xs:complexType>
             <xs:sequence>
@@ -33,10 +33,10 @@
                                             </xs:complexType>
                                         </xs:element>
                                     </xs:sequence>
+                                    <xs:attribute type="xs:string" name="group" use="required"/>
                                 </xs:complexType>
-                                <xs:attribute type="xs:string" name="group" use="required"/>
                             </xs:element>
-                            <xs:element name="anon_login" maxOccurs="1" minOccurs="1">
+                            <xs:element name="anon_login">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element type="xs:string" name="uname"/>
@@ -52,7 +52,7 @@
                     <xs:complexType>
                         <xs:sequence>
                             <xs:element type="xs:string" name="path"/>
-                            <xs:element type="xs:string" name="add_src" minOccurs="0" maxOccurs="1"/>
+                            <xs:element type="xs:string" name="add_src" nillable="true"/>
                             <xs:element type="xs:string" name="data_fs_subdir"/>
                             <xs:element type="xs:unsignedShort" name="default_owner"/>
                             <xs:element type="xs:string" name="default_perms"/>
@@ -67,7 +67,6 @@
                                         <xs:element type="xs:string" name="last_modified"/>
                                     </xs:sequence>
                                     <xs:attribute type="xs:string" name="path" use="required"/>
-                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
                                 </xs:complexType>
                             </xs:element>
                             <xs:element name="dir" maxOccurs="unbounded">
@@ -79,13 +78,16 @@
                                         <xs:element type="xs:string" name="last_modified"/>
                                     </xs:sequence>
                                     <xs:attribute type="xs:string" name="path" use="required"/>
-                                    <xs:attribute type="xs:boolean" name="recursive" use="required"/>
+                                    <xs:attribute type="xs:string" name="recursive" use="required"/>
                                 </xs:complexType>
                             </xs:element>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
             </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

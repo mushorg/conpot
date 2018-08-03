@@ -69,13 +69,14 @@ class VirtualFS(object):
                 sys.exit(3)
         self.protocol_fs = None
 
-    def initialize_vfs(self, fs_path=None, data_fs_path=None):
+    def initialize_vfs(self, fs_path=None, data_fs_path=None, temp_dir=None):
         if data_fs_path is not None:
             logger.info('Opening path {} for persistent storage of files.'.format(data_fs_path))
             self.__init__(data_fs_path=data_fs_path)
         if fs_path is None:
             fs_path = 'tar://' + os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'data.tar')
-        self.protocol_fs = AbstractFS(src_path=fs_path)
+            logger.warning('Using default FS path. {}'.format(fs_path))
+        self.protocol_fs = AbstractFS(src_path=fs_path, temp_dir=temp_dir)
 
     def add_protocol(self,
                      protocol_name: str,
