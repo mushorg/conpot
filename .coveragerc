@@ -14,6 +14,7 @@ omit =
     conpot/core/internal_interface.py
     conpot/core/protocol_wrapper.py
     conpot/core/auth.py
+    .tox/*
 
 
 exclude_lines =

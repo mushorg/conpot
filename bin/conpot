@@ -124,7 +124,6 @@ def drop_privileges(fs_root, uid_name=None, gid_name=None):
     if fs_root:
         logger.debug('Conpot path : {}'.format(conpot.__path__[0]))
         logger.info('Dropping privileges for path: {}'.format(fs_root))
-        logger.debug('------------- Before -----------------')
         logger.debug('UID: {}, GID: {} , Permissions: {}'.format(
             os.stat(fs_root).st_uid, os.stat(fs_root).st_gid, filemode(os.stat(fs_root).st_mode)
         ))
@@ -436,7 +435,7 @@ def main():
                 conpot_group = config.get('daemon', 'group')
             except (NoSectionError, NoOptionError):
                 conpot_group = None
-            drop_privileges(fs_root, conpot_user, conpot_group)
+            # drop_privileges(fs_root, conpot_user, conpot_group)
 
             try:
                 if len(servers) > 0:

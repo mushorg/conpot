@@ -26,6 +26,7 @@ from freezegun import freeze_time
 import fs
 from datetime import datetime
 from fs import permissions
+from fs.time import datetime_to_epoch, epoch_to_datetime
 
 
 class TestFileSystem(unittest.TestCase):
@@ -321,6 +322,15 @@ class TestSubFileSystem(unittest.TestCase):
     def test_get_permissions(self):
         self.assertEqual(self.test_vfs.getinfo('vfs.txt', namespaces=['access']).permissions.as_str(),
                          self.test_vfs.get_permissions('vfs.txt'))
+
+    @freeze_time("2018-07-15 17:51:17")
+    def test_set_time(self):
+        """Test for changing time in the file system."""
+        self.test_vfs.settimes('vfs.txt', accessed=epoch_to_datetime(103336010), modified=epoch_to_datetime(103336010))
+        self.assertEqual(self.test_vfs.getinfo('vfs.txt', namespaces=['details']).accessed,
+                         epoch_to_datetime(103336010))
+        self.assertEqual(self.test_vfs.getinfo('vfs.txt', namespaces=['details']).modified,
+                         epoch_to_datetime(103336010))
 
     def test_access(self):
         # check it the root user has all the permissions
