@@ -27,7 +27,8 @@ class TestMacAddrUtil(unittest.TestCase):
 
     def tearDown(self):
         pass
-
+    
+    @unittest.skip
     def test_mac(self):
         """
         Objective: Test if the spoofer is able to change MAC address
