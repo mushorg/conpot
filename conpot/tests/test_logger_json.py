@@ -37,6 +37,7 @@ class TestJsonLogger(unittest.TestCase):
         filename = path.join(self.logging_dir, 'test.json')
         sensorid = 'default'
         public_ip = '0.0.0.0'
+        dst_port = 502
         timestamp = datetime.now()
         event_id = 1337
         src_ip = '127.0.0.1'
@@ -50,6 +51,7 @@ class TestJsonLogger(unittest.TestCase):
             'timestamp': timestamp,
             'id': event_id,
             'remote': (src_ip, src_port),
+            'local': (public_ip, dst_port),
             'data_type': data_type,
             'data': {
                 'request': request,
@@ -65,6 +67,7 @@ class TestJsonLogger(unittest.TestCase):
             self.assertEqual(e['src_ip'], src_ip)
             self.assertEqual(e['src_port'], src_port)
             self.assertEqual(e['dst_ip'], public_ip)
+            self.assertEqual(e['dst_port'], dst_port)
             self.assertEqual(e['data_type'], data_type)
             self.assertEqual(e['request'], request)
             self.assertEqual(e['response'], response)

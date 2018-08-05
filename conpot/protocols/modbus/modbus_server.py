@@ -28,6 +28,8 @@ class ModbusServer(modbus.Server):
         self.timeout = timeout
         self.delay = None
         self.mode = None
+        self.host = None
+        self.port = None
         databank = slave_db.SlaveBase(template)
 
         # Constructor: initializes the server settings
@@ -83,7 +85,7 @@ class ModbusServer(modbus.Server):
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
 
-        session = conpot_core.get_session('modbus', address[0], address[1])
+        session = conpot_core.get_session('modbus', address[0], address[1], self.host, self.port)
 
         self.start_time = time.time()
         logger.info(
@@ -158,6 +160,8 @@ class ModbusServer(modbus.Server):
             session.add_event({'type': 'CONNECTION_LOST'})
 
     def start(self, host, port):
+        self.host = host
+        self.port = port
         connection = (host, port)
         server = StreamServer(connection, self.handle)
         logger.info('Modbus server started on: %s', connection)

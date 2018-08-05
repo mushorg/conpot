@@ -30,8 +30,8 @@ class conpot_extension(object):
 
         return addr, snmp_version
 
-    def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None):
-        session = conpot_core.get_session('snmp', addr[0], addr[1])
+    def log(self, version, msg_type, addr, dst_host, dst_port, req_varBinds, res_varBinds=None):
+        session = conpot_core.get_session('snmp', addr[0], addr[1], dst_host, dst_port)
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
         event_type = 'SNMPv{0} {1}'.format(version, msg_type)
@@ -90,10 +90,12 @@ class conpot_extension(object):
 
 
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+    def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
+        self.host = host
+        self.port = port
 
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
@@ -126,7 +128,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
                 rspVarBinds = rspModBinds
 
         finally:
-            self.log(snmp_version, 'Get', addr, varBinds, rspVarBinds)
+            self.log(snmp_version, 'Get', addr, self.host, self.port, varBinds, rspVarBinds)
 
         # apply tarpit delay
         if self.tarpit is not 0:
@@ -138,10 +140,12 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
 
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+    def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
+        self.host = host
+        self.port = port
 
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
@@ -187,16 +191,18 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                     break
 
         finally:
-            self.log(snmp_version, 'GetNext', addr, varBinds, rspVarBinds)
+            self.log(snmp_version, 'GetNext', addr, self.host, self.port, varBinds, rspVarBinds)
 
         self.releaseStateInformation(stateReference)
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+    def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
+        self.host = host
+        self.port = port
 
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
@@ -241,7 +247,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
                 varBinds = rspVarBinds[-R:]
                 M = M - 1
         finally:
-            self.log(snmp_version, 'Bulk', addr, varBinds, rspVarBinds)
+            self.log(snmp_version, 'Bulk', addr, self.host, self.port, varBinds, rspVarBinds)
 
         # apply tarpit delay
         if self.tarpit is not 0:
@@ -255,10 +261,12 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             raise pysnmp.smi.error.SmiError()
 
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
-    def __init__(self, snmpEngine, snmpContext, databus_mediator):
+    def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
         self.tarpit = '0;0'
         self.threshold = '0;0'
+        self.host = host
+        self.port = port
 
         conpot_extension.__init__(self)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
@@ -298,4 +306,4 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             e.update(sys.exc_info()[1])
             raise e
         finally:
-            self.log(snmp_version, 'Set', addr, varBinds, rspVarBinds)
+            self.log(snmp_version, 'Set', addr, self.host, self.port, varBinds, rspVarBinds)
