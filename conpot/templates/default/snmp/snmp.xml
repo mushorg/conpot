@@ -1,4 +1,4 @@
-<snmp enabled="True" host="0.0.0.0" port="161">
+<snmp enabled="True" host="0.0.0.0" port="16100">
     <config>
         <!-- Configure individual delays for SNMP commands -->
         <entity name="tarpit" command="get">0.1;0.2</entity>

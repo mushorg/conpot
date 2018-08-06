@@ -1,4 +1,4 @@
-<s7comm enabled="True" host="0.0.0.0" port="102">
+<s7comm enabled="True" host="0.0.0.0" port="10201">
     <system_status_lists>
         <ssl id="W#16#xy1C" name="Component Identification">
             <system_name id="W#16#0001">SystemName</system_name>
