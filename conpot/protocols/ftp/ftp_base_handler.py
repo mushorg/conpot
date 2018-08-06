@@ -535,5 +535,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                       gevent.spawn(self.handle_data_channel)]
                 gevent.joinall(self.ftp_greenlets)
                 # Block till all jobs are not finished
+            except KeyboardInterrupt:
+                logger.info('Shutting FTP server.')
             finally:
                 gevent.killall(self.ftp_greenlets)

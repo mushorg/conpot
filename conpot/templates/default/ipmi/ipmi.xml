@@ -1,4 +1,4 @@
-<ipmi enabled="True" host="0.0.0.0" port="623">
+<ipmi enabled="True" host="0.0.0.0" port="6230">
     <device_info>
         <device_name>SystemName</device_name>
     </device_info>

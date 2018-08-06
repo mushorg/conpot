@@ -24,10 +24,9 @@ import sys
 import pwd
 import grp
 import ast
-from stat import filemode
 import inspect
 from configparser import ConfigParser, NoSectionError, NoOptionError
-
+from gevent import subprocess
 import gevent
 from lxml import etree
 import conpot
@@ -96,7 +95,7 @@ def setup_logging(log_file, verbose):
     root_logger.addHandler(file_log)
 
 
-def drop_privileges(fs_root, uid_name=None, gid_name=None):
+def drop_privileges(uid_name=None, gid_name=None):
     if uid_name is None:
         uid_name = 'nobody'
 
@@ -121,24 +120,6 @@ def drop_privileges(fs_root, uid_name=None, gid_name=None):
 
     logger.debug('Attempting to drop privileges to "%s:%s"',
                  wanted_user.pw_name, wanted_group.gr_name)
-    if fs_root:
-        logger.debug('Conpot path : {}'.format(conpot.__path__[0]))
-        logger.info('Dropping privileges for path: {}'.format(fs_root))
-        logger.debug('UID: {}, GID: {} , Permissions: {}'.format(
-            os.stat(fs_root).st_uid, os.stat(fs_root).st_gid, filemode(os.stat(fs_root).st_mode)
-        ))
-        os.chmod(fs_root, 0o0777)
-        os.chown(fs_root, wanted_user.pw_uid, wanted_group.gr_gid)
-        for root, dirs, files in os.walk(fs_root):
-            for _directory in dirs:
-                os.chown(os.path.join(root, _directory), wanted_user.pw_uid, wanted_user.pw_uid)
-                os.chmod(fs_root, 0o0777)
-            for _file in files:
-                os.chown(os.path.join(root, _file), wanted_user.pw_uid, wanted_user.pw_uid)
-                os.chmod(fs_root, 0o0777)
-        logger.info('UID: {}, GID: {} , Permissions: {}'.format(
-            os.stat(fs_root).st_uid, os.stat(fs_root).st_gid, filemode(os.stat(fs_root).st_mode)
-        ))
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
     new_user = pwd.getpwuid(os.getuid())
@@ -205,6 +186,23 @@ def main():
 
     core_interface.config = ConfigParser(os.environ)
     config = core_interface.config
+
+    if os.getuid() == 0:
+        logger.critical("Can't start conpot with root. Please ref user docs for more info.")
+        sys.exit(3)
+
+    try:
+        # retrieve user to run as
+        conpot_user = config.get('daemon', 'user')
+    except (NoSectionError, NoOptionError):
+        conpot_user = None
+
+    try:
+        # retrieve group to run as
+        conpot_group = config.get('daemon', 'group')
+    except (NoSectionError, NoOptionError):
+        conpot_group = None
+    drop_privileges(conpot_user, conpot_group)
 
     # Loading default config if config not set.
     if args.force:
@@ -319,7 +317,6 @@ def main():
             fs_url, data_fs_url = None, None
     logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
     conpot_core.initialize_vfs(fs_url, data_fs_url, temp_dir)
-    fs_root = conpot_core.get_vfs().root
 
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
@@ -422,30 +419,13 @@ def main():
             logger.info('No proxy template found. Service will remain unconfigured/stopped.')
         # Wait for the services to bind ports before forking
         gevent.sleep(5)
-        # Only drop if running as root
-        if os.getuid() == 0:
-            try:
-                # retrieve user to run as
-                conpot_user = config.get('daemon', 'user')
-            except (NoSectionError, NoOptionError):
-                conpot_user = None
-
-            try:
-                # retrieve group to run as
-                conpot_group = config.get('daemon', 'group')
-            except (NoSectionError, NoOptionError):
-                conpot_group = None
-            # drop_privileges(fs_root, conpot_user, conpot_group)
-
-            try:
-                if len(servers) > 0:
-                    gevent.wait()
-            except KeyboardInterrupt:
-                logging.info('Stopping Conpot')
-                for server in servers:
-                    server.stop()
-        else:
-            logging.info('Conpot has to be executed as root.')
+        try:
+            if len(servers) > 0:
+                gevent.wait()
+        except KeyboardInterrupt:
+            logging.info('Stopping Conpot')
+            for server in servers:
+                server.stop()
 
     else:
         # wait for the child to end
