@@ -202,7 +202,8 @@ def main():
         conpot_group = config.get('daemon', 'group')
     except (NoSectionError, NoOptionError):
         conpot_group = None
-    drop_privileges(conpot_user, conpot_group)
+    # FIXME: drop privs require sudo
+    # drop_privileges(conpot_user, conpot_group)
 
     # Loading default config if config not set.
     if args.force:
