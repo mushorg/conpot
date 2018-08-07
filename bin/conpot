@@ -26,7 +26,6 @@ import grp
 import ast
 import inspect
 from configparser import ConfigParser, NoSectionError, NoOptionError
-from gevent import subprocess
 import gevent
 from lxml import etree
 import conpot
@@ -195,37 +194,20 @@ def main():
         else:
             logger.warning('Running conpot with root. Running conpot with root isn\'t recommended. ')
 
-    try:
-        # retrieve user to run as
-        conpot_user = config.get('daemon', 'user')
-    except (NoSectionError, NoOptionError):
-        conpot_user = None
-
-    try:
-        # retrieve group to run as
-        conpot_group = config.get('daemon', 'group')
-    except (NoSectionError, NoOptionError):
-        conpot_group = None
-    # FIXME: drop privs require sudo
-    # drop_privileges(conpot_user, conpot_group)
-
     if os.getuid() == 0:
-        logger.critical("Can't start conpot with root. Please ref user docs for more info.")
-        sys.exit(3)
+        try:
+            # retrieve user to run as
+            conpot_user = config.get('daemon', 'user')
+        except (NoSectionError, NoOptionError):
+            conpot_user = None
 
-    try:
-        # retrieve user to run as
-        conpot_user = config.get('daemon', 'user')
-    except (NoSectionError, NoOptionError):
-        conpot_user = None
-
-    try:
-        # retrieve group to run as
-        conpot_group = config.get('daemon', 'group')
-    except (NoSectionError, NoOptionError):
-        conpot_group = None
-    # FIXME: drop privs require sudo
-    # drop_privileges(conpot_user, conpot_group)
+        try:
+            # retrieve group to run as
+            conpot_group = config.get('daemon', 'group')
+        except (NoSectionError, NoOptionError):
+            conpot_group = None
+        # FIXME: drop privs require sudo
+        drop_privileges(conpot_user, conpot_group)
 
     # Loading default config if config not set.
     if args.force:
