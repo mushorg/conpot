@@ -95,6 +95,7 @@ def setup_logging(log_file, verbose):
     root_logger.addHandler(file_log)
 
 
+# fixme: drop privs need sudo user. Figure alternatives.
 def drop_privileges(uid_name=None, gid_name=None):
     if uid_name is None:
         uid_name = 'nobody'
@@ -188,8 +189,11 @@ def main():
     config = core_interface.config
 
     if os.getuid() == 0:
-        logger.critical("Can't start conpot with root. Please ref user docs for more info.")
-        sys.exit(3)
+        if not args.force:
+            logger.critical("Can't start conpot with root. Please ref user docs for more info.")
+            sys.exit(3)
+        else:
+            logger.warning('Running conpot with root. Running conpot with root isn\'t recommended. ')
 
     try:
         # retrieve user to run as
