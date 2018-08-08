@@ -55,7 +55,7 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
         self.kamstrup_management_server = KamstrupManagementServer(
             self.dir_name + '/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml', None, None
         )
-        self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 50100)
+        self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 0)
 
         # initialize the databus
         self.databus = conpot_core.get_databus()

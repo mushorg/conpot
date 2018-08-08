@@ -47,7 +47,7 @@ class TestGuardianAST(unittest.TestCase):
         self.guardian_ast_server = GuardianASTServer(self.dir_name +
                                                      '/templates/guardian_ast/guardian_ast/guardian_ast.xml',
                                                      self.dir_name + '/templates/guardian_ast', args)
-        self.server_greenlet = gevent.spawn(self.guardian_ast_server.start, '127.0.0.1', 10001)
+        self.server_greenlet = gevent.spawn(self.guardian_ast_server.start, '127.0.0.1', 0)
         # initialize the databus
         self.guardian_ast_server.databus.initialize(self.dir_name + '/templates/guardian_ast/template.xml')
         gevent.sleep(1)

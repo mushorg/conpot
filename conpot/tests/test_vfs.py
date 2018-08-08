@@ -26,7 +26,7 @@ from freezegun import freeze_time
 import fs
 from datetime import datetime
 from fs import permissions
-from fs.time import datetime_to_epoch, epoch_to_datetime
+from fs.time import epoch_to_datetime
 
 
 class TestFileSystem(unittest.TestCase):
@@ -152,8 +152,9 @@ class TestFileSystem(unittest.TestCase):
         self.test_vfs.getinfo('new_file', namespaces=['basic'])
         self.assertEqual(_test, 'This is just a test')
 
-    @freeze_time("2018-07-15 17:51:17", tz_offset=-4)
+    @freeze_time("2018-07-15 17:51:17")
     def test_format_list(self):
+        self.test_vfs.settimes('/data', accessed=datetime.now(), modified=datetime.now())
         self._f_list = self.test_vfs.format_list('/', self.test_vfs.listdir('/'))
         [_result] = [i for i in self._f_list]
         self.assertIn('root', _result)
@@ -161,7 +162,7 @@ class TestFileSystem(unittest.TestCase):
 
     @freeze_time("2028-07-15 17:51:17")
     def test_utime(self):
-        self.test_vfs.utime('/data')
+        self.test_vfs.utime('/data', accessed=datetime.now(), modified=datetime.now())
         self.assertEqual(self.test_vfs.getinfo('/data', namespaces=['details']).modified.ctime(),
                          datetime.now().ctime())
         self.assertEqual(self.test_vfs.getinfo('/data', namespaces=['details']).accessed.ctime(),
@@ -191,6 +192,7 @@ class TestFileSystem(unittest.TestCase):
         self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).user, _user)
         self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).group, _group)
         # accessed and modified file must not be the same.
+        self.test_vfs.settimes('/data_move', accessed=datetime.now(), modified=datetime.now())
         self.assertNotEqual(self.test_vfs.getinfo('/data_move', namespaces=['details']).accessed, _accessed)
         self.assertNotEqual(self.test_vfs.getinfo('/data_move', namespaces=['details']).modified, _modified)
 
@@ -292,6 +294,7 @@ class TestSubFileSystem(unittest.TestCase):
         with self.test_vfs.open('new_file', mode='wb') as _file:
             _file.write(b'This is just a test')
         self.assertIn('new_file', self.test_vfs.listdir('/'))
+        self.test_vfs.settimes('/new_file', accessed=datetime.now(), modified=datetime.now())
         _test = self.test_vfs.gettext('/new_file')
         self.assertEqual(_test, 'This is just a test')
         self.assertEqual(self.test_vfs.getinfo('new_file', namespaces=['details']).modified.ctime(),
@@ -304,7 +307,7 @@ class TestSubFileSystem(unittest.TestCase):
 
     @freeze_time("2028-07-15 17:51:17")
     def test_utime(self):
-        self.test_vfs.utime('vfs.txt')
+        self.test_vfs.utime('vfs.txt', accessed=datetime.now(), modified=datetime.now())
         self.assertEqual(self.test_vfs.getinfo('vfs.txt', namespaces=['details']).modified.ctime(),
                          datetime.now().ctime())
         self.assertEqual(self.test_vfs.getinfo('vfs.txt', namespaces=['details']).accessed.ctime(),
@@ -361,8 +364,9 @@ class TestSubFileSystem(unittest.TestCase):
         # FIXME: add tests for a file that is actually a link!
         self.assertIsNone(self.test_vfs.readlink('vfs.txt'))
 
-    @freeze_time("2018-07-15 17:51:17", tz_offset=-4)
+    @freeze_time("2018-07-15 17:51:17")
     def test_format_list(self):
+        self.test_vfs.settimes('vfs.txt', accessed=datetime.now(), modified=datetime.now())
         self._f_list = self.test_vfs.format_list('/', self.test_vfs.listdir('/'))
         [_result] = [i for i in self._f_list]
         self.assertIn(self.test_vfs.default_user, _result)

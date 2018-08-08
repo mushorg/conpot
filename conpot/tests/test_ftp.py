@@ -216,13 +216,12 @@ class TestFTPServer(unittest.TestCase):
                                "550 'rmd ../../' points to a path which is outside the user's root directory.",
                                self.client.sendcmd, 'rmd ../../')
 
-    @freeze_time('2018-07-15 17:51:17')
     def test_mdtm(self):
         # TODO : test for user that does not have permissions for mdtm
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
         # test for a file that already exists
-        self.assertEqual(self.client.sendcmd('mdtm ftp_data.txt'), '213 20180715175117')
+        self.assertEqual(self.client.sendcmd('mdtm ftp_data.txt'), '213 20180802010912')
         self.assertRaisesRegex(ftplib.error_perm, "550 /this_file_does_not_exist.txt is not retrievable",
                                self.client.sendcmd, 'mdtm this_file_does_not_exist.txt')
 
