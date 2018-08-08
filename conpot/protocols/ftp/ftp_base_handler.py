@@ -381,6 +381,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         if self._data_channel_output_q.qsize() == 0:
                             logger.debug('No more data to read. Either transfer finished or error occurred.')
                             self._data_channel_send.set()
+                            self.respond(b'226 Transfer complete.')
                 elif not self._data_channel_recv.is_set():
                     # must be a receiving event. Get data from socket and add it to input_q
                     # Receive data, log it and add it to the data channel input queue.
@@ -405,6 +406,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     # we have received all data. Time to finish this process.
                     # set the writing event to set - so that we can write this data to files.
                     self._data_channel_recv.set()
+                    self.respond(b'226 Transfer complete.')
                 else:
                     # assume that the read/write event has finished
                     # send a nice resp to the client saying everything has finished.

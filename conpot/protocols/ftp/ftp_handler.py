@@ -536,8 +536,6 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 LIST command failed.')
-        else:
-            self.respond(b'226 Transfer complete.')
 
     def do_NLST(self, path):
         """Return a list of files in the specified directory in a compact form to the client."""
@@ -560,8 +558,6 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 NLST command failed.')
-        else:
-            self.respond(b'226 Transfer complete.')
 
     def do_RETR(self, arg):
         """
@@ -580,8 +576,6 @@ class FTPCommandChannel(FTPHandlerBase):
         except (OSError, fs.errors.FSError, FilesystemError, FTPPrivilegeException) as err:
             self._log_err(err)
             self.respond(b'550 The system cannot find the file specified.')
-        else:
-            self.respond(b'226 Transfer complete.')
 
     def do_ABOR(self, arg):
         """Aborts a file transfer currently in progress."""

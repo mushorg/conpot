@@ -428,7 +428,8 @@ class AbstractFS(WrapFS):
         return super(AbstractFS, self).opendir(path, factory=factory)
 
     def settimes(self, path, accessed=None, modified=None):
-        self.delegate_fs().settimes(path, accessed, modified)
+        if accessed or modified:
+            self.delegate_fs().settimes(path, accessed, modified)
         self._cache[path].raw['details']['accessed'] = \
             fs.time.datetime_to_epoch(super(AbstractFS, self).getinfo(path, namespaces=['details']).accessed)
         self._cache[path].raw['details']['modified'] = \

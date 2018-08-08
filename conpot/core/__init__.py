@@ -66,6 +66,10 @@ def get_vfs(protocol_name: Optional[str] = None) -> Union[virtual_fs.AbstractFS,
         return virtualFS.protocol_fs
 
 
+def close_fs():
+    """Close the file system. Remove all the temp files."""
+    virtualFS.close()
+
 # internal-interface related   --
 
 

@@ -294,12 +294,14 @@ class TestFTPServer(unittest.TestCase):
         # Do a list of directory for passive mode
         _pasv_list = list()
         self.client.retrlines('LIST', _pasv_list.append)
-        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt'], _pasv_list)
+        # note that this time is set in ftp_server settimes method. Picked up from the default template.
+        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Aug 02 01:09 ftp_data.txt'], _pasv_list)
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines('LIST', _actv_list.append)
-        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt'], _actv_list)
+        # note that this time is set in ftp_server settimes method. Picked up from the default template.
+        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Aug 02 01:09 ftp_data.txt'], _actv_list)
         # response from active and pasv mode should be same.
 
     def test_nlist(self):

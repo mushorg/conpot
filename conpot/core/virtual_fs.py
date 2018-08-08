@@ -140,8 +140,5 @@ class VirtualFS(object):
                 except fs.errors.FSError:
                     logger.exception('Error occurred while closing FS {}'.format(_fs))
                     del self._conpot_vfs[_fs][0]
-        del self.protocol_fs
-
-    def __del__(self):
-        if self.protocol_fs:
-            del self.protocol_fs
+        self.protocol_fs.close()
+        self.protocol_fs.clean()

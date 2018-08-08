@@ -320,14 +320,19 @@ def main():
             sys.exit(3)
         else:
             fs_url, data_fs_url = None, None
-    logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
+    else:
+        logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
     conpot_core.initialize_vfs(fs_url, data_fs_url, temp_dir)
 
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
     if config.getboolean('change_mac_addr', 'enabled'):
-        mac_addr.change_mac(config=config)
+        if os.getuid() == 0:
+            logger.info('Attempting to change mac address.')
+            mac_addr.change_mac(config=config)
+        else:
+            logger.info('Changing mac address require sudo permissions. Skipping')
     protocol_instance_mapping = (
         ('modbus', ModbusServer),
         ('s7comm', S7Server),
@@ -431,6 +436,8 @@ def main():
             logging.info('Stopping Conpot')
             for server in servers:
                 server.stop()
+        finally:
+            conpot_core.close_fs()
 
     else:
         # wait for the child to end

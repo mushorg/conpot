@@ -23,11 +23,11 @@ from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
 from datetime import datetime
-# import logging
-# logger = logging.getLogger(__name__)
-import sys
-import logging as logger
-logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+import logging
+logger = logging.getLogger(__name__)
+# import sys
+# import logging as logger
+# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class FTPConfig(object):
@@ -145,7 +145,8 @@ class FTPConfig(object):
             _modified = datetime.fromtimestamp(float(_file.xpath('./last_modified/text()')[0]))
             self.vfs.chown(_path, _owner, self.default_group)
             self.vfs.chmod(_path, _perms)
-            self.vfs.settimes(_path, _accessed, _modified)
+            _fs = self.vfs.delegate_fs().delegate_fs()
+            _fs.settimes(self.vfs.delegate_path(_path)[1], _accessed, _modified)
 
         for _dir in self._custom_dirs:
             _path = _dir.attrib['path']
@@ -157,7 +158,8 @@ class FTPConfig(object):
             _modified = datetime.fromtimestamp(float(_dir.xpath('./last_modified/text()')[0]))
             self.vfs.chown(_path, _owner, self.default_group, _recursive)
             self.vfs.chmod(_path, _perms)
-            self.vfs.settimes(_path, _accessed, _modified)
+            _fs = self.vfs.delegate_fs().delegate_fs()
+            _fs.settimes(self.vfs.delegate_path(_path)[1], _accessed, _modified)
         # self.default_owner = 13
         # self.default_group = 45
         # self.vfs.chmod('/', self.default_perms, recursive=True)
