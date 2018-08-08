@@ -19,6 +19,7 @@ import gevent
 from gevent import monkey; gevent.monkey.patch_all()
 import unittest
 import os
+from datetime import datetime
 import conpot
 from freezegun import freeze_time
 from conpot.protocols.ftp.ftp_utils import ftp_commands
@@ -216,12 +217,15 @@ class TestFTPServer(unittest.TestCase):
                                "550 'rmd ../../' points to a path which is outside the user's root directory.",
                                self.client.sendcmd, 'rmd ../../')
 
+    @freeze_time('2018-07-15 17:51:17')
     def test_mdtm(self):
         # TODO : test for user that does not have permissions for mdtm
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
+        _vfs, _ = conpot_core.get_vfs('ftp')
+        _vfs.settimes('ftp_data.txt', accessed=datetime.now(), modified=datetime.now())
         # test for a file that already exists
-        self.assertEqual(self.client.sendcmd('mdtm ftp_data.txt'), '213 20180802010912')
+        self.assertEqual(self.client.sendcmd('mdtm ftp_data.txt'), '213 20180715175117')
         self.assertRaisesRegex(ftplib.error_perm, "550 /this_file_does_not_exist.txt is not retrievable",
                                self.client.sendcmd, 'mdtm this_file_does_not_exist.txt')
 
@@ -290,17 +294,19 @@ class TestFTPServer(unittest.TestCase):
         # TODO: check for a user who does not have permissions to do list!
         self.client.connect(host='127.0.0.1', port=self.ftp_server.server.server_port)
         self.client.login(user='nobody', passwd='nobody')
+        _vfs, _ = conpot_core.get_vfs('ftp')
+        _vfs.settimes('ftp_data.txt', accessed=datetime.now(), modified=datetime.now())
         # Do a list of directory for passive mode
         _pasv_list = list()
         self.client.retrlines('LIST', _pasv_list.append)
         # note that this time is set in ftp_server settimes method. Picked up from the default template.
-        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Aug 02 01:09 ftp_data.txt'], _pasv_list)
+        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt'], _pasv_list)
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines('LIST', _actv_list.append)
         # note that this time is set in ftp_server settimes method. Picked up from the default template.
-        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Aug 02 01:09 ftp_data.txt'], _actv_list)
+        self.assertEqual(['-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt'], _actv_list)
         # response from active and pasv mode should be same.
 
     def test_nlist(self):
