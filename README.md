@@ -59,7 +59,7 @@ Navigate to `http://MY_IP_ADDRESS` to confirm the setup.
 
     2018-08-09 19:13:15,085 Initializing Virtual File System at ConpotTempFS/__conpot__ootc_k3j. Source specified : tar://conpot-0.6.0-py3.6/conpot/data.tar
     2018-08-09 19:13:15,100 Please wait while the system copies all specified files
-    2018-08-09 19:13:15,172 Fetched 91.219.68.4 as external ip.
+    2018-08-09 19:13:15,172 Fetched x.x.x.x as external ip.
     2018-08-09 19:13:15,175 Found and enabled ('modbus', <conpot.protocols.modbus.modbus_server.ModbusServer object at 0x7f1af52231d0>) protocol.
     2018-08-09 19:13:15,177 Found and enabled ('s7comm', <conpot.protocols.s7comm.s7_server.S7Server object at 0x7f1af5ad1f60>) protocol.
     2018-08-09 19:13:15,178 Found and enabled ('http', <conpot.protocols.http.web_server.HTTPServer object at 0x7f1af4fc2630>) protocol.
