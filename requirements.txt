@@ -31,4 +31,4 @@ python-slugify
 tftpy
 freezegun
 pytest
-# git+https://github.com/mushorg/telnetsrvlib.git
+tox
