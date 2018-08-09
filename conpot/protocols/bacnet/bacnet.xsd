@@ -39,7 +39,6 @@
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>
-
             </xs:sequence>
             <xs:attribute type="xs:string" name="enabled" use="required"/>
             <xs:attribute type="xs:string" name="host" use="required"/>

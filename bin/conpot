@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
 #
 # This program is free software; you can redistribute it and/or
@@ -16,10 +16,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-
-gevent.monkey.patch_all()
-
+import gevent.monkey; gevent.monkey.patch_all()
 import logging
 import os
 import argparse
@@ -29,13 +26,10 @@ import grp
 import ast
 import inspect
 from configparser import ConfigParser, NoSectionError, NoOptionError
-
 import gevent
 from lxml import etree
-
 import conpot
 import conpot.core as conpot_core
-
 from conpot.core.loggers.log_worker import LogWorker
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.protocols.modbus.modbus_server import ModbusServer
@@ -49,6 +43,8 @@ from conpot.protocols.bacnet.bacnet_server import BacnetServer
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 from conpot.protocols.IEC104.IEC104_server import IEC104Server
+from conpot.protocols.ftp.ftp_server import FTPServer
+from conpot.protocols.tftp.tftp_server import TftpServer
 
 from conpot.emulators.proxy import Proxy
 from conpot.utils import ext_ip
@@ -98,6 +94,7 @@ def setup_logging(log_file, verbose):
     root_logger.addHandler(file_log)
 
 
+# fixme: drop privs need sudo user. Figure alternatives.
 def drop_privileges(uid_name=None, gid_name=None):
     if uid_name is None:
         uid_name = 'nobody'
@@ -123,13 +120,10 @@ def drop_privileges(uid_name=None, gid_name=None):
 
     logger.debug('Attempting to drop privileges to "%s:%s"',
                  wanted_user.pw_name, wanted_group.gr_name)
-
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
-
     new_user = pwd.getpwuid(os.getuid())
     new_group = grp.getgrgid(os.getgid())
-
     logger.info('Privileges dropped, running as "%s:%s"',
                 new_user.pw_name, new_group.gr_name)
 
@@ -181,6 +175,10 @@ def main():
                              "(must be compiled with build-pysnmp-mib)",
                         default=[]
                         )
+    parser.add_argument("--temp_dir",
+                        help="Directory where all conpot vfs related files would be kept.",
+                        default="ConpotTempFS"
+                        )
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
     args = parser.parse_args()
 
@@ -189,10 +187,32 @@ def main():
     core_interface.config = ConfigParser(os.environ)
     config = core_interface.config
 
+    if os.getuid() == 0:
+        if not args.force:
+            logger.critical("Can't start conpot with root. Please ref user docs for more info.")
+            sys.exit(3)
+        else:
+            logger.warning('Running conpot with root. Running conpot with root isn\'t recommended. ')
+
+    if os.getuid() == 0:
+        try:
+            # retrieve user to run as
+            conpot_user = config.get('daemon', 'user')
+        except (NoSectionError, NoOptionError):
+            conpot_user = None
+
+        try:
+            # retrieve group to run as
+            conpot_group = config.get('daemon', 'group')
+        except (NoSectionError, NoOptionError):
+            conpot_group = None
+        # FIXME: drop privs require sudo
+        drop_privileges(conpot_user, conpot_group)
+
     # Loading default config if config not set.
     if args.force:
         args.config = os.path.join(package_directory, 'testing.cfg')
-        logger.info('--force option specified. Using testing configuration')
+        logger.warning('--force option specified. Using testing configuration')
         config.read(args.config)
     else:
         # sanity check: see that both config and template arguments are provided - else exit
@@ -284,11 +304,35 @@ def main():
     session_manager = conpot_core.get_sessionManager()
     session_manager.initialize_databus(template_base)
 
+    # initialize the virtual file system
+    fs_url = config.get('virtual_file_system', 'fs_url')
+    data_fs_url = config.get('virtual_file_system', 'data_fs_url')
+    if os.path.isdir(args.temp_dir):
+        temp_dir = args.temp_dir
+    else:
+        temp_dir = os.path.join(conpot.__path__[0], 'ConpotTempFS')
+        logger.info("Can't find the temp directory. Conpot VFS would be kept at : {}".format(temp_dir))
+        if not os.path.exists(temp_dir):
+            os.mkdir(temp_dir)
+    if fs_url == 'default' or data_fs_url == 'default':
+        if not args.force:
+            logger.error('Can\'t start conpot with default file system')
+            sys.exit(3)
+        else:
+            fs_url, data_fs_url = None, None
+    else:
+        logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
+    conpot_core.initialize_vfs(fs_url, data_fs_url, temp_dir)
+
     public_ip = None
     if config.getboolean('fetch_public_ip', 'enabled'):
         public_ip = ext_ip.get_ext_ip(config)
     if config.getboolean('change_mac_addr', 'enabled'):
-        mac_addr.change_mac(config=config)
+        if os.getuid() == 0:
+            logger.info('Attempting to change mac address.')
+            mac_addr.change_mac(config=config)
+        else:
+            logger.info('Changing mac address require sudo permissions. Skipping')
     protocol_instance_mapping = (
         ('modbus', ModbusServer),
         ('s7comm', S7Server),
@@ -300,7 +344,9 @@ def main():
         ('ipmi', IpmiServer),
         ('guardian_ast', GuardianASTServer),
         ('enip', EnipServer),
-        ('IEC104', IEC104Server)
+        ('IEC104', IEC104Server),
+        ('ftp', FTPServer),
+        ('tftp', TftpServer)
     )
 
     # no need to fork process when we don't want to change MAC address
@@ -383,31 +429,15 @@ def main():
             logger.info('No proxy template found. Service will remain unconfigured/stopped.')
         # Wait for the services to bind ports before forking
         gevent.sleep(5)
-        # Only drop if running as root
-        if os.getuid() == 0:
-            try:
-                # retrieve user to run as
-                conpot_user = config.get('daemon', 'user')
-            except (NoSectionError, NoOptionError):
-                conpot_user = None
-
-            try:
-                # retrieve group to run as
-                conpot_group = config.get('daemon', 'group')
-            except (NoSectionError, NoOptionError):
-                conpot_group = None
-
-            drop_privileges(conpot_user, conpot_group)
-
-            try:
-                if len(servers) > 0:
-                    gevent.wait()
-            except KeyboardInterrupt:
-                logging.info('Stopping Conpot')
-                for server in servers:
-                    server.stop()
-        else:
-            logging.info('Conpot has to be executed as root.')
+        try:
+            if len(servers) > 0:
+                gevent.wait()
+        except KeyboardInterrupt:
+            logging.info('Stopping Conpot')
+            for server in servers:
+                server.stop()
+        finally:
+            conpot_core.close_fs()
 
     else:
         # wait for the child to end

@@ -16,19 +16,28 @@
 # Brno University of Technology, Faculty of Information Technology
 
 import logging
+
 from pyghmi.ipmi.bmc import Bmc
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class FakeBmc(Bmc):
+
     def __init__(self, authdata, port):
         self.authdata = authdata
         self.port = port
+        self.deviceid = 0x25
+        self.revision = 0x13
+        self.firmwaremajor = 0x14
+        self.firmwareminor = 0x1
+        self.ipmiversion = 2
+        self.additionaldevices = 0
+        self.mfgid = 0xf
+        self.prodid = 0xe
         self.powerstate = 'off'
         self.bootdevice = 'default'
-        super(FakeBmc, self).__init__(authdata=authdata, port=port)
         logger.info('IPMI BMC initialized.')
 
     def get_boot_device(self):

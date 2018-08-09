@@ -29,6 +29,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+.coverage.*
 nosetests.xml
 
 # Translations
@@ -59,4 +60,5 @@ conpot.log
 
 # for fs testing
 fs_test/
-conpot/protocols/ftp/ftp_data/
+# dir that store conpot temp file system
+ConpotTempFS/

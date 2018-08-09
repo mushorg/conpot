@@ -18,7 +18,7 @@ hpfeeds3
 modbus-tk
 stix-validator
 stix
-pycrypto # IPMI requirement
+pycrypto
 cybox
 bacpypes==0.17.0
 pyghmi
@@ -27,4 +27,8 @@ modbus-tk
 cpppo
 pytest
 fs
-slugify
+python-slugify
+tftpy
+freezegun
+pytest
+# git+https://github.com/mushorg/telnetsrvlib.git

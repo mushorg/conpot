@@ -32,7 +32,6 @@ from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
 
 
-@conpot_protocol
 class EnipConfig(object):
     """
     Configurations parsed from template
@@ -83,6 +82,7 @@ class EnipConfig(object):
             self.dtags.append(self.Tag(name, type, size, value, addr))
 
 
+@conpot_protocol
 class EnipServer(object):
     """
     Ethernet/IP server

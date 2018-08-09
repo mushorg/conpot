@@ -1,0 +1,8 @@
+<tftp enabled="True" host="0.0.0.0" port="6969">
+    <tftp_root_path>/data/tftp/</tftp_root_path> <!-- TFTP path that you want protocol to serve. This should be
+    a directory in Conpot's VFS -->
+    <add_src></add_src> <!-- This is the location from where all your files would be copied - to be served
+     via tftp server. Leave it blank if there are no files you want to copy. In that case, only file available at
+     <tftp_root_path>/<tftp_root_path> would be used for serving -->
+    <data_fs_subdir>tftp</data_fs_subdir> <!-- specify any subdirectory for storing all tftp related uploads -->
+</tftp>
