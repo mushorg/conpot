@@ -48,12 +48,3 @@ notifications:
   - irc.freenode.org#conpot-dev
   slack:
     secure: kNsZ0yGar7bcvU4xazqCeGf8zJ8PfbQ16X+Q4Fzu4mHNcnmmal80BHMwHKHfg5SBZViDVqZeA+yEGFAK4z93IXGKLhcCkXiw7qm9K29dP7DWgAFwDn42XNPjx5mQF9elr6T8AD0S1oQM4ML+0h1I+nYY+SK28UUjvDh65o9NHqA=
-deploy:
-  provider: pypi
-  user: Johnny.Vestergaard
-  password:
-    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
-  on:
-    repo: mushorg/conpot
-    all_branches: true
-    condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"
