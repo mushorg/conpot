@@ -21,6 +21,7 @@ import unittest
 
 @unittest.skip("switch for a more generic db solution in py3")
 class Test_MySQLlogger(unittest.TestCase):
+    @unittest.skip
     def test_mysqllogger(self):
         """
         Objective: Test if events can be stored to and retrieved from mysql properly.

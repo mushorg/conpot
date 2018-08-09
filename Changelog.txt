@@ -1,3 +1,10 @@
+Conpot 0.5.2 (release 2018-08-06)
+    * Improved Docker compatibility
+    * Support for IEC104-1
+    * Support for ENIP/CIP
+    * Added JSON logging option
+    * Various bug fixes
+
 Conpot 0.5.1 (release 2015-11-08)
     * Maintenance release
 

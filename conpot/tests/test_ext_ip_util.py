@@ -18,6 +18,7 @@
 import gevent.monkey; gevent.monkey.patch_all()
 import unittest
 import conpot.utils.ext_ip
+
 from gevent.pywsgi import WSGIServer
 import gevent
 

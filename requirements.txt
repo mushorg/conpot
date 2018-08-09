@@ -32,3 +32,4 @@ tftpy
 freezegun
 pytest
 tox
+pycrypto

@@ -38,7 +38,7 @@ class KamstrupManagementServer(object):
         self.server = None
 
     def handle(self, sock, address):
-        session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1])
+        session = conpot_core.get_session('kamstrup_management_protocol', address[0], address[1], self.host, self.port)
         logger.info('New Kamstrup connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
 
@@ -75,6 +75,8 @@ class KamstrupManagementServer(object):
         sock.close()
 
     def start(self, host, port):
+        self.host = host
+        self.port = port
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info('Kamstrup management protocol server started on: %s', connection)
