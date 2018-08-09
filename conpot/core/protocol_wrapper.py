@@ -1,0 +1,46 @@
+# Copyright (C) 2018 Abhinav Saxena <xandfury@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from conpot.core import get_interface
+from datetime import datetime
+
+core_interface = get_interface()
+
+
+def conpot_protocol(cls):
+    class Wrapper(object):
+        def __init__(self, *args, **kwargs):
+            self.wrapped = cls(*args, **kwargs)
+            self.cls = cls
+            if self.cls.__name__ not in 'Proxy':
+                core_interface.protocols[self.cls] = self.wrapped
+
+        def __getattr__(self, name):
+            if name == 'handle':
+                # assuming that handle function from a class is only called when a client tries to connect with an
+                # enabled protocol, update the last_active (last_attacked attribute)
+                # FIXME: No handle function in HTTPServer
+                core_interface.last_active = datetime.now().strftime("%b %d %Y - %H:%M:%S")
+            return getattr(core_interface.protocols[self.cls], name)
+
+        def __repr__(self):
+            return self.cls.__repr__(self.wrapped)
+
+        __doc__ = property(lambda self: self.cls.__doc__)
+        __module__ = property(lambda self: self.cls.__module__)
+        __name__ = property(lambda self: self.cls.__name__)
+    return Wrapper

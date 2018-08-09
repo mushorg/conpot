@@ -18,7 +18,12 @@
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.protocols.kamstrup.meter_protocol import request_parser
-
+from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
+from conpot.helpers import chr_py3
+import conpot
+import gevent
+from gevent import socket
+import os
 import unittest
 
 
@@ -28,10 +33,20 @@ class TestKamstrup(unittest.TestCase):
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
 
+        # get the conpot directory
+        self.dir_name = os.path.dirname(conpot.__file__)
+        self.kamstrup_management_server = KamstrupServer(
+            self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml', None, None
+        )
+        self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 0)
+
+        # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize('conpot/templates/kamstrup_382/template.xml')
+        self.databus.initialize(self.dir_name + '/templates/kamstrup_382/template.xml')
+        gevent.sleep(1)
+
         self.request_parser = request_parser.KamstrupRequestParser()
-        self.command_responder = CommandResponder('conpot/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
+        self.command_responder = CommandResponder(self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
 
     def tearDown(self):
         self.databus.reset()
@@ -52,3 +67,17 @@ class TestKamstrup(unittest.TestCase):
         self.assertEqual(response.registers[0].name, 1033)
         # we should have no left overs
         self.assertEqual(len(self.request_parser.bytes), 0)
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('127.0.0.1', self.kamstrup_management_server.server.server_port))
+        s.sendall(chr_py3(0x80) + chr_py3(0x3f) + chr_py3(0x10) + chr_py3(0x01) + chr_py3(0x04) + chr_py3(0x09)
+                  + chr_py3(0x18) + chr_py3(0x6d) + chr_py3(0x0d))
+        data = s.recv(1024)
+        s.close()
+        # FIXME: verify bytes received from server - ask jkv?
+        pkt = [hex(data[i]) for i in range(len(data))]
+        self.assertTrue(('0x40' in pkt) and ('0x3f' in pkt) and ('0xd' in pkt))
+
+
+if __name__ == '__main__':
+    unittest.main()

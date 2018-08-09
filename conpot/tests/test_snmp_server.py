@@ -24,24 +24,26 @@ import shutil
 from collections import namedtuple
 
 import gevent
-
+import os
 from pysnmp.proto import rfc1902
-
+import conpot
 import conpot.core as conpot_core
 from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
 
 
-class TestBase(unittest.TestCase):
+class TestSNMPServer(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
         self.host = '127.0.0.1'
         databus = conpot_core.get_databus()
-        databus.initialize('conpot/templates/default/template.xml')
+        # get the current directory
+        self.dir_name = os.path.dirname(conpot.__file__)
+        databus.initialize(self.dir_name + '/templates/default/template.xml')
         args = namedtuple('FakeArgs', 'mibpaths raw_mib')
         args.mibpaths = [self.tmp_dir]
         args.raw_mib = [self.tmp_dir]
-        self.snmp_server = SNMPServer('conpot/templates/default/snmp/snmp.xml', 'none', args)
+        self.snmp_server = SNMPServer(self.dir_name + '/templates/default/snmp/snmp.xml', 'none', args)
         self.server_greenlet = gevent.spawn(self.snmp_server.start, self.host, 0)
         gevent.sleep(1)
         self.port = self.snmp_server.get_port()
@@ -67,7 +69,7 @@ class TestBase(unittest.TestCase):
         oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
         client.set_command(oid, callback=self.mock_callback)
         databus = conpot_core.get_databus()
-        self.assertEqual('TESTVALUE', databus.get_value('sysLocation'))
+        self.assertEqual('TESTVALUE', databus.get_value('sysLocation')._value.decode())
 
     def mock_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
         self.result = None
@@ -78,3 +80,7 @@ class TestBase(unittest.TestCase):
         else:
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
+
+
+if __name__ == '__main__':
+    unittest.main()

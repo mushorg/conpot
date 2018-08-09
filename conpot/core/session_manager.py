@@ -22,7 +22,7 @@ from conpot.core.databus import Databus
 
 
 # one instance only
-class SessionManager(object):
+class SessionManager:
     def __init__(self):
         self._sessions = []
         self._databus = Databus()

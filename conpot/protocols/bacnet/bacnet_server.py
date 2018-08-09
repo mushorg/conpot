@@ -18,39 +18,34 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-import logging
+import gevent
+from gevent import monkey; gevent.monkey.patch_all()
+
 import socket
 from lxml import etree
-
 from gevent.server import DatagramServer
-from bacpypes.service.device import LocalDeviceObject
+from bacpypes.local.device import LocalDeviceObject
 from bacpypes.apdu import APDU
 from bacpypes.pdu import PDU
 from bacpypes.errors import DecodingError
-
 import conpot.core as conpot_core
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
-
+from conpot.core.protocol_wrapper import conpot_protocol
+import logging
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class BacnetServer(object):
     def __init__(self, template, template_directory, args):
         self.dom = etree.parse(template)
-        databus = conpot_core.get_databus()
         device_info_root = self.dom.xpath('//bacnet/device_info')[0]
-
-        name_key = databus.get_value(device_info_root.xpath('./device_name/text()')[0])
+        name_key = device_info_root.xpath('./device_name/text()')[0]
         id_key = device_info_root.xpath('./device_identifier/text()')[0]
         vendor_name_key = device_info_root.xpath('./vendor_name/text()')[0]
-        vendor_identifier_key = device_info_root.xpath(
-            './vendor_identifier/text()')[0]
-        apdu_length_key = device_info_root.xpath(
-            './max_apdu_length_accepted/text()')[0]
-        segmentation_key = device_info_root.xpath(
-            './segmentation_supported/text()')[0]
-
-        # self.local_device_address = dom.xpath('./@*[name()="host" or name()="port"]')
+        vendor_identifier_key = device_info_root.xpath('./vendor_identifier/text()')[0]
+        apdu_length_key = device_info_root.xpath('./max_apdu_length_accepted/text()')[0]
+        segmentation_key = device_info_root.xpath('./segmentation_supported/text()')[0]
 
         self.thisDevice = LocalDeviceObject(
             objectName=name_key,
@@ -61,7 +56,7 @@ class BacnetServer(object):
             vendorIdentifier=int(vendor_identifier_key)
         )
         self.bacnet_app = None
-
+        self.server = None  # Initialize later
         logger.info('Conpot Bacnet initialized using the %s template.', template)
 
     def handle(self, data, address):
@@ -72,15 +67,15 @@ class BacnetServer(object):
         # received data is over the MTU -> fragmentation
         if data:
             pdu = PDU()
-            pdu.pduData = data
+            pdu.pduData = bytearray(data)
             apdu = APDU()
             try:
                 apdu.decode(pdu)
-            except DecodingError as e:
-                logger.error("DecodingError: %s", e)
-                logger.error("PDU: " + format(pdu))
+            except DecodingError:
+                logger.warning("DecodingError - PDU: {}".format(pdu))
                 return
             self.bacnet_app.indication(apdu, address, self.thisDevice)
+            # send an appropriate response from BACnet app to the attacker
             self.bacnet_app.response(self.bacnet_app._response, address)
         logger.info('Bacnet client disconnected %s:%d. (%s)', address[0], address[1], session.id)
 
@@ -92,10 +87,8 @@ class BacnetServer(object):
         # start to init the socket
         self.server.start()
         self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-
         # create application instance
-        # not too beautifull, but the BACnetApp needs access to the socket's sendto method
+        # not too beautiful, but the BACnetApp needs access to the socket's sendto method
         # this could properly be refactored in a way such that sending operates on it's own
         # (non-bound) socket.
         self.bacnet_app = BACnetApp(self.thisDevice, self.server)
@@ -107,3 +100,41 @@ class BacnetServer(object):
 
     def stop(self):
         self.server.stop()
+
+
+if __name__ == '__main__':
+    import os
+    test_template = os.getcwd() + '/../../templates/default/bacnet/bacnet.xml'
+    test = BacnetServer(test_template, None, None)
+    try:
+        from bacpypes.apdu import WhoIsRequest, WhoHasObject, WhoHasRequest
+        # code for generating adpu - who-is
+        # request = WhoIsRequest(deviceInstanceRangeLowLimit=500, deviceInstanceRangeHighLimit=50000)
+        # test_pdu = PDU()
+        # test_apdu = APDU()
+        # request.encode(test_apdu)
+        # test_apdu.encode(test_pdu)
+        # bacnet_app = BACnetApp(test.thisDevice, test)
+        # bacnet_app.get_objects_and_properties(test.dom)
+        # bacnet_app.indication(test_apdu, ('127.0.0.1', 9999), test.thisDevice)
+        # print(bacnet_app._response)
+        # bacnet_app.response(bacnet_app._response, ('127.0.0.1', 9999))
+        # # logger.debug('Starting BACnet Server! at {}:{}'.format('localhost', 9999))
+        # # test.start('127.0.0.1', 9999)
+
+        # testing who-has
+        request_object = WhoHasObject()
+        request_object.objectIdentifier = ('binaryInput', 12)
+        request = WhoHasRequest(object=request_object)
+        test_apdu = APDU()
+        request.encode(test_apdu)
+        test_pdu = PDU()
+        test_apdu.encode(test_pdu)
+        bacnet_app = BACnetApp(test.thisDevice, test)
+        bacnet_app.get_objects_and_properties(test.dom)
+        bacnet_app.indication(test_apdu, ('127.0.0.1', 9999), test.thisDevice)
+        print(bacnet_app._response)
+        bacnet_app.response(bacnet_app._response, ('127.0.0.1', 9999))
+    except KeyboardInterrupt:
+        logger.debug('Stopping BACnet server')
+        test.stop()

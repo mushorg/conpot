@@ -1,11 +1,9 @@
 import sys
 import json
 import logging
-
-logging.basicConfig(level=logging.CRITICAL)
-
 import hpfeeds
 
+logging.basicConfig(level=logging.CRITICAL)
 
 HOST = 'hpfriends.honeycloud.net'
 PORT = 20000

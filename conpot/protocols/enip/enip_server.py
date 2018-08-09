@@ -28,9 +28,8 @@ from cpppo.server import network
 from cpppo.server.enip import logix
 from cpppo.server.enip import parser
 from cpppo.server.enip import device
-
+from conpot.core.protocol_wrapper import conpot_protocol
 logger = logging.getLogger(__name__)
-
 
 
 class EnipConfig(object):
@@ -83,6 +82,7 @@ class EnipConfig(object):
             self.dtags.append(self.Tag(name, type, size, value, addr))
 
 
+@conpot_protocol
 class EnipServer(object):
     """
     Ethernet/IP server
@@ -368,14 +368,14 @@ class EnipServer(object):
                     where = "at %d total bytes:\n%s\n%s (byte %d)" % (
                         stats.get('processed', 0) if stats else 0,
                         repr(memory + future), '-' * (len(repr(memory)) - 1) + '^', pos)
-                    logger.error("Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n", addr, where,
-                              ''.join(traceback.format_exception(*sys.exc_info())))
+                    logger.error("Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n", addr, where, ''.join(
+                        traceback.format_exception(*sys.exc_info())))
 
     def set_tags(self):
         typenames = {
             "BOOL":    (parser.BOOL,    0,   lambda v: bool(v)),
             "INT":     (parser.INT,     0,   lambda v: int(v)),
-            "DINT":    (parser.DINT,    0,   lambda v: long(v)),
+            "DINT":    (parser.DINT,    0,   lambda v: int(v)),
             "SINT":    (parser.SINT,    0,   lambda v: int(v)),
             "REAL":    (parser.REAL,    0.0, lambda v: float(v)),
             "SSTRING": (parser.SSTRING, '',  lambda v: str(v)),
@@ -420,7 +420,6 @@ class EnipServer(object):
                 attribute = device.Attribute(tag_name, tag_class,
                                              default = (tag_value if tag_size == 1 else [tag_value] * tag_size))
 
-
             # Ready to create the tag and its Attribute (and error code to return, if any).  If tag_size
             # is 1, it will be a scalar Attribute.  Since the tag_name may contain '.', we don't want
             # the normal dotdict.__setitem__ resolution to parse it; use plain dict.__setitem__.
@@ -456,3 +455,16 @@ class EnipServer(object):
     def stop(self):
         logger.debug('Stopping ENIP server')
         self.stopped = True
+
+
+if __name__ == '__main__':
+    import conpot, os
+    dir_name = os.path.dirname(conpot.__file__)
+    template = dir_name + '/templates/default/enip/enip.xml'
+    enip_server_implicit = EnipServer(template, None, None)
+    enip_server_implicit.config.mode = 'udp'
+    enip_server_implicit.port = 60002
+    try:
+        enip_server_implicit.start(enip_server_implicit.addr, enip_server_implicit.port)
+    except KeyboardInterrupt:
+        enip_server_implicit.stop()

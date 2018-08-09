@@ -1,6 +1,6 @@
 language: python
 python:
-- '2.7'
+- '3.5'
 virtualenv:
   system_site_packages: false
 sudo: false
@@ -16,8 +16,7 @@ before_install:
 addons:
   apt:
     packages:
-    - python2.7
-    - python-pip
+    - python3-pip
     - git
     - unzip
     - python-dev
@@ -29,18 +28,18 @@ addons:
     - libxml2-utils
     - python-mysqldb
     - libmysqlclient-dev
+    - ipmitool
 install:
-- pip install -U pip setuptools
 - export PYTHONIOENCODING=UTF8
-- python setup.py install
 - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
 - pip install coveralls
+- pip install tox
+- pip install -r requirements.txt
 before_script:
 - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
 - chmod +x "$REPO/bin/conpot"
 script:
-- coverage run --timid --source=conpot setup.py test
-- "$REPO/bin/conpot -f"
+- tox
 - xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
 after_success:
 - coveralls
@@ -49,12 +48,3 @@ notifications:
   - irc.freenode.org#conpot-dev
   slack:
     secure: kNsZ0yGar7bcvU4xazqCeGf8zJ8PfbQ16X+Q4Fzu4mHNcnmmal80BHMwHKHfg5SBZViDVqZeA+yEGFAK4z93IXGKLhcCkXiw7qm9K29dP7DWgAFwDn42XNPjx5mQF9elr6T8AD0S1oQM4ML+0h1I+nYY+SK28UUjvDh65o9NHqA=
-deploy:
-  provider: pypi
-  user: Johnny.Vestergaard
-  password:
-    secure: EVml8GnoBJigUe1EmsnRQWK8zGd+9fOGOzrLN4t6HRAYBZAOdnDuiuRQ6q/mZQjfhqa5zf2pxpr/ufASVoP+SLSGpfofEDHSpWiuhk2iFJy/RY6+t6O0tr8ka+2Z3X+WLCNVPNuSIlR2V8RFTXzM1aOV0Dw5DgKnEMfZ40eSwmc=
-  on:
-    repo: mushorg/conpot
-    all_branches: true
-    condition: "$TRAVIS_TAG =~ ^Release_[0-9]+[.][0-9]+[.][0-9]+"

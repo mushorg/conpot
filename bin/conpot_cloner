@@ -128,10 +128,10 @@ class ConpotCloner(object):
             actual_bits = master.execute(slave=slave,
                                          function_code=cst.READ_COILS,
                                          starting_address=1, quantity_of_x=128)
-        except:
+        except Exception:
             pass
         else:
-            print actual_bits
+            print(actual_bits)
 
     def modbus_worker(self, workers=10):
         pool = Pool(workers)
@@ -146,14 +146,14 @@ class ConpotCloner(object):
         client = snmp_client.SNMPClient(host='127.0.0.1', port=161)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.get_command(OID, callback=self.mock_callback)
-        print self.result
+        print(self.result)
 
     def snmp_walk(self):
         client = snmp_client.SNMPClient(host='127.0.0.1', port=161)
         OID = ((1, 3, 6, 1, 2, 1, 1, 1, 0), None)
         client.walk_command(OID, callback=self.mock_callback)
         client.snmpEngine.transportDispatcher.runDispatcher()
-        print self.result
+        print(self.result)
         client.snmpEngine.transportDispatcher.closeDispatcher()
 
 

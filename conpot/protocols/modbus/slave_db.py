@@ -2,7 +2,7 @@
 # Brno University of Technology, Faculty of Information Technology
 import struct
 from lxml import etree
-
+import codecs
 from modbus_tk.modbus import Databank, DuplicatedKeyError, MissingKeyError, \
                              ModbusInvalidRequestError
 from modbus_tk import defines
@@ -42,7 +42,7 @@ class SlaveBase(Databank):
         of items to log.
         """
         request_pdu = None
-        response_pdu = ""
+        response_pdu = b''
         slave_id = None
         function_code = None
         func_code = None
@@ -53,7 +53,7 @@ class SlaveBase(Databank):
             # extract the pdu and the slave id
             slave_id, request_pdu = query.parse_request(request)
             if len(request_pdu) > 0:
-                (func_code, ) = struct.unpack(">B", request_pdu[0])
+                (func_code, ) = struct.unpack(">B", request_pdu[:1])
 
             logger.debug("Working mode: %s" % mode)
 
@@ -107,8 +107,8 @@ class SlaveBase(Databank):
         if slave:
             function_code = slave.function_code
 
-        return (response, {'request': request_pdu.encode('hex'),
+        return (response, {'request': codecs.encode(request_pdu, 'hex'),
                            'slave_id': slave_id,
                            'function_code': function_code,
-                           'response': response_pdu.encode('hex')})
+                           'response': codecs.encode(response_pdu, 'hex')})
 

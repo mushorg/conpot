@@ -1,2 +1,25 @@
 [report]
-omit = */tests/*
+omit =
+    */tests/*
+    */helpers.py
+    conpot/core/loggers/hpfriends.py
+    conpot/core/loggers/log_worker.py
+    conpot/core/loggers/syslog.py
+    conpot/core/loggers/mysql_log.py
+    conpot/core/loggers/sqlite_log.py
+    conpot/core/loggers/stix_transform.py
+    conpot/core/loggers/taxii_log.py
+    conpot/utils/mac_addr.py
+    # New features.. Just to avoid coverage drop - before we actually write some tests
+    conpot/core/auth.py
+    .tox/*
+
+
+exclude_lines =
+    pragma: no cover
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+
+ignore_errors = True

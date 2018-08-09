@@ -45,40 +45,38 @@ Navigate to `http://MY_IP_ADDRESS` to confirm the setup.
 5. Permanently run as a daemon with `docker-compose up -d`
 
 ## Sample output
+::
+          
+    # conpot --template default  
+                         _                                                                                                    
+     ___ ___ ___ ___ ___| |_                                                                                                
+    |  _| . |   | . | . |  _|                                                                                               
+    |___|___|_|_|  _|___|_|                                                                                                 
+                |_|                                                                                                         
+                                                                                                                          
+    Version 0.6.0                                                                                                           
+    MushMush Foundation                                                                                                     
 
-
-```shell
-
-    # conpot --template default
-
-                           _
-       ___ ___ ___ ___ ___| |_
-      |  _| . |   | . | . |  _|
-      |___|___|_|_|  _|___|_|
-                  |_|
-
-      Version 0.5.1
-      MushMush Foundation
-
-    2015-11-08 11:24:02,150 Starting Conpot using template: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/templates/default
-    2015-11-08 11:24:02,150 Starting Conpot using configuration found in: /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/conpot.cfg
-    2015-11-08 11:24:02,291 Fetched xxx.xxx.xxx.xxx as external ip.
-    2015-11-08 11:24:02,295 Found and enabled ('modbus', <class conpot.protocols.modbus.modbus_server.ModbusServer at 0x7fe0d70a27a0>) protocol.
-    2015-11-08 11:24:02,299 Conpot S7Comm initialized
-    2015-11-08 11:24:02,299 Found and enabled ('s7comm', <class 'conpot.protocols.s7comm.s7_server.S7Server'>) protocol.
-    2015-11-08 11:24:02,300 Found and enabled ('http', <class 'conpot.protocols.http.web_server.HTTPServer'>) protocol.
-    2015-11-08 11:24:02,301 Found and enabled ('snmp', <class 'conpot.protocols.snmp.snmp_server.SNMPServer'>) protocol.
-    2015-11-08 11:24:02,302 Conpot Bacnet initialized using the /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/templates/default/bacnet/bacnet.xml template.
-    2015-11-08 11:24:02,303 Found and enabled ('bacnet', <class 'conpot.protocols.bacnet.bacnet_server.BacnetServer'>) protocol.
-    2015-11-08 11:24:02,304 IPMI BMC initialized.
-    2015-11-08 11:24:02,305 Conpot IPMI initialized using /usr/local/lib/python2.7/dist-packages/Conpot-0.5.0-py2.7.egg/conpot/templates/default/ipmi/ipmi.xml template
-    2015-11-08 11:24:02,305 Found and enabled ('ipmi', <class 'conpot.protocols.ipmi.ipmi_server.IpmiServer'>) protocol.
-    2015-11-08 11:24:02,305 No proxy template found. Service will remain unconfigured/stopped.
-    2015-11-08 11:24:02,305 Modbus server started on: ('0.0.0.0', 502)
-    2015-11-08 11:24:02,306 S7Comm server started on: ('0.0.0.0', 102)
-    2015-11-08 11:24:02,306 HTTP server started on: ('0.0.0.0', 80)
-    2015-11-08 11:24:02,461 SNMP server started on: ('0.0.0.0', 161)
-    2015-11-08 11:24:02,462 Bacnet server started on: ('0.0.0.0', 47808)
-    2015-11-08 11:24:02,462 IPMI server started on: ('0.0.0.0', 623)
-    2015-11-08 11:24:07,307 Privileges dropped, running as "nobody:nobody"
-```
+    2018-08-09 19:13:15,085 Initializing Virtual File System at ConpotTempFS/__conpot__ootc_k3j. Source specified : tar://conpot-0.6.0-py3.6/conpot/data.tar
+    2018-08-09 19:13:15,100 Please wait while the system copies all specified files
+    2018-08-09 19:13:15,172 Fetched x.x.x.x as external ip.
+    2018-08-09 19:13:15,175 Found and enabled ('modbus', <conpot.protocols.modbus.modbus_server.ModbusServer object at 0x7f1af52231d0>) protocol.
+    2018-08-09 19:13:15,177 Found and enabled ('s7comm', <conpot.protocols.s7comm.s7_server.S7Server object at 0x7f1af5ad1f60>) protocol.
+    2018-08-09 19:13:15,178 Found and enabled ('http', <conpot.protocols.http.web_server.HTTPServer object at 0x7f1af4fc2630>) protocol.
+    2018-08-09 19:13:15,179 Found and enabled ('snmp', <conpot.protocols.snmp.snmp_server.SNMPServer object at 0x7f1af4fc2710>) protocol.
+    2018-08-09 19:13:15,181 Found and enabled ('bacnet', <conpot.protocols.bacnet.bacnet_server.BacnetServer object at 0x7f1af4fc22e8>) protocol.
+    2018-08-09 19:13:15,182 Found and enabled ('ipmi', <conpot.protocols.ipmi.ipmi_server.IpmiServer object at 0x7f1af5aaa1d0>) protocol.
+    2018-08-09 19:13:15,185 Found and enabled ('enip', <conpot.protocols.enip.enip_server.EnipServer object at 0x7f1af5aaa0f0>) protocol.
+    2018-08-09 19:13:15,199 Found and enabled ('ftp', <conpot.protocols.ftp.ftp_server.FTPServer object at 0x7f1af4fcec18>) protocol.
+    2018-08-09 19:13:15,206 Found and enabled ('tftp', <conpot.protocols.tftp.tftp_server.TftpServer object at 0x7f1af4fcef28$) protocol.
+    2018-08-09 19:13:15,206 No proxy template found. Service will remain unconfigured/stopped.                                
+    2018-08-09 19:13:15,206 Modbus server started on: ('0.0.0.0', 5020)                                                       
+    2018-08-09 19:13:15,206 S7Comm server started on: ('0.0.0.0', 10201)                                                      
+    2018-08-09 19:13:15,207 HTTP server started on: ('0.0.0.0', 8800)                                                         
+    2018-08-09 19:13:15,402 SNMP server started on: ('0.0.0.0', 16100)                                                        
+    2018-08-09 19:13:15,403 Bacnet server started on: ('0.0.0.0', 47808)                                                      
+    2018-08-09 19:13:15,403 IPMI server started on: ('0.0.0.0', 6230)                                                         
+    2018-08-09 19:13:15,403 handle server PID [23183] running on ('0.0.0.0', 44818)                                           
+    2018-08-09 19:13:15,404 handle server PID [23183] responding to external done/disable signal in object 139753672309064
+    2018-08-09 19:13:15,404 FTP server started on: ('0.0.0.0', 2121)                                                          
+    2018-08-09 19:13:15,404 Starting TFTP server at ('0.0.0.0', 6969)

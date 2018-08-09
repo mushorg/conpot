@@ -1,26 +1,24 @@
-import multiprocessing
-from ez_setup import use_setuptools
-use_setuptools()
 from setuptools import setup, find_packages
 import conpot
 
 setup(
-    name='Conpot',
+    name='conpot',
     version=conpot.__version__,
     packages=find_packages(exclude=['*.pyc']),
+    python_requires='>=3.5',
     scripts=['bin/conpot'],
     url="http://conpot.org",
     license='GPL 2',
     author="MushMush Foundation",
     author_email="glastopf@public.honeynet.org",
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 6 - Beta",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 2 :: Only",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python",
         "Topic :: Security",
     ],
@@ -31,6 +29,7 @@ setup(
     keywords="ICS SCADA honeypot",
     include_package_data=True,
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
     and methods of adversaries targeting industrial control systems""",
     test_suite='nose.collector',

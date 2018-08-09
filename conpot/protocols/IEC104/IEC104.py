@@ -16,11 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import gevent
 import natsort
-
 from conpot.protocols.IEC104.DeviceDataController import addr_in_hex, inro_response
 from conpot.protocols.IEC104.i_frames_check import *
 import conpot.core as conpot_core
-from frames import *
+from .frames import *
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +49,10 @@ class IEC104(object):
         try:
             # check if valid u_frame (length, rest bits)
             if len(frame) == 6 and container.getfieldval("LenAPDU") == 4:
-                if ord(frame[3]) == 0x00 and ord(frame[4]) == 0x00 and ord(frame[5]) == 0x00:
+                if frame[3] == 0x00 and frame[4] == 0x00 and frame[5] == 0x00:
                     # check which type (Start, Stop, Test), only one active at same time
                     # STARTDT_act
-                    if ord(frame[2]) == 0x07:
+                    if frame[2] == 0x07:
                         logger.info('%s ---> u_frame. STARTDT act. (%s)', self.address, self.session_id)
                         self.allow_DT = True
                         yield self.send_104frame(STARTDT_con)
@@ -62,12 +61,12 @@ class IEC104(object):
                             for pkt in self.send_buffer:
                                 yield self.send_104frame(pkt)
                     # STARTDT_con
-                    elif ord(frame[2]) == 0x0B:
+                    elif frame[2] == 0x0B:
                         logger.info('%s ---> u_frame. STARTDT con. (%s)', self.address, self.session_id)
                         #  Station sends no STARTDT_act, so there is no STARTDT_con expected and no action performed
                         #  Can be extended, if used as Master
                     # STOPDT_act
-                    elif ord(frame[2]) == 0x13:
+                    elif frame[2] == 0x13:
                         logger.info('%s ---> u_frame. STOPDT act. (%s)', self.address, self.session_id)
                         self.allow_DT = False
                         # Send S_Frame
@@ -75,11 +74,11 @@ class IEC104(object):
                         yield self.send_104frame(resp_frame)
                         yield self.send_104frame(STOPDT_con)
                     # STOPDT_con
-                    elif ord(frame[2]) == 0x23:
+                    elif frame[2] == 0x23:
                         logger.info('%s ---> u_frame. STOPDT con. (%s)', self.address, self.session_id)
                         self.timeout_t1.cancel()
                     # TESTFR_act
-                    elif ord(frame[2]) == 0x43:
+                    elif frame[2] == 0x43:
                         logger.info('%s ---> u_frame. TESTFR act. (%s)', self.address, self.session_id)
                         # In case of both sending a TESTFR_act.
                         if self.sentmsgs:
@@ -93,7 +92,7 @@ class IEC104(object):
                             self.sentmsgs = temp_list
                         yield self.send_104frame(TESTFR_con)
                     # TESTFR_con
-                    elif ord(frame[2]) == 0x83:
+                    elif frame[2] == 0x83:
                         logger.info('%s ---> u_frame. TESTFR con. (%s)', self.address, self.session_id)
                         if self.sentmsgs:
                             temp_list = []
@@ -120,7 +119,7 @@ class IEC104(object):
         try:
             # check if valid u_frame (length, rest bits)
             if len(frame) == 6 and container.getfieldval("LenAPDU") == 4:
-                if ord(frame[2]) & 0x01 and ord(frame[3]) == 0x00:
+                if frame[2] & 0x01 and frame[3] == 0x00:
                     recv_snr = container.getfieldval("RecvSeq")
                     logger.info("%s ---> s_frame receive nr: %s. (%s)",
                                 self.address, str(recv_snr), self.session_id)
@@ -148,7 +147,7 @@ class IEC104(object):
     # === i_frame
     def handle_i_frame(self, frame):
         container = i_frame(frame)
-        request_string = (" ".join(hex(ord(n)) for n in frame))
+        request_string = (" ".join(hex(n) for n in frame))
         logger.info("%s ---> i_frame: %s. (%s)", self.address, request_string, self.session_id)
         frame_length = len(frame)
         try:
@@ -219,7 +218,7 @@ class IEC104(object):
             if self.t2_caller:
                 gevent.kill(self.t2_caller)
             self.telegram_count = 0
-            response_string = (" ".join(hex(ord(n)) for n in frame.build()))
+            response_string = (" ".join(hex(n) for n in frame.build()))
             logger.info('%s <--- s_frame %s  (%s)', self.address, response_string, self.session_id)
             return frame.build()
 
@@ -235,7 +234,7 @@ class IEC104(object):
                 iframe = frame_object_with_timer(frame)
                 self.sentmsgs.append(iframe)
                 iframe.restart_t1()
-                response_string = (" ".join(hex(ord(n)) for n in frame.build()))
+                response_string = (" ".join(hex(n) for n in frame.build()))
                 logger.info('%s <--- i_frame %s  (%s)', self.address, response_string, self.session_id)
                 return frame.build()
 
@@ -251,7 +250,7 @@ class IEC104(object):
                 uframe = frame_object_with_timer(frame)
                 self.sentmsgs.append(uframe)
                 uframe.restart_t1()
-            response_string = (" ".join(hex(ord(n)) for n in frame.build()))
+            response_string = (" ".join(hex(n) for n in frame.build()))
             logger.info('%s <--- u_frame %s  (%s)', self.address, response_string, self.session_id)
             return frame.build()
 
@@ -262,7 +261,7 @@ class IEC104(object):
             if self.t2_caller:
                 gevent.kill(self.t2_caller)
             self.telegram_count = 0
-            response_string = (" ".join(hex(ord(n)) for n in frame.build()))
+            response_string = (" ".join(hex(n) for n in frame.build()))
             logger.info('%s <--- s_frame %s  (%s)', self.address, response_string, self.session_id)
             return self.sock.send(frame.build())
 
@@ -479,7 +478,7 @@ class IEC104(object):
                 # === Inro response
                 if qualif_of_inro == 20:
                     reg = self.device_data_controller.get_registers()
-                    sorted_reg = natsort.natsorted(reg.items())
+                    sorted_reg = natsort.natsorted(list(reg.items()))
 
                     # get response list for certain types
                     resp1_list = inro_response(sorted_reg, 1)
@@ -533,7 +532,7 @@ class IEC104(object):
                 i_send_seq = frm.getfieldval("SendSeq")
                 i_recv_seq = frm.getfieldval("RecvSeq")
                 list_temp.append("i(" + str(i_send_seq) + "," + str(i_recv_seq) + ")")
-        print list_temp
+        print(list_temp)
 
     def disconnect(self):
         self.timeout_t1.cancel()

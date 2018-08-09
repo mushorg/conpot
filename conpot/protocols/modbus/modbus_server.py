@@ -5,7 +5,7 @@ import socket
 import time
 import logging
 import sys
-
+import codecs
 from lxml import etree
 from gevent.server import StreamServer
 
@@ -14,13 +14,14 @@ from modbus_tk import modbus
 
 # Following imports are required for modbus template evaluation
 import modbus_tk.defines as mdef
-
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.modbus import slave_db
 import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 
 
+@conpot_protocol
 class ModbusServer(modbus.Server):
 
     def __init__(self, template, template_directory, args, timeout=5):
@@ -110,6 +111,10 @@ class ModbusServer(modbus.Server):
                     logger.info('Modbus client quit. (%s)', session.id)
                     session.add_event({'type': 'CONNECTION_QUIT'})
                     break
+                if len(request) < 7:
+                    logger.info('Modbus client provided data {} but invalid.'.format(session.id))
+                    session.add_event({'type': 'CONNECTION_TERMINATED'})
+                    break
                 tr_id, pr_id, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
                     new_byte = sock.recv(1)
@@ -119,8 +124,9 @@ class ModbusServer(modbus.Server):
                 # logdata is a dictionary containing request, slave_id,
                 # function_code and response
                 response, logdata = self._databank.handle_request(
-                    query, request, self.mode)
-                logdata['request'] = request.encode('hex')
+                    query, request, self.mode
+                )
+                logdata['request'] = codecs.encode(request, 'hex')
                 session.add_event(logdata)
 
                 logger.info(
@@ -135,7 +141,7 @@ class ModbusServer(modbus.Server):
                     # response could be None under several different cases
 
                     # MB serial connection addressing UID=0
-                    if (self.mode == 'serial' and logdata['slave_id'] == 0):
+                    if (self.mode == 'serial') and (logdata['slave_id'] == 0):
                         # delay is in milliseconds
                         time.sleep(self.delay / 1000)
                         logger.debug(

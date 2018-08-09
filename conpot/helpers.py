@@ -1,3 +1,47 @@
+"""
+Some python3 fixtures - helper methods for handy conversions + fix ssl
+"""
+from datetime import datetime
+from slugify import slugify
+
+
+def sanitize_file_name(name, host, port):
+    """
+    Ensure that file_name is legal. Slug the filename and store it onto the server.
+    This would ensure that there are no duplicates as far as writing a file is concerned. Also client addresses are
+    noted so that one can verify which client uploaded the file.
+    :param name: Name of the file
+    :param host: host/client address
+    :param port port/client port
+    :type name: str
+    """
+    return '(' + host + ', ' + str(port) + ')-' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '-' + slugify(name)
+
+
+# py3 chr
+def chr_py3(x): return bytearray((x,))
+
+
+# covert a number to an ascii byte string
+def number_to_bytes(x): return x if isinstance(x, bytes) else bytes(str(int(x)), encoding='ascii')
+
+
+# convert a string to an ascii byte string
+def str_to_bytes(x): return x if isinstance(x, bytes) else str(x).encode('ascii')
+
+
+# pack a short int
+def pack_short_int(x): return x if isinstance(x, bytes) else x.to_bytes(2, byteorder='big')
+
+
+# unpack a short int
+def unpack_short_int(x): return int.from_bytes(x,  byteorder='big')
+
+
+months_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+              11: 'Nov', 12: 'Dec'}
+
+
 # https://www.bountysource.com/issues/4335201-ssl-broken-for-python-2-7-9
 # Kudos to Eugene for this workaround!
 def fix_sslwrap():

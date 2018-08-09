@@ -30,34 +30,30 @@ import hmac
 import hashlib
 from Crypto.Cipher import AES
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
 
 def _monotonic_time():
     return os.times()[4]
 
+
 class FakeSession(Session):
 
     def __init__(self, bmc, userid, password, port):
-
         self.lastpayload = None
         self.servermode = True
         self.privlevel = 4
-        self.request_entry = []        
+        self.request_entry = []
         self.socket = None
         self.response = None
         self.stage = 0
-
         self.bmc = bmc
         self.port = port
         self.bmc_handlers = {}
-        try:
-            self.userid = userid.encode('utf-8')
-            self.password = password.encode('utf-8')
-        except AttributeError:
-            self.userid = userid
-            self.password = password
+        self.userid = userid
+        self.password = password
         self._initsession()
-        self.sockaddr = (bmc, port) 
+        self.sockaddr = (bmc, port)
         self.server = None
         self.sol_handler = None
         self.ipmicallback = self._generic_callback
@@ -132,7 +128,7 @@ class FakeSession(Session):
                 payload = list(payload[:-padsize])
             if payload_type == 0:
                 self._ipmi15(payload)
-            elif payload_type == 1: 
+            elif payload_type == 1:
                 if self.last_payload_type == 1:
                     self.lastpayload = None
                     self.last_payload_type = None
@@ -154,13 +150,13 @@ class FakeSession(Session):
         self.clientcommand = payload[5]
         self._parse_payload(payload)
         return
-        
+
     def _parse_payload(self, payload):
         if hasattr(self, 'hasretried'):
             if self.hasretried:
                 self.hasretried = 0
                 self.tabooseq[(self.expectednetfn, self.expectedcmd, self.seqlun)] = 16
-        self.expectednetfn = 0x1ff 
+        self.expectednetfn = 0x1ff
         self.expectedcmd = 0x1ff
         self.waiting_sessions.pop(self, None)
         self.lastpayload = None
@@ -200,7 +196,7 @@ class FakeSession(Session):
         self.expectednetfn = netfn + 1
         # IPMI spec forbids gaps bigger then 7 in seq number.
         seqincrement = 7
-        
+
         if bridge_request:
             addr = bridge_request.get('addr', 0x0)
             channel = bridge_request.get('channel', 0x0)
@@ -246,7 +242,7 @@ class FakeSession(Session):
         if not payload:
             payload = self.lastpayload
         # constant RMCP header for IPMI
-        message = [0x6, 0x00, 0xff, 0x07] 
+        message = [0x6, 0x00, 0xff, 0x07]
         if retry:
             self.lastpayload = payload
             self.last_payload_type = payload_type
@@ -274,12 +270,12 @@ class FakeSession(Session):
             totlen = 34 + len(message)
             if totlen in (56, 84, 112, 128, 156):
                 # Legacy pad as mandated by ipmi spec
-                message.append(0) 
+                message.append(0)
         elif self.ipmiversion == 2.0:
             psize = len(payload)
             if self.confalgo:
                 pad = (psize + 1) % 16
-                if pad:  
+                if pad:
                     # if no pad needed, then we take no more action
                     pad = 16 - pad
                 newpsize = psize + pad + 17
@@ -292,7 +288,7 @@ class FakeSession(Session):
                 crypted = crypter.encrypt(struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt))
                 crypted = list(struct.unpack("%dB" % len(crypted), crypted))
                 message += crypted
-            else:  
+            else:
                 # no confidetiality algorithm
                 message.append(psize & 0xff)
                 message.append(psize >> 8)
@@ -306,8 +302,7 @@ class FakeSession(Session):
                 message.append(7)
                 integdata = message[4:]
                 authcode = hmac.new(self.k1, struct.pack("%dB" % len(integdata), *integdata),
-                                    hashlib.sha1).digest()[:12]  # SHA1-96
-                                    # per RFC2404 truncates to 96 bits
+                                    hashlib.sha1).digest()[:12]  # SHA1-96 - per RFC2404 truncates to 96 bits
                 message += struct.unpack("12B", authcode)
         self.netpacket = struct.pack("!%dB" % len(message), *message)
         self.stage += 1
@@ -325,8 +320,8 @@ class FakeSession(Session):
             # skip transmit, let retry timer do it's thing
             self.waiting_sessions[self] = {}
             self.waiting_sessions[self]['ipmisession'] = self
-            self.waiting_sessions[self]['timeout'] = delay_xmit +  _monotonic_time()
-            return  
+            self.waiting_sessions[self]['timeout'] = delay_xmit + _monotonic_time()
+            return
         if self.sockaddr:
             self.send_data(self.netpacket, self.sockaddr)
         else:
@@ -350,6 +345,5 @@ class FakeSession(Session):
 
     def send_data(self, packet, address):
         logger.info('IPMI response sent to %s', address)
+        logger.debug('IPMI: Sending response {} to client {}'.format(packet, address))
         self.socket.sendto(packet, address)
-
-

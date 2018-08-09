@@ -29,6 +29,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+.coverage.*
 nosetests.xml
 
 # Translations
@@ -49,3 +50,15 @@ docs/source/conpot_version.py
 .log
 
 log/
+conpot.log
+.cache/
+.tox
+.pytest_cache/
+
+# 2to3 backup files
+*.bak
+
+# for fs testing
+fs_test/
+# dir that store conpot temp file system
+ConpotTempFS/

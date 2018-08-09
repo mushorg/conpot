@@ -1,4 +1,4 @@
-FROM python:2
+FROM python:3
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,6 +8,7 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 # Install dependencies
 RUN apt-get update -y -qq && apt-get install -y -qq \
         default-libmysqlclient-dev \
+        ipmitool \
         libxslt1-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -21,7 +22,8 @@ RUN pip install --no-cache-dir coverage
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run test cases
-RUN coverage run --timid --source=conpot setup.py test
+RUN tox
+RUN tox -e run -- conpot -f --template default
 
 # Install the Conpot application
 RUN python setup.py install
@@ -32,6 +34,6 @@ RUN mkdir -p /var/log/conpot/
 
 VOLUME /var/log/conpot/
 
-EXPOSE 80 102 161/udp 502
+EXPOSE 80 102 161/udp 502 21 69/udp
 
 CMD ["/usr/local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot/conpot.log"]

@@ -1,0 +1,63 @@
+<ftp enabled="True" host="0.0.0.0" port="2121">
+    <device_info>
+        <enabled_commands>
+            'USER', 'PASS', 'HELP', 'NOOP', 'QUIT', 'SITE HELP', 'SITE', 'SYST', 'TYPE', 'PASV',
+            'PORT', 'ALLO', 'MODE', 'SIZE', 'PWD', 'MKD', 'RMD', 'CWD', 'CDUP', 'MDTM', 'DELE',
+            'SITE CHMOD', 'RNFR', 'RNTO', 'STAT', 'LIST', 'NLST', 'RETR', 'REIN', 'ABOR', 'STOR',
+            'APPE', 'REST', 'STRU', 'STOU'
+        </enabled_commands>
+        <device_type>Siemens</device_type> <!-- Used in SYST FTP command-->
+        <banner>FTP server ready.</banner>
+        <max_login_attempts>3</max_login_attempts>
+        <sever_timeout>40</sever_timeout>  <!-- server timeout in seconds -->
+        <motd> Technodrome - Mouser Factory. Authorized personnel only</motd>
+        <!-- Prefix and suffix names used when creating store unique files. -->
+        <stou_suffix>conpot_test</stou_suffix>
+        <stou_prefix>conpot_test</stou_prefix>
+    </device_info>
+    <!-- All User related information -->
+    <ftp_users>
+        <users group="45:ftp">   <!-- Format of the group is gid:gname. -->
+            <user uid="13">
+                <uname>nobody</uname>
+                <password>nobody</password>
+            </user>
+            <user uid="10">
+                <uname>test_user</uname>
+                <password>test</password>
+            </user>
+        </users>
+        <anon_login enabled="True" uid="32">
+            <uname>ftp</uname>   <!-- this is the user name with which anon would read/write files. gid is same as with
+             user group. -->
+        </anon_login>
+    </ftp_users>
+    <!-- All VFS related information -->
+    <ftp_vfs>
+        <path>/data/ftp/</path>  <!-- path in the VFS you want FTP server to serve -->
+        <add_src></add_src>  <!-- If you with to add some additional files from your system to the ftp_vfs,
+        add dir path here. Otherwise keep it blank. -->
+        <data_fs_subdir>ftp</data_fs_subdir> <!-- Data fs sub directory name. This would be the directory where FTP
+        related uploads would be kept -->
+        <default_owner>13</default_owner>  <!-- user uid 13 is the default user -->
+        <!-- <default_grp>45</default_grp>  group with gid 45 is the default group | Not Implemented ATM.-->
+        <default_perms>0o777</default_perms>
+        <!-- ^^^ default permissions applied to entire ftp file system. You can change specific files via file tag -->
+        <upload_file_perms>0o755</upload_file_perms>
+        <!-- ^^^ These permissions would be enforced to all files that are uploaded -->
+        <mkdir_directory_perms>0o766</mkdir_directory_perms>
+        <!-- ^^^ These permissions are enforced to all directories that are created. -->
+        <file path="/data/ftp/ftp_data.txt">
+            <owner_uid>13</owner_uid>
+            <perms>0o777</perms>
+            <last_accessed>1533152352.517261</last_accessed>  <!-- Please specify epoch time -->
+            <last_modified>1533152352.517261</last_modified>
+        </file>
+        <dir path="/" recursive="True">
+            <owner_uid>13</owner_uid>
+            <perms>0o777</perms>
+            <last_accessed>1533148068.517261</last_accessed> <!-- Please specify epoch time -->
+            <last_modified>1533148068.517261</last_modified>
+        </dir>
+    </ftp_vfs>
+</ftp>

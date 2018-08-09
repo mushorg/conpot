@@ -1,0 +1,93 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified"
+           elementFormDefault="qualified">
+    <xs:element name="ftp">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="device_info">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="enabled_commands"/>
+                            <xs:element type="xs:string" name="device_type"/>
+                            <xs:element type="xs:string" name="banner"/>
+                            <xs:element type="xs:unsignedShort" name="max_login_attempts"/>
+                            <xs:element type="xs:unsignedShort" name="sever_timeout"/>
+                            <xs:element type="xs:string" name="motd"/>
+                            <xs:element type="xs:string" name="stou_suffix"/>
+                            <xs:element type="xs:string" name="stou_prefix"/>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="ftp_users">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="users">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="user" minOccurs="1" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element type="xs:string" name="uname" minOccurs="1" maxOccurs="1"/>
+                                                    <xs:element type="xs:string" name="password" minOccurs="1" maxOccurs="1"/>
+                                                </xs:sequence>
+                                                <xs:attribute type="xs:string" name="uid" use="required"/>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="group" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="anon_login">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:string" name="uname"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="uid" use="required"/>
+                                    <xs:attribute type="xs:string" name="enabled" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="ftp_vfs">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element type="xs:string" name="path"/>
+                            <xs:element type="xs:string" name="add_src" nillable="true"/>
+                            <xs:element type="xs:string" name="data_fs_subdir"/>
+                            <xs:element type="xs:unsignedShort" name="default_owner"/>
+                            <xs:element type="xs:string" name="default_perms"/>
+                            <xs:element type="xs:string" name="upload_file_perms"/>
+                            <xs:element type="xs:string" name="mkdir_directory_perms"/>
+                            <xs:element name="file" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:unsignedShort" name="owner_uid"/>
+                                        <xs:element type="xs:string" name="perms"/>
+                                        <xs:element type="xs:string" name="last_accessed"/>
+                                        <xs:element type="xs:string" name="last_modified"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="path" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="dir" maxOccurs="unbounded">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element type="xs:unsignedShort" name="owner_uid"/>
+                                        <xs:element type="xs:string" name="perms"/>
+                                        <xs:element type="xs:string" name="last_accessed"/>
+                                        <xs:element type="xs:string" name="last_modified"/>
+                                    </xs:sequence>
+                                    <xs:attribute type="xs:string" name="path" use="required"/>
+                                    <xs:attribute type="xs:string" name="recursive" use="required"/>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="enabled" use="required"/>
+            <xs:attribute type="xs:string" name="host" use="required"/>
+            <xs:attribute type="xs:unsignedShort" name="port" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
