@@ -114,16 +114,16 @@ class TestIPMI(unittest.TestCase):
 
     def test_channel_get_access(self):
         result, _ = run_cmd(cmd=['channel', 'getaccess', '1', '3'], port=str(self.ipmi_server.server.server_port))
-        self.assertEqual(result,
-                         b'Maximum User IDs     : 5\n'
-                         b'Enabled User IDs     : 3\n\n'
-                         b'User ID              : 3\n'
-                         b'User Name            : User1\n'
-                         b'Fixed Name           : Yes\n'
-                         b'Access Available     : call-in / callback\n'
-                         b'Link Authentication  : enabled\n'
-                         b'IPMI Messaging       : enabled\n'
-                         b'Privilege Level      : USER\n')
+        self.assertIn(b'Maximum User IDs     : 5\n'
+                      b'Enabled User IDs     : 3\n\n'
+                      b'User ID              : 3\n'
+                      b'User Name            : User1\n'
+                      b'Fixed Name           : Yes\n'
+                      b'Access Available     : call-in / callback\n'
+                      b'Link Authentication  : enabled\n'
+                      b'IPMI Messaging       : enabled\n'
+                      b'Privilege Level      : USER\n',
+                      result)
 
     def test_misc(self):
         # change the session pass

@@ -9,6 +9,7 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 RUN apt-get update -y -qq && apt-get install -y -qq \
         default-libmysqlclient-dev \
         ipmitool \
+	python3.5-dev \
         libxslt1-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -19,11 +20,11 @@ WORKDIR /opt/conpot
 
 # Install Python requirements
 RUN pip install --no-cache-dir coverage
+RUN pip install --no-cache-dir cffi
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run test cases
 RUN tox
-RUN tox -e run -- conpot -f --template default
 
 # Install the Conpot application
 RUN python setup.py install
