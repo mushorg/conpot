@@ -210,7 +210,7 @@ class TestFileSystem(unittest.TestCase):
         self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).permissions, _perms)
         self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).user, _user)
         self.assertEqual(self.test_vfs.getinfo('/data_move', namespaces=['access']).group, _group)
-        self.assertEqual(self.test_vfs.listdir('/'), ['data', 'data_move'])
+        self.assertEqual(set(self.test_vfs.listdir('/')), {'data', 'data_move'})
 
     @freeze_time("2028-07-15 17:51:17")
     def test_copyfile(self):
