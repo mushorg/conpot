@@ -25,7 +25,7 @@ import pwd
 import grp
 import ast
 import inspect
-from configparser import ConfigParser, NoSectionError, NoOptionError
+from configparser import ConfigParser, NoSectionError, NoOptionError, BasicInterpolation
 import gevent
 from lxml import etree
 import conpot
