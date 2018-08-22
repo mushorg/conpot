@@ -39,7 +39,7 @@ class IEC104Server(object):
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
-        session = conpot_core.get_session('IEC104', address[0], address[1])
+        session = conpot_core.get_session('IEC104',address[0], address[1], sock.getsockname()[0], sock.getsockname()[1])
         logger.info('New IEC 104 connection from %s:%s. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         iec104_handler = IEC104(self.device_data_controller, sock, address, session.id)

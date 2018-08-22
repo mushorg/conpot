@@ -60,7 +60,15 @@ class BacnetServer(object):
         logger.info('Conpot Bacnet initialized using the %s template.', template)
 
     def handle(self, data, address):
-        session = conpot_core.get_session('bacnet', address[0], address[1], self.host, self.port)
+        # workaround as there is no direct access to socket when logging
+        # note that this does not send out data as its an udp socket
+        # will only determine the IP of the primary interface
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((address[0], 80))
+        destIP=(s.getsockname()[0])
+        s.close()
+
+        session = conpot_core.get_session('bacnet', address[0], address[1], destIP, self.server.server_port)
         logger.info('New Bacnet connection from %s:%d. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         # I'm not sure if gevent DatagramServer handles issues where the

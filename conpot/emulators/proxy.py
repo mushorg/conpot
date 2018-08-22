@@ -77,7 +77,7 @@ class Proxy(object):
         return server
 
     def handle(self, sock, address):
-        session = conpot_core.get_session(self.proxy_id, address[0], address[1])
+        session = conpot_core.get_session(self.proxy_id, address[0], address[1], sock.getsockname()[0], sock.getsockname()[1])
         logger.info(
             'New connection from %s:%s on %s proxy. (%s)',
             address[0], address[1], self.proxy_id, session.id)
