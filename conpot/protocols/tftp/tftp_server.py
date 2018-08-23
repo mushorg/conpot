@@ -29,6 +29,7 @@ from conpot.core.protocol_wrapper import conpot_protocol
 from gevent import event
 from tftpy import TftpException, TftpTimeout
 import logging
+import socket
 logger = logging.getLogger(__name__)
 
 # For debugging --
@@ -91,8 +92,18 @@ class TftpServer(object):
         else:
             logger.warning("The TFTP root {} is not writable".format(self.vfs.getcwd() + self.root))
 
+    def getPublicIP(self, source):
+        # workaround as there is no direct access to socket when logging
+        # note that this does not send out data as its an udp socket
+        # will only determine the IP of the primary interface
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect((source, 80))
+        socketIP=(s.getsockname()[0])
+        s.close()
+        return socketIP
+
     def handle(self, buffer, client_addr):
-        session = conpot_core.get_session('tftp', client_addr[0], client_addr[1])
+        session = conpot_core.get_session('tftp', client_addr[0], client_addr[1],  self.getPublicIP(client_addr[0]), self.server._socket.getsockname()[1])
         logger.info('New TFTP client has connected. Connection from {}:{}. '.format(client_addr[0], client_addr[1]))
         session.add_event({'type': 'NEW_CONNECTION'})
         logger.debug("Read %d bytes", len(buffer))
