@@ -32,7 +32,7 @@ class JsonLogger(object):
         if self.public_ip is not None:
             dst_ip = self.public_ip
         else:
-            dst_ip = event["local"][0]
+            dst_ip = None
         data = {
             'timestamp': event['timestamp'].isoformat(),
             'sensorid': self.sensorid,
