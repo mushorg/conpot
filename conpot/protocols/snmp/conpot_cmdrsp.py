@@ -10,7 +10,7 @@ import pysnmp.smi.error
 from pysnmp import debug
 import gevent
 import conpot.core as conpot_core
-import socket
+from conpot.utils.ext_ip import get_interface_ip
 
 logger = logging.getLogger(__name__)
 
@@ -31,18 +31,8 @@ class conpot_extension(object):
 
         return addr, snmp_version
 
-    def getPublicIP(self, source):
-        # workaround as there is no direct access to socket when logging
-        # note that this does not send out data as its an udp socket
-        # will only determine the IP of the primary interface
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect((source, 80))
-        socketIP=(s.getsockname()[0])
-        s.close()
-        return socketIP
-
     def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None, sock=None):
-        session = conpot_core.get_session('snmp', addr[0], addr[1],  self.getPublicIP(addr[0]), sock.getsockname()[1])
+        session = conpot_core.get_session('snmp', addr[0], addr[1],  get_interface_ip(addr[0]), sock.getsockname()[1])
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
         event_type = 'SNMPv{0} {1}'.format(version, msg_type)
