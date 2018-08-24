@@ -30,6 +30,7 @@ from gevent import event
 from tftpy import TftpException, TftpTimeout
 import logging
 logger = logging.getLogger(__name__)
+from conpot.utils.ext_ip import get_interface_ip
 
 # For debugging --
 # import logging as logger
@@ -92,7 +93,7 @@ class TftpServer(object):
             logger.warning("The TFTP root {} is not writable".format(self.vfs.getcwd() + self.root))
 
     def handle(self, buffer, client_addr):
-        session = conpot_core.get_session('tftp', client_addr[0], client_addr[1])
+        session = conpot_core.get_session('tftp', client_addr[0], client_addr[1],  get_interface_ip(client_addr[0]), self.server._socket.getsockname()[1])
         logger.info('New TFTP client has connected. Connection from {}:{}. '.format(client_addr[0], client_addr[1]))
         session.add_event({'type': 'NEW_CONNECTION'})
         logger.debug("Read %d bytes", len(buffer))

@@ -64,5 +64,13 @@ def get_ext_ip(config=None, urls=None):
     return public_ip
 
 
+def get_interface_ip(destination_ip: str):
+    # returns interface ip from socket in case direct udp socket access not possible
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((destination_ip, 80))
+    socket_ip=(s.getsockname()[0])
+    s.close()
+    return socket_ip
+
 if __name__ == "__main__":
     print((get_ext_ip(urls=["https://api.ipify.org", "http://127.0.0.1:8000"])))
