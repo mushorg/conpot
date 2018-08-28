@@ -204,7 +204,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     def setup(self):
         """Connect incoming connection to a FTP session"""
-        self.session = conpot_core.get_session('ftp', self.client_address[0], self.client_address[1])
+        self.session = conpot_core.get_session('ftp', self.client_address[0], self.client_address[1], self.request._sock.getsockname()[0] ,self.request._sock.getsockname()[1])
         logger.info('New FTP connection from {}:{}. ({})'.format(self.client_address[0], self.client_address[1],
                                                                  self.session.id))
         self.session.add_event({'type': 'NEW_CONNECTION'})

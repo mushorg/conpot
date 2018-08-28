@@ -46,7 +46,7 @@ class GuardianASTServer(object):
         logger.info('Conpot GuardianAST initialized')
 
     def handle(self, sock, addr):
-        session = conpot_core.get_session('guardian_ast', addr[0], addr[1], self.host, self.port)
+        session = conpot_core.get_session('guardian_ast', addr[0], addr[1], sock.getsockname()[0], sock.getsockname()[1])
         logger.info('New GuardianAST connection from %s:%d. (%s)', addr[0], addr[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         current_time = datetime.datetime.utcnow()

@@ -807,7 +807,7 @@ class AbstractFS(WrapFS):
             new_dir.chmod('/', mode=perms, recursive=True)
             return new_dir
         else:
-            raise fs.errors.DirectoryExpected('{} path does not exists'.format(path))
+            raise fs.errors.DirectoryExpected('{} path does not exist'.format(path))
 
     def __getattribute__(self, attr):
         # Restrict access to methods that are implemented in AbstractFS class - Calling methods from base class may

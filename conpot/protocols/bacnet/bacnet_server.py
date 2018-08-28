@@ -33,7 +33,7 @@ from conpot.protocols.bacnet.bacnet_app import BACnetApp
 from conpot.core.protocol_wrapper import conpot_protocol
 import logging
 logger = logging.getLogger(__name__)
-
+from conpot.utils.ext_ip import get_interface_ip
 
 @conpot_protocol
 class BacnetServer(object):
@@ -60,7 +60,7 @@ class BacnetServer(object):
         logger.info('Conpot Bacnet initialized using the %s template.', template)
 
     def handle(self, data, address):
-        session = conpot_core.get_session('bacnet', address[0], address[1], self.host, self.port)
+        session = conpot_core.get_session('bacnet', address[0], address[1], get_interface_ip(address[0]), self.server.server_port)
         logger.info('New Bacnet connection from %s:%d. (%s)', address[0], address[1], session.id)
         session.add_event({'type': 'NEW_CONNECTION'})
         # I'm not sure if gevent DatagramServer handles issues where the

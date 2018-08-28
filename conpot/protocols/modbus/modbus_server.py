@@ -86,7 +86,7 @@ class ModbusServer(modbus.Server):
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
 
-        session = conpot_core.get_session('modbus', address[0], address[1], self.host, self.port)
+        session = conpot_core.get_session('modbus', address[0], address[1], sock.getsockname()[0], sock.getsockname()[1])
 
         self.start_time = time.time()
         logger.info(
