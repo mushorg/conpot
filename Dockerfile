@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.5
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -22,11 +22,10 @@ RUN pip install --no-cache-dir coverage
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run test cases
-RUN tox
-RUN tox -e run -- conpot -f --template default
+RUN py.test -v
 
 # Install the Conpot application
-RUN python setup.py install
+RUN python3.5 setup.py install
 RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
 
 # Create directories

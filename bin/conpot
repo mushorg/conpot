@@ -359,7 +359,13 @@ def main():
             protocol_name, server_class = protocol
             protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
             if os.path.isfile(protocol_template):
-                xsd_file = os.path.join(package_directory, 'protocols', protocol_name, '{0}.xsd'.format(protocol_name))
+                if 'kamstrup' in protocol_name:
+                    kamstrup_dir, kamstrup_protocol = os.path.split((protocol_name.replace('_', '/')) + '_protocol')
+                    xsd_file = os.path.join(package_directory, 'protocols', kamstrup_dir, kamstrup_protocol,
+                                            '{0}.xsd'.format(protocol_name))
+                else:
+                    xsd_file = os.path.join(package_directory, 'protocols', protocol_name,
+                                            '{0}.xsd'.format(protocol_name))
                 validate_template(protocol_template, xsd_file)
                 dom_protocol = etree.parse(protocol_template)
                 if dom_protocol.xpath('//{0}'.format(protocol_name)):
