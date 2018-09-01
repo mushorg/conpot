@@ -277,7 +277,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 requestheaders['Host'] = target
                 requestheaders['Connection'] = 'close'
 
-                remotestatus = 0
                 conn = http.client.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
@@ -664,10 +663,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         else:
 
             # try to find a configuration item for this GET request
-            entity_xml = configuration.xpath(
-                '//http/htdocs/node[@name="'
-                + self.path.partition('?')[0] + '"]'
-            )
+            try:
+                entity_xml = configuration.xpath(
+                    '//http/htdocs/node[@name="'
+                    + self.path.partition('?')[0] + '"]'
+                )
+            except:
+                entity_xml = None
+                logger.debug('Malformed HTTP:HEAD URN. Failed to handle <%s>. (Client: %s)', self.path, self.client_address)
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
@@ -799,9 +802,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             get_data = self.rfile.read(int(get_data_length))
 
         # try to find a configuration item for this GET request
-        entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
-        )
+        try:
+            entity_xml = configuration.xpath(
+                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+            )
+        except:
+            entity_xml = None
+            logger.debug('Malformed HTTP:GET URN. Failed to handle <%s>. (Client: %s)', self.path, self.client_address)
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
@@ -862,9 +869,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             post_data = self.rfile.read(int(post_data_length))
 
         # try to find a configuration item for this POST request
-        entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
-        )
+        try:
+            entity_xml = configuration.xpath(
+                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+            )
+        except:
+            entity_xml = None
+            logger.debug('Malformed HTTP:POST URN. Failed to handle <%s>. (Client: %s)', self.path, self.client_address)
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
