@@ -28,6 +28,7 @@ import http.server
 import http.client
 import os
 from lxml import etree
+from lxml.etree import XPathEvalError
 from conpot.helpers import str_to_bytes
 import conpot.core as conpot_core
 import gevent
@@ -277,7 +278,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 requestheaders['Host'] = target
                 requestheaders['Connection'] = 'close'
 
-                remotestatus = 0
                 conn = http.client.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
@@ -663,11 +663,16 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         else:
 
-            # try to find a configuration item for this GET request
-            entity_xml = configuration.xpath(
-                '//http/htdocs/node[@name="'
-                + self.path.partition('?')[0] + '"]'
-            )
+            # try to find a configuration item for this HEAD request
+            try:
+                entity_xml = configuration.xpath(
+                    '//http/htdocs/node[@name="'
+                    + self.path.partition('?')[0] + '"]'
+                )
+            except XPathEvalError:
+                entity_xml = None
+                logger.debug('Malformed HTTP:HEAD URN. Failed to handle <{}>. (Client: {})'.format(self.path,
+                                                                                                   self.client_address))
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
@@ -712,7 +717,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         docpath = self.server.docpath
 
         # retrieve OPTIONS body data
-        # ( sticking to the HTTP protocol, there should not be any body in HEAD requests,
+        # ( sticking to the HTTP protocol, there should not be any body in OPTIONS requests,
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
@@ -799,9 +804,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             get_data = self.rfile.read(int(get_data_length))
 
         # try to find a configuration item for this GET request
-        entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
-        )
+        try:
+            entity_xml = configuration.xpath(
+                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+            )
+        except XPathEvalError:
+            entity_xml = None
+            logger.debug('Malformed HTTP:GET URN. Failed to handle <{}>. (Client: {})'.format(self.path,
+                                                                                              self.client_address))
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
@@ -862,9 +872,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             post_data = self.rfile.read(int(post_data_length))
 
         # try to find a configuration item for this POST request
-        entity_xml = configuration.xpath(
-            '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
-        )
+        try:
+            entity_xml = configuration.xpath(
+                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+            )
+        except XPathEvalError:
+            entity_xml = None
+            logger.debug('Malformed HTTP:POST URN. Failed to handle <{}>. (Client: {})'.format(self.path,
+                                                                                               self.client_address))
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
