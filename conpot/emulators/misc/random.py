@@ -15,19 +15,20 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import random 
+import random
 
 class Random8BitRegisters:
     def __init__(self):
-        pass
+        self.key_num = random.SystemRandom()
 
     def get_value(self):
-        return [random.randint(0,1) for b in range(0,8)]
+        values = [self.key_num.randint(0,1 for b in range (0, 8)]
+        return values
 
 
 class Random16bitRegister:
     def __init__(self):
-        pass
+        self.key_num = random.SystemRandom()
 
     def get_value(self):
-        return [random.randint(0,15)]
+        return [self.key_num.randint(0,1)]
