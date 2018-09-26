@@ -60,10 +60,10 @@ class TFTPServerState(TFTPState):
             # Return same state, we're still waiting for valid traffic.
             return self
         logger.debug("Requested filename is %s", pkt.filename)
-        if pkt.filename.startswith(self.context.root.encode()):
+        if pkt.filename.startswith(self.context.root):
             full_path = pkt.filename
         else:
-            full_path = os.path.join(self.context.root, pkt.filename.decode().lstrip('/'))
+            full_path = os.path.join(self.context.root, pkt.filename.lstrip('/'))
         try:
             logger.info("Full path of file to be uploaded is {}".format(full_path))
             self.full_path = full_path
