@@ -22,7 +22,7 @@ class Random8BitRegisters:
         self.key_num = random.SystemRandom()
 
     def get_value(self):
-        values = [self.key_num.randint(0,1 for b in range (0, 8)]
+        values = [self.key_num.randint(0,1) for b in range (0, 8)]
         return values
 
 
