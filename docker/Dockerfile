@@ -17,11 +17,12 @@ RUN apt-get update -y -qq && apt-get install -y -qq \
 
 # Copy the app from the host folder (probably a cloned repo) to the container
 RUN useradd -r conpot
-COPY ./ /opt/conpot/
-WORKDIR /opt/conpot
+WORKDIR /opt/
+RUN git clone https://github.com/mushorg/conpot.git
 RUN chown conpot:conpot -R /opt/conpot
 
 # Install Python requirements
+WORKDIR /opt/conpot
 RUN pip install --no-cache-dir coverage
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -37,10 +38,8 @@ RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
 
 # Create directories
 RUN mkdir -p /var/log/conpot/
-
-VOLUME /var/log/conpot/
 RUN chown conpot:conpot /var/log/conpot/
 
 EXPOSE 80 102 161/udp 502 21 69/udp
 
-CMD ["/usr/bin/supervisord", "-nc", "/etc/supervisor/supervisor.conf"]
+CMD ["/usr/bin/supervisord", "-nc", "/etc/supervisor/supervisord.conf"]
