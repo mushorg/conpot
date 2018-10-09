@@ -3,12 +3,13 @@ services:
   conpot:
     build: ./
     ports:
-     - "80:80" #SCADA UI, http
-     - "102:102" #S7Comm
-     - "502:502" #Modbus
-     - "161:161/udp" #SNMP
-#     - "47808:47808" #Bacnet
-#     - "623:623" #IPMI
+     - "80:8800" #SCADA UI, http
+     - "102:10201" #S7Comm
+     - "502:5020" #Modbus
+     - "161:16100/udp" #SNMP
+     - "47808:47808" #Bacnet
+     - "623:6230" #IPMI
+     - "21:2121" #FTP
     volumes:
      - ./log:/var/log/conpot
     restart: always
