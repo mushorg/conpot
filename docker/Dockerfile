@@ -40,7 +40,9 @@ RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
 
 # Create directories
 RUN mkdir -p /var/log/conpot/
+RUN mkdir -p /data/tftp/
 RUN chown conpot:conpot /var/log/conpot
+RUN chown conpot:conpot -R /data
 
 #EXPOSE 80 102 161/udp 502 21 69/udp
 
