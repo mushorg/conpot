@@ -1,4 +1,4 @@
-FROM python:3.5
+FROM debian:stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -7,11 +7,14 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 
 # Install dependencies
 RUN apt-get update -y -qq && apt-get install -y -qq \
-        default-libmysqlclient-dev \
         ipmitool \
         supervisor \
         tcpdump \
-        libxslt1-dev && \
+        git \
+        python3-pip \
+        python3 \
+        python3-dev \
+        wget &&\
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -25,8 +28,8 @@ RUN chown conpot:conpot -R /opt/conpot
 USER conpot
 ENV PATH=$PATH:/home/conpot/.local/bin
 WORKDIR /opt/conpot
-RUN pip install --user --no-cache-dir coverage
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip3 install --user --no-cache-dir coverage
+RUN pip3 install --user --no-cache-dir -r requirements.txt
 
 # Run test cases
 RUN py.test -v
@@ -46,10 +49,10 @@ RUN chown conpot:conpot /var/log/conpot
 RUN chown conpot:conpot -R /data
 
 # Clean
-RUN apt-get autoremove --purge
-RUN apt-get purge -y x11-common git wget build-essential gcc g++
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get remove --purge -y git wget build-essential python3-dev python3-pip && \
+    apt-get autoremove -y --purge && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 #EXPOSE 80 102 161/udp 502 21 69/udp
 USER conpot
