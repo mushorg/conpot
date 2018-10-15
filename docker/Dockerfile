@@ -35,7 +35,6 @@ RUN py.test -v
 RUN python3.5 setup.py install --user --prefix=
 USER root
 WORKDIR /
-COPY conpot.conf /etc/supervisor/conf.d/
 RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
 
 # Create directories
@@ -44,6 +43,13 @@ RUN mkdir -p /data/tftp/
 RUN chown conpot:conpot /var/log/conpot
 RUN chown conpot:conpot -R /data
 
-#EXPOSE 80 102 161/udp 502 21 69/udp
+# Clean
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
-CMD ["/usr/bin/supervisord", "-nc", "/etc/supervisor/supervisord.conf"]
+#EXPOSE 80 102 161/udp 502 21 69/udp
+USER conpot
+WORKDIR /home/conpot
+ENV USER=conpot
+
+CMD ["/home/conpot/.local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp" ]
