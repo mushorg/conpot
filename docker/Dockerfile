@@ -46,6 +46,8 @@ RUN chown conpot:conpot /var/log/conpot
 RUN chown conpot:conpot -R /data
 
 # Clean
+RUN apt-get autoremove --purge
+RUN apt-get purge -y x11-common git wget build-essential gcc g++
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
