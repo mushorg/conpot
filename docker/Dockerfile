@@ -36,6 +36,8 @@ RUN python3.5 setup.py install --user --prefix=
 USER root
 WORKDIR /
 RUN rm -rf /opt/conpot /tmp/* /var/tmp/*
+RUN mkdir -p /etc/conpot /var/log/conpot /usr/share/wireshark && \
+    wget https://github.com/wireshark/wireshark/raw/master/manuf -o /usr/share/wireshark/manuf
 
 # Create directories
 RUN mkdir -p /var/log/conpot/
