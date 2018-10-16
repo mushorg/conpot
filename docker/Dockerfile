@@ -80,7 +80,6 @@ RUN apt-get remove --purge -y wget ca-certificates && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-#EXPOSE 80 102 161/udp 502 21 69/udp
 USER conpot
 WORKDIR /home/conpot
 ENV USER=conpot
