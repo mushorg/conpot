@@ -12,15 +12,7 @@ Contents:
    :maxdepth: 2
 
    installation/index
+   concepts/index
    usage/index
    development/index
    faq
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
