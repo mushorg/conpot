@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM debian:stretch as conpot-builder
 
 ENV DEBIAN_FRONTEND noninteractive
 
