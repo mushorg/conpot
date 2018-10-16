@@ -63,7 +63,7 @@ RUN apt-get update -y -qq && apt-get install --no-install-recommends -y -qq \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN useradd -m conpot
-COPY --from=0 /home/conpot/conpot.tgz /home/conpot
+COPY --from=conpot-builder /home/conpot/conpot.tgz /home/conpot
 RUN tar -zxvf conpot.tgz && rm conpot.tgz
 RUN mkdir -p /etc/conpot /var/log/conpot /usr/share/wireshark && \
     wget https://github.com/wireshark/wireshark/raw/master/manuf -o /usr/share/wireshark/manuf
