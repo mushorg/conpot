@@ -18,9 +18,9 @@ The build of the documentations [source](https://github.com/mushorg/conpot/tree/
 
 ## Easy install using Docker
 
-![Docker Build Status](https://img.shields.io/docker/build/honeynet/conpot.svg)
-![Docket Image Size](https://img.shields.io/microbadger/image-size/honeynet/conpot.svg?style=flat-square)
-![Docker Pulls](https://img.shields.io/docker/pulls/honeynet/conpot.svg?style=flat-square)
+[![Docker Build Status](https://img.shields.io/docker/build/honeynet/conpot.svg)](https://hub.docker.com/r/honeynet/conpot)
+[![Docket Image Size](https://img.shields.io/microbadger/image-size/honeynet/conpot.svg)](https://hub.docker.com/r/honeynet/conpot)
+[![Docker Pulls](https://img.shields.io/docker/pulls/honeynet/conpot.svg)](https://hub.docker.com/r/honeynet/conpot)
 
 #### Via a pre-built image
 
