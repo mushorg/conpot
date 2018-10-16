@@ -8,7 +8,6 @@ RUN sed -i -e 's/main/main non-free contrib/g' /etc/apt/sources.list
 # Install dependencies
 RUN apt-get update -y -qq && apt-get install --no-install-recommends -y -qq \
         ipmitool \
-        supervisor \
         tcpdump \
         git \
         python3-pip \
