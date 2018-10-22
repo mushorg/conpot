@@ -27,7 +27,6 @@ RUN py.test -v
 RUN pip3 uninstall -y setuptools
 
 WORKDIR /home/conpot
-RUN tar -zcf conpot.tgz .local
 
 FROM alpine:3.8
 
@@ -38,8 +37,7 @@ RUN apk add --no-cache ipmitool ca-certificates tcpdump python3 wget py-cffi lib
 
 RUN adduser -s /bin/ash -D conpot
 WORKDIR /home/conpot
-COPY --from=conpot-builder /home/conpot/conpot.tgz /home/conpot
-RUN tar -zxf conpot.tgz && rm conpot.tgz
+COPY --from=conpot-builder --chown=conpot:conpot /home/conpot/.local/ /home/conpot/.local/
 RUN mkdir -p /etc/conpot /var/log/conpot /usr/share/wireshark && \
     wget https://github.com/wireshark/wireshark/raw/master/manuf -o /usr/share/wireshark/manuf
 
