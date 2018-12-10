@@ -53,7 +53,7 @@ class FTPMetrics(object):
         self.data_channel_bytes_send = 0
         self.command_chanel_bytes_send = 0
         self.command_chanel_bytes_recv = 0
-        self.last_active = None
+        self.last_active = self.start_time
         # basically we need a timeout time composite of timeout for
         # data_sock and client_sock. Let us say that timeout of 5 sec for data_sock
         # and command_sock is 300.
@@ -245,6 +245,11 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         """Read data from the socket and add it to the _command_channel_input_q for processing"""
         log_data = dict()
         try:
+            if self.client_sock.closed:
+                logger.info('FTP socket is closed, connection lost. Remote: {} ({}).'.format(self.client_address, self.session.id))
+                self.session.add_event({'type': 'CONNECTION_LOST'})
+                self.finish()
+                return
             socket_read, socket_write, _ = gevent.select.select([self.client_sock], [self.client_sock], [], 1)
             # make sure the socket is ready to read - we would read from the command channel.
             if self.client_sock in socket_read:
