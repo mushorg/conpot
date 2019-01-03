@@ -69,7 +69,7 @@ def logo():
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
+    logger.exception('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
     sys.exit(1)
 
 
