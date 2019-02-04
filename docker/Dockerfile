@@ -1,6 +1,5 @@
 FROM alpine:3.8 as conpot-builder
 
-
 # Install dependencies
 RUN apk add --no-cache ipmitool tcpdump git python3-dev build-base wget py-cffi libxslt-dev openssl-dev libffi-dev
 
@@ -13,9 +12,9 @@ RUN chown conpot:conpot -R /opt/conpot
 # Install Python requirements
 USER conpot
 WORKDIR /opt/conpot
-RUN pip3 install --user --no-cache-dir -U --no-use-pep517 pip setuptools
-RUN pip3 install --user --no-cache-dir --no-use-pep517 coverage
-RUN pip3 install --user --no-cache-dir --no-use-pep517 -r requirements.txt
+RUN pip3 install --user --no-cache-dir -U pip==18.1 setuptools
+RUN pip3 install --user --no-cache-dir coverage
+RUN pip3 install --user --no-cache-dir -r requirements.txt
 
 # Install the Conpot application
 RUN python3 setup.py install --user --prefix=
