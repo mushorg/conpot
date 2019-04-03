@@ -237,7 +237,7 @@ class BACnetApp(BIPSimpleApplication):
                     # self._response.errorClass
                     # self._response.errorCode
 
-    def indication(self, apdu, address: str, device): -> None
+    def indication(self, apdu, address: str, device) -> None:
         """logging the received PDU type and Service request"""
         request = None
         apdu_type = apdu_types.get(apdu.apduType)
