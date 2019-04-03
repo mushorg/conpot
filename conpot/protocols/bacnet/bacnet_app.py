@@ -61,18 +61,18 @@ class BACnetApp(BIPSimpleApplication):
         parse the bacnet template for objects and their properties
         """
         self.deviceIdentifier = int(dom.xpath('//bacnet/device_info/*')[1].text)
-        device_property_list = dom.xpath('//bacnet/device_info/*') -> list
+        device_property_list = dom.xpath('//bacnet/device_info/*')
         for prop in device_property_list:
-            prop_key = prop.tag.lower().title() -> tuple
+            prop_key = prop.tag.lower().title()
             prop_key = re.sub("['_','-']", "", prop_key)
             prop_key = prop_key[0].lower() + prop_key[1:]
             if prop_key not in self.localDevice.propertyList.value and \
                     prop_key not in ['deviceIdentifier', 'deviceName']:
                 self.add_property(prop_key, prop.text)
 
-        object_list = dom.xpath('//bacnet/object_list/object/@name') -> list
+        object_list = dom.xpath('//bacnet/object_list/object/@name')
         for obj in object_list:
-            property_list = dom.xpath('//bacnet/object_list/object[@name="%s"]/properties/*' % obj) -> list
+            property_list = dom.xpath('//bacnet/object_list/object[@name="%s"]/properties/*' % obj)
             for prop in property_list:
                 if prop.tag == 'object_type':
                     object_type = re.sub('-', ' ', prop.text).lower().title()
@@ -87,7 +87,7 @@ class BACnetApp(BIPSimpleApplication):
                 prop_key = prop.tag.lower().title()
                 prop_key = re.sub("['_','-']", "", prop_key)
                 prop_key = prop_key[0].lower() + prop_key[1:]
-                if prop_key == 'objectType': ->str
+                if prop_key == 'objectType':
                     prop_val = prop.text.lower().title()
                     prop_val = re.sub(" ", "", prop_val)
                     prop_val = prop_val[0].lower() + prop_val[1:]
@@ -182,7 +182,7 @@ class BACnetApp(BIPSimpleApplication):
             for obj in device.objectList.value[2:]:
                 if int(request.object.objectIdentifier[1]) == obj[1] and \
                                 request.object.objectIdentifier[0] == obj[0]:
-                    objName = self.objectIdentifier[obj].objectName -> str
+                    objName = self.objectIdentifier[obj].objectName
                     self._response_service = 'IHaveRequest'
                     self._response = IHaveRequest()
                     self._response.pduDestination = GlobalBroadcast()
