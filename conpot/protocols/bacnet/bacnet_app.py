@@ -56,7 +56,7 @@ class BACnetApp(BIPSimpleApplication):
         self.deviceIdentifier = None
         super(BIPSimpleApplication, self).__init__()
 
-    def get_objects_and_properties(self, dom):
+    def get_objects_and_properties(self, dom) -> None:
         """
         parse the bacnet template for objects and their properties
         """
@@ -103,7 +103,7 @@ class BACnetApp(BIPSimpleApplication):
                     sys.exit(3)
             self.add_object(device_object)
 
-    def add_object(self, obj: str): -> None
+    def add_object(self, obj: str) -> None:
         object_name = obj.objectName
         if not object_name:
             raise RuntimeError("object name required")
@@ -120,7 +120,7 @@ class BACnetApp(BIPSimpleApplication):
         self.objectIdentifier[object_identifier] = obj
         self.localDevice.objectList.append(object_identifier)
 
-    def add_property(self, prop_name, prop_value):
+    def add_property(self, prop_name, prop_value) -> None:
         if not prop_name:
             raise RuntimeError("property name required")
         if not prop_value:
@@ -137,7 +137,7 @@ class BACnetApp(BIPSimpleApplication):
         self._response = None
         return
 
-    def whoIs(self, request, address: str, invoke_key: int, device): -> None
+    def whoIs(self, request, address: str, invoke_key: int, device) -> None:
         # Limits are optional (but if used, must be paired)
         execute = False
         try:
@@ -163,7 +163,7 @@ class BACnetApp(BIPSimpleApplication):
             self._response.segmentationSupported = getattr(self.localDevice, 'segmentationSupported')
             self._response.vendorID = int(getattr(self.localDevice, 'vendorIdentifier'))
 
-    def whoHas(self, request, address: str, invoke_key: int, device):
+    def whoHas(self, request, address: str, invoke_key: int, device) -> None:
         execute = False
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
@@ -194,7 +194,7 @@ class BACnetApp(BIPSimpleApplication):
             else:
                 logger.info('Bacnet WhoHasRequest: no object found')
 
-    def readProperty(self, request, address, invoke_key, device): -> None
+    def readProperty(self, request, address, invoke_key, device) -> None:
         # Read Property
         # TODO: add support for PropertyArrayIndex handling;
         for obj in device.objectList.value[2:]:
@@ -339,7 +339,7 @@ class BACnetApp(BIPSimpleApplication):
             return
 
     # socket not actually socket, but DatagramServer with sendto method
-    def response(self, response_apdu, address: str): -> None
+    def response(self, response_apdu, address: str) -> None:
         if response_apdu is None:
             return
         apdu = APDU()
