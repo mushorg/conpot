@@ -18,7 +18,7 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-from typing import int, Union
+from typing import Any, Union
 import logging
 import re
 import sys
