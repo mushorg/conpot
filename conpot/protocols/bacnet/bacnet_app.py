@@ -18,6 +18,7 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
+from typing import int, Union
 import logging
 import re
 import sys
@@ -49,8 +50,8 @@ class BACnetApp(BIPSimpleApplication):
         self._response = None
         self._response_service = None
         self.localDevice = device
-        self.objectName = {device.objectName: device} -> dict
-        self.objectIdentifier = {device.objectIdentifier: device} -> dict
+        self.objectName = {device.objectName: device}
+        self.objectIdentifier = {device.objectIdentifier: device}
         self.datagram_server = datagram_server
         self.deviceIdentifier = None
         super(BIPSimpleApplication, self).__init__()
@@ -102,7 +103,7 @@ class BACnetApp(BIPSimpleApplication):
                     sys.exit(3)
             self.add_object(device_object)
 
-    def add_object(self, obj):
+    def add_object(self, obj: str): -> None
         object_name = obj.objectName
         if not object_name:
             raise RuntimeError("object name required")
@@ -136,7 +137,7 @@ class BACnetApp(BIPSimpleApplication):
         self._response = None
         return
 
-    def whoIs(self, request, address, invoke_key, device):
+    def whoIs(self, request, address: str, invoke_key: int, device): -> None
         # Limits are optional (but if used, must be paired)
         execute = False
         try:
@@ -162,7 +163,7 @@ class BACnetApp(BIPSimpleApplication):
             self._response.segmentationSupported = getattr(self.localDevice, 'segmentationSupported')
             self._response.vendorID = int(getattr(self.localDevice, 'vendorIdentifier'))
 
-    def whoHas(self, request, address, invoke_key, device):
+    def whoHas(self, request, address: str, invoke_key: int, device):
         execute = False
         try:
             if (request.deviceInstanceRangeLowLimit is not None) and \
@@ -193,7 +194,7 @@ class BACnetApp(BIPSimpleApplication):
             else:
                 logger.info('Bacnet WhoHasRequest: no object found')
 
-    def readProperty(self, request, address, invoke_key, device):
+    def readProperty(self, request, address, invoke_key, device): -> None
         # Read Property
         # TODO: add support for PropertyArrayIndex handling;
         for obj in device.objectList.value[2:]:
@@ -236,7 +237,7 @@ class BACnetApp(BIPSimpleApplication):
                     # self._response.errorClass
                     # self._response.errorCode
 
-    def indication(self, apdu, address, device):
+    def indication(self, apdu, address: str, device): -> None
         """logging the received PDU type and Service request"""
         request = None
         apdu_type = apdu_types.get(apdu.apduType)
@@ -338,7 +339,7 @@ class BACnetApp(BIPSimpleApplication):
             return
 
     # socket not actually socket, but DatagramServer with sendto method
-    def response(self, response_apdu, address):
+    def response(self, response_apdu, address: str): -> None
         if response_apdu is None:
             return
         apdu = APDU()
