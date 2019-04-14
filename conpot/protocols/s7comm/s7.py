@@ -125,8 +125,7 @@ class S7(object):
     def plc_stop_signal(self, current_client):
     # This function gets executed after plc stop signal is received the function stops the server for a while and then restarts it
         logger.info("Stop signal recieved from {}".format(current_client))
-        return 0x00, self.parameters
-
+        return str_to_bytes('0x00'), str_to_bytes('0x29')
 
     def request_diagnostics(self):
 
