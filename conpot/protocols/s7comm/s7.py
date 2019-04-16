@@ -10,7 +10,6 @@ import conpot.core as conpot_core
 from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import AssembleException, ParseException
 import logging
-
 logger = logging.getLogger(__name__)
 
 

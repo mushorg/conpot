@@ -276,14 +276,11 @@ class s7:
         return response.data[4:]
 
     def plc_stop_function(self):
-
         pdu_type = 1
         request_id = 256
         stop_func_parameter = struct.pack('!B5x10p',
-                                                    0x29               # function code
-                                                                       # Padding
-                                          , str_to_bytes('P_PROGRAM')  # Function Name
-
+                                                    0x29,                      # function code
+                                                    str_to_bytes('P_PROGRAM')  # Function Name
                                           )
         s7packet = S7Packet(pdu_type,request_id,stop_func_parameter).pack()
         cotp_packet = COTPDataPacket(s7packet).pack()
