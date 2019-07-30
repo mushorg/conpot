@@ -9,6 +9,8 @@ import struct
 import conpot.core as conpot_core
 from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import AssembleException, ParseException
+import logging
+logger = logging.getLogger(__name__)
 
 
 # S7 packet
@@ -39,7 +41,8 @@ class S7(object):
                               0x1d: ('start_upload', self.request_not_implemented),
                               0x1e: ('upload', self.request_not_implemented),
                               0x1f: ('end_upload', self.request_not_implemented),
-                              0x28: ('insert_block', self.request_not_implemented)}
+                              0x28: ('insert_block', self.request_not_implemented),
+                              0x29: ('plc_stop',self.plc_stop_signal)}
 
         # maps valid pdu codes to name
         self.pdu_mapping = {0x01: set('request_pdu'),
@@ -56,8 +59,10 @@ class S7(object):
         else:
             return 10 + int(self.param_length) + int(self.data_length)
 
-    def handle(self):
+    def handle(self, current_client=None):
         if self.param in self.param_mapping:
+            if self.param == 0x29:
+                return self.param_mapping[self.param][1](current_client)
             # direct execution to the correct method based on the param
             return self.param_mapping[self.param][1]()
 
@@ -116,6 +121,11 @@ class S7(object):
         return self
 
     # SSL/SZL System Status List/Systemzustandsliste
+    def plc_stop_signal(self, current_client):
+    # This function gets executed after plc stop signal is received the function stops the server for a while and then restarts it
+        logger.info("Stop signal recieved from {}".format(current_client))
+        return str_to_bytes('0x00'), str_to_bytes('0x29')
+
     def request_diagnostics(self):
 
         # semi-check

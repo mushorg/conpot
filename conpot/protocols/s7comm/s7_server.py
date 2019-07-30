@@ -166,7 +166,7 @@ class S7Server(object):
                                             S7_packet.param_length, S7_packet.data_length,
                                             S7_packet.result_info, session.id)
 
-                                        response_param, response_data = S7_packet.handle()
+                                        response_param, response_data = S7_packet.handle(address[0])
                                         s7_resp_ssl_packet = S7(7, 0, S7_packet.request_id, 0, response_param,
                                                                 response_data).pack()
                                         cotp_resp_ssl_packet = COTP_BASE_packet(0xf0, 0x80, s7_resp_ssl_packet).pack()

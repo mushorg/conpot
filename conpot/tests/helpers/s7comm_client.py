@@ -275,6 +275,23 @@ class s7:
             raise S7Error(code)
         return response.data[4:]
 
+    def plc_stop_function(self):
+        pdu_type = 1
+        request_id = 256
+        stop_func_parameter = struct.pack('!B5x10p',
+                                                    0x29,                      # function code
+                                                    str_to_bytes('P_PROGRAM')  # Function Name
+                                          )
+        s7packet = S7Packet(pdu_type,request_id,stop_func_parameter).pack()
+        cotp_packet = COTPDataPacket(s7packet).pack()
+        tpkt_packet = TPKTPacket(cotp_packet).pack()
+        self.s.send(tpkt_packet)
+        reply = self.s.recv(1024)
+        if reply:
+            return S7Packet().unpack(COTPDataPacket().unpack(TPKTPacket().unpack(reply).data).data).data
+        else:
+            return None
+
     def ReadSZL(self, szl_id):
         szl_data = self.Function(
             0x04,                   # request
