@@ -88,7 +88,7 @@ class TestENIPServer(unittest.TestCase):
             connection.list_services()
             connection.shutdown()
             while True:
-                response, ela = client.await(connection, timeout=4.0)
+                response, ela = client.await_response(connection, timeout=4.0)
                 if response:
                     self.assertEqual("Communications",
                                      response['enip']['CIP']['list_services']['CPF']['item'][0]['communications_service']['service_name'])
@@ -103,7 +103,7 @@ class TestENIPServer(unittest.TestCase):
             connection.list_services()
             # TODO: udp does not cleanly shutdown. We get OSError.
             while True:
-                response, ela = client.await(connection, timeout=4.0)
+                response, ela = client.await_response(connection, timeout=4.0)
                 if response:
                     self.assertEqual("Communications",
                                      response['enip']['CIP']['list_services']['CPF']['item'][0]['communications_service']['service_name'])
@@ -118,7 +118,7 @@ class TestENIPServer(unittest.TestCase):
             connection.list_identity()
             connection.shutdown()
             while True:
-                response, ela = client.await(connection, timeout=4.0)
+                response, ela = client.await_response(connection, timeout=4.0)
                 if response:
                     expected = self.enip_server_tcp.config.product_name
                     self.assertEqual(expected, response['enip']['CIP']['list_identity']['CPF']['item'][0]['identity_object']['product_name'])
@@ -132,7 +132,7 @@ class TestENIPServer(unittest.TestCase):
             connection.list_identity()
             # TODO: udp does not cleanly shutdown. We get OSError.
             while True:
-                response, ela = client.await(connection, timeout=4.0)
+                response, ela = client.await_response(connection, timeout=4.0)
                 if response:
                     expected = self.enip_server_tcp.config.product_name
                     self.assertEqual(expected, response['enip']['CIP']['list_identity']['CPF']['item'][0]['identity_object']['product_name'])
@@ -146,7 +146,7 @@ class TestENIPServer(unittest.TestCase):
             conn.list_interfaces()
             conn.shutdown()
             while True:
-                response, ela = client.await(conn, timeout=4.0)
+                response, ela = client.await_response(conn, timeout=4.0)
                 if response:
                     self.assertDictEqual({'count': 0}, response['enip']['CIP']['list_interfaces']['CPF'])
                 else:
@@ -159,7 +159,7 @@ class TestENIPServer(unittest.TestCase):
             conn.list_interfaces()
             # TODO: udp does not cleanly shutdown. We get OSError.
             while True:
-                response, ela = client.await(conn, timeout=4.0)
+                response, ela = client.await_response(conn, timeout=4.0)
                 if response:
                     self.assertDictEqual({'count': 0}, response['enip']['CIP']['list_interfaces']['CPF'])
                 else:

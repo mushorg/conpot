@@ -1,26 +1,58 @@
-.. Conpot documentation master file, created by
-   sphinx-quickstart on Sat Apr 20 14:00:03 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to Conpot's documentation!
 ==================================
 
-Contents:
+Conpot is an ICS honeypot with the goal to collect intelligence about the motives and
+methods of adversaries targeting industrial control systems.
+
+Installation
+-------------
+
+Basics instruction on how to install Conpot:
+
+There are two ways of multiple ways of installing conpot. If you are just tinkering around, it is recommended that you
+use the quick install method. On the other hand, if you are an advanced user, you should do host installation via `pip`.
+This is described as quick install.
 
 .. toctree::
    :maxdepth: 2
 
-   installation/index
-   usage/index
-   development/index
+   installation/quick_install
+   installation/install
+
+Conpot concepts
+-------------
+<todo: add some data here>
+
+.. toctree::
+   :glob:
+
+   concepts/*
+
+Developmental guidelines
+-------------------------
+<todo: add some data here>
+
+.. toctree::
+   :maxdepth: 2
+
+   development/guidelines
+
+Usage and Frequently asked questions
+-------------
+<todo: add some data here>
+
+.. toctree::
+   :maxdepth: 2
+
    faq
 
 
-Indices and tables
-==================
+API reference
+--------------
+-------------
+<todo: add some data here>
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
 
+   api/index
