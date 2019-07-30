@@ -1,3 +1,6 @@
+ConpotFS
+========
+
 ConpotFS designed to have "safe to use" `os.*` wrappers that could be used by protocols. We cannot allow `chmod()` like commands that may allow attackers to make arbitrary system calls.
 
 At the same time - protocols such as FTP need `chmod()` like methods. Same goes for `stat()` etc. For this reason, we needed a file system that can operate on a layer above the actual file system and still provide the flexibility/robustness.

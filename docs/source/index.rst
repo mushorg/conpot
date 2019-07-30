@@ -28,14 +28,14 @@ Conpot concepts
 
    concepts/*
 
-Developmental guidelines and API reference
--------------
+Developmental guidelines
+-------------------------
 <todo: add some data here>
 
 .. toctree::
    :maxdepth: 2
 
-   development/index
+   development/guidelines
 
 Usage and Frequently asked questions
 -------------
@@ -45,3 +45,14 @@ Usage and Frequently asked questions
    :maxdepth: 2
 
    faq
+
+
+API reference
+--------------
+-------------
+<todo: add some data here>
+
+.. toctree::
+   :maxdepth: 2
+
+   api/index
