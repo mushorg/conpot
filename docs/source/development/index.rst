@@ -1,11 +1,7 @@
-.. Development chapter frontpage
-
-Development
-===========
-
-Basics on how to develop Conpot
+Development Guidelines
+----------------------
 
 .. toctree::
 
     guidelines
-    releasing
+    api/index

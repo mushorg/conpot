@@ -1,11 +1,9 @@
-Virtualenv
+Installation on host using Virtualenv
 ==========
 
-A generic way to keep Python installations separate is using `virtualenv <https://pypi.python.org/pypi/virtualenv>`_. This way you can run conpot on your machine without littering your machine. This guides assumes you have Python 3.5 installed and running on your computer.
+A generic way to keep Python installations separate is using `virtualenv <https://pypi.python.org/pypi/virtualenv>`_. This way you can run conpot on your machine without littering your machine. This guides assumes you have Python 3.6 installed and running on your computer.
 
-
-Installation
-------------
+Note that this is also the recommended way of installing conpot on a machine. Installation can be done as follows:-
 
 Install dependencies:
 ::
