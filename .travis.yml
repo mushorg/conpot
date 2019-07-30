@@ -13,6 +13,8 @@ before_install:
 - echo $REPO
 - echo $TRAVIS_TAG
 - pwd
+services:
+  - mysql
 addons:
   apt:
     packages:
