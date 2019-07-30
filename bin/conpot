@@ -69,7 +69,7 @@ def logo():
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.error('Stopping because %s died: %s', dead_greenlet, dead_greenlet.exception)
+    logger.exception('Stopping because {} died: {}'.format(dead_greenlet, dead_greenlet.exception))
     sys.exit(1)
 
 
@@ -103,8 +103,8 @@ def drop_privileges(uid_name=None, gid_name=None):
         wanted_user = pwd.getpwnam(uid_name)
     except KeyError:
         logger.exception(
-            'Cannot drop privileges: user "%s" does not exist.',
-            uid_name)
+            'Cannot drop privileges: user "{}" does not exist.'.
+            format(uid_name))
         sys.exit(1)
 
     if gid_name is None:
@@ -114,18 +114,18 @@ def drop_privileges(uid_name=None, gid_name=None):
         wanted_group = grp.getgrnam(gid_name)
     except KeyError:
         logger.exception(
-            'Cannot drop privileges: group "%s" does not exist.',
-            gid_name)
+            'Cannot drop privileges: group "{}" does not exist.'.
+            format(gid_name))
         sys.exit(1)
 
-    logger.debug('Attempting to drop privileges to "%s:%s"',
-                 wanted_user.pw_name, wanted_group.gr_name)
+    logger.debug('Attempting to drop privileges to "{}:{}"'.
+                format(wanted_user.pw_name, wanted_group.gr_name))
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
     new_user = pwd.getpwuid(os.getuid())
     new_group = grp.getgrgid(os.getgid())
-    logger.info('Privileges dropped, running as "%s:%s"',
-                new_user.pw_name, new_group.gr_name)
+    logger.info('Privileges dropped, running as "{}:{}"'.
+                format(new_user.pw_name, new_group.gr_name))
 
 
 def validate_template(xml_file, xsd_file):
@@ -134,7 +134,7 @@ def validate_template(xml_file, xsd_file):
     xml = etree.parse(xml_file)
     xsd.validate(xml)
     if xsd.error_log:
-        logger.error('Error parsing XML template: %s', xsd.error_log)
+        logger.exception('Error parsing XML template: {}'.format(xsd.error_log))
         sys.exit(1)
 
 
@@ -280,16 +280,16 @@ def main():
     elif os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
         root_template_directory = os.path.join(package_directory, 'templates', args.template)
     else:
-        logger.error('Template not found: %s', args.template)
+        logger.exception('Template not found: {}'.format(args.template))
         sys.exit(1)
 
     # Check if the configuration file exists..
     if not os.path.isfile(args.config):
-        logger.error('Config not found: %s', args.config)
+        logger.exception('Config not found: {}'.format(args.config))
         sys.exit(1)
 
-    logger.info('Starting Conpot using template: %s', root_template_directory)
-    logger.info('Starting Conpot using configuration found in: %s', args.config)
+    logger.info('Starting Conpot using template: {}'.format(root_template_directory))
+    logger.info('Starting Conpot using configuration found in: {}'.format(args.config))
 
     servers = list()
 
@@ -298,7 +298,7 @@ def main():
         validate_template(template_base, os.path.join(package_directory, 'tests/template_schemas/core.xsd'))
         dom_base = etree.parse(template_base)
     else:
-        logger.error('Could not access template configuration')
+        logger.exception('Could not access template configuration')
         sys.exit(1)
 
     session_manager = conpot_core.get_sessionManager()
@@ -316,7 +316,7 @@ def main():
             os.mkdir(temp_dir)
     if fs_url == 'default' or data_fs_url == 'default':
         if not args.force:
-            logger.error('Can\'t start conpot with default file system')
+            logger.exception('Can\'t start conpot with default file system')
             sys.exit(3)
         else:
             fs_url, data_fs_url = None, None
@@ -375,18 +375,18 @@ def main():
                         if 'testing.cfg' in args.config:
                             if '127.' not in host:
                                 if not args.force:
-                                    logger.error('To run conpot on a non local interface, please specify -f option')
+                                    logger.exception('To run conpot on a non local interface, please specify -f option')
                                     sys.exit(1)
                         port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
                         server = server_class(protocol_template, root_template_directory, args)
                         greenlet = gevent.spawn(server.start, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
                         servers.append(server)
-                        logger.info('Found and enabled %s protocol.', (protocol[0], server))
+                        logger.info('Found and enabled {} protocol.'.format(protocol[0], server))
                 else:
-                    logger.info('%s available but disabled by configuration.', protocol_name)
+                    logger.info('{} available but disabled by configuration.'.format(protocol_name))
             else:
-                logger.debug('No %s template found. Service will remain unconfigured/stopped.', protocol_name)
+                logger.debug('No {} template found. Service will remain unconfigured/stopped.', protocol_name)
 
         log_worker = LogWorker(config, dom_base, session_manager, public_ip)
         greenlet = gevent.spawn(log_worker.start)

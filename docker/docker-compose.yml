@@ -1,0 +1,15 @@
+version: "3"
+services:
+  conpot:
+    build: ./
+    ports:
+     - "80:8800" #SCADA UI, http
+     - "102:10201" #S7Comm
+     - "502:5020" #Modbus
+     - "161:16100/udp" #SNMP
+     - "47808:47808/udp" #Bacnet
+     - "623:6230/udp" #IPMI
+     - "21:2121" #FTP
+     - "69:6969/udp" #TFTP
+     - "44818:44818" #EN/IP
+    restart: always

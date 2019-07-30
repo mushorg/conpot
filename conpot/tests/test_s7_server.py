@@ -66,6 +66,7 @@ class TestS7Server(unittest.TestCase):
         s7_con.s.connect((s7_con.ip, s7_con.port))
         s7_con.Connect()
         identities = s7comm_client.GetIdentity('127.0.0.1', self.server_port, res[0], res[1])
+        s7_con.plc_stop_function()
 
         dic = {
             17: {1: "v.0.0"},
