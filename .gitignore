@@ -62,3 +62,4 @@ conpot.log
 fs_test/
 # dir that store conpot temp file system
 ConpotTempFS/
+docs/source/development/api/reference
