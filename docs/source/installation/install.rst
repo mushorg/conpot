@@ -8,12 +8,12 @@ Note that this is also the recommended way of installing conpot on a machine. In
 Install dependencies:
 ::
 
-    apt-get install git libsmi2ldbl smistrip libxslt1-dev python3.5-dev libevent-dev default-libmysqlclient-dev
+    apt-get install git libsmi2ldbl smistrip libxslt1-dev python3.6-dev libevent-dev default-libmysqlclient-dev
 
 Create the virtualenv
 ::
 
-    virtualenv --python=python3.5 conpot
+    virtualenv --python=python3.6 conpot
 
 Activate the environment
 ::
