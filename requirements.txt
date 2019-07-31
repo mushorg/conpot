@@ -13,7 +13,7 @@ libtaxii>=1.1.0
 xlrd
 crc16
 natsort
-scapy
+scapy==2.4.3rc1
 enum34
 hpfeeds3
 modbus-tk
@@ -27,10 +27,11 @@ mixbox
 modbus-tk
 cpppo
 pytest
-fs
+fs==2.3.0
 python-slugify
 tftpy
 freezegun
 pytest
 tox
 pycrypto
+sphinx_rtd_theme
