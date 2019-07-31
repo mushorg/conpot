@@ -27,10 +27,11 @@ mixbox
 modbus-tk
 cpppo
 pytest
-fs
+fs==2.3.0
 python-slugify
 tftpy
 freezegun
 pytest
 tox
 pycrypto
+sphinx_rtd_theme
