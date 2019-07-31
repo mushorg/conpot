@@ -8,26 +8,26 @@ Note that this is also the recommended way of installing conpot on a machine. In
 Install dependencies:
 ::
 
-    apt-get install git libsmi2ldbl smistrip libxslt1-dev python3.6-dev libevent-dev default-libmysqlclient-dev
+    $ sudo apt-get install git libsmi2ldbl smistrip libxslt1-dev python3.6-dev libevent-dev default-libmysqlclient-dev
 
 Create the virtualenv
 ::
 
-    virtualenv --python=python3.6 conpot
+    $ virtualenv --python=python3.6 conpot
 
 Activate the environment
 ::
 
-    source conpot/bin/activate
+    $ source conpot/bin/activate
 
 Upgrade any basic tools in the environment and deps
 ::
 
-    pip install --upgrade pip
-    pip install --upgrade setuptools
-    pip install cffi
+    $ pip install --upgrade pip
+    $ pip install --upgrade setuptools
+    $ pip install cffi
 
 Install the table version of Conpot from PyPI:
 ::
 
-    pip install conpot
+    $ pip install conpot
