@@ -252,7 +252,7 @@ class CP16Time(Packet):
 
 class IOA(Packet):
     name = "IOA"
-    fields_desc = [X3BytesField("IOA", 0x010000)]
+    fields_desc = [LEX3BytesField("IOA", 0x010000)]
 
 
 class QOS(Packet):
