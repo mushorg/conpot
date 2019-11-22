@@ -486,7 +486,7 @@ class asdu_infobj_14(Packet):
     name = "M_ME_TC_1"
     fields_desc = [
         IOA,
-        IEEEFloatField("FPNumber", 0),
+        FloatField("FPNumber", 0),
         PacketField("QDS", QDS(), QDS),
         PacketField("CP24Time", CP24Time(), CP24Time)]
 
@@ -606,7 +606,7 @@ class asdu_infobj_36(Packet):
     name = "M_ME_TF_1"
     fields_desc = [
         IOA,
-        IEEEFloatField("FPNumber", 0),
+        FloatField("FPNumber", 0),
         PacketField("QDS", QDS(), QDS),
         PacketField("CP56Time", CP56Time(), CP56Time)]
 
@@ -700,7 +700,7 @@ class asdu_infobj_50(Packet):
     name = "C_SE_NC_1"
     fields_desc = [
         IOA,
-        IEEEFloatField("FPNumber", 0),
+        FloatField("FPNumber", 0),
         PacketField("QOS", QOS(), QOS)]
 
 
@@ -789,7 +789,7 @@ class asdu_infobj_63(Packet):
     name = "C_SE_TC_1"
     fields_desc = [
         IOA,
-        IEEEFloatField("FPNumber", 0),
+        FloatField("FPNumber", 0),
         PacketField("QOS", QOS(), QOS),
         PacketField("CP56Time", CP56Time(), CP56Time)]
 
