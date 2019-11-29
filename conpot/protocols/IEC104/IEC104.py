@@ -147,8 +147,11 @@ class IEC104(object):
     # === i_frame
     def handle_i_frame(self, frame):
         container = i_frame(frame)
+
         request_string = (" ".join(hex(n) for n in frame))
-        logger.info("%s ---> i_frame: %s. (%s)", self.address, request_string, self.session_id)
+        logger.debug("%s ---> i_frame %s. (%s)", self.address, request_string, self.session_id)
+        logger.info('%s ---> i_frame %s  (%s)', self.address, container.payload, self.session_id)
+
         frame_length = len(frame)
         try:
             if container.getfieldval("LenAPDU") != frame_length - 2:
@@ -235,7 +238,8 @@ class IEC104(object):
                 self.sentmsgs.append(iframe)
                 iframe.restart_t1()
                 response_string = (" ".join(hex(n) for n in frame.build()))
-                logger.info('%s <--- i_frame %s  (%s)', self.address, response_string, self.session_id)
+                logger.debug('%s <--- i_frame %s  (%s)', self.address, response_string, self.session_id)
+                logger.info('%s <--- i_frame %s  (%s)', self.address, frame.payload, self.session_id)
                 return frame.build()
 
             else:
