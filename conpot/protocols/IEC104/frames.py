@@ -843,6 +843,16 @@ class asdu_head(Packet):
                    XByteField("OrigAddr", 0x00),
                    LEShortField("Addr", station_addr)]
 
+    def __str__(self):
+        asdu_infobj = self.payload
+        infobj_repr = []
+
+        while not isinstance(asdu_infobj, NoPayload):
+            infobj_repr.append(str(asdu_infobj.fields))
+            asdu_infobj = asdu_infobj.payload
+
+        return "{} with {} Objects=[{}]".format(self.payload.name, self.fields, ", ".join(infobj_repr))
+
     def guess_payload_class(self, payload):
         if self.TypeID == 1:
             if self.SQ == 0:
