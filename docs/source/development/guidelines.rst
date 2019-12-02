@@ -18,10 +18,6 @@ Copyright
 ---------
 * If you are adding a file/code which is produced only by you, feel free to add the license information and a notice who holds the copyrights.
 
-Environment
------------
-* PyCharm is recommended.
-
 Recommended git workflow
 ------------------------
 
