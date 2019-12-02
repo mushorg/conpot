@@ -18,6 +18,8 @@ methods of adversaries targeting industrial control systems
 ## Documentation
 
 The documentation can be found [here](https://conpot.readthedocs.io/). If you are just checking out conpot, we
-suggest that you go for [quick install](https://conpot.readthedocs.io/en/latest/installation/quick_install.html). Meanwhile, if you want to tinker around and write your own template, change ports etc. we suggest that you do host install.
+suggest that you go for [quick install](https://conpot.readthedocs.io/en/latest/installation/quick_install.html). 
+
+If you want to tinker around and write your own template, change ports etc. We suggest that you do host install.
 You can find instructions on how to install conpot [here](https://conpot.readthedocs.io/en/latest/installation/install.html) and the FAQ [here](https://conpot.readthedocs.io/en/latest/faq.html).
 
