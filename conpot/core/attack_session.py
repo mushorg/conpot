@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 # one instance per connection
 
 class AttackSession(object):
-    def __init__(self, protocol, source_ip, source_port, destination_ip, destination_port, databus, log_queue):
+    def __init__(self, protocol, source_ip, source_port, destination_ip, destination_port, log_queue):
         self.log_queue = log_queue
         self.id = uuid.uuid4()
         logger.info('New %s session from %s (%s)', protocol, source_ip, self.id)
@@ -36,7 +36,6 @@ class AttackSession(object):
         self.destination_ip = destination_ip
         self.destination_port = destination_port
         self.timestamp = datetime.utcnow()
-        self.databus = databus
         self.public_ip = None
         self.data = dict()
         self._ended = False
