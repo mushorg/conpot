@@ -40,8 +40,8 @@ class AttackSession(object):
         self.data = dict()
         self._ended = False
 
-    def _dump_event(self, event_data):
-        data = {
+    def _dump_data(self, data):
+        return {
             "id": self.id,
             "remote": (self.source_ip, self.source_port),
             "src_ip": self.source_ip,
@@ -52,9 +52,8 @@ class AttackSession(object):
             "data_type": self.protocol,
             "timestamp": self.timestamp,
             "public_ip": self.public_ip,
-            "data": event_data
+            "data": data
         }
-        return data
 
     def add_event(self, event_data):
         sec_elapsed = (datetime.utcnow() - self.timestamp).total_seconds()
@@ -63,23 +62,10 @@ class AttackSession(object):
             elapse_ms += 1
         self.data[elapse_ms] = event_data
         # TODO: We should only log the session when it is finished
-        self.log_queue.put(self._dump_event(event_data))
+        self.log_queue.put(self._dump_data(event_data))
 
     def dump(self):
-        data = {
-            "id": self.id,
-            "remote": (self.source_ip, self.source_port),
-            "src_ip": self.source_ip,
-            "src_port": self.source_port,
-            "local": (self.destination_ip, self.destination_port),
-            "dst_ip": self.destination_ip,
-            "dst_port": self.destination_port,
-            "data_type": self.protocol,
-            "timestamp": self.timestamp,
-            "public_ip": self.public_ip,
-            "data": self.data
-        }
-        return data
+        return self._dump_data(self.data)
 
     def set_ended(self):
         self._ended = True
