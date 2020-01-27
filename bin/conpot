@@ -134,7 +134,7 @@ def validate_template(xml_file, xsd_file):
     xml = etree.parse(xml_file)
     xsd.validate(xml)
     if xsd.error_log:
-        logger.exception('Error parsing XML template: {}'.format(xsd.error_log))
+        logger.error('Error parsing XML template: {}'.format(xsd.error_log))
         sys.exit(1)
 
 
@@ -280,12 +280,12 @@ def main():
     elif os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
         root_template_directory = os.path.join(package_directory, 'templates', args.template)
     else:
-        logger.exception('Template not found: {}'.format(args.template))
+        logger.error('Template not found: {}'.format(args.template))
         sys.exit(1)
 
     # Check if the configuration file exists..
     if not os.path.isfile(args.config):
-        logger.exception('Config not found: {}'.format(args.config))
+        logger.error('Config not found: {}'.format(args.config))
         sys.exit(1)
 
     logger.info('Starting Conpot using template: {}'.format(root_template_directory))
@@ -298,7 +298,7 @@ def main():
         validate_template(template_base, os.path.join(package_directory, 'tests/template_schemas/core.xsd'))
         dom_base = etree.parse(template_base)
     else:
-        logger.exception('Could not access template configuration')
+        logger.error('Could not access template configuration')
         sys.exit(1)
 
     session_manager = conpot_core.get_sessionManager()
@@ -316,7 +316,7 @@ def main():
             os.mkdir(temp_dir)
     if fs_url == 'default' or data_fs_url == 'default':
         if not args.force:
-            logger.exception('Can\'t start conpot with default file system')
+            logger.error('Can\'t start conpot with default file system')
             sys.exit(3)
         else:
             fs_url, data_fs_url = None, None
@@ -375,7 +375,7 @@ def main():
                         if 'testing.cfg' in args.config:
                             if '127.' not in host:
                                 if not args.force:
-                                    logger.exception('To run conpot on a non local interface, please specify -f option')
+                                    logger.error('To run conpot on a non local interface, please specify -f option')
                                     sys.exit(1)
                         port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
                         server = server_class(protocol_template, root_template_directory, args)

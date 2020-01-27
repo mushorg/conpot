@@ -108,7 +108,7 @@ class VirtualFS(object):
         if src_path:
             assert isinstance(src_path, str)
             if not os.path.isdir(src_path):
-                logger.exception('Protocol directory is not a valid directory.')
+                logger.error('Protocol directory is not a valid directory.')
                 sys.exit(3)
         logger.info('Creating persistent data store for protocol: {}'.format(protocol_name))
         # create a sub directory for persistent storage.
