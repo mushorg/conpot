@@ -22,7 +22,7 @@ stix
 pycrypto
 cybox
 bacpypes==0.17.0
-pyghmi
+pyghmi==1.4.1
 mixbox
 modbus-tk
 cpppo
