@@ -30,7 +30,8 @@ pytest
 fs==2.3.0
 python-slugify
 tftpy
-freezegun
+# some freezegun versions broken
+freezegun!=0.3.13
 pytest
 tox
 pycrypto
