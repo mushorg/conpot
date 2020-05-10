@@ -18,14 +18,12 @@
 from gevent.queue import Queue
 
 from conpot.core.attack_session import AttackSession
-from conpot.core.databus import Databus
 
 
 # one instance only
 class SessionManager:
     def __init__(self):
         self._sessions = []
-        self._databus = Databus()
         self.log_queue = Queue()
 
     def _find_sessions(self, protocol, source_ip):
@@ -56,6 +54,3 @@ class SessionManager:
     def purge_sessions(self):
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()
-
-    def initialize_databus(self, config_file):
-        self._databus.initialize(config_file)
