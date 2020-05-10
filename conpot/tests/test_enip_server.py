@@ -49,6 +49,8 @@ class TestENIPServer(unittest.TestCase):
     def tearDown(self):
         self.enip_server_tcp.stop()
         self.enip_server_udp.stop()
+        self.server_greenlet_tcp.join()
+        self.server_greenlet_udp.join()
 
     def attribute_operations(self, paths, int_type=None, **kwds):
         for op in client.parse_operations(paths, int_type=int_type or 'SINT', **kwds):
