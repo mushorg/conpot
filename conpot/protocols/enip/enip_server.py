@@ -23,6 +23,7 @@ import time
 import sys
 import traceback
 
+from gevent.event import Event
 from lxml import etree
 from cpppo.server import network
 from cpppo.server.enip import logix
@@ -94,6 +95,7 @@ class EnipServer(object):
         self.port = self.config.server_port
         self.stopped = False
         self.connections = cpppo.dotdict()
+        self.start_event = Event()
 
         # all known tags
         self.tags = cpppo.dotdict()
@@ -445,6 +447,8 @@ class EnipServer(object):
         tcp_mode = True if self.config.mode == 'tcp' else False
         udp_mode = True if self.config.mode == 'udp' else False
 
+        self.start_event.set()
+
         logger.debug('ENIP server started on: %s:%d, mode: %s' % (host, port, self.config.mode))
         while not self.stopped:
             network.server_main(address=(host, port), target=self.handle,
@@ -455,6 +459,7 @@ class EnipServer(object):
     def stop(self):
         logger.debug('Stopping ENIP server')
         self.stopped = True
+        self.start_event.clear()
 
 
 if __name__ == '__main__':

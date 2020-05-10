@@ -30,11 +30,12 @@ class TestENIPServer(unittest.TestCase):
         self.dir_name = os.path.dirname(conpot.__file__)
         template = self.dir_name + '/templates/default/enip/enip.xml'
         # start the tcp server
-        self.enip_server_tcp= EnipServer(template, None, None)
+        self.enip_server_tcp = EnipServer(template, None, None)
         self.enip_server_tcp.port = 50002
         self.server_greenlet_tcp = gevent.spawn(self.enip_server_tcp.start, self.enip_server_tcp.addr,
                                                 self.enip_server_tcp.port)
-        self.server_greenlet_tcp.start()
+        self.enip_server_tcp.start_event.wait()
+        self.assertFalse(self.server_greenlet_tcp.exception)
 
         # start the udp server
         self.enip_server_udp = EnipServer(template, None, None)
@@ -42,7 +43,8 @@ class TestENIPServer(unittest.TestCase):
         self.enip_server_udp.port = 60002
         self.server_greenlet_udp = gevent.spawn(self.enip_server_udp.start, self.enip_server_udp.addr,
                                                 self.enip_server_udp.port)
-        self.server_greenlet_udp.start()
+        self.enip_server_udp.start_event.wait()
+        self.assertFalse(self.server_greenlet_udp.exception)
 
     def tearDown(self):
         self.enip_server_tcp.stop()
