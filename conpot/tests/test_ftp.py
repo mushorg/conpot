@@ -15,19 +15,19 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
 from gevent import monkey
 
-gevent.monkey.patch_all()
+monkey.patch_all()
 import unittest
 import os
 from datetime import datetime
-import conpot
 from freezegun import freeze_time
-from conpot.protocols.ftp.ftp_utils import ftp_commands
+import conpot
 import conpot.core as conpot_core
 from conpot.helpers import sanitize_file_name
 from conpot.protocols.ftp.ftp_server import FTPServer
+from conpot.protocols.ftp.ftp_utils import ftp_commands
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 import ftplib  # Use ftplib's client for more authentic testing
 
 
@@ -41,16 +41,11 @@ class TestFTPServer(unittest.TestCase):
     """
 
     def setUp(self):
-        # Initialize the file system
         conpot_core.initialize_vfs()
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        self.ftp_server = FTPServer(
-            self.dir_name + "/templates/default/ftp/ftp.xml", None, None
-        )
-        self.server_greenlet = gevent.spawn(self.ftp_server.start, "127.0.0.1", 0)
+
+        self.ftp_server, self.greenlet = spawn_test_server(FTPServer, "default", "ftp")
+
         self.client = ftplib.FTP()
-        gevent.sleep(1)
 
     def tearDown(self):
         if self.client:
@@ -58,8 +53,8 @@ class TestFTPServer(unittest.TestCase):
                 self.client.close()
             except ftplib.all_errors:
                 pass
-        self.ftp_server.stop()
-        self.server_greenlet.kill()
+
+        teardown_test_server(self.ftp_server, self.greenlet)
 
     def refresh_client(self):
         """

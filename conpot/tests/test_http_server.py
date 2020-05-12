@@ -15,45 +15,30 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
+from gevent import monkey
 
-gevent.monkey.patch_all()
+monkey.patch_all()
 import unittest
 import datetime
-from collections import namedtuple
 import conpot
 import os
 from lxml import etree
-import gevent
 import requests
-from gevent import socket
+from gevent import socket, sleep
 from conpot.protocols.http import web_server
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 import conpot.core as conpot_core
 
 
 class TestHTTPServer(unittest.TestCase):
     def setUp(self):
-
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-        self.dir_name = os.path.dirname(conpot.__file__)
-        args = namedtuple("FakeArgs", "")
-        self.http_server = web_server.HTTPServer(
-            self.dir_name + "/templates/default/http/http.xml",
-            self.dir_name + "/templates/default/",
-            args,
+        self.http_server, self.http_worker = spawn_test_server(
+            web_server.HTTPServer, "default", "http"
         )
-        self.http_worker = gevent.spawn(self.http_server.start, "127.0.0.1", 0)
-        # initialize the databus
-        self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + "/templates/default/template.xml")
-        gevent.sleep(1)
+        sleep(0.5)
 
     def tearDown(self):
-        self.http_server.stop()
-        gevent.joinall([self.http_worker])
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        teardown_test_server(self.http_server, self.http_worker)
 
     def test_http_request_base(self):
         """
@@ -72,29 +57,19 @@ class TestHTTPServer(unittest.TestCase):
         """
         Objective: Test if http backend is able to retrieve data from databus
         """
-        # retrieve configuration from xml
-        dom = etree.parse(self.dir_name + "/templates/default/template.xml")
+        sysName = conpot_core.get_databus().get_value("sysName")
 
-        # retrieve reference value from configuration
-        sysName = dom.xpath(
-            '//core/databus/key_value_mappings/key[@name="sysName"]/value'
-        )
         if sysName:
-            # print(sysName)
-            assert_reference = sysName[0].xpath("./text()")[0][1:-1]
-        else:
-            assert_reference = None
-        if assert_reference is not None:
             ret = requests.get(
                 "http://127.0.0.1:{0}/tests/unittest_databus.html".format(
                     self.http_server.server_port
                 )
             )
             self.assertIn(
-                assert_reference,
+                sysName,
                 ret.text,
                 "Could not find databus entity 'sysName' (value '{0}') in output.".format(
-                    assert_reference
+                    sysName
                 ),
             )
         else:
@@ -107,7 +82,8 @@ class TestHTTPServer(unittest.TestCase):
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse(self.dir_name + "/templates/default/http/http.xml")
+        dir_name = os.path.dirname(conpot.__file__)
+        dom = etree.parse(dir_name + "/templates/default/http/http.xml")
 
         # check for proper tarpit support
         tarpit = dom.xpath(

@@ -510,8 +510,6 @@ class GuardianASTServer(object):
         session.add_event({"type": "CONNECTION_LOST"})
 
     def start(self, host, port):
-        self.host = host
-        self.port = port
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info("GuardianAST server started on: {0}".format(connection))

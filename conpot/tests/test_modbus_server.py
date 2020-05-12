@@ -16,43 +16,30 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from gevent import monkey
-import os
+
+monkey.patch_all()
 import unittest
 from datetime import datetime
-from collections import namedtuple
-from gevent.queue import Queue
-import conpot
-from gevent.server import StreamServer
-from conpot.protocols.modbus.slave import MBSlave
-from modbus_tk.exceptions import ModbusInvalidResponseError, ModbusError
+from modbus_tk.exceptions import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 from gevent import socket
-from conpot.protocols.modbus import modbus_server
 import conpot.core as conpot_core
-
-monkey.patch_all()
+from conpot.protocols.modbus import modbus_server
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestModbusServer(unittest.TestCase):
     def setUp(self):
-        # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
 
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-
-        # make paths platform-independent
-        template = self.dir_name + "/templates/default/template.xml"
-        modbus_template = self.dir_name + "/templates/default/modbus/modbus.xml"
+        self.modbus, self.greenlet = spawn_test_server(
+            modbus_server.ModbusServer, "default", "modbus"
+        )
 
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(template)
-        self.modbus = modbus_server.ModbusServer(
-            modbus_template, "none", None, timeout=2
-        )
-        self.modbus_server = StreamServer(("127.0.0.1", 0), self.modbus.handle)
-        self.modbus_server.start()
+        self.host = self.modbus.server.server_host
+        self.port = self.modbus.server.server_port
 
         # We have to use different slave IDs under different modes. In tcp mode,
         # only 255 and 0 make sense. However, modbus_tcp.TcpMaster explicitly
@@ -60,25 +47,19 @@ class TestModbusServer(unittest.TestCase):
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
-        self.modbus_server.stop()
-
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        teardown_test_server(self.modbus, self.greenlet)
 
     def test_read_coils(self):
         """
         Objective: Test if we can extract the expected bits from a slave using the modbus protocol.
         """
-
         self.databus.set_value(
             "memoryModbusSlave%dBlockA" % self.target_slave_id,
             [1 for b in range(0, 128)],
         )
 
         # create READ_COILS request
-        master = modbus_tcp.TcpMaster(
-            host="127.0.0.1", port=self.modbus_server.server_port
-        )
+        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         actual_bits = master.execute(
             slave=self.target_slave_id,
@@ -95,9 +76,7 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if we can change values using the modbus protocol.
         """
-        master = modbus_tcp.TcpMaster(
-            host="127.0.0.1", port=self.modbus_server.server_port
-        )
+        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         set_bits = [1, 0, 0, 1, 0, 0, 1, 1]
 
@@ -122,9 +101,7 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if the correct exception is raised when trying to read from nonexistent slave.
         """
-        master = modbus_tcp.TcpMaster(
-            host="127.0.0.1", port=self.modbus_server.server_port
-        )
+        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
             master.execute(
@@ -154,9 +131,7 @@ class TestModbusServer(unittest.TestCase):
             [1 for b in range(0, 128)],
         )
 
-        master = modbus_tcp.TcpMaster(
-            host="127.0.0.1", port=self.modbus_server.server_port
-        )
+        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
 
         # issue request to modbus server
@@ -201,7 +176,7 @@ class TestModbusServer(unittest.TestCase):
         """
         # Function 17 is not currently supported by modbus_tk
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("127.0.0.1", self.modbus_server.server_port))
+        s.connect((self.host, self.port))
         s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
         data = s.recv(1024)
         s.close()
@@ -209,7 +184,7 @@ class TestModbusServer(unittest.TestCase):
 
     def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(("127.0.0.1", self.modbus_server.server_port))
+        s.connect((self.host, self.port))
         s.sendall(b"\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02")
         data = s.recv(1024)
         s.close()

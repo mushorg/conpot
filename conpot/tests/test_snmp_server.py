@@ -15,42 +15,39 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
+from gevent import monkey
 
-gevent.monkey.patch_all()
+monkey.patch_all()
 
-import unittest
-import tempfile
 import shutil
+import tempfile
+import unittest
 from collections import namedtuple
 
-import gevent
-import os
 from pysnmp.proto import rfc1902
-import conpot
+
 import conpot.core as conpot_core
-from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.tests.helpers import snmp_client
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestSNMPServer(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
-        self.host = "127.0.0.1"
-        databus = conpot_core.get_databus()
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        databus.initialize(self.dir_name + "/templates/default/template.xml")
+
         args = namedtuple("FakeArgs", "mibcache")
         args.mibcache = self.tmp_dir
-        self.snmp_server = SNMPServer(
-            self.dir_name + "/templates/default/snmp/snmp.xml", "none", args
+
+        self.snmp_server, self.greenlet = spawn_test_server(
+            SNMPServer, template="default", protocol="snmp", args=args
         )
-        self.server_greenlet = gevent.spawn(self.snmp_server.start, self.host, 0)
-        gevent.sleep(1)
+
+        self.host = "127.0.0.1"
         self.port = self.snmp_server.get_port()
 
     def tearDown(self):
+        teardown_test_server(self.snmp_server, self.greenlet)
         shutil.rmtree(self.tmp_dir)
 
     def test_snmp_get(self):

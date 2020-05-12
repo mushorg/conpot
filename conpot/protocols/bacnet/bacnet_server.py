@@ -89,13 +89,13 @@ class BacnetServer(object):
         )
 
     def start(self, host, port):
-        self.host = host
-        self.port = port
         connection = (host, port)
         self.server = DatagramServer(connection, self.handle)
         # start to init the socket
         self.server.start()
         self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.host = self.server.server_host
+        self.port = self.server.server_port
         # create application instance
         # not too beautiful, but the BACnetApp needs access to the socket's sendto method
         # this could properly be refactored in a way such that sending operates on it's own
@@ -104,7 +104,7 @@ class BacnetServer(object):
         # get object_list and properties
         self.bacnet_app.get_objects_and_properties(self.dom)
 
-        logger.info("Bacnet server started on: %s", connection)
+        logger.info("Bacnet server started on: %s", (self.host, self.port))
         self.server.serve_forever()
 
     def stop(self):
