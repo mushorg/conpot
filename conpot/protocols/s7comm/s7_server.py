@@ -311,14 +311,3 @@ class S7Server(object):
 
     def stop(self):
         self.server.stop()
-
-
-if __name__ == "__main__":
-    import os
-
-    test_template = os.getcwd() + "/../../templates/default/s7comm/s7comm.xml"
-    test = S7Server(test_template, None, None)
-    try:
-        test.start("127.0.0.1", 9999)
-    except KeyboardInterrupt:
-        test.stop()

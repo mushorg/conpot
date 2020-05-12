@@ -26,9 +26,6 @@ from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
-# import sys
-# import logging as logger
-# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class FTPConfig(object):
@@ -315,19 +312,3 @@ class FTPServer(object):
         logger.debug("Stopping FTP server")
         self.server.stop()
         del self.handler
-
-
-# ---- For debugging ----
-if __name__ == "__main__":
-    # Set vars for connection information
-    TCP_IP = "127.0.0.1"
-    TCP_PORT = 10001
-    import os
-
-    conpot_core.initialize_vfs()
-    test_template = os.getcwd() + "/../../templates/default/ftp/ftp.xml"
-    server = FTPServer(test_template, None, None)
-    try:
-        server.start(TCP_IP, TCP_PORT)
-    except KeyboardInterrupt:
-        server.stop()

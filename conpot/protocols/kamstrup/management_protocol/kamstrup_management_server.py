@@ -18,7 +18,6 @@ import socket
 
 import gevent
 from gevent.server import StreamServer
-import conpot
 import conpot.core as conpot_core
 from conpot.protocols.kamstrup.management_protocol.command_responder import (
     CommandResponder,
@@ -106,24 +105,3 @@ class KamstrupManagementServer(object):
 
     def stop(self):
         self.server.stop()
-
-
-if __name__ == "__main__":
-    TCP_IP = "127.0.0.1"
-    TCP_PORT = 50100
-    import os
-
-    dir_name = os.path.dirname(conpot.__file__)
-    conpot_core.get_databus().initialize(
-        dir_name + "/templates/kamstrup_382/template.xml"
-    )
-    server = KamstrupManagementServer(
-        dir_name
-        + "/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml",
-        None,
-        None,
-    )
-    try:
-        server.start(TCP_IP, TCP_PORT)
-    except KeyboardInterrupt:
-        server.stop()

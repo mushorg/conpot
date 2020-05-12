@@ -22,13 +22,11 @@ Original authors: Kyle Wilhoit and Stephen Hilt
 
 from gevent.server import StreamServer
 import datetime
+import logging
 import random
-import conpot
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.helpers import str_to_bytes
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -521,18 +519,3 @@ class GuardianASTServer(object):
 
     def stop(self):
         self.server.stop()
-
-
-if __name__ == "__main__":
-    # Set vars for connection information
-    TCP_IP = "127.0.0.1"
-    TCP_PORT = 10001
-    import os
-
-    dir_name = os.path.dirname(conpot.__file__)
-    server = GuardianASTServer(None, None, None)
-    server.databus.initialize(dir_name + "/templates/guardian_ast/template.xml")
-    try:
-        server.start(TCP_IP, TCP_PORT)
-    except KeyboardInterrupt:
-        server.stop()
