@@ -16,10 +16,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
+from gevent import monkey
 
-gevent.monkey.patch_all()
-
+monkey.patch_all()
 import logging
 import os
 import argparse
@@ -40,6 +39,7 @@ from conpot.core.loggers.log_worker import LogWorker
 from conpot.emulators.proxy import Proxy
 from conpot.helpers import fix_sslwrap
 from conpot.utils import ext_ip
+from conpot.utils.greenlet import spawn_startable_greenlet
 from conpot.utils import mac_addr
 
 logger = logging.getLogger()
@@ -421,9 +421,9 @@ def main():
                         server = server_class(
                             protocol_template, root_template_directory, args
                         )
-                        greenlet = gevent.spawn(server.start, host, port)
+                        greenlet = spawn_startable_greenlet(server, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
-                        servers.append(server)
+                        servers.append((server, greenlet))
                         logger.info(
                             "Found and enabled {} protocol.".format(
                                 protocol_name, server
@@ -443,8 +443,9 @@ def main():
                 )
 
         log_worker = LogWorker(config, dom_base, session_manager, public_ip)
-        greenlet = gevent.spawn(log_worker.start)
+        greenlet = spawn_startable_greenlet(log_worker)
         greenlet.link_exception(on_unhandled_greenlet_exception)
+        servers.append((log_worker, greenlet))
 
         # TODO: Line up Proxy init with other protocols
         template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
@@ -492,24 +493,25 @@ def main():
                             name, proxy_host, proxy_port, decoder, keyfile, certfile
                         )
                         proxy_server = proxy_instance.get_server(host, port)
-                        servers.append(proxy_instance)
-                        proxy_greenlet = gevent.spawn(proxy_server.start)
+                        proxy_greenlet = spawn_startable_greenlet(proxy_server)
                         proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
+                        servers.append((proxy_instance, proxy_greenlet))
                 else:
                     logger.info("Proxy available but disabled by template.")
         else:
             logger.info(
                 "No proxy template found. Service will remain unconfigured/stopped."
             )
-        # Wait for the services to bind ports before forking
-        gevent.sleep(5)
+
         try:
             if len(servers) > 0:
                 gevent.wait()
         except KeyboardInterrupt:
             logging.info("Stopping Conpot")
-            for server in servers:
+            for server, greenlet in servers:
+                logging.debug(f"Shutting down {greenlet.name}")
                 server.stop()
+                greenlet.get()
         finally:
             conpot_core.close_fs()
 
