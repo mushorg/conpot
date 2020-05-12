@@ -16,12 +16,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
+from types import SimpleNamespace
 
-from gevent import Greenlet
+from gevent import Greenlet, sleep
 from gevent.event import Event
 
 import conpot
-from conpot import core
+from conpot import core, protocols
 
 
 class ServiceGreenlet(Greenlet):
@@ -63,3 +64,33 @@ def spawn_test_server(server_class, template, protocol, args=None, port=0):
 def teardown_test_server(server, greenlet):
     server.stop()
     greenlet.get()
+
+
+# this is really a test helper but start_protocol.py wants to use it too
+def init_test_server_by_name(name, port=0):
+    server_class = protocols.name_mapping[name]
+
+    template = {
+        "guardian_ast": "guardian_ast",
+        "IEC104": "IEC104",
+        "kamstrup_management": "kamstrup_382",
+        "kamstrup_meter": "kamstrup_382",
+    }.get(name, "default")
+
+    # Required by SNMP
+    class Args(SimpleNamespace):
+        mibcache = None
+
+    if name in ("ftp", "tftp"):
+        core.initialize_vfs()
+
+    server, greenlet = spawn_test_server(
+        server_class, template, name, args=Args(), port=port
+    )
+
+    # special case protocol with more complex start() logic
+    # TODO: add serve_forever-Event() to servers to fix this properly
+    if name == "http":
+        sleep(0.5)
+
+    return server, greenlet
