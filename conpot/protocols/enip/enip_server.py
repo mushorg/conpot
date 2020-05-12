@@ -23,6 +23,7 @@ import time
 import sys
 import traceback
 
+from gevent.event import Event
 from lxml import etree
 from cpppo.server import network
 from cpppo.server.enip import logix
@@ -92,8 +93,9 @@ class EnipServer(object):
         self.config = EnipConfig(template)
         self.addr = self.config.server_addr
         self.port = self.config.server_port
-        self.stopped = False
         self.connections = cpppo.dotdict()
+        self.control = None
+        self.start_event = Event()
 
         # all known tags
         self.tags = cpppo.dotdict()
@@ -185,7 +187,7 @@ class EnipServer(object):
                                 # that (shared) server.control.{done,disable} dotdict be in kwds.  We do
                                 # *not* read using attributes here, to avoid reporting completion to
                                 # external APIs (eg. web) awaiting reception of these signals.
-                                if kwds['server']['control']['done'] or  kwds['server']['control']['disable']:
+                                if kwds['server']['control']['done'] or kwds['server']['control']['disable']:
                                     logger.info("%s done, due to server done/disable", machine.name_centered())
                                     stats['eof'] = True
                                 if msg is not None:
@@ -313,6 +315,9 @@ class EnipServer(object):
                                 brx = cpppo.timer()
                                 msg, frm = network.recvfrom(conn, timeout=wait)
                                 now = cpppo.timer()
+                                if not msg:
+                                    if kwds['server']['control']['done'] or kwds['server']['control']['disable']:
+                                        return
                                 (logger.info if msg else logger.debug)(
                                     "Transaction receive after %7.3fs (%5s bytes in %7.3f/%7.3fs): %r",
                                     now - begun, len(msg) if msg is not None else "None",
@@ -445,16 +450,18 @@ class EnipServer(object):
         tcp_mode = True if self.config.mode == 'tcp' else False
         udp_mode = True if self.config.mode == 'udp' else False
 
+        self.control = srv_ctl.control
+        self.start_event.set()
+
         logger.debug('ENIP server started on: %s:%d, mode: %s' % (host, port, self.config.mode))
-        while not self.stopped:
+        while not self.control["done"]:
             network.server_main(address=(host, port), target=self.handle,
-                                kwargs=kwargs, idle_service=None,
-                                udp=udp_mode, tcp=tcp_mode,
-                                thread_factory=network.server_thread)
+                                kwargs=kwargs, udp=udp_mode, tcp=tcp_mode)
 
     def stop(self):
         logger.debug('Stopping ENIP server')
-        self.stopped = True
+        self.control['done'] = True
+        self.start_event.clear()
 
 
 if __name__ == '__main__':
