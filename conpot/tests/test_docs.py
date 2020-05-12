@@ -15,9 +15,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-
-import unittest
+import os
 import subprocess
+import unittest
 
 
 class TestMakeDocs(unittest.TestCase):
@@ -30,6 +30,9 @@ class TestMakeDocs(unittest.TestCase):
 
     def test_make_docs(self):
         cmd = "make -C docs/ html"
-        process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+        project_root = os.path.join(os.path.dirname(__file__), "..", "..")
+
+        process = subprocess.Popen(cmd.split(), cwd=project_root, stdout=subprocess.PIPE)
         output = process.communicate()[0].decode()
+
         self.assertIn("Build finished. The HTML pages are in build/html.", output)
