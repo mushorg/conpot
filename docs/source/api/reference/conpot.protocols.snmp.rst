@@ -4,14 +4,6 @@ conpot.protocols.snmp package
 Submodules
 ----------
 
-conpot.protocols.snmp.build\_pysnmp\_mib\_wrapper module
---------------------------------------------------------
-
-.. automodule:: conpot.protocols.snmp.build_pysnmp_mib_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.protocols.snmp.command\_responder module
 -----------------------------------------------
 

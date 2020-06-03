@@ -170,10 +170,7 @@ def main():
                         default=[]
                         )
     parser.add_argument("-m", "--mibpaths",
-                        action='append',
                         help="Path to compiled PySNMP MIB files."
-                             "(must be compiled with build-pysnmp-mib)",
-                        default=[]
                         )
     parser.add_argument("--temp_dir",
                         help="Directory where all conpot vfs related files would be kept.",
