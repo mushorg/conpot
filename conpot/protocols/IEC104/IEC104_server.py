@@ -111,8 +111,6 @@ class IEC104Server(object):
                                     for resp_packet in response:
                                         if resp_packet:
                                             sock.send(resp_packet)
-                                            # response_string = (" ".join(hex(n) for n in resp_packet))
-
                                 break
 
                     except Timeout_t3:
