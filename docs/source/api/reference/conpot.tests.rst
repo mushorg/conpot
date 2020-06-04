@@ -19,14 +19,6 @@ conpot.tests.test\_bacnet\_server module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_base module
-------------------------------
-
-.. automodule:: conpot.tests.test_base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.tests.test\_docs module
 ------------------------------
 
