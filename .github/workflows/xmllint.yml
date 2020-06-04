@@ -11,4 +11,4 @@ jobs:
       uses: ChristophWurst/xmllint-action@v1
       with:
         xml-file: ./conpot/templates/default/template.xml
-        xml-schema-file: ./conpot/tests/template_schemas/core.xsd
+        xml-schema-file: ./conpot/template.xsd

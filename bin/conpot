@@ -320,8 +320,7 @@ def main():
     template_base = os.path.join(root_template_directory, "template.xml")
     if os.path.isfile(template_base):
         validate_template(
-            template_base,
-            os.path.join(package_directory, "tests/template_schemas/core.xsd"),
+            template_base, os.path.join(package_directory, "template.xsd")
         )
         dom_base = etree.parse(template_base)
     else:
