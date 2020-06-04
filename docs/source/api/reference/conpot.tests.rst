@@ -123,14 +123,6 @@ conpot.tests.test\_logger\_json module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_logger\_mysql module
----------------------------------------
-
-.. automodule:: conpot.tests.test_logger_mysql
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.tests.test\_mac\_addr module
 -----------------------------------
 

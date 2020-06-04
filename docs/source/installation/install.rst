@@ -8,7 +8,7 @@ Note that this is also the recommended way of installing conpot on a machine. In
 Install dependencies:
 ::
 
-    $ sudo apt-get install git libxslt1-dev python3.6-dev libevent-dev default-libmysqlclient-dev
+    $ sudo apt-get install git libxslt1-dev python3.6-dev libevent-dev
 
 Create the virtualenv
 ::
