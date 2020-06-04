@@ -32,8 +32,5 @@ setup(
     long_description_content_type="text/markdown",
     description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
     and methods of adversaries targeting industrial control systems""",
-    dependency_links=[
-        "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
-    ],
     install_requires=open("requirements.txt").read().splitlines(),
 )
