@@ -18,9 +18,6 @@
 from scapy.all import *
 from datetime import datetime
 
-# Station Address (maybe better in databus)
-station_addr = 0x1E28
-
 
 # Structure of control field formats
 class i_frame(Packet):
@@ -889,7 +886,7 @@ class asdu_head(Packet):
         BitField("COT", 6, 6),
         # XByteField("COT", 0x06),
         XByteField("OrigAddr", 0x00),
-        LEShortField("Addr", station_addr),
+        LEShortField("COA", 0),
     ]
 
     def __str__(self):

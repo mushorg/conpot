@@ -244,39 +244,35 @@ class IEC104(object):
         if self.telegram_count >= self.w:
             return self.send_104frame(resp_frame)
 
+        common_address = self.device_data_controller.common_address
         type_id = container.getfieldval("TypeID")
-        station_address = container.getfieldval("Addr")
+        request_coa = container.getfieldval("COA")
+
         # 45: Single command
-        if (
-            type_id == TypeIdentification["C_SC_NA_1"]
-            and station_address == station_addr
-        ):
+        if type_id == TypeIdentification["C_SC_NA_1"] and request_coa == common_address:
             return self.handle_single_command45(container)
 
         # 46: Double command
         elif (
-            type_id == TypeIdentification["C_DC_NA_1"]
-            and station_address == station_addr
+            type_id == TypeIdentification["C_DC_NA_1"] and request_coa == common_address
         ):
             return self.handle_double_command46(container)
 
         # 49: Setpoint command, scaled value
         elif (
-            type_id == TypeIdentification["C_SE_NB_1"]
-            and station_address == station_addr
+            type_id == TypeIdentification["C_SE_NB_1"] and request_coa == common_address
         ):
             return self.handle_setpointscaled_command49(container)
 
         # 50: Setpoint command, short floating point value
         elif (
-            type_id == TypeIdentification["C_SE_NC_1"]
-            and station_address == station_addr
+            type_id == TypeIdentification["C_SE_NC_1"] and request_coa == common_address
         ):
             return self.handle_setpointfloatpoint_command50(container)
 
         # 100: (General-) Interrogation command
-        elif type_id == TypeIdentification["C_IC_NA_1"] and station_address in (
-            station_addr,
+        elif type_id == TypeIdentification["C_IC_NA_1"] and request_coa in (
+            common_address,
             0xFFFF,
         ):
             return self.handle_inro_command100(container)
@@ -304,6 +300,7 @@ class IEC104(object):
                     gevent.kill(self.t2_caller)
                 frame.SendSeq = self.ssn
                 frame.RecvSeq = self.rsn
+                frame.COA = self.device_data_controller.common_address
                 self.increment_sendseq()
                 self.telegram_count = 0
                 iframe = frame_object_with_timer(frame)
