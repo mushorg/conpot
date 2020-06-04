@@ -16,7 +16,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import time
-import typing
 import stat
 import tempfile
 import logging
@@ -42,8 +41,6 @@ from conpot.core.fs_utils import (
     FilesystemError,
 )
 from conpot.core.fs_utils import FSOperationNotPermitted
-
-_F = typing.TypeVar("_F", bound="FS", covariant=True)
 
 logger = logging.getLogger(__name__)
 

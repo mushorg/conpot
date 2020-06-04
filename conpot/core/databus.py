@@ -16,7 +16,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import json
 import inspect
 
 # this is needed because we use it in the xml.
@@ -104,13 +103,6 @@ class Databus(object):
             else:
                 raise Exception("Unknown value type: {0}".format(value_type))
         self.initialized.set()
-
-    def get_shapshot(self):
-        # takes a snapshot of the internal honeypot state and returns it as json.
-        snapsnot = {}
-        for key in list(self._data.keys()):
-            snapsnot[key] = self.get_value(key)
-        return json.dumps(snapsnot)
 
     def reset(self):
         logger.debug("Resetting databus.")
