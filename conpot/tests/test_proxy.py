@@ -26,8 +26,6 @@ import conpot
 from conpot.emulators.proxy import Proxy
 from conpot.protocols.misc.ascii_decoder import AsciiDecoder
 
-# gevent.monkey.patch_all()
-
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 

@@ -102,7 +102,7 @@ class TestIEC104Server(unittest.TestCase):
 
         self.databus.set_value("22_20", 0)  # Must be in template and relation to 13_20
         self.databus.set_value("13_20", 0)  # Must be in template
-        # print str(hex(IEC104.addr_in_hex('13_20')))
+
         single_command = (
             frames.i_frame()
             / frames.asdu_head(COT=6)
@@ -148,7 +148,7 @@ class TestIEC104Server(unittest.TestCase):
         s.recv(6)
 
         self.databus.set_value("22_19", 0)  # Must be in template and no relation
-        # print str(hex(IEC104.addr_in_hex('13_20')))
+
         single_command = (
             frames.i_frame()
             / frames.asdu_head(COT=6)
@@ -186,7 +186,7 @@ class TestIEC104Server(unittest.TestCase):
         s.recv(6)
 
         self.databus.set_value("22_20", 0)  # Must be in template
-        # print str(hex(IEC104.addr_in_hex('13_20')))
+
         single_command = (
             frames.i_frame()
             / frames.asdu_head(COT=6)
