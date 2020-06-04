@@ -189,7 +189,3 @@ class TestModbusServer(unittest.TestCase):
         data = s.recv(1024)
         s.close()
         self.assertTrue(b"SIMATIC" in data and b"Siemens" in data)
-
-
-if __name__ == "__main__":
-    unittest.main()

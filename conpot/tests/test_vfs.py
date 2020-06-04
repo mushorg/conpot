@@ -509,7 +509,3 @@ class TestSubFileSystem(unittest.TestCase):
         [_result] = [i for i in self._f_list]
         self.assertIn(self.test_vfs.default_user, _result)
         self.assertIn("Jul 15 17:51", _result)
-
-
-if __name__ == "__main__":
-    unittest.main()

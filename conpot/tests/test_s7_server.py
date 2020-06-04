@@ -85,7 +85,3 @@ class TestS7Server(unittest.TestCase):
             except AssertionError:
                 print((sec, item, val))
                 raise
-
-
-if __name__ == "__main__":
-    unittest.main()

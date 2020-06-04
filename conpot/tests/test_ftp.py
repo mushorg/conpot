@@ -551,7 +551,3 @@ class TestFTPServer(unittest.TestCase):
             user="nobody",
             passwd="incorrect_pass",
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

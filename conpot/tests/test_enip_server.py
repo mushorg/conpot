@@ -215,7 +215,3 @@ class TestENIPServer(unittest.TestCase):
 
     def test_malformend_request_udp(self):
         pass
-
-
-if __name__ == "__main__":
-    unittest.main()

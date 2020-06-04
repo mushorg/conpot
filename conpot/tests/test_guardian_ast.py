@@ -169,7 +169,3 @@ class TestGuardianAST(unittest.TestCase):
         s.close()
         count = len(re.findall("(?=ULTIMATETEST)", data.decode()))
         self.assertEqual(count, 4)
-
-
-if __name__ == "__main__":
-    unittest.main()

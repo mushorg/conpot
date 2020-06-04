@@ -164,7 +164,3 @@ class TestIPMI(unittest.TestCase):
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Set session password\n")
-
-
-if __name__ == "__main__":
-    unittest.main()
