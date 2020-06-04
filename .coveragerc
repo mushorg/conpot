@@ -5,7 +5,6 @@ omit =
     conpot/core/loggers/hpfriends.py
     conpot/core/loggers/log_worker.py
     conpot/core/loggers/syslog.py
-    conpot/core/loggers/mysql_log.py
     conpot/core/loggers/sqlite_log.py
     conpot/core/loggers/stix_transform.py
     conpot/core/loggers/taxii_log.py

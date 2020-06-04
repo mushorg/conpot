@@ -10,7 +10,6 @@ beautifulsoup4
 requests
 sphinx
 libtaxii>=1.1.0
-mysqlclient==2.0.1
 xlrd
 crc16
 natsort

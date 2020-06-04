@@ -1,7 +1,6 @@
 FROM python:3.8 AS conpot-builder
 
 RUN apt-get update && apt-get install -y \
-    libmariadb-dev \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 

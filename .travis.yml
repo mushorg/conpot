@@ -13,8 +13,6 @@ before_install:
   - echo $REPO
   - echo $TRAVIS_TAG
   - pwd
-services:
-  - mysql
 addons:
   apt:
     packages:
@@ -26,7 +24,6 @@ install:
   - pip install tox
   - pip install -r requirements.txt
 before_script:
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
   - chmod +x "$REPO/bin/conpot"
 script:
   - tox
