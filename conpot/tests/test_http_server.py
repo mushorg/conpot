@@ -216,7 +216,3 @@ class TestHTTPServer(unittest.TestCase):
             data=payload,
         )
         self.assertEqual(ret.status_code, 501)
-
-
-if __name__ == "__main__":
-    unittest.main()

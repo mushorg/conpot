@@ -80,7 +80,3 @@ class TestKamstrup(unittest.TestCase):
         # FIXME: verify bytes received from server - ask jkv?
         pkt = [hex(data[i]) for i in range(len(data))]
         self.assertTrue(("0x40" in pkt) and ("0x3f" in pkt) and ("0xd" in pkt))
-
-
-if __name__ == "__main__":
-    unittest.main()

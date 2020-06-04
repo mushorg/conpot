@@ -221,7 +221,3 @@ class TestIEC104Server(unittest.TestCase):
         self.assertEqual("CONNECTION_LOST", con_lost_event["data"]["type"])
 
         s.close()
-
-
-if __name__ == "__main__":
-    unittest.main()

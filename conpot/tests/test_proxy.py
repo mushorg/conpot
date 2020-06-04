@@ -145,7 +145,3 @@ class TestProxy(unittest.TestCase):
     def echo_server(self, sock, address):
         r = sock.recv(len(self.test_input))
         sock.send(r)
-
-
-if __name__ == "__main__":
-    unittest.main()

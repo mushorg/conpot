@@ -214,7 +214,3 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
                 self.kamstrup_management_server,
             )
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
