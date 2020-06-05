@@ -12,15 +12,6 @@ Subpackages
 Submodules
 ----------
 
-conpot.emulators.proxy module
------------------------------
-
-.. automodule:: conpot.emulators.proxy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
 Module contents
 ---------------
 

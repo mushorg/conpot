@@ -12,7 +12,7 @@
     <proxy name="Kamstrup telnet" host="0.0.0.0" port="50100">
         <proxy_host>192.168.0.10</proxy_host>
         <proxy_port>50100</proxy_port>
-        <decoder>conpot.protocols.misc.ascii_decoder.AsciiDecoder</decoder>
+        <decoder>conpot.protocols.proxy.ascii_decoder.AsciiDecoder</decoder>
     </proxy>
     <proxy name="SSL proxy" host="0.0.0.0" port="1234" keyfile="ssl.key" certfile="ssl.crt">
         <proxy_host>192.168.1.123</proxy_host>

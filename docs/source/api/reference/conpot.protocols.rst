@@ -14,8 +14,8 @@ Subpackages
    conpot.protocols.http
    conpot.protocols.ipmi
    conpot.protocols.kamstrup
-   conpot.protocols.misc
    conpot.protocols.modbus
+   conpot.protocols.proxy
    conpot.protocols.s7comm
    conpot.protocols.snmp
    conpot.protocols.tftp

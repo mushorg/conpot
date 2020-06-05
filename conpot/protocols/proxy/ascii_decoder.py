@@ -16,7 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from conpot.emulators.proxy import ProxyDecoder
+from .proxy import ProxyDecoder
 
 logger = logging.getLogger(__name__)
 

@@ -36,8 +36,8 @@ import conpot
 import conpot.core as conpot_core
 from conpot import protocols
 from conpot.core.loggers.log_worker import LogWorker
-from conpot.emulators.proxy import Proxy
 from conpot.helpers import fix_sslwrap
+from conpot.protocols.proxy.proxy import Proxy
 from conpot.utils import ext_ip
 from conpot.utils.greenlet import spawn_startable_greenlet
 from conpot.utils import mac_addr
