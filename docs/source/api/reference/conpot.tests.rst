@@ -99,18 +99,18 @@ conpot.tests.test\_kamstrup\_decoder module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_kamstrup\_management\_protocol module
---------------------------------------------------------
+conpot.tests.test\_kamstrup\_management module
+----------------------------------------------
 
-.. automodule:: conpot.tests.test_kamstrup_management_protocol
+.. automodule:: conpot.tests.test_kamstrup_management
    :members:
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_kamstrup\_meter\_protocol module
----------------------------------------------------
+conpot.tests.test\_kamstrup\_meter module
+-----------------------------------------
 
-.. automodule:: conpot.tests.test_kamstrup_meter_protocol
+.. automodule:: conpot.tests.test_kamstrup_meter
    :members:
    :undoc-members:
    :show-inheritance:
