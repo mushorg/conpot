@@ -12,15 +12,6 @@ Subpackages
 Submodules
 ----------
 
-conpot.protocols.kamstrup.usage\_simulator module
--------------------------------------------------
-
-.. automodule:: conpot.protocols.kamstrup.usage_simulator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
 Module contents
 ---------------
 

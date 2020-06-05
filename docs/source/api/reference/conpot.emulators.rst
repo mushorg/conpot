@@ -6,11 +6,9 @@ Subpackages
 
 .. toctree::
 
+   conpot.emulators.kamstrup
    conpot.emulators.misc
    conpot.emulators.sensors
-
-Submodules
-----------
 
 Module contents
 ---------------
