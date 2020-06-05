@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 
 @conpot_protocol
 class KamstrupManagementServer(object):
-    def __init__(self, template, template_directory, args, timeout=0):
-        self.template = template
-        self.timeout = timeout
+    def __init__(self, template, template_directory, args):
         self.command_responder = CommandResponder()
         self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n"
         logger.info("Kamstrup management protocol server initialized.")
