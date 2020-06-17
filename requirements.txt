@@ -1,20 +1,15 @@
 gevent>=1.0
-cffi
 pysnmp
 pysnmp-mibs
 pysmi
 lxml
-bottle
-jinja2
 beautifulsoup4
 requests
 sphinx
 libtaxii>=1.1.0
-xlrd
 crc16
 natsort
 scapy==2.4.3rc1
-enum34
 hpfeeds3
 modbus-tk
 stix-validator
@@ -25,13 +20,11 @@ pyghmi==1.4.1
 mixbox
 modbus-tk
 cpppo
-pytest
 fs==2.3.0
 python-slugify
 tftpy
 # some freezegun versions broken
 freezegun!=0.3.13
 pytest
-tox
 pycrypto
 sphinx_rtd_theme
