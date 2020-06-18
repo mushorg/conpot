@@ -39,7 +39,7 @@ class SNMPServer(object):
         self.dom = etree.parse(template)
         self.cmd_responder = None
 
-        self.compiled_mibs = args.mibpaths
+        self.compiled_mibs = args.mibcache
         self.raw_mibs = os.path.join(template_directory, 'snmp', 'mibs')
 
     def xml_general_config(self, dom):

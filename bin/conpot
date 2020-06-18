@@ -163,8 +163,8 @@ def main():
                         help="The logfile to use",
                         default="conpot.log"
                         )
-    parser.add_argument("-m", "--mibpaths",
-                        help="Path to compiled PySNMP MIB files."
+    parser.add_argument("-m", "--mibcache",
+                        help="Cache directory for compiled PySNMP MIB files"
                         )
     parser.add_argument("--temp_dir",
                         help="Directory where all conpot vfs related files would be kept.",
