@@ -23,8 +23,6 @@ addons:
     - unzip
     - python-dev
     - libevent-dev
-    - libsmi2ldbl
-    - snmp-mibs-downloader
     - libxml2
     - libxml2-dev
     - libxml2-utils
