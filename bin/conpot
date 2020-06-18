@@ -163,12 +163,6 @@ def main():
                         help="The logfile to use",
                         default="conpot.log"
                         )
-    parser.add_argument("-a", "--raw_mib",
-                        help="Path to raw MIB files."
-                             "(will automatically get compiled by build-pysnmp-mib)",
-                        action='append',
-                        default=[]
-                        )
     parser.add_argument("-m", "--mibpaths",
                         help="Path to compiled PySNMP MIB files."
                         )

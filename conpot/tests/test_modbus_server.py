@@ -48,8 +48,7 @@ class TestModbusServer(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize(template)
-        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
-        self.modbus = modbus_server.ModbusServer(modbus_template, 'none', args, timeout=2)
+        self.modbus = modbus_server.ModbusServer(modbus_template, 'none', None, timeout=2)
         self.modbus_server = StreamServer(('127.0.0.1', 0), self.modbus.handle)
         self.modbus_server.start()
 

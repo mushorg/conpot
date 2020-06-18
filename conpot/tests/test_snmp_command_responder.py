@@ -26,7 +26,7 @@ from conpot.protocols.snmp.command_responder import CommandResponder
 
 def test_register_fails_on_unknown_mib():
     with TemporaryDirectory() as tmpdir:
-        responder = CommandResponder("", 0, [], tmpdir)
+        responder = CommandResponder("", 0, "/tmp", tmpdir)
 
         with pytest.raises(MibNotFoundError) as exc_info:
             responder.register("NONEXISTENT-MIB", "foobar", (0,), 42, None)
@@ -36,10 +36,10 @@ def test_register_fails_on_unknown_mib():
 
 
 def test_register_loads_custom_mib():
-    rabmib_dirs = [os.path.join(os.path.dirname(__file__), "data")]
+    raw_mibs = os.path.join(os.path.dirname(__file__), "data")
 
     with TemporaryDirectory() as tmpdir:
-        responder = CommandResponder("", 0, rabmib_dirs, tmpdir)
+        responder = CommandResponder("", 0, raw_mibs, tmpdir)
 
         responder.register("VOGON-POEM-MIB", "poemNumber", (0,), 42, None)
 

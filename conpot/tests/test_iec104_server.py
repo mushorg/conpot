@@ -35,8 +35,7 @@ class TestIEC104Server(unittest.TestCase):
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize(template)
-        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
-        self.iec104_inst = IEC104_server.IEC104Server(iec104_template, 'none', args)
+        self.iec104_inst = IEC104_server.IEC104Server(iec104_template, 'none', None)
         self.iec104_server = StreamServer(('127.0.0.1', 2404), self.iec104_inst.handle)
         self.iec104_server.start()
 

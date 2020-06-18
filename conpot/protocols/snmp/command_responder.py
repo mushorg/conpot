@@ -46,7 +46,7 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, rawmibs_dirs, compiled_mibs):
+    def __init__(self, host, port, raw_mibs, compiled_mibs):
 
         self.oid_mapping = {}
         self.databus_mediator = DatabusMediator(self.oid_mapping)
@@ -58,9 +58,7 @@ class CommandResponder(object):
         # Configure SNMP compiler
         mib_builder = self.snmpEngine.getMibBuilder()
         addMibCompiler(mib_builder, destination=compiled_mibs)
-
-        for source in rawmibs_dirs:
-            mib_builder.getMibCompiler().addSources(FileReader(source))
+        mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
         mib_builder.getMibCompiler().addSources(HttpReader('mibs.snmplabs.com', 80, '/asn1/@mib@'))
 
         # Transport setup
