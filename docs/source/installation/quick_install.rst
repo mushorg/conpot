@@ -9,8 +9,7 @@ Via a pre-built image
 1. Install `Docker`_
 2. Run ``docker pull honeynet/conpot``
 3. Run
-   ``docker run -it -p 80:80 -p 102:102 -p 502:502 -p 161:161/udp --network=bridge honeynet/conpot:latest /bin/sh``
-4. Finally run ``conpot -f --template default``
+   ``docker run -it -p 80:8800 -p 102:10201 -p 502:5020 -p 161:16100/udp --network=bridge honeynet/conpot``
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 

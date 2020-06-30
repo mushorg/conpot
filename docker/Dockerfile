@@ -52,5 +52,5 @@ RUN apk del --purge wget ca-certificates
 USER conpot
 WORKDIR /home/conpot
 ENV USER=conpot
-
-CMD ["/home/conpot/.local/bin/conpot", "--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp" ]
+ENTRYPOINT ["/home/conpot/.local/bin/conpot"]
+CMD ["--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp" ]
