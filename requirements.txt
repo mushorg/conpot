@@ -27,3 +27,4 @@ freezegun!=0.3.13
 pytest
 pycrypto
 sphinx_rtd_theme
+psutil

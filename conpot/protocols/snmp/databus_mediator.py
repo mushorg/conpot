@@ -64,6 +64,11 @@ class DatabusMediator(object):
                 (response_class,) = builder.MibBuilder().importSymbols(
                     "SNMPv2-SMI", "TimeTicks"
                 )
+
+            elif reference_class == "DateAndTime":
+                (response_class,) = builder.MibBuilder().importSymbols(
+                    "SNMPv2-TC", "DateAndTime"
+                )
             # TODO: All mode classes - or autodetect'ish?
             else:
                 # dynamic responses are not supported for this class (yet)
