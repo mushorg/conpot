@@ -9,5 +9,5 @@ jobs:
     - uses: actions/checkout@master
     - name: Run Black
       uses: lgeiger/black-action@master
-      # with:
-        # args: --check src/ tests/
+      with:
+        args: --check conpot/ bin/
