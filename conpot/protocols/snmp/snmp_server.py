@@ -16,16 +16,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-import tempfile
-import shutil
 import os
 
 from lxml import etree
+
+import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.snmp.command_responder import CommandResponder
-from conpot.protocols.snmp.build_pysnmp_mib_wrapper import find_mibs, compile_mib
-import conpot.core as conpot_core
-
 
 logger = logging.getLogger()
 
@@ -42,15 +39,8 @@ class SNMPServer(object):
         self.dom = etree.parse(template)
         self.cmd_responder = None
 
-        if args.mibpaths:
-            self.compiled_mibs = args.mibpaths
-        else:
-            self.compiled_mibs = [os.path.join(template_directory, 'snmp', 'mibs_compiled')]
-
-        if args.raw_mib:
-            self.raw_mibs = args.raw_mib
-        else:
-            self.raw_mibs = [os.path.join(template_directory, 'snmp', 'mibs_raw')]
+        self.compiled_mibs = args.mibcache
+        self.raw_mibs = os.path.join(template_directory, 'snmp', 'mibs')
 
     def xml_general_config(self, dom):
         snmp_config = dom.xpath('//snmp/config/*')
@@ -81,46 +71,35 @@ class SNMPServer(object):
                     elif entity.attrib['command'].lower() == 'bulk':
                         self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(entity.text)
 
-    def xml_mib_config(self, dom, mibpaths, rawmibs_dirs):
-        try:
-            mibs = dom.xpath('//snmp/mibs/*')
-            tmp_mib_dir = tempfile.mkdtemp()
-            mibpaths.append(tmp_mib_dir)
-            available_mibs = find_mibs(rawmibs_dirs)
+    def xml_mib_config(self):
+        mibs = self.dom.xpath('//snmp/mibs/*')
 
-            databus = conpot_core.get_databus()
-            # parse mibs and oid tables
-            for mib in mibs:
-                mib_name = mib.attrib['name']
-                # compile the mib file if it is found and not already loaded.
-                if mib_name in available_mibs and not self.cmd_responder.has_mib(mib_name):
-                    compile_mib(mib_name, tmp_mib_dir)
-                for symbol in mib:
-                    symbol_name = symbol.attrib['name']
+        # parse mibs and oid tables
+        for mib in mibs:
+            mib_name = mib.attrib['name']
 
-                    # retrieve instance from template
-                    if 'instance' in symbol.attrib:
-                        # convert instance to (int-)tuple
-                        symbol_instance = symbol.attrib['instance'].split('.')
-                        symbol_instance = tuple(map(int, symbol_instance))
-                    else:
-                        # use default instance (0)
-                        symbol_instance = (0,)
+            for symbol in mib:
+                symbol_name = symbol.attrib['name']
 
+                # retrieve instance from template
+                if 'instance' in symbol.attrib:
+                    # convert instance to (int-)tuple
+                    symbol_instance = symbol.attrib['instance'].split('.')
+                    symbol_instance = tuple(map(int, symbol_instance))
+                else:
+                    # use default instance (0)
+                    symbol_instance = (0,)
 
-                    # retrieve value from databus
-                    value = databus.get_value(symbol.xpath('./value/text()')[0])
-                    profile_map_name = symbol.xpath('./value/text()')[0]
+                # retrieve value from databus
+                value = conpot_core.get_databus().get_value(symbol.xpath('./value/text()')[0])
+                profile_map_name = symbol.xpath('./value/text()')[0]
 
-                    # register this MIB instance to the command responder
-                    self.cmd_responder.register(mib_name,
-                                                symbol_name,
-                                                symbol_instance,
-                                                value,
-                                                profile_map_name)
-        finally:
-            # cleanup compiled mib files
-            shutil.rmtree(tmp_mib_dir)
+                # register this MIB instance to the command responder
+                self.cmd_responder.register(mib_name,
+                                            symbol_name,
+                                            symbol_instance,
+                                            value,
+                                            profile_map_name)
 
     def config_sanitize_tarpit(self, value):
 
@@ -178,9 +157,9 @@ class SNMPServer(object):
             return '0;0'
 
     def start(self, host, port):
-        self.cmd_responder = CommandResponder(host, port, self.compiled_mibs)
+        self.cmd_responder = CommandResponder(host, port, self.raw_mibs, self.compiled_mibs)
         self.xml_general_config(self.dom)
-        self.xml_mib_config(self.dom, self.compiled_mibs, self.raw_mibs)
+        self.xml_mib_config()
 
         logger.info('SNMP server started on: %s', (host, self.get_port()))
         self.cmd_responder.serve_forever()

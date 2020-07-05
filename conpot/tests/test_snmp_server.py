@@ -40,9 +40,8 @@ class TestSNMPServer(unittest.TestCase):
         # get the current directory
         self.dir_name = os.path.dirname(conpot.__file__)
         databus.initialize(self.dir_name + '/templates/default/template.xml')
-        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
-        args.mibpaths = [self.tmp_dir]
-        args.raw_mib = [self.tmp_dir]
+        args = namedtuple('FakeArgs', 'mibcache')
+        args.mibcache = self.tmp_dir
         self.snmp_server = SNMPServer(self.dir_name + '/templates/default/snmp/snmp.xml', 'none', args)
         self.server_greenlet = gevent.spawn(self.snmp_server.start, self.host, 0)
         gevent.sleep(1)

@@ -3,11 +3,12 @@
 
 import logging
 
+from pysmi.reader import FileReader, HttpReader
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity import engine
-from pysnmp.smi import builder
+from pysnmp.smi.compiler import addMibCompiler
 import gevent
 
 from conpot.protocols.snmp import conpot_cmdrsp
@@ -45,7 +46,7 @@ class SNMPDispatcher(DatagramServer):
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, mibpaths):
+    def __init__(self, host, port, raw_mibs, compiled_mibs):
 
         self.oid_mapping = {}
         self.databus_mediator = DatabusMediator(self.oid_mapping)
@@ -54,13 +55,11 @@ class CommandResponder(object):
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
 
-        # path to custom mibs
-        mibBuilder = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder
-        mibSources = mibBuilder.getMibSources()
-
-        for mibpath in mibpaths:
-            mibSources += (builder.DirMibSource(mibpath),)
-        mibBuilder.setMibSources(*mibSources)
+        # Configure SNMP compiler
+        mib_builder = self.snmpEngine.getMibBuilder()
+        addMibCompiler(mib_builder, destination=compiled_mibs)
+        mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
+        mib_builder.getMibCompiler().addSources(HttpReader('mibs.snmplabs.com', 80, '/asn1/@mib@'))
 
         # Transport setup
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
@@ -139,17 +138,13 @@ class CommandResponder(object):
             logger.debug('Registered: OID %s Instance %s ASN.1 (%s @ %s) value %s dynrsp.', s.name, instance, s.label, mibname, value)
 
         else:
-            logger.debug('Skipped: OID for symbol %s not found in MIB %s', symbolname, mibname)
+            logger.warning('Skipped: OID for symbol %s not found in MIB %s', symbolname, mibname)
 
     def _get_mibSymbol(self, mibname, symbolname):
         modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
         if mibname in modules:
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
-
-    def has_mib(self, mibname):
-        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
-        return mibname in modules
 
     def serve_forever(self):
         self.snmpEngine.transportDispatcher.serve_forever()
