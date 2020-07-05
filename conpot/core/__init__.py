@@ -14,12 +14,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+from typing import Tuple, Union, Optional
 
+from .databus import Databus
+from .internal_interface import Interface
 from .session_manager import SessionManager
 from .virtual_fs import VirtualFS
-from typing import Tuple, Union, Optional
-from .internal_interface import Interface
 
+databus = Databus()
 sessionManager = SessionManager()
 virtualFS = VirtualFS()
 core_interface = Interface()
@@ -32,7 +34,7 @@ def get_sessionManager():
 
 
 def get_databus():
-    return sessionManager._databus
+    return databus
 
 
 def get_session(*args, **kwargs):

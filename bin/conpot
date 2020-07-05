@@ -293,7 +293,7 @@ def main():
         sys.exit(1)
 
     session_manager = conpot_core.get_sessionManager()
-    session_manager.initialize_databus(template_base)
+    conpot_core.get_databus().initialize(template_base)
 
     # initialize the virtual file system
     fs_url = config.get('virtual_file_system', 'fs_url')
