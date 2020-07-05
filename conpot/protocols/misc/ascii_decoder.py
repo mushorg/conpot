@@ -17,13 +17,13 @@
 
 import logging
 from conpot.emulators.proxy import ProxyDecoder
+
 logger = logging.getLogger(__name__)
 
 
 class AsciiDecoder(ProxyDecoder):
-    
     def decode_in(self, data):
-        return data.decode('utf-8', 'replace').encode('utf-8')
+        return data.decode("utf-8", "replace").encode("utf-8")
 
     def decode_out(self, data):
-        return data.decode('utf-8', 'replace').encode('utf-8')
+        return data.decode("utf-8", "replace").encode("utf-8")

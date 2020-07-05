@@ -19,6 +19,7 @@ import os
 from conpot.protocols.http.command_responder import CommandResponder
 import logging
 from conpot.core.protocol_wrapper import conpot_protocol
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,8 +32,10 @@ class HTTPServer(object):
         self.cmd_responder = None
 
     def start(self, host, port):
-        logger.info('HTTP server started on: %s', (host, port))
-        self.cmd_responder = CommandResponder(host, port, self.template, os.path.join(self.template_directory, 'http'))
+        logger.info("HTTP server started on: %s", (host, port))
+        self.cmd_responder = CommandResponder(
+            host, port, self.template, os.path.join(self.template_directory, "http")
+        )
         self.cmd_responder.httpd.allow_reuse_address = True
         self.server_port = self.cmd_responder.server_port
         self.cmd_responder.serve_forever()
@@ -42,16 +45,20 @@ class HTTPServer(object):
             self.cmd_responder.stop()
 
 
-if __name__ == '__main__':
-    TCP_IP = '127.0.0.1'
+if __name__ == "__main__":
+    TCP_IP = "127.0.0.1"
     TCP_PORT = 50001
     import os
     import conpot
     import conpot.core as conpot_core
+
     dir_name = os.path.dirname(conpot.__file__)
-    conpot_core.get_databus().initialize(dir_name + '/templates/default/template.xml')
-    server = HTTPServer(dir_name + '/templates/default/http/http.xml', dir_name + '/templates/default/',
-                        None)
+    conpot_core.get_databus().initialize(dir_name + "/templates/default/template.xml")
+    server = HTTPServer(
+        dir_name + "/templates/default/http/http.xml",
+        dir_name + "/templates/default/",
+        None,
+    )
     try:
         server.start(TCP_IP, TCP_PORT)
     except KeyboardInterrupt:

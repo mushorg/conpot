@@ -16,50 +16,63 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
 from conpot.protocols.IEC104.IEC104 import IEC104
-from .frames import *
+from .frames import struct, TESTFR_act, socket, errno
 import logging
 import conpot.core as conpot_core
 from gevent.server import StreamServer
 import gevent
-from .errors import *
+from .errors import Timeout_t3
 from conpot.core.protocol_wrapper import conpot_protocol
+
 logger = logging.getLogger(__name__)
 
 
 @conpot_protocol
 class IEC104Server(object):
-
     def __init__(self, template, template_directory, args):
-        self.timeout = conpot_core.get_databus().get_value('T_0')
+        self.timeout = conpot_core.get_databus().get_value("T_0")
         self.device_data_controller = DeviceDataController(template)
         self.server_active = True
         self.server = None
-        logger.info('IEC 104 Server up')
+        logger.info("IEC 104 Server up")
         self.template = template
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
-        session = conpot_core.get_session('IEC104',address[0], address[1], sock.getsockname()[0], sock.getsockname()[1])
-        logger.info('New IEC 104 connection from %s:%s. (%s)', address[0], address[1], session.id)
-        session.add_event({'type': 'NEW_CONNECTION'})
+        session = conpot_core.get_session(
+            "IEC104",
+            address[0],
+            address[1],
+            sock.getsockname()[0],
+            sock.getsockname()[1],
+        )
+        logger.info(
+            "New IEC 104 connection from %s:%s. (%s)",
+            address[0],
+            address[1],
+            session.id,
+        )
+        session.add_event({"type": "NEW_CONNECTION"})
         iec104_handler = IEC104(self.device_data_controller, sock, address, session.id)
         try:
             while True:
-                timeout_t3 = gevent.Timeout(conpot_core.get_databus().get_value('T_3'), Timeout_t3)
+                timeout_t3 = gevent.Timeout(
+                    conpot_core.get_databus().get_value("T_3"), Timeout_t3
+                )
                 timeout_t3.start()
                 try:
                     try:
                         request = sock.recv(6)
                         if not request:
-                            logger.info('IEC104 Station disconnected. (%s)', session.id)
-                            session.add_event({'type': 'CONNECTION_LOST'})
+                            logger.info("IEC104 Station disconnected. (%s)", session.id)
+                            session.add_event({"type": "CONNECTION_LOST"})
                             iec104_handler.disconnect()
                             break
                         while request and len(request) < 2:
                             new_byte = sock.recv(1)
                             request += new_byte
 
-                        protocol_identifier, length = struct.unpack(">BB", request[:2])
+                        _, length = struct.unpack(">BB", request[:2])
                         while len(request) < (length + 2):
                             new_byte = sock.recv(1)
                             if not new_byte:
@@ -76,13 +89,23 @@ class IEC104Server(object):
                                 response = None
                                 # check which frame type
                                 if not (iec_request[2] & 0x01):  # i_frame
-                                    response = iec104_handler.handle_i_frame(iec_request)
-                                elif iec_request[2] & 0x01 and not(iec_request[2] & 0x02):  # s_frame
-                                    response = iec104_handler.handle_s_frame(iec_request)
+                                    response = iec104_handler.handle_i_frame(
+                                        iec_request
+                                    )
+                                elif iec_request[2] & 0x01 and not (
+                                    iec_request[2] & 0x02
+                                ):  # s_frame
+                                    iec104_handler.handle_s_frame(iec_request)
                                 elif iec_request[2] & 0x03:  # u_frame
-                                    response = iec104_handler.handle_u_frame(iec_request)
+                                    response = iec104_handler.handle_u_frame(
+                                        iec_request
+                                    )
                                 else:
-                                    logger.warning("%s ---> No valid IEC104 type (%s)", address, session.id)
+                                    logger.warning(
+                                        "%s ---> No valid IEC104 type (%s)",
+                                        address,
+                                        session.id,
+                                    )
 
                                 if response:
                                     for resp_packet in response:
@@ -100,19 +123,19 @@ class IEC104Server(object):
                         timeout_t3.cancel()
                 except gevent.Timeout:
                     logger.warning("T1 timed out. (%s)", session.id)
-                    logger.info('IEC104 Station disconnected. (%s)', session.id)
-                    session.add_event({'type': 'CONNECTION_LOST'})
+                    logger.info("IEC104 Station disconnected. (%s)", session.id)
+                    session.add_event({"type": "CONNECTION_LOST"})
                     iec104_handler.disconnect()
                     break
         except socket.timeout:
-            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
-            session.add_event({'type': 'CONNECTION_LOST'})
+            logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
+            session.add_event({"type": "CONNECTION_LOST"})
         except socket.error as err:
             if isinstance(err.args, tuple):
-                if err[0] == errno.EPIPE:
+                if err == errno.EPIPE:
                     # remote peer disconnected
-                    logger.info('IEC104 Station disconnected. (%s)', session.id)
-                    session.add_event({'type': 'CONNECTION_LOST'})
+                    logger.info("IEC104 Station disconnected. (%s)", session.id)
+                    session.add_event({"type": "CONNECTION_LOST"})
                 else:
                     # determine and handle different error
                     pass
@@ -123,7 +146,7 @@ class IEC104Server(object):
     def start(self, host, port):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
-        logger.info('IEC 60870-5-104 protocol server started on: %s', connection)
+        logger.info("IEC 60870-5-104 protocol server started on: %s", connection)
         self.server.start()
 
     def stop(self):

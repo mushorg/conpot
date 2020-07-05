@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCommand(object):
-    HELP_MESSAGE = ''
-    CMD_OUTPUT = ''
+    HELP_MESSAGE = ""
+    CMD_OUTPUT = ""
     INVALID_PARAMETER = (
         "\r\n"
         "? Invalid parameter.\r\n"
@@ -113,25 +113,25 @@ class AccessControlCommand(BaseCommand):
 
     def set_access_ip(self, number, ip_string):
         databus = conpot_core.get_databus()
-        if ip_string.count('.') == 3:
-            if any(x in number for x in ['1', '2', '3', '4', '5']):
+        if ip_string.count(".") == 3:
+            if any(x in number for x in ["1", "2", "3", "4", "5"]):
                 acl_number = int(number)
                 final_ip = parse_ip(ip_string)
-                databus.set_value('access_control_{0}'.format(acl_number), final_ip)
+                databus.set_value("access_control_{0}".format(acl_number), final_ip)
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
-        cmd_output = ''
+        cmd_output = ""
         if params:
             # return is always OK apparently...
-            cmd_output = '\r\nOK\r\n'
-            if len(params) == 1 and params == '0':
+            cmd_output = "\r\nOK\r\n"
+            if len(params) == 1 and params == "0":
                 databus.set_value("access_control_status", "DISABLED")
-            elif len(params) == 1 and params == '1':
+            elif len(params) == 1 and params == "1":
                 databus.set_value("access_control_status", "ENABLED")
-            elif len(params.split(' ')) == 3:
-                cmd, acl_number, ip_address = params.split(' ')
-                if cmd == '0':
+            elif len(params.split(" ")) == 3:
+                cmd, acl_number, ip_address = params.split(" ")
+                if cmd == "0":
                     self.set_access_ip(acl_number, ip_address)
 
         return cmd_output + self.CMD_OUTPUT.format(
@@ -140,7 +140,8 @@ class AccessControlCommand(BaseCommand):
             access_control_2=databus.get_value("access_control_2"),
             access_control_3=databus.get_value("access_control_3"),
             access_control_4=databus.get_value("access_control_4"),
-            access_control_5=databus.get_value("access_control_5"))
+            access_control_5=databus.get_value("access_control_5"),
+        )
 
 
 class AlarmServerCommand(BaseCommand):
@@ -156,42 +157,45 @@ class AlarmServerCommand(BaseCommand):
         "               Alarm reporting is disabled.\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "Alarm server:  {alarm_server_output} "  # no CRLF
-    )
+    CMD_OUTPUT = "\r\n" "Alarm server:  {alarm_server_output} "  # no CRLF
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
-        output_prefix = ''
-        output_postfix = ''
+        output_prefix = ""
+        output_postfix = ""
         if not params:
-            if databus.get_value('alarm_server_status') == 'DISABLED':
-                output = 'DISABLED'
+            if databus.get_value("alarm_server_status") == "DISABLED":
+                output = "DISABLED"
             else:
-                output = '{0}:{1}'.format(databus.get_value('alarm_server_ip'), databus.get_value('alarm_server_port'))
+                output = "{0}:{1}".format(
+                    databus.get_value("alarm_server_ip"),
+                    databus.get_value("alarm_server_port"),
+                )
         else:
-            output_prefix = '\r\nOK'
+            output_prefix = "\r\nOK"
             # in this case the command has CRLF... really funky...
-            output_postfix = '\r\n'
-            databus.set_value('alarm_server_status', 'ENABLED')
-            params_split = params.split(' ')
-            databus.set_value('alarm_server_ip', parse_ip(params_split[0]))
+            output_postfix = "\r\n"
+            databus.set_value("alarm_server_status", "ENABLED")
+            params_split = params.split(" ")
+            databus.set_value("alarm_server_ip", parse_ip(params_split[0]))
             # port provided also
             if len(params_split) > 1:
                 port = parse_port(params_split[1])
                 if port != 0:
-                    databus.set_value('alarm_server_port', port)
-            output = '{0}:{1}'.format(databus.get_value('alarm_server_ip'), databus.get_value('alarm_server_port'))
-        return output_prefix + self.CMD_OUTPUT.format(
-            alarm_server_output=output) + output_postfix
+                    databus.set_value("alarm_server_port", port)
+            output = "{0}:{1}".format(
+                databus.get_value("alarm_server_ip"),
+                databus.get_value("alarm_server_port"),
+            )
+        return (
+            output_prefix
+            + self.CMD_OUTPUT.format(alarm_server_output=output)
+            + output_postfix
+        )
 
 
 class GetConfigCommand(BaseCommand):
-    HELP_MESSAGE = (
-        "!GC: Get Config.\r\n"
-        "     Returns the module configuration.\r\n"
-    )
+    HELP_MESSAGE = "!GC: Get Config.\r\n" "     Returns the module configuration.\r\n"
 
     CMD_OUTPUT = (
         "Device Name         : {device_name}\r\n"
@@ -236,7 +240,8 @@ class GetConfigCommand(BaseCommand):
             channel_b_meternumber=databus.get_value("channel_b_meternumber"),
             kap_ack_server=databus.get_value("kap_ack_server"),
             kap_a_server_port=databus.get_value("kap_a_server_port"),
-            kap_local_port=databus.get_value("kap_local_port"), )
+            kap_local_port=databus.get_value("kap_local_port"),
+        )
 
 
 class SoftwareVersionCommand(BaseCommand):
@@ -245,14 +250,12 @@ class SoftwareVersionCommand(BaseCommand):
         "     Returns the software revision of the module.\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "Software Version: {software_version}\r\n"
-    )
+    CMD_OUTPUT = "\r\n" "Software Version: {software_version}\r\n"
 
     def run(self, params=None):
         return self.CMD_OUTPUT.format(
-            software_version=conpot_core.get_databus().get_value("software_version"))
+            software_version=conpot_core.get_databus().get_value("software_version")
+        )
 
 
 class SetKap1Command(BaseCommand):
@@ -264,7 +267,7 @@ class SetKap1Command(BaseCommand):
         "      Example: !SA 195215168045 \r\n"
         "               KAP packages are hereafter sent to 195.215.168.45.\r\n"
         "      Example: !SA 195.215.168.45 \r\n"
-        "               Same result as \"!SA 195215168045\".\r\n"
+        '               Same result as "!SA 195215168045".\r\n'
         "      Example: !SA 192168001002 61000\r\n"
         "               KAP packages are hereafter sent to 192.168.1.2:61000\r\n"
         "               from module port 8000.\r\n"
@@ -272,28 +275,27 @@ class SetKap1Command(BaseCommand):
         "               Disables KAP.\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "Service server addr.: {kap_a_output}\r\n"
-    )
+    CMD_OUTPUT = "\r\n" "Service server addr.: {kap_a_output}\r\n"
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
         if params:
-            output_prefix = '\r\nOK'
-            params_split = params.split(' ')
-            databus.set_value('kap_a_server_ip', parse_ip(params_split[0]))
+            output_prefix = "\r\nOK"
+            params_split = params.split(" ")
+            databus.set_value("kap_a_server_ip", parse_ip(params_split[0]))
             # TODO: The meter might do a lookup on the ip, and the result of that
             # lookup might be stored in a_server_host...
-            databus.set_value('kap_a_server_hostname', '0 - none')
+            databus.set_value("kap_a_server_hostname", "0 - none")
             # port provided also
             if len(params_split) > 1:
                 port = parse_port(params_split[1])
                 if port != 0:
-                    databus.set_value('kap_a_server_port', port)
+                    databus.set_value("kap_a_server_port", port)
         else:
-            output_prefix = '\r\n'
-        output = '{0}:{1}'.format(databus.get_value('kap_a_server_ip'), databus.get_value('kap_a_server_port'))
+            output_prefix = "\r\n"
+        output = "{0}:{1}".format(
+            databus.get_value("kap_a_server_ip"), databus.get_value("kap_a_server_port")
+        )
         return output_prefix + self.CMD_OUTPUT.format(kap_a_output=output)
 
 
@@ -316,10 +318,7 @@ class SetKap2Command(BaseCommand):
     )
 
     CMD_OUTPUT_SINGLE = (
-        "\r\n"
-        "{}\r\n"
-        "Service server addr.: {}:{} (from DNS)\r\n"
-        "No redundancy."
+        "\r\n" "{}\r\n" "Service server addr.: {}:{} (from DNS)\r\n" "No redundancy."
     )
 
     CMD_OUTPUT_DOUBLE = (
@@ -342,14 +341,18 @@ class SetKap2Command(BaseCommand):
                     databus.set_value("kap_b_server_port", params_split[1])
 
         if databus.get_value("kap_b_server_ip") == "0.0.0.0":
-            return self.CMD_OUTPUT_SINGLE.format(cmd_ok,
+            return self.CMD_OUTPUT_SINGLE.format(
+                cmd_ok,
                 databus.get_value("kap_a_server_ip"),
-                databus.get_value("kap_a_server_port"))
-        return self.CMD_OUTPUT_DOUBLE.format(cmd_ok,
+                databus.get_value("kap_a_server_port"),
+            )
+        return self.CMD_OUTPUT_DOUBLE.format(
+            cmd_ok,
             databus.get_value("kap_a_server_ip"),
             databus.get_value("kap_a_server_port"),
             databus.get_value("kap_b_server_ip"),
-            databus.get_value("kap_b_server_port"))
+            databus.get_value("kap_b_server_port"),
+        )
 
 
 class SetConfigCommand(BaseCommand):
@@ -364,10 +367,7 @@ class SetConfigCommand(BaseCommand):
         "               SRV_DNS     DNS name of remote server (0 to disable DNS lookup)\r\n"
     )
 
-    CMD_OUTPUT = (
-        "\r\n"
-        "Service server hostname.: {}\r\n"
-    )
+    CMD_OUTPUT = "\r\n" "Service server hostname.: {}\r\n"
 
     def run(self, params=None):
         databus = conpot_core.get_databus()
@@ -430,7 +430,7 @@ class SetLookupCommand(BaseCommand):
     HELP_MESSAGE = (
         "!SH: Set KAP Server lookup (DNS or DHCP)\r\n"
         "     Used for setting the DNS name of the Server to receive KAP-pacakeges.\r\n"
-        "     Using the keyword \"DHCP_OPTION:xxx\" makes the module request the IP using DHCP option xxx.\r\n"
+        '     Using the keyword "DHCP_OPTION:xxx" makes the module request the IP using DHCP option xxx.\r\n'
         "     The settings are first activated when the module is reset (using !RR).\r\n"
         "      Example: !SH 0 \r\n"
         "               Lookup Disabled.\r\n"
@@ -454,14 +454,14 @@ class SetLookupCommand(BaseCommand):
         databus = conpot_core.get_databus()
         # no, i am not making this up... this is actually how it is implemented on the Kamstrup meter..
         if len(params) == 1:
-            databus.set_value('kap_server_lookup', '0 - none')
+            databus.set_value("kap_server_lookup", "0 - none")
             output = "\r\nOK" + output
         elif len(params) > 1:
-            databus.set_value('kap_server_lookup', params)
+            databus.set_value("kap_server_lookup", params)
             output = "\r\nOK" + output
 
         output += "Service server hostname.: {0}\r\n"
-        return output.format(databus.get_value('kap_server_lookup'))
+        return output.format(databus.get_value("kap_server_lookup"))
 
 
 class SetIPCommand(BaseCommand):
@@ -494,12 +494,11 @@ class SetIPCommand(BaseCommand):
             if ip_addr == "0.0.0.0":
                 if databus.get_value("use_dhcp") == "NO":
                     databus.set_value("use_dhcp", "YES")
-                    databus.set_value("ip_addr",
-                        databus.get_value("ip_addr_dhcp"))
-                    databus.set_value("ip_gateway",
-                        databus.get_value("ip_gateway_dhcp"))
-                    databus.set_value("ip_subnet",
-                        databus.get_value("ip_subnet_dhcp"))
+                    databus.set_value("ip_addr", databus.get_value("ip_addr_dhcp"))
+                    databus.set_value(
+                        "ip_gateway", databus.get_value("ip_gateway_dhcp")
+                    )
+                    databus.set_value("ip_subnet", databus.get_value("ip_subnet_dhcp"))
                     databus.set_value("reboot_signal", 1)
             else:
                 databus.set_value("use_dhcp", "NO")
@@ -507,8 +506,8 @@ class SetIPCommand(BaseCommand):
                 databus.set_value("reboot_signal", 1)
 
         return self.CMD_OUTPUT.format(
-            use_dhcp=databus.get_value("use_dhcp"),
-            ip_addr=databus.get_value("ip_addr"))
+            use_dhcp=databus.get_value("use_dhcp"), ip_addr=databus.get_value("ip_addr")
+        )
 
 
 class SetWatchdogCommand(BaseCommand):
@@ -546,31 +545,43 @@ class SetWatchdogCommand(BaseCommand):
             if len(params_split) > 0:
                 # meh, actually the real value is non-existing. If you supply a larger value the smart meter
                 # just overwrite memory and starts writing to the next memory location - yep, you heard it here first!
-                watchdog_value = str(try_parse_uint(params_split[0], min_value=5, max_value=4294967295))
-                databus.set_value('software_watchdog', watchdog_value)
+                watchdog_value = str(
+                    try_parse_uint(params_split[0], min_value=5, max_value=4294967295)
+                )
+                databus.set_value("software_watchdog", watchdog_value)
                 if len(params_split) > 1:
-                    kap_missing = str(try_parse_uint(params_split[1], min_value=0, max_value=4294967295))
-                    databus.set_value('kap_missing_warning', kap_missing)
+                    kap_missing = str(
+                        try_parse_uint(
+                            params_split[1], min_value=0, max_value=4294967295
+                        )
+                    )
+                    databus.set_value("kap_missing_warning", kap_missing)
                 if len(params_split) > 2:
-                    keep_alive_timer = str(try_parse_uint(params_split[2], min_value=0, max_value=4294967295))
-                    databus.set_value('keep_alive_timer', keep_alive_timer)
+                    keep_alive_timer = str(
+                        try_parse_uint(
+                            params_split[2], min_value=0, max_value=4294967295
+                        )
+                    )
+                    databus.set_value("keep_alive_timer", keep_alive_timer)
                 output = "\r\nOK" + output
 
-        return_values = [databus.get_value('software_watchdog'),
-                         databus.get_value('kap_missing_warning'),
-                         databus.get_value('keep_alive_timer')]
+        return_values = [
+            databus.get_value("software_watchdog"),
+            databus.get_value("kap_missing_warning"),
+            databus.get_value("keep_alive_timer"),
+        ]
 
         for i in range(0, len(return_values)):
-            if return_values[i] == '0':
-                return_values[i] = 'DISABLED {0}'.format(return_values[i])
+            if return_values[i] == "0":
+                return_values[i] = "DISABLED {0}".format(return_values[i])
             else:
-                return_values[i] = 'ENABLED {0}'.format(return_values[i])
+                return_values[i] = "ENABLED {0}".format(return_values[i])
 
-        output += SetWatchdogCommand.CMD_OUTPUT.format(return_values[0],
-                                                       return_values[1],
-                                                       return_values[2])
+        output += SetWatchdogCommand.CMD_OUTPUT.format(
+            return_values[0], return_values[1], return_values[2]
+        )
 
-        return output.format(databus.get_value('kap_server_lookup'))
+        return output.format(databus.get_value("kap_server_lookup"))
 
 
 class SetNameserverCommand(BaseCommand):
@@ -642,16 +653,18 @@ class SetPortsCommand(BaseCommand):
                     databus.set_value("channel_b_port", chb_port)
 
             # FIXME: how do we change the port we are connected to?
-            #if len(params_split) > 3:
-                #cfg_port = parse_port(params_split[3])
-                #if cfg_port != 0:
-                    #databus.set_value("", cfg_port)
+            # if len(params_split) > 3:
+            # cfg_port = parse_port(params_split[3])
+            # if cfg_port != 0:
+            # databus.set_value("", cfg_port)
 
-        return self.CMD_OUTPUT.format(cmd_ok,
+        return self.CMD_OUTPUT.format(
+            cmd_ok,
             databus.get_value("kap_a_server_port"),
             databus.get_value("channel_a_port"),
             databus.get_value("channel_b_port"),
-            50100)  # FIXME: see above
+            50100,
+        )  # FIXME: see above
 
 
 class SetSerialCommand(BaseCommand):
@@ -676,20 +689,20 @@ class SetSerialCommand(BaseCommand):
             if len(params_split) == 2:
                 output = "\r\nOK\r\n"
                 if params_split[0] == "A":
-                    databus.set_value('serial_settings_a', params_split[1])
+                    databus.set_value("serial_settings_a", params_split[1])
                 elif params_split[0] == "B":
-                    databus.set_value('serial_settings_b', params_split[1])
+                    databus.set_value("serial_settings_b", params_split[1])
                 else:
                     return invalid_message
             else:
                 return invalid_message
         else:
-            output = "\r\n" \
-                     "UART A setup : {0}\r\n" \
-                     "UART B setup : {1}\r\n"
+            output = "\r\n" "UART A setup : {0}\r\n" "UART B setup : {1}\r\n"
 
-        return output.format(databus.get_value('serial_settings_a'),
-                             databus.get_value('serial_settings_b'))
+        return output.format(
+            databus.get_value("serial_settings_a"),
+            databus.get_value("serial_settings_b"),
+        )
 
 
 class RequestConnectCommand(BaseCommand):
@@ -712,15 +725,15 @@ class RequestConnectCommand(BaseCommand):
         if params:
             params_split = params.split(" ")
             output = "\r\nOK\r\n" + output
-            if len(params_split) == 1 and params_split[0] == 'D':
+            if len(params_split) == 1 and params_split[0] == "D":
                 pass
             elif len(params_split) == 2:
                 channel, value = params_split
                 if channel == "A":
                     # TODO: figure out how these are parsed when meter is online again
-                    databus.set_value('channel_a_connect_socket', value)
+                    databus.set_value("channel_a_connect_socket", value)
                 elif channel == "B":
-                    databus.set_value('channel_b_connect_socket', value)
+                    databus.set_value("channel_b_connect_socket", value)
                 else:
                     return self.INVALID_PARAMETER
             else:
@@ -732,9 +745,7 @@ class RequestConnectCommand(BaseCommand):
 
 
 class RequestRestartCommand(BaseCommand):
-    HELP_MESSAGE = (
-        "!RR: Request restart (*1).\r\n"
-    )
+    HELP_MESSAGE = "!RR: Request restart (*1).\r\n"
 
     def run(self, params=None):
         conpot_core.get_databus().set_value("reboot_signal", 1)
@@ -748,11 +759,7 @@ class WinkModuleCommand(BaseCommand):
     )
 
     # no other output
-    CMD_OUTPUT = (
-        "\r\n"
-        "\r\n"
-        "OK\r\n"
-    )
+    CMD_OUTPUT = "\r\n" "\r\n" "OK\r\n"
 
 
 def parse_ip(ip_string):
@@ -760,7 +767,7 @@ def parse_ip(ip_string):
     if "." in ip_string:
         octets = ip_string.split(".")
     else:
-        octets = [int(ip_string[i:i + 3]) for i in range(0, len(ip_string), 3)]
+        octets = [int(ip_string[i : i + 3]) for i in range(0, len(ip_string), 3)]
 
     if len(octets) is not 4:
         return default
@@ -786,5 +793,5 @@ def try_parse_uint(uint_string, min_value=0, max_value=254):
         if value < min_value or value > max_value:
             value = 0
     except ValueError:
-        value = '0'
+        value = "0"
     return value

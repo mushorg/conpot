@@ -1,8 +1,15 @@
 import struct
 import logging
 
-from modbus_tk.modbus import Slave, ModbusError, ModbusInvalidRequestError, InvalidArgumentError, DuplicatedKeyError,\
-                             InvalidModbusBlockError, OverlapModbusBlockError
+from modbus_tk.modbus import (
+    Slave,
+    ModbusError,
+    ModbusInvalidRequestError,
+    InvalidArgumentError,
+    DuplicatedKeyError,
+    InvalidModbusBlockError,
+    OverlapModbusBlockError,
+)
 from modbus_tk import defines, utils
 from conpot.helpers import str_to_bytes
 from .modbus_block_databus_mediator import ModbusBlockDatabusMediator
@@ -18,40 +25,37 @@ class MBSlave(Slave):
 
     def __init__(self, slave_id, dom):
         Slave.__init__(self, slave_id)
-        self._fn_code_map = {defines.READ_COILS: self._read_coils,
-                             defines.READ_DISCRETE_INPUTS: self._read_discrete_inputs,
-                             defines.READ_INPUT_REGISTERS: self._read_input_registers,
-                             defines.READ_HOLDING_REGISTERS: self._read_holding_registers,
-                             defines.WRITE_SINGLE_COIL: self._write_single_coil,
-                             defines.WRITE_SINGLE_REGISTER: self._write_single_register,
-                             defines.WRITE_MULTIPLE_COILS: self._write_multiple_coils,
-                             defines.WRITE_MULTIPLE_REGISTERS: self._write_multiple_registers,
-                             defines.DEVICE_INFO: self._device_info,
-                             defines.REPORT_SLAVE_ID: self._report_slave_id,
-                             }
+        self._fn_code_map = {
+            defines.READ_COILS: self._read_coils,
+            defines.READ_DISCRETE_INPUTS: self._read_discrete_inputs,
+            defines.READ_INPUT_REGISTERS: self._read_input_registers,
+            defines.READ_HOLDING_REGISTERS: self._read_holding_registers,
+            defines.WRITE_SINGLE_COIL: self._write_single_coil,
+            defines.WRITE_SINGLE_REGISTER: self._write_single_register,
+            defines.WRITE_MULTIPLE_COILS: self._write_multiple_coils,
+            defines.WRITE_MULTIPLE_REGISTERS: self._write_multiple_registers,
+            defines.DEVICE_INFO: self._device_info,
+            defines.REPORT_SLAVE_ID: self._report_slave_id,
+        }
         self.dom = dom
         logger.debug("Modbus slave (ID: %d) created" % self._id)
 
     def _report_slave_id(self, request_pdu):
-        logger.debug('Requested to report slave ID (0x11)')
+        logger.debug("Requested to report slave ID (0x11)")
         response = struct.pack(">B", 0x11)  # function code
-        response += struct.pack(">B", 1)    # byte count
-        response += struct.pack(">B", 1)    # slave id
-        response += struct.pack(">B", 0xFF) # run status, OxFF on, 0x00 off
+        response += struct.pack(">B", 1)  # byte count
+        response += struct.pack(">B", 1)  # slave id
+        response += struct.pack(">B", 0xFF)  # run status, OxFF on, 0x00 off
         return response
 
     def _device_info(self, request_pdu):
-        info_root = self.dom.xpath('//modbus/device_info')[0]
-        vendor_name = info_root.xpath('./VendorName/text()')[0]
-        product_code = info_root.xpath('./ProductCode/text()')[0]
-        major_minor_revision = info_root.xpath('./MajorMinorRevision/text()')[0]
+        info_root = self.dom.xpath("//modbus/device_info")[0]
+        vendor_name = info_root.xpath("./VendorName/text()")[0]
+        product_code = info_root.xpath("./ProductCode/text()")[0]
+        major_minor_revision = info_root.xpath("./MajorMinorRevision/text()")[0]
 
-        (req_device_id, req_object_id) = struct.unpack(">BB", request_pdu[2:4])
-        device_info = {
-            0: vendor_name,
-            1: product_code,
-            2: major_minor_revision
-        }
+        (req_device_id, _) = struct.unpack(">BB", request_pdu[2:4])
+        device_info = {0: vendor_name, 1: product_code, 2: major_minor_revision}
 
         # MEI type
         response = struct.pack(">B", 0x0E)
@@ -84,16 +88,22 @@ class MBSlave(Slave):
         with self._data_lock:  # thread-safe
             try:
                 # get the function code
-                (self.function_code, ) = struct.unpack(">B", request_pdu[:1])
+                (self.function_code,) = struct.unpack(">B", request_pdu[:1])
 
                 # check if the function code is valid. If not returns error response
                 if not self.function_code in self._fn_code_map:
                     raise ModbusError(defines.ILLEGAL_FUNCTION)
 
-                can_broadcast = [defines.WRITE_MULTIPLE_COILS, defines.WRITE_MULTIPLE_REGISTERS,
-                                 defines.WRITE_SINGLE_COIL, defines.WRITE_SINGLE_REGISTER]
+                can_broadcast = [
+                    defines.WRITE_MULTIPLE_COILS,
+                    defines.WRITE_MULTIPLE_REGISTERS,
+                    defines.WRITE_SINGLE_COIL,
+                    defines.WRITE_SINGLE_REGISTER,
+                ]
                 if broadcast and (self.function_code not in can_broadcast):
-                    raise ModbusInvalidRequestError("Function %d can not be broadcasted" % self.function_code)
+                    raise ModbusInvalidRequestError(
+                        "Function %d can not be broadcasted" % self.function_code
+                    )
 
                 # execute the corresponding function
                 try:
@@ -103,15 +113,23 @@ class MBSlave(Slave):
                 if response_pdu:
                     if broadcast:
                         # not really sure whats going on here - better log it!
-                        logger.info("Modbus broadcast: %s" % (utils.get_log_buffer("!!", response_pdu)))
+                        logger.info(
+                            "Modbus broadcast: %s"
+                            % (utils.get_log_buffer("!!", response_pdu))
+                        )
                         return ""
                     else:
                         return struct.pack(">B", self.function_code) + response_pdu
                 raise Exception("No response for function %d" % self.function_code)
 
             except ModbusError as e:
-                logger.error('Exception caught: %s. (A proper response will be sent to the peer)', e)
-                return struct.pack(">BB", self.function_code + 128, e.get_exception_code())
+                logger.error(
+                    "Exception caught: %s. (A proper response will be sent to the peer)",
+                    e,
+                )
+                return struct.pack(
+                    ">BB", self.function_code + 128, e.get_exception_code()
+                )
 
     def add_block(self, block_name, block_type, starting_address, size):
         """Add a new block identified by its name"""
@@ -119,7 +137,9 @@ class MBSlave(Slave):
             if size <= 0:
                 raise InvalidArgumentError("size must be a positive number")
             if starting_address < 0:
-                raise InvalidArgumentError("starting address must be zero or positive number")
+                raise InvalidArgumentError(
+                    "starting address must be zero or positive number"
+                )
             if block_name in self._blocks:
                 raise DuplicatedKeyError("Block %s already exists. " % block_name)
 
@@ -133,7 +153,10 @@ class MBSlave(Slave):
             for i in range(len(self._memory[block_type])):
                 block = self._memory[block_type][i]
                 if block.is_in(starting_address, size):
-                    raise OverlapModbusBlockError("Overlap block at %d size %d" % (block.starting_address, block.size))
+                    raise OverlapModbusBlockError(
+                        "Overlap block at %d size %d"
+                        % (block.starting_address, block.size)
+                    )
                 if block.starting_address > starting_address:
                     index = i
                     break
@@ -141,4 +164,6 @@ class MBSlave(Slave):
             # if the block is ok: register it
             self._blocks[block_name] = (block_type, starting_address)
             # add it in the 'per type' shortcut
-            self._memory[block_type].insert(index, ModbusBlockDatabusMediator(block_name, starting_address))
+            self._memory[block_type].insert(
+                index, ModbusBlockDatabusMediator(block_name, starting_address)
+            )

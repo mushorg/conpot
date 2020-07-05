@@ -37,20 +37,25 @@ class KamstrupRequestBase(KamstrupProtocolBase):
         super(KamstrupRequestBase, self).__init__(communication_address)
         self.command = command
         self.message_bytes = message_bytes
-        logger.info('Kamstrup request package created with bytes: %s', self.message_bytes)
+        logger.info(
+            "Kamstrup request package created with bytes: %s", self.message_bytes
+        )
 
     def __str__(self):
-        return 'Comm address: {0}, Command: {1}, Message: {2}'.format(hex(self.communication_address),
-                                                                      hex(self.command),
-                                                                      binascii.hexlify(bytearray(self.message_bytes)))
+        return "Comm address: {0}, Command: {1}, Message: {2}".format(
+            hex(self.communication_address),
+            hex(self.command),
+            binascii.hexlify(bytearray(self.message_bytes)),
+        )
 
 
 # Valid but request command unknown
 class KamstrupRequestUnknown(KamstrupRequestBase):
     def __init__(self, communication_address, command_byte, message_bytes):
-        super(KamstrupRequestUnknown, self).__init__(communication_address,
-                                                     command_byte, message_bytes)
-        logger.warning('Unknown Kamstrup request: %s', self)
+        super(KamstrupRequestUnknown, self).__init__(
+            communication_address, command_byte, message_bytes
+        )
+        logger.warning("Unknown Kamstrup request: %s", self)
 
 
 class KamstrupRequestGetRegisters(KamstrupRequestBase):
@@ -58,18 +63,26 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
 
     def __init__(self, communication_address, command_byte, message_bytes):
         assert command_byte is command_byte
-        super(KamstrupRequestGetRegisters, self).__init__(communication_address,
-                                                          KamstrupRequestGetRegisters.command_byte, message_bytes)
+        super(KamstrupRequestGetRegisters, self).__init__(
+            communication_address,
+            KamstrupRequestGetRegisters.command_byte,
+            message_bytes,
+        )
         self.registers = []
         self._parse_register_bytes()
-        logger.debug('Kamstrup request for registers: %s', str(self.registers).strip('[]'))
+        logger.debug(
+            "Kamstrup request for registers: %s", str(self.registers).strip("[]")
+        )
 
     def _parse_register_bytes(self):
         register_count = self.message_bytes[0]
         if len(self.message_bytes[1:]) * 2 < register_count:
-            raise Exception('Invalid register count in register request')
+            raise Exception("Invalid register count in register request")
         for count in range(register_count):
-            register = self.message_bytes[1 + count * 2] * 256 + self.message_bytes[2 + count * 2]
+            register = (
+                self.message_bytes[1 + count * 2] * 256
+                + self.message_bytes[2 + count * 2]
+            )
             self.registers.append(register)
 
 
@@ -90,9 +103,9 @@ class KamstrupResponseBase(KamstrupProtocolBase):
             final_message.append(c)
 
         # generate and append checksum
-        crc = crc16.crc16xmodem(b''.join([chr_py3(item) for item in final_message[1:]]))
+        crc = crc16.crc16xmodem(b"".join([chr_py3(item) for item in final_message[1:]]))
         final_message.append(crc >> 8)
-        final_message.append(crc & 0xff)
+        final_message.append(crc & 0xFF)
 
         # trailing magic
         final_message.append(kamstrup_constants.EOT_MAGIC)
@@ -108,7 +121,7 @@ class KamstrupResponseBase(KamstrupProtocolBase):
         for c in message[1:-1]:
             if c in kamstrup_constants.NEED_ESCAPE:
                 escaped_list.append(kamstrup_constants.ESCAPE)
-                escaped_list.append(c ^ 0xff)
+                escaped_list.append(c ^ 0xFF)
             else:
                 escaped_list.append(c)
         escaped_list.append(message[-1])
@@ -132,7 +145,7 @@ class KamstrupResponseRegister(KamstrupResponseBase):
             # each register must be packed: (ushort registerId, byte units, byte length, byte unknown)
             # and the following $length payload with the register value
             message.append(register.name >> 8)
-            message.append(register.name & 0xff)
+            message.append(register.name & 0xFF)
             message.append(register.units)
             message.append(register.length)
             # mystery byte
@@ -142,7 +155,7 @@ class KamstrupResponseRegister(KamstrupResponseBase):
             register_value = conpot_core.get_databus().get_value(register.databus_key)
             for _ in range(register.length):
                 # get least significant
-                low_endian_value_packed.append(register_value & 0xff)
+                low_endian_value_packed.append(register_value & 0xFF)
                 register_value >>= 8
 
             # reverse to get pack high endian

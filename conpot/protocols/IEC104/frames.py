@@ -19,16 +19,18 @@ from scapy.all import *
 from datetime import datetime
 
 # Station Address (maybe better in databus)
-station_addr = 0x1e28
+station_addr = 0x1E28
 
 
 # Structure of control field formats
 class i_frame(Packet):
     name = "i_frame"
-    fields_desc = [XByteField("Start", 0x68),
-                   ByteField("LenAPDU", None),
-                   LEShortField("SendSeq", 0x0),
-                   LEShortField("RecvSeq", 0x0)]
+    fields_desc = [
+        XByteField("Start", 0x68),
+        ByteField("LenAPDU", None),
+        LEShortField("SendSeq", 0x0),
+        LEShortField("RecvSeq", 0x0),
+    ]
 
     # Compute length
     def post_build(self, p, pay):
@@ -40,19 +42,23 @@ class i_frame(Packet):
 
 class u_frame(Packet):
     name = "u_frame"
-    fields_desc = [XByteField("Start", 0x68),
-                   ByteField("LenAPDU", 0x04),
-                   XByteField("Type", 0x07),
-                   X3BytesField("Default", 0x000000)]
+    fields_desc = [
+        XByteField("Start", 0x68),
+        ByteField("LenAPDU", 0x04),
+        XByteField("Type", 0x07),
+        X3BytesField("Default", 0x000000),
+    ]
 
 
 class s_frame(Packet):
     name = "s_frame"
-    fields_desc = [XByteField("Start", 0x68),
-                   ByteField("LenAPDU", 0x04),
-                   XByteField("Type", 0x01),
-                   XByteField("Default", 0x00),
-                   LEShortField("RecvSeq", 0x0)]  # 0001 is in packet 01 00 and that's true, bec 1 is LSB
+    fields_desc = [
+        XByteField("Start", 0x68),
+        ByteField("LenAPDU", 0x04),
+        XByteField("Type", 0x01),
+        XByteField("Default", 0x00),
+        LEShortField("RecvSeq", 0x0),
+    ]  # 0001 is in packet 01 00 and that's true, bec 1 is LSB
 
 
 TypeIdentification = {
@@ -98,7 +104,6 @@ TypeIdentification = {
     # "M_PS_NA_1": 20,
     # Measured value, normalized value without quality descriptor
     # "M_ME_ND_1": 21,
-
     # Process telegrams with long time tag ( 7 octets ) :
     # Single point information with time tag CP56Time2a
     "M_SP_TB_1": 30,
@@ -122,7 +127,6 @@ TypeIdentification = {
     # "M_EP_TE_1": 39,
     # Packed output circuit information of protection equipment with time tag CP56Time2a
     # "M_EP_TF_1": 40,
-
     # Process information in control direction:
     # Single command
     "C_SC_NA_1": 45,
@@ -138,7 +142,6 @@ TypeIdentification = {
     "C_SE_NC_1": 50,
     # Bit string  32 bit
     # "C_BO_NA_1": 51,
-
     # Command telegrams with long time tag ( 7 octets ):
     # Single command with time tag CP56Time2a
     # "C_SC_TA_1": 58,
@@ -154,11 +157,9 @@ TypeIdentification = {
     # "C_SE_TC_1": 63,
     # Bit string 32 bit with time tag CP56Time2a
     # "C_BO_TA_1": 64,
-
     # System information  in monitoring direction :
     # End of initialization
     # "M_EI_NA_1": 70,
-
     # System information in control direction :
     # (General-) Interrogation command
     "C_IC_NA_1": 100,
@@ -176,7 +177,6 @@ TypeIdentification = {
     # "C_CD_NA_1": 106,
     # Test command with time tag CP56Time2a
     # "C_TS_TA_1": 107,
-
     #  Parameter in control direction :
     # Parameter of measured value, normalized value
     # "P_ME_NA_1": 110,
@@ -186,7 +186,6 @@ TypeIdentification = {
     # "P_ME_NC_1": 112,
     # Parameter activation
     # "P_AC_NA_1": 113,
-
     # File transfer:
     # File ready
     # "F_FR_NA_1": 120,
@@ -214,7 +213,7 @@ class LESignedShortField(Field):
 
 class NormValueField(LESignedShortField):
     def i2repr(self, pkt, x):
-        normalized = 2 * ((x+2**15)/((2**15+2**15.)-1)) - 1
+        normalized = 2 * ((x + 2 ** 15) / ((2 ** 15 + 2 ** 15.0) - 1)) - 1
         return self.i2h(pkt, normalized)
 
 
@@ -226,14 +225,13 @@ class CP56Time(Packet):
         ByteField("Hour", 0x0),
         ByteField("Day", 0x01),
         ByteField("Month", 0x01),
-        ByteField("Year", 0x5b)]
+        ByteField("Year", 0x5B),
+    ]
 
 
 class CP24Time(Packet):
     name = "CP24Time"
-    fields_desc = [
-        ShortField("Ms", 0x0000),
-        ByteField("Min", 0x00)]
+    fields_desc = [ShortField("Ms", 0x0000), ByteField("Min", 0x00)]
 
     def extract_padding(self, p):
         return "", p
@@ -241,14 +239,14 @@ class CP24Time(Packet):
 
 class CP16Time(Packet):
     name = "CP24Time"
-    fields_desc = [
-        ShortField("Ms", 0x0000)]
+    fields_desc = [ShortField("Ms", 0x0000)]
 
     def extract_padding(self, p):
         return "", p
 
 
 # Info Elements
+
 
 class IOA(Packet):
     name = "IOA"
@@ -258,16 +256,20 @@ class IOA(Packet):
 class QOS(Packet):
     #  Quality of set-point command
     name = "QOS"
-    fields_desc = [
-        XBitField("S/E", 0, 1), XBitField("QL", 0, 7)]
+    fields_desc = [XBitField("S/E", 0, 1), XBitField("QL", 0, 7)]
 
 
 class QDS(Packet):
     #  Quality descriptor
     name = "QDS"
     fields_desc = [
-        XBitField("IV", 0, 1), XBitField("NT", 0, 1), XBitField("SB", 0, 1), XBitField("BL", 0, 1),
-        XBitField("Padding", 0, 3), XBitField("OV", 0, 1)]
+        XBitField("IV", 0, 1),
+        XBitField("NT", 0, 1),
+        XBitField("SB", 0, 1),
+        XBitField("BL", 0, 1),
+        XBitField("Padding", 0, 3),
+        XBitField("OV", 0, 1),
+    ]
 
     def extract_padding(self, p):
         return "", p
@@ -276,8 +278,13 @@ class QDS(Packet):
 class QDP(Packet):
     name = "QDP"
     fields_desc = [
-        XBitField("IV", 0, 1), XBitField("NT", 0, 1), XBitField("SB", 0, 1), XBitField("BL", 0, 1),
-        XBitField("EI", 0, 1), XBitField("Padding", 0, 3)]
+        XBitField("IV", 0, 1),
+        XBitField("NT", 0, 1),
+        XBitField("SB", 0, 1),
+        XBitField("BL", 0, 1),
+        XBitField("EI", 0, 1),
+        XBitField("Padding", 0, 3),
+    ]
 
     def extract_padding(self, p):
         return "", p
@@ -288,14 +295,18 @@ class SIQ(Packet):
     fields_desc = [
         #  XByteField("SIQ", 0x00)]
         #  Exacter representation for SIQ:
-        XBitField("IV", 0, 1), XBitField("NT", 0, 1), XBitField("SB", 0, 1), XBitField("BL", 0, 1),
-        XBitField("Padding", 0, 3), XBitField("SPI", 0, 1)]
+        XBitField("IV", 0, 1),
+        XBitField("NT", 0, 1),
+        XBitField("SB", 0, 1),
+        XBitField("BL", 0, 1),
+        XBitField("Padding", 0, 3),
+        XBitField("SPI", 0, 1),
+    ]
 
 
 class BSI(Packet):
     name = "BSI"
-    fields_desc = [
-        LEIntField("BSI", 0)]
+    fields_desc = [LEIntField("BSI", 0)]
 
 
 class DIQ(Packet):
@@ -303,28 +314,30 @@ class DIQ(Packet):
     fields_desc = [
         #  XByteField("DIQ", 0x00)]
         #  Exacter representation for DIQ:
-        XBitField("IV", 0, 1), XBitField("NT", 0, 1), XBitField("SB", 0, 1), XBitField("BL", 0, 1),
-        XBitField("Padding", 0, 2), XBitField("DPI", 0, 2)]
+        XBitField("IV", 0, 1),
+        XBitField("NT", 0, 1),
+        XBitField("SB", 0, 1),
+        XBitField("BL", 0, 1),
+        XBitField("Padding", 0, 2),
+        XBitField("DPI", 0, 2),
+    ]
 
 
 class VTI(Packet):
     name = "VTI"
-    fields_desc = [
-        XBitField("T", 0, 1), XBitField("Value", 0, 7)]
+    fields_desc = [XBitField("T", 0, 1), XBitField("Value", 0, 7)]
 
 
 class NVA(Packet):
     # Normalized value
     name = "NVA"
-    fields_desc = [
-        NormValueField("NVA", 0x5000)]
+    fields_desc = [NormValueField("NVA", 0x5000)]
 
 
 class SVA(Packet):
     # Scaled value
     name = "SVA"
-    fields_desc = [
-        LESignedShortField("SVA", 0x50)]
+    fields_desc = [LESignedShortField("SVA", 0x50)]
 
 
 class BCR(Packet):
@@ -332,14 +345,24 @@ class BCR(Packet):
     name = "BCR"
     fields_desc = [
         LESignedIntField("Value", 0x0),
-        XBitField("IV", 0, 1), XBitField("CA", 0, 1), XBitField("CY", 0, 1), XBitField("SeqNr", 0, 5)]
+        XBitField("IV", 0, 1),
+        XBitField("CA", 0, 1),
+        XBitField("CY", 0, 1),
+        XBitField("SeqNr", 0, 5),
+    ]
 
 
 class SEP(Packet):
     name = "SEP"
     fields_desc = [
-        XBitField("IV", 0, 1), XBitField("NT", 0, 1), XBitField("SB", 0, 1), XBitField("BL", 0, 1),
-        XBitField("EI", 0, 1), XBitField("Padding", 0, 1), XBitField("ES", 0, 2)]
+        XBitField("IV", 0, 1),
+        XBitField("NT", 0, 1),
+        XBitField("SB", 0, 1),
+        XBitField("BL", 0, 1),
+        XBitField("EI", 0, 1),
+        XBitField("Padding", 0, 1),
+        XBitField("ES", 0, 2),
+    ]
 
     def extract_padding(self, p):
         return "", p
@@ -348,8 +371,14 @@ class SEP(Packet):
 class SPE(Packet):
     name = "SPE"
     fields_desc = [
-        XBitField("Padding", 0, 2), XBitField("SRD", 0, 1), XBitField("SIE", 0, 1),
-        XBitField("SL3", 0, 1), XBitField("SL2", 0, 1), XBitField("SL2", 0, 1), XBitField("GS", 0, 1)]
+        XBitField("Padding", 0, 2),
+        XBitField("SRD", 0, 1),
+        XBitField("SIE", 0, 1),
+        XBitField("SL3", 0, 1),
+        XBitField("SL2", 0, 1),
+        XBitField("SL2", 0, 1),
+        XBitField("GS", 0, 1),
+    ]
 
     def extract_padding(self, p):
         return "", p
@@ -359,14 +388,19 @@ class OCI(Packet):
     name = "OCI"
     fields_desc = [
         XBitField("Padding", 0, 4),
-        XBitField("CL3", 0, 1), XBitField("CL2", 0, 1), XBitField("CL1", 0, 1), XBitField("GC", 0, 1)]
+        XBitField("CL3", 0, 1),
+        XBitField("CL2", 0, 1),
+        XBitField("CL1", 0, 1),
+        XBitField("GC", 0, 1),
+    ]
 
 
 class SCD(Packet):
     name = "SCD"
     fields_desc = [
         LEShortField("Status", 0x0),  # LE?
-        LEShortField("StatChaDet", 0x0)]  # LE?
+        LEShortField("StatChaDet", 0x0),
+    ]  # LE?
 
 
 class FloatField(Field):
@@ -380,7 +414,8 @@ class asdu_infobj_1(Packet):
     fields_desc = [
         IOA,
         # SIQ]
-        PacketField("SIQ", SIQ(), SIQ)]
+        PacketField("SIQ", SIQ(), SIQ),
+    ]
 
 
 class asdu_infobj_2(Packet):
@@ -388,14 +423,13 @@ class asdu_infobj_2(Packet):
     fields_desc = [
         IOA,
         PacketField("SIQ", SIQ(), SIQ),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_3(Packet):
     name = "M_DP_NA_1"
-    fields_desc = [
-        IOA,
-        PacketField("DIQ", DIQ(), DIQ)]
+    fields_desc = [IOA, PacketField("DIQ", DIQ(), DIQ)]
 
 
 class asdu_infobj_4(Packet):
@@ -403,15 +437,13 @@ class asdu_infobj_4(Packet):
     fields_desc = [
         IOA,
         PacketField("DIQ", DIQ(), DIQ),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_5(Packet):
     name = "M_ST_NA_1"
-    fields_desc = [
-        IOA,
-        PacketField("VTI", VTI(), VTI),
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, PacketField("VTI", VTI(), VTI), PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_6(Packet):
@@ -420,15 +452,13 @@ class asdu_infobj_6(Packet):
         IOA,
         PacketField("VTI", VTI(), VTI),
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_7(Packet):
     name = "M_BO_NA_1"
-    fields_desc = [
-        IOA,
-        BSI,
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, BSI, PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_8(Packet):
@@ -437,15 +467,13 @@ class asdu_infobj_8(Packet):
         IOA,
         BSI,
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_9(Packet):
     name = "M_ME_NA_1"
-    fields_desc = [
-        IOA,
-        NVA,
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, NVA, PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_10(Packet):
@@ -454,15 +482,13 @@ class asdu_infobj_10(Packet):
         IOA,
         NVA,
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_11(Packet):
     name = "M_ME_NB_1"
-    fields_desc = [
-        IOA,
-        SVA,
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, SVA, PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_12(Packet):
@@ -471,15 +497,13 @@ class asdu_infobj_12(Packet):
         IOA,
         SVA,
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_13(Packet):
     name = "M_ME_NC_1"
-    fields_desc = [
-        IOA,
-        FloatField("FPNumber", 1),
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, FloatField("FPNumber", 1), PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_14(Packet):
@@ -488,14 +512,13 @@ class asdu_infobj_14(Packet):
         IOA,
         FloatField("FPNumber", 0),
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_15(Packet):
     name = "M_IT_NA_1"
-    fields_desc = [
-        IOA,
-        PacketField("BCR", BCR(), BCR)]
+    fields_desc = [IOA, PacketField("BCR", BCR(), BCR)]
 
 
 class asdu_infobj_16(Packet):
@@ -503,7 +526,8 @@ class asdu_infobj_16(Packet):
     fields_desc = [
         IOA,
         PacketField("BCR", BCR(), BCR),
-        PacketField("CP24Time", CP24Time(), CP24Time)]
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]
 
 
 class asdu_infobj_17(Packet):
@@ -512,7 +536,8 @@ class asdu_infobj_17(Packet):
         IOA,
         PacketField("SEP", SEP(), SEP),
         CP16Time,  # elapsed time
-        PacketField("CP24Time", CP24Time(), CP24Time)]  # binary time
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]  # binary time
 
 
 class asdu_infobj_18(Packet):
@@ -522,7 +547,8 @@ class asdu_infobj_18(Packet):
         PacketField("SPE", SPE(), SPE),
         PacketField("QDP", QDP(), QDP),
         CP16Time,  # elapsed time
-        PacketField("CP24Time", CP24Time(), CP24Time)]  # binary time
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]  # binary time
 
 
 class asdu_infobj_19(Packet):
@@ -532,22 +558,18 @@ class asdu_infobj_19(Packet):
         PacketField("OCI", OCI(), OCI),
         PacketField("QDP", QDP(), QDP),
         CP16Time,  # relay duration time
-        PacketField("CP24Time", CP24Time(), CP24Time)]  # binary time
+        PacketField("CP24Time", CP24Time(), CP24Time),
+    ]  # binary time
 
 
 class asdu_infobj_20(Packet):
     name = "M_PS_NA_1"
-    fields_desc = [
-        IOA,
-        PacketField("SCD", SCD(), SCD),
-        PacketField("QDS", QDS(), QDS)]
+    fields_desc = [IOA, PacketField("SCD", SCD(), SCD), PacketField("QDS", QDS(), QDS)]
 
 
 class asdu_infobj_21(Packet):
     name = "M_ME_ND_1"
-    fields_desc = [
-        IOA,
-        NVA]
+    fields_desc = [IOA, NVA]
 
 
 class asdu_infobj_30(Packet):
@@ -555,7 +577,8 @@ class asdu_infobj_30(Packet):
     fields_desc = [
         IOA,
         PacketField("SIQ", SIQ(), SIQ),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_31(Packet):
@@ -563,7 +586,8 @@ class asdu_infobj_31(Packet):
     fields_desc = [
         IOA,
         PacketField("DIQ", DIQ(), DIQ),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_32(Packet):
@@ -572,7 +596,8 @@ class asdu_infobj_32(Packet):
         IOA,
         PacketField("VTI", VTI(), VTI),
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_33(Packet):
@@ -581,7 +606,8 @@ class asdu_infobj_33(Packet):
         IOA,
         PacketField("BSI", BSI(), BSI),
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_34(Packet):
@@ -590,7 +616,8 @@ class asdu_infobj_34(Packet):
         IOA,
         NVA,
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_35(Packet):
@@ -599,7 +626,8 @@ class asdu_infobj_35(Packet):
         IOA,
         SVA,
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_36(Packet):
@@ -608,7 +636,8 @@ class asdu_infobj_36(Packet):
         IOA,
         FloatField("FPNumber", 0),
         PacketField("QDS", QDS(), QDS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_37(Packet):
@@ -616,7 +645,8 @@ class asdu_infobj_37(Packet):
     fields_desc = [
         IOA,
         PacketField("BCR", BCR(), BCR),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_38(Packet):
@@ -625,7 +655,8 @@ class asdu_infobj_38(Packet):
         IOA,
         PacketField("SEP", SEP(), SEP),
         CP16Time,  # elapsed time
-        PacketField("CP56Time", CP56Time(), CP56Time)]  # binary time
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]  # binary time
 
 
 class asdu_infobj_39(Packet):
@@ -635,7 +666,8 @@ class asdu_infobj_39(Packet):
         PacketField("SPE", SPE(), SPE),
         PacketField("QDP", QDP(), QDP),
         CP16Time,  # relay duration time
-        PacketField("CP56Time", CP56Time(), CP56Time)]  # binary time
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]  # binary time
 
 
 class asdu_infobj_40(Packet):
@@ -645,7 +677,8 @@ class asdu_infobj_40(Packet):
         PacketField("OCI", OCI(), OCI),
         PacketField("QDP", QDP(), QDP),
         CP16Time,  # relay duration time
-        PacketField("CP56Time", CP56Time(), CP56Time)]  # binary time
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]  # binary time
 
 
 class asdu_infobj_45(Packet):
@@ -655,7 +688,10 @@ class asdu_infobj_45(Packet):
         #  XByteField("SCO", 0x00)]
         #  Exacter representation(2) for SCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("Padding", 0, 1), XBitField("SCS", 0, 1)]
-        XBitField("QOC", 0, 6), XBitField("Padding", 0, 1), BitField("SCS", 0, 1)]
+        XBitField("QOC", 0, 6),
+        XBitField("Padding", 0, 1),
+        BitField("SCS", 0, 1),
+    ]
 
 
 class asdu_infobj_46(Packet):
@@ -665,7 +701,9 @@ class asdu_infobj_46(Packet):
         #  XByteField("SCO", 0x00)]
         #  Exacter representation(2) for DCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("DCS", 0, 2)]
-        XBitField("QOC", 0, 6), XBitField("DCS", 0, 2)]
+        XBitField("QOC", 0, 6),
+        XBitField("DCS", 0, 2),
+    ]
 
 
 class asdu_infobj_47(Packet):
@@ -675,7 +713,9 @@ class asdu_infobj_47(Packet):
         #  XByteField("SCO", 0x00)]
         #  Exacter representation(2) for RCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("RCS", 0, 2)]
-        XBitField("QOC", 0, 6), XBitField("RCS", 0, 2)]
+        XBitField("QOC", 0, 6),
+        XBitField("RCS", 0, 2),
+    ]
 
 
 class asdu_infobj_48(Packet):
@@ -684,7 +724,8 @@ class asdu_infobj_48(Packet):
         IOA,
         # Normalized value
         NVA,
-        PacketField("QOS", QOS(), QOS)]
+        PacketField("QOS", QOS(), QOS),
+    ]
 
 
 class asdu_infobj_49(Packet):
@@ -693,22 +734,18 @@ class asdu_infobj_49(Packet):
         IOA,
         # Scaled value
         SVA,
-        PacketField("QOS", QOS(), QOS)]
+        PacketField("QOS", QOS(), QOS),
+    ]
 
 
 class asdu_infobj_50(Packet):
     name = "C_SE_NC_1"
-    fields_desc = [
-        IOA,
-        FloatField("FPNumber", 0),
-        PacketField("QOS", QOS(), QOS)]
+    fields_desc = [IOA, FloatField("FPNumber", 0), PacketField("QOS", QOS(), QOS)]
 
 
 class asdu_infobj_51(Packet):
     name = "C_BO_NA_1"
-    fields_desc = [
-        IOA,
-        BSI]
+    fields_desc = [IOA, BSI]
 
 
 # maybe in handle client
@@ -739,8 +776,11 @@ class asdu_infobj_58(Packet):
         #  XByteField("SCO", 0x00)]
         #  Exacter representation(2) for SCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("Padding", 0, 1), XBitField("SCS", 0, 1)]
-        XBitField("QOC", 0, 6), XBitField("Padding", 0, 1), BitField("SCS", 0, 1),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        XBitField("QOC", 0, 6),
+        XBitField("Padding", 0, 1),
+        BitField("SCS", 0, 1),
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_59(Packet):
@@ -750,8 +790,10 @@ class asdu_infobj_59(Packet):
         #  XByteField("DCO", 0x00)]
         #  Exacter representation(2) for DCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("DCS", 0, 2)]
-        XBitField("QOC", 0, 6), XBitField("DCS", 0, 2),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        XBitField("QOC", 0, 6),
+        XBitField("DCS", 0, 2),
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_60(Packet):
@@ -761,8 +803,10 @@ class asdu_infobj_60(Packet):
         #  XByteField("RCO", 0x00)]
         #  Exacter representation(2) for RCO:
         #  XBitField("S/E", 0, 1), XBitField("QU", 0, 5), XBitField("RCS", 0, 2)]
-        XBitField("QOC", 0, 6), XBitField("RCS", 0, 2),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        XBitField("QOC", 0, 6),
+        XBitField("RCS", 0, 2),
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_61(Packet):
@@ -772,7 +816,8 @@ class asdu_infobj_61(Packet):
         # Normalized value
         NVA,
         PacketField("QOS", QOS(), QOS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_62(Packet):
@@ -782,7 +827,8 @@ class asdu_infobj_62(Packet):
         # Scaled value
         SVA,
         PacketField("QOS", QOS(), QOS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_63(Packet):
@@ -791,7 +837,8 @@ class asdu_infobj_63(Packet):
         IOA,
         FloatField("FPNumber", 0),
         PacketField("QOS", QOS(), QOS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_64(Packet):
@@ -800,48 +847,50 @@ class asdu_infobj_64(Packet):
         IOA,
         BSI,
         PacketField("QOS", QOS(), QOS),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 class asdu_infobj_100(Packet):
     name = "C_IC_NA_1"
-    fields_desc = [
-        X3BytesField("IOA", 0x0),
-        ByteField("QOI", 0x14)]
+    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
 
 
 class asdu_infobj_101(Packet):
     name = "C_CI_NA_1"
-    fields_desc = [
-        X3BytesField("IOA", 0x0),
-        ByteField("QCC", 0x05)]
+    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
 
 
 class asdu_infobj_102(Packet):
     name = "C_RD_NA_1"
-    fields_desc = [
-        X3BytesField("IOA", 0x0)]
+    fields_desc = [X3BytesField("IOA", 0x0)]
 
 
 class asdu_infobj_103(Packet):
     name = "C_CS_NA_1"
     fields_desc = [
         X3BytesField("IOA", 0x0),
-        PacketField("CP56Time", CP56Time(), CP56Time)]
+        PacketField("CP56Time", CP56Time(), CP56Time),
+    ]
 
 
 # IEC104 asdu head
 class asdu_head(Packet):
     name = "asdu_head"
-    fields_desc = [ByteField("TypeID", 0x05),  # Command Type
-                   #  Exacter representation for variable structure qualifier
-                   BitField("SQ", 0b0, 1), BitField("NoO", 1, 7),  # SQ and Number of Object
-                   #  XByteField("NoO", 0x01),
-                   #  Exacter representation for Cause of Transmission:
-                   BitField("T", 0, 1), BitField("PN", 0, 1), BitField("COT", 6, 6),
-                   # XByteField("COT", 0x06),
-                   XByteField("OrigAddr", 0x00),
-                   LEShortField("Addr", station_addr)]
+    fields_desc = [
+        ByteField("TypeID", 0x05),  # Command Type
+        #  Exacter representation for variable structure qualifier
+        BitField("SQ", 0b0, 1),
+        BitField("NoO", 1, 7),  # SQ and Number of Object
+        #  XByteField("NoO", 0x01),
+        #  Exacter representation for Cause of Transmission:
+        BitField("T", 0, 1),
+        BitField("PN", 0, 1),
+        BitField("COT", 6, 6),
+        # XByteField("COT", 0x06),
+        XByteField("OrigAddr", 0x00),
+        LEShortField("Addr", station_addr),
+    ]
 
     def __str__(self):
         asdu_infobj = self.payload
@@ -851,7 +900,9 @@ class asdu_head(Packet):
             infobj_repr.append(str(asdu_infobj.fields))
             asdu_infobj = asdu_infobj.payload
 
-        return "{} with {} Objects=[{}]".format(self.payload.name, self.fields, ", ".join(infobj_repr))
+        return "{} with {} Objects=[{}]".format(
+            self.payload.name, self.fields, ", ".join(infobj_repr)
+        )
 
     def guess_payload_class(self, payload):
         if self.TypeID == 1:
@@ -997,60 +1048,60 @@ class asdu_head(Packet):
 
 
 bind_layers(i_frame, asdu_head)
-bind_layers(asdu_head, asdu_infobj_1, {'TypeID': 1})
-bind_layers(asdu_head, asdu_infobj_2, {'TypeID': 2})
-bind_layers(asdu_head, asdu_infobj_3, {'TypeID': 3})
-bind_layers(asdu_head, asdu_infobj_4, {'TypeID': 4})
-bind_layers(asdu_head, asdu_infobj_5, {'TypeID': 5})
-bind_layers(asdu_head, asdu_infobj_6, {'TypeID': 6})
-bind_layers(asdu_head, asdu_infobj_7, {'TypeID': 7})
-bind_layers(asdu_head, asdu_infobj_8, {'TypeID': 8})
-bind_layers(asdu_head, asdu_infobj_9, {'TypeID': 9})
-bind_layers(asdu_head, asdu_infobj_10, {'TypeID': 10})
-bind_layers(asdu_head, asdu_infobj_11, {'TypeID': 11})
-bind_layers(asdu_head, asdu_infobj_12, {'TypeID': 12})
-bind_layers(asdu_head, asdu_infobj_13, {'TypeID': 13})
-bind_layers(asdu_head, asdu_infobj_14, {'TypeID': 14})
-bind_layers(asdu_head, asdu_infobj_15, {'TypeID': 15})
-bind_layers(asdu_head, asdu_infobj_16, {'TypeID': 16})
-bind_layers(asdu_head, asdu_infobj_17, {'TypeID': 17})
-bind_layers(asdu_head, asdu_infobj_18, {'TypeID': 18})
-bind_layers(asdu_head, asdu_infobj_19, {'TypeID': 19})
-bind_layers(asdu_head, asdu_infobj_20, {'TypeID': 20})
-bind_layers(asdu_head, asdu_infobj_21, {'TypeID': 21})
+bind_layers(asdu_head, asdu_infobj_1, {"TypeID": 1})
+bind_layers(asdu_head, asdu_infobj_2, {"TypeID": 2})
+bind_layers(asdu_head, asdu_infobj_3, {"TypeID": 3})
+bind_layers(asdu_head, asdu_infobj_4, {"TypeID": 4})
+bind_layers(asdu_head, asdu_infobj_5, {"TypeID": 5})
+bind_layers(asdu_head, asdu_infobj_6, {"TypeID": 6})
+bind_layers(asdu_head, asdu_infobj_7, {"TypeID": 7})
+bind_layers(asdu_head, asdu_infobj_8, {"TypeID": 8})
+bind_layers(asdu_head, asdu_infobj_9, {"TypeID": 9})
+bind_layers(asdu_head, asdu_infobj_10, {"TypeID": 10})
+bind_layers(asdu_head, asdu_infobj_11, {"TypeID": 11})
+bind_layers(asdu_head, asdu_infobj_12, {"TypeID": 12})
+bind_layers(asdu_head, asdu_infobj_13, {"TypeID": 13})
+bind_layers(asdu_head, asdu_infobj_14, {"TypeID": 14})
+bind_layers(asdu_head, asdu_infobj_15, {"TypeID": 15})
+bind_layers(asdu_head, asdu_infobj_16, {"TypeID": 16})
+bind_layers(asdu_head, asdu_infobj_17, {"TypeID": 17})
+bind_layers(asdu_head, asdu_infobj_18, {"TypeID": 18})
+bind_layers(asdu_head, asdu_infobj_19, {"TypeID": 19})
+bind_layers(asdu_head, asdu_infobj_20, {"TypeID": 20})
+bind_layers(asdu_head, asdu_infobj_21, {"TypeID": 21})
 
-bind_layers(asdu_head, asdu_infobj_30, {'TypeID': 30})
-bind_layers(asdu_head, asdu_infobj_31, {'TypeID': 31})
-bind_layers(asdu_head, asdu_infobj_32, {'TypeID': 32})
-bind_layers(asdu_head, asdu_infobj_33, {'TypeID': 33})
-bind_layers(asdu_head, asdu_infobj_34, {'TypeID': 34})
-bind_layers(asdu_head, asdu_infobj_35, {'TypeID': 35})
-bind_layers(asdu_head, asdu_infobj_36, {'TypeID': 36})
-bind_layers(asdu_head, asdu_infobj_37, {'TypeID': 37})
-bind_layers(asdu_head, asdu_infobj_38, {'TypeID': 38})
-bind_layers(asdu_head, asdu_infobj_39, {'TypeID': 39})
-bind_layers(asdu_head, asdu_infobj_40, {'TypeID': 40})
+bind_layers(asdu_head, asdu_infobj_30, {"TypeID": 30})
+bind_layers(asdu_head, asdu_infobj_31, {"TypeID": 31})
+bind_layers(asdu_head, asdu_infobj_32, {"TypeID": 32})
+bind_layers(asdu_head, asdu_infobj_33, {"TypeID": 33})
+bind_layers(asdu_head, asdu_infobj_34, {"TypeID": 34})
+bind_layers(asdu_head, asdu_infobj_35, {"TypeID": 35})
+bind_layers(asdu_head, asdu_infobj_36, {"TypeID": 36})
+bind_layers(asdu_head, asdu_infobj_37, {"TypeID": 37})
+bind_layers(asdu_head, asdu_infobj_38, {"TypeID": 38})
+bind_layers(asdu_head, asdu_infobj_39, {"TypeID": 39})
+bind_layers(asdu_head, asdu_infobj_40, {"TypeID": 40})
 
-bind_layers(asdu_head, asdu_infobj_45, {'TypeID': 45})
-bind_layers(asdu_head, asdu_infobj_46, {'TypeID': 46})
-bind_layers(asdu_head, asdu_infobj_47, {'TypeID': 47})
-bind_layers(asdu_head, asdu_infobj_48, {'TypeID': 48})
-bind_layers(asdu_head, asdu_infobj_49, {'TypeID': 49})
-bind_layers(asdu_head, asdu_infobj_50, {'TypeID': 50})
-bind_layers(asdu_head, asdu_infobj_51, {'TypeID': 51})
+bind_layers(asdu_head, asdu_infobj_45, {"TypeID": 45})
+bind_layers(asdu_head, asdu_infobj_46, {"TypeID": 46})
+bind_layers(asdu_head, asdu_infobj_47, {"TypeID": 47})
+bind_layers(asdu_head, asdu_infobj_48, {"TypeID": 48})
+bind_layers(asdu_head, asdu_infobj_49, {"TypeID": 49})
+bind_layers(asdu_head, asdu_infobj_50, {"TypeID": 50})
+bind_layers(asdu_head, asdu_infobj_51, {"TypeID": 51})
 
-bind_layers(asdu_head, asdu_infobj_58, {'TypeID': 58})
-bind_layers(asdu_head, asdu_infobj_59, {'TypeID': 59})
-bind_layers(asdu_head, asdu_infobj_60, {'TypeID': 60})
-bind_layers(asdu_head, asdu_infobj_61, {'TypeID': 61})
-bind_layers(asdu_head, asdu_infobj_62, {'TypeID': 62})
-bind_layers(asdu_head, asdu_infobj_63, {'TypeID': 63})
-bind_layers(asdu_head, asdu_infobj_64, {'TypeID': 64})
+bind_layers(asdu_head, asdu_infobj_58, {"TypeID": 58})
+bind_layers(asdu_head, asdu_infobj_59, {"TypeID": 59})
+bind_layers(asdu_head, asdu_infobj_60, {"TypeID": 60})
+bind_layers(asdu_head, asdu_infobj_61, {"TypeID": 61})
+bind_layers(asdu_head, asdu_infobj_62, {"TypeID": 62})
+bind_layers(asdu_head, asdu_infobj_63, {"TypeID": 63})
+bind_layers(asdu_head, asdu_infobj_64, {"TypeID": 64})
 
-bind_layers(asdu_head, asdu_infobj_100, {'TypeID': 100})
-bind_layers(asdu_head, asdu_infobj_101, {'TypeID': 101})
-bind_layers(asdu_head, asdu_infobj_102, {'TypeID': 102})
-bind_layers(asdu_head, asdu_infobj_103, {'TypeID': 103})
+bind_layers(asdu_head, asdu_infobj_100, {"TypeID": 100})
+bind_layers(asdu_head, asdu_infobj_101, {"TypeID": 101})
+bind_layers(asdu_head, asdu_infobj_102, {"TypeID": 102})
+bind_layers(asdu_head, asdu_infobj_103, {"TypeID": 103})
 
 # For SQ=1 and SQ=0, experimental..
 # bind_layers(asdu_infobj_1, asdu_infobj_1)
@@ -1077,12 +1128,14 @@ STOPDT_con = u_frame(Type=0x23)
 TESTFR_act = u_frame(Type=0x43)
 TESTFR_con = u_frame(Type=0x83)
 
-u_list = {'0x7': 'STARTDT_ACT',
-          '0xB': 'STARTDT_CON',
-          '0x13': 'STOPDT_act',
-          '0x23': 'STOPDT_con',
-          '0x43': 'TESTFR_act',
-          '0x83': 'TESTFR_con'}
+u_list = {
+    "0x7": "STARTDT_ACT",
+    "0xB": "STARTDT_CON",
+    "0x13": "STOPDT_act",
+    "0x23": "STOPDT_con",
+    "0x43": "TESTFR_act",
+    "0x83": "TESTFR_con",
+}
 
 # ==== Timeouts ==== old.....
 # Timeout of connection establishment

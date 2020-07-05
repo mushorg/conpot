@@ -5,11 +5,13 @@ import hpfeeds
 
 logging.basicConfig(level=logging.CRITICAL)
 
-HOST = 'hpfriends.honeycloud.net'
+HOST = "hpfriends.honeycloud.net"
 PORT = 20000
-CHANNELS = ['conpot.events', ]
-IDENT = ''
-SECRET = ''
+CHANNELS = [
+    "conpot.events",
+]
+IDENT = ""
+SECRET = ""
 
 
 def main():
@@ -17,7 +19,7 @@ def main():
         try:
             decoded = json.loads(str(payload))
         except:
-            decoded = {'raw': payload}
+            decoded = {"raw": payload}
         print(decoded)
 
     def on_error(payload):
@@ -31,7 +33,8 @@ def main():
     hpc.close()
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     try:
         sys.exit(main())
     except KeyboardInterrupt:

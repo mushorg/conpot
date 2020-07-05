@@ -34,41 +34,40 @@ class TestJsonLogger(unittest.TestCase):
         shutil.rmtree(self.logging_dir)
 
     def test_log_event(self):
-        filename = path.join(self.logging_dir, 'test.json')
-        sensorid = 'default'
-        public_ip = '0.0.0.0'
+        filename = path.join(self.logging_dir, "test.json")
+        sensorid = "default"
+        public_ip = "0.0.0.0"
         dst_port = 502
         timestamp = datetime.now()
         event_id = 1337
-        src_ip = '127.0.0.1'
-        src_port = '2048'
-        data_type = 'unittest'
-        request = 'ping'
-        response = 'pong'
+        src_ip = "127.0.0.1"
+        src_port = "2048"
+        data_type = "unittest"
+        request = "ping"
+        response = "pong"
 
         json_logger = JsonLogger(filename, sensorid, public_ip)
-        json_logger.log({
-            'timestamp': timestamp,
-            'id': event_id,
-            'remote': (src_ip, src_port),
-            'local': (public_ip, dst_port),
-            'data_type': data_type,
-            'data': {
-                'request': request,
-                'response': response
-            },
-        })
+        json_logger.log(
+            {
+                "timestamp": timestamp,
+                "id": event_id,
+                "remote": (src_ip, src_port),
+                "local": (public_ip, dst_port),
+                "data_type": data_type,
+                "data": {"request": request, "response": response},
+            }
+        )
 
-        with open(filename, 'r') as logfile:
+        with open(filename, "r") as logfile:
             e = json.load(logfile)
-            self.assertEqual(e['timestamp'], timestamp.isoformat())
-            self.assertEqual(e['sensorid'], sensorid)
-            self.assertEqual(e['id'], event_id)
-            self.assertEqual(e['src_ip'], src_ip)
-            self.assertEqual(e['src_port'], src_port)
-            self.assertEqual(e['dst_ip'], public_ip)
-            self.assertEqual(e['dst_port'], dst_port)
-            self.assertEqual(e['data_type'], data_type)
-            self.assertEqual(e['request'], request)
-            self.assertEqual(e['response'], response)
-            self.assertEqual(e['event_type'], None)
+            self.assertEqual(e["timestamp"], timestamp.isoformat())
+            self.assertEqual(e["sensorid"], sensorid)
+            self.assertEqual(e["id"], event_id)
+            self.assertEqual(e["src_ip"], src_ip)
+            self.assertEqual(e["src_port"], src_port)
+            self.assertEqual(e["dst_ip"], public_ip)
+            self.assertEqual(e["dst_port"], dst_port)
+            self.assertEqual(e["data_type"], data_type)
+            self.assertEqual(e["request"], request)
+            self.assertEqual(e["response"], response)
+            self.assertEqual(e["event_type"], None)

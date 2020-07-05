@@ -29,7 +29,6 @@ from bs4 import BeautifulSoup
 
 
 class Crawler(object):
-
     def _get_md5(self, data, path):
         md5 = hashlib.md5(data).hexdigest()
         if md5 in self.known_files.values():
@@ -38,7 +37,7 @@ class Crawler(object):
         return md5
 
     def _populate_known_files(self):
-        for dir_name, dir_names, file_names in os.walk(self.base_dir):
+        for dir_name, _, file_names in os.walk(self.base_dir):
             for name in file_names:
                 if name[-2:] == "py":
                     continue
@@ -96,7 +95,7 @@ class Crawler(object):
     def _fetch_page(self, url):
         result = requests.get(url)
         path = urlparse(result.url).path
-        soup = BeautifulSoup(result.text.encode('ascii', 'ignore'))
+        soup = BeautifulSoup(result.text.encode("ascii", "ignore"))
         return soup, path
 
     def _store_page(self, soup, name="/index.html"):
@@ -106,7 +105,7 @@ class Crawler(object):
             html_fh.write(soup.prettify().encode("utf-8"))
 
     def _process_page(self, url, page):
-        soup, path = self._fetch_page(url)
+        soup, _ = self._fetch_page(url)
         self.known_pages.append(url)
         self._dig(soup)
         self._store_page(soup, page)
@@ -135,7 +134,8 @@ class Crawler(object):
 
 
 if __name__ == "__main__":
-    print("""
+    print(
+        """
 
     HTTP HMI Crawler
 
@@ -144,23 +144,24 @@ if __name__ == "__main__":
 
     Usage on your own risk!
 
-    """)
+    """
+    )
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-w", "--www",
-        help="HMI public www path",
-        default='www',
-        metavar="www"
+        "-w", "--www", help="HMI public www path", default="www", metavar="www"
     )
     parser.add_argument(
-        "-t", "--target",
+        "-t",
+        "--target",
         help="Target domain or IP address",
-        default='localhost:80',
-        metavar="http://target:port"
+        default="localhost:80",
+        metavar="http://target:port",
     )
     args = parser.parse_args()
     try:
-        agreement = input("Are you sure you want to crawl {0}? (y/N): ".format(args.target))
+        agreement = input(
+            "Are you sure you want to crawl {0}? (y/N): ".format(args.target)
+        )
         if not agreement == "y":
             print("You have to reply with 'y' to continue... Bye")
             sys.exit(0)

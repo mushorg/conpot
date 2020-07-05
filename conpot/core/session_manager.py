@@ -33,11 +33,25 @@ class SessionManager:
                     return session
         return None
 
-    def get_session(self, protocol, source_ip, source_port, destination_ip=None, destination_port=None):
+    def get_session(
+        self,
+        protocol,
+        source_ip,
+        source_port,
+        destination_ip=None,
+        destination_port=None,
+    ):
         # around here we would inject dependencies into the attack session
         attack_session = self._find_sessions(protocol, source_ip)
         if not attack_session:
-            attack_session = AttackSession(protocol, source_ip, source_port, destination_ip, destination_port, self.log_queue)
+            attack_session = AttackSession(
+                protocol,
+                source_ip,
+                source_port,
+                destination_ip,
+                destination_port,
+                self.log_queue,
+            )
             self._sessions.append(attack_session)
         return attack_session
 

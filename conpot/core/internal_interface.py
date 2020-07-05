@@ -36,11 +36,12 @@ class Network(object):
 
     # return default value in case an attribute cannot be found in the interface
     def __getattr__(self, attr):
-        raise AttributeError('Interface.Network attribute does exist')
+        raise AttributeError("Interface.Network attribute does exist")
 
 
 class Interface(object):
     """ Conpot's internal interface """
+
     def __init__(self):
         self.network = Network()
         self.config = None
@@ -55,16 +56,18 @@ class Interface(object):
         object.__setattr__(self, attr, value)
 
     def __getattr__(self, attr):
-        raise AttributeError('Interface attribute does exist. Please check assignment')
+        raise AttributeError("Interface attribute does exist. Please check assignment")
 
     # FIXME: Do we really need this?
     def __repr__(self):
-        s = '''          Conpot: ICS/SCADA Honeypot        
+        s = """          Conpot: ICS/SCADA Honeypot        
                         (c) 2018, MushMush Foundation.   
                ---------------------------------------------
                 (1) Using Config                       :  {}
                 (2) Enabled Protocols                  :  {}
-                (3) Last Active (Attacked) on          :  {}'''.format(self.config, self.enabled, self.last_active)
+                (3) Last Active (Attacked) on          :  {}""".format(
+            self.config, self.enabled, self.last_active
+        )
         return s
 
     __str__ = __repr__

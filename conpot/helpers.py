@@ -15,31 +15,57 @@ def sanitize_file_name(name, host, port):
     :param port port/client port
     :type name: str
     """
-    return '(' + host + ', ' + str(port) + ')-' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '-' + slugify(name)
+    return (
+        "("
+        + host
+        + ", "
+        + str(port)
+        + ")-"
+        + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        + "-"
+        + slugify(name)
+    )
 
 
 # py3 chr
-def chr_py3(x): return bytearray((x,))
+def chr_py3(x):
+    return bytearray((x,))
 
 
 # covert a number to an ascii byte string
-def number_to_bytes(x): return x if isinstance(x, bytes) else bytes(str(int(x)), encoding='ascii')
+def number_to_bytes(x):
+    return x if isinstance(x, bytes) else bytes(str(int(x)), encoding="ascii")
 
 
 # convert a string to an ascii byte string
-def str_to_bytes(x): return x if isinstance(x, bytes) else str(x).encode('ascii')
+def str_to_bytes(x):
+    return x if isinstance(x, bytes) else str(x).encode("ascii")
 
 
 # pack a short int
-def pack_short_int(x): return x if isinstance(x, bytes) else x.to_bytes(2, byteorder='big')
+def pack_short_int(x):
+    return x if isinstance(x, bytes) else x.to_bytes(2, byteorder="big")
 
 
 # unpack a short int
-def unpack_short_int(x): return int.from_bytes(x,  byteorder='big')
+def unpack_short_int(x):
+    return int.from_bytes(x, byteorder="big")
 
 
-months_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct',
-              11: 'Nov', 12: 'Dec'}
+months_map = {
+    1: "Jan",
+    2: "Feb",
+    3: "Mar",
+    4: "Apr",
+    5: "May",
+    6: "Jun",
+    7: "Jul",
+    8: "Aug",
+    9: "Sep",
+    10: "Oct",
+    11: "Nov",
+    12: "Dec",
+}
 
 
 # https://www.bountysource.com/issues/4335201-ssl-broken-for-python-2-7-9
@@ -47,14 +73,24 @@ months_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Ju
 def fix_sslwrap():
     # Re-add sslwrap to Python 2.7.9
     import inspect
-    __ssl__ = __import__('ssl')
+
+    __ssl__ = __import__("ssl")
 
     try:
         _ssl = __ssl__._ssl
     except AttributeError:
         _ssl = __ssl__._ssl2
 
-    def new_sslwrap(sock, server_side=False, keyfile=None, certfile=None, cert_reqs=__ssl__.CERT_NONE, ssl_version=__ssl__.PROTOCOL_SSLv23, ca_certs=None, ciphers=None):
+    def new_sslwrap(
+        sock,
+        server_side=False,
+        keyfile=None,
+        certfile=None,
+        cert_reqs=__ssl__.CERT_NONE,
+        ssl_version=__ssl__.PROTOCOL_SSLv23,
+        ca_certs=None,
+        ciphers=None,
+    ):
         context = __ssl__.SSLContext(ssl_version)
         context.verify_mode = cert_reqs or __ssl__.CERT_NONE
         if ca_certs:
@@ -64,8 +100,8 @@ def fix_sslwrap():
         if ciphers:
             context.set_ciphers(ciphers)
 
-        caller_self = inspect.currentframe().f_back.f_locals['self']
+        caller_self = inspect.currentframe().f_back.f_locals["self"]
         return context._wrap_socket(sock, server_side=server_side, ssl_sock=caller_self)
 
-    if not hasattr(_ssl, 'sslwrap'):
+    if not hasattr(_ssl, "sslwrap"):
         _ssl.sslwrap = new_sslwrap

@@ -59,49 +59,49 @@ class UsageSimulator(object):
         databus.initialized.wait()
 
         # accumulated counter
-        energy_in_register = 'register_13'
+        energy_in_register = "register_13"
         self.energy_in = databus.get_value(energy_in_register)
         databus.set_value(energy_in_register, self._get_energy_in)
-        databus.set_value('register_1', self._get_energy_in_lowres)
+        databus.set_value("register_1", self._get_energy_in_lowres)
 
-        energy_out_register = 'register_14'
+        energy_out_register = "register_14"
         self.energy_out = databus.get_value(energy_out_register)
         databus.set_value(energy_out_register, self._get_energy_out)
-        databus.set_value('register_2', self._get_energy_out_lowres)
+        databus.set_value("register_2", self._get_energy_out_lowres)
 
-        volt_1_register = 'register_1054'
+        volt_1_register = "register_1054"
         self.voltage[0] = databus.get_value(volt_1_register)
         databus.set_value(volt_1_register, self._get_voltage_1)
 
-        volt_2_register = 'register_1055'
+        volt_2_register = "register_1055"
         self.voltage[1] = databus.get_value(volt_2_register)
         databus.set_value(volt_2_register, self._get_voltage_2)
 
-        volt_3_register = 'register_1056'
+        volt_3_register = "register_1056"
         self.voltage[2] = databus.get_value(volt_3_register)
         databus.set_value(volt_3_register, self._get_voltage_3)
 
-        current_1_register = 'register_1076'
+        current_1_register = "register_1076"
         self.current[0] = databus.get_value(current_1_register)
         databus.set_value(current_1_register, self._get_current_1)
 
-        current_2_register = 'register_1077'
+        current_2_register = "register_1077"
         self.current[1] = databus.get_value(current_2_register)
         databus.set_value(current_2_register, self._get_current_2)
 
-        current_3_register = 'register_1078'
+        current_3_register = "register_1078"
         self.current[2] = databus.get_value(current_3_register)
         databus.set_value(current_3_register, self._get_current_3)
 
-        power_1_register = 'register_1080'
+        power_1_register = "register_1080"
         self.power[0] = databus.get_value(power_1_register)
         databus.set_value(power_1_register, self._get_power_1)
 
-        power_2_register = 'register_1081'
+        power_2_register = "register_1081"
         self.power[1] = databus.get_value(power_2_register)
         databus.set_value(power_2_register, self._get_power_2)
 
-        power_3_register = 'register_1082'
+        power_3_register = "register_1082"
         self.power[2] = databus.get_value(power_3_register)
         databus.set_value(power_3_register, self._get_power_3)
 

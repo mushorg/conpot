@@ -16,7 +16,10 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey; gevent.monkey.patch_all()
+import gevent.monkey
+
+gevent.monkey.patch_all()
+
 import logging
 import os
 import argparse
@@ -38,7 +41,9 @@ from conpot.protocols.http.web_server import HTTPServer
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.helpers import fix_sslwrap
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
-from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
+from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import (
+    KamstrupManagementServer,
+)
 from conpot.protocols.bacnet.bacnet_server import BacnetServer
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
@@ -56,7 +61,8 @@ core_interface = conpot_core.get_interface()
 
 
 def logo():
-    print("""
+    print(
+        """
                        _
    ___ ___ ___ ___ ___| |_
   |  _| . |   | . | . |  _|
@@ -65,11 +71,16 @@ def logo():
 
   Version {0}
   MushMush Foundation
-""".format(conpot.__version__))
+""".format(
+            conpot.__version__
+        )
+    )
 
 
 def on_unhandled_greenlet_exception(dead_greenlet):
-    logger.exception('Stopping because {} died: {}'.format(dead_greenlet, dead_greenlet.exception))
+    logger.exception(
+        "Stopping because {} died: {}".format(dead_greenlet, dead_greenlet.exception)
+    )
     sys.exit(1)
 
 
@@ -79,7 +90,7 @@ def setup_logging(log_file, verbose):
     else:
         log_level = logging.INFO
 
-    log_format = logging.Formatter('%(asctime)-15s %(message)s')
+    log_format = logging.Formatter("%(asctime)-15s %(message)s")
     console_log = logging.StreamHandler()
     console_log.setLevel(log_level)
     console_log.setFormatter(log_format)
@@ -97,14 +108,14 @@ def setup_logging(log_file, verbose):
 # fixme: drop privs need sudo user. Figure alternatives.
 def drop_privileges(uid_name=None, gid_name=None):
     if uid_name is None:
-        uid_name = 'nobody'
+        uid_name = "nobody"
 
     try:
         wanted_user = pwd.getpwnam(uid_name)
     except KeyError:
         logger.exception(
-            'Cannot drop privileges: user "{}" does not exist.'.
-            format(uid_name))
+            'Cannot drop privileges: user "{}" does not exist.'.format(uid_name)
+        )
         sys.exit(1)
 
     if gid_name is None:
@@ -114,18 +125,24 @@ def drop_privileges(uid_name=None, gid_name=None):
         wanted_group = grp.getgrnam(gid_name)
     except KeyError:
         logger.exception(
-            'Cannot drop privileges: group "{}" does not exist.'.
-            format(gid_name))
+            'Cannot drop privileges: group "{}" does not exist.'.format(gid_name)
+        )
         sys.exit(1)
 
-    logger.debug('Attempting to drop privileges to "{}:{}"'.
-                format(wanted_user.pw_name, wanted_group.gr_name))
+    logger.debug(
+        'Attempting to drop privileges to "{}:{}"'.format(
+            wanted_user.pw_name, wanted_group.gr_name
+        )
+    )
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
     new_user = pwd.getpwuid(os.getuid())
     new_group = grp.getgrgid(os.getgid())
-    logger.info('Privileges dropped, running as "{}:{}"'.
-                format(new_user.pw_name, new_group.gr_name))
+    logger.info(
+        'Privileges dropped, running as "{}:{}"'.format(
+            new_user.pw_name, new_group.gr_name
+        )
+    )
 
 
 def validate_template(xml_file, xsd_file):
@@ -134,7 +151,7 @@ def validate_template(xml_file, xsd_file):
     xml = etree.parse(xml_file)
     xsd.validate(xml)
     if xsd.error_log:
-        logger.error('Error parsing XML template: {}'.format(xsd.error_log))
+        logger.error("Error parsing XML template: {}".format(xsd.error_log))
         sys.exit(1)
 
 
@@ -143,34 +160,43 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-t", "--template",
-                        help="Name of one of the supplied templates, or the full path to a custom template.",
-                        default=''
-                        )
-    parser.add_argument("-f", "--force",
-                        help="Force use testing config.",
-                        metavar="testing.cfg",
-                        action='store_const',
-                        const=True,
-                        default=False
-                        )
-    parser.add_argument("-c", "--config",
-                        help="The configuration file to use",
-                        metavar="conpot.cfg",
-                        )
+    parser.add_argument(
+        "-t",
+        "--template",
+        help="Name of one of the supplied templates, or the full path to a custom template.",
+        default="",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        help="Force use testing config.",
+        metavar="testing.cfg",
+        action="store_const",
+        const=True,
+        default=False,
+    )
+    parser.add_argument(
+        "-c", "--config", help="The configuration file to use", metavar="conpot.cfg",
+    )
 
-    parser.add_argument("-l", "--logfile",
-                        help="The logfile to use",
-                        default="conpot.log"
-                        )
-    parser.add_argument("-m", "--mibcache",
-                        help="Cache directory for compiled PySNMP MIB files"
-                        )
-    parser.add_argument("--temp_dir",
-                        help="Directory where all conpot vfs related files would be kept.",
-                        default="ConpotTempFS"
-                        )
-    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Logs debug messages.')
+    parser.add_argument(
+        "-l", "--logfile", help="The logfile to use", default="conpot.log"
+    )
+    parser.add_argument(
+        "-m", "--mibcache", help="Cache directory for compiled PySNMP MIB files"
+    )
+    parser.add_argument(
+        "--temp_dir",
+        help="Directory where all conpot vfs related files would be kept.",
+        default="ConpotTempFS",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Logs debug messages.",
+    )
     args = parser.parse_args()
 
     setup_logging(args.logfile, args.verbose)
@@ -180,21 +206,25 @@ def main():
 
     if os.getuid() == 0:
         if not args.force:
-            logger.critical("Can't start conpot with root. Please ref user docs for more info.")
+            logger.critical(
+                "Can't start conpot with root. Please ref user docs for more info."
+            )
             sys.exit(3)
         else:
-            logger.warning('Running conpot with root. Running conpot with root isn\'t recommended. ')
+            logger.warning(
+                "Running conpot with root. Running conpot with root isn't recommended. "
+            )
 
     if os.getuid() == 0:
         try:
             # retrieve user to run as
-            conpot_user = config.get('daemon', 'user')
+            conpot_user = config.get("daemon", "user")
         except (NoSectionError, NoOptionError):
             conpot_user = None
 
         try:
             # retrieve group to run as
-            conpot_group = config.get('daemon', 'group')
+            conpot_group = config.get("daemon", "group")
         except (NoSectionError, NoOptionError):
             conpot_group = None
         # FIXME: drop privs require sudo
@@ -202,62 +232,74 @@ def main():
 
     # Loading default config if config not set.
     if args.force:
-        args.config = os.path.join(package_directory, 'testing.cfg')
-        logger.warning('--force option specified. Using testing configuration')
+        args.config = os.path.join(package_directory, "testing.cfg")
+        logger.warning("--force option specified. Using testing configuration")
         config.read(args.config)
     else:
         # sanity check: see that both config and template arguments are provided - else exit
         if not (args.config and args.template):
-            print('Invalid arguments supplied. Please check that you pass both template and config arguments before'
-                  ' running Conpot')
+            print(
+                "Invalid arguments supplied. Please check that you pass both template and config arguments before"
+                " running Conpot"
+            )
             sys.exit(3)
         try:
             if not os.path.isfile(os.path.join(package_directory, args.config)):
-                raise FileNotFoundError('Config file not found!')
+                raise FileNotFoundError("Config file not found!")
             args.config = os.path.join(package_directory, args.config)
-            logger.info('Config file found!')
+            logger.info("Config file found!")
             config.read(args.config)
         except FileNotFoundError:
-            logger.exception('\nCould not find config file!\nUse -f option to try the test configuration')
+            logger.exception(
+                "\nCould not find config file!\nUse -f option to try the test configuration"
+            )
             sys.exit(1)
 
     # No template specified
     if not args.template:
 
-        available_templates = os.listdir(os.path.join(package_directory, 'templates'))
+        available_templates = os.listdir(os.path.join(package_directory, "templates"))
 
         print("--------------------------------------------------")
         print(" Available templates:")
         print("--------------------------------------------------\n")
 
         for folder in available_templates:
-            template_xml = os.path.join(package_directory, 'templates', folder, 'template.xml')
+            template_xml = os.path.join(
+                package_directory, "templates", folder, "template.xml"
+            )
             if os.path.isfile(template_xml):
-                template_unit = template_vendor = template_description = template_protocols = template_creator = 'N/A'
+                template_unit = (
+                    template_vendor
+                ) = template_description = template_protocols = template_creator = "N/A"
                 dom_template = etree.parse(template_xml)
-                template_details = dom_template.xpath('//core/template/*')
+                template_details = dom_template.xpath("//core/template/*")
                 if template_details:
 
                     # retrieve all template details
                     for entity in template_details:
 
-                        if entity.attrib['name'] == 'unit':
+                        if entity.attrib["name"] == "unit":
                             template_unit = entity.text
 
-                        elif entity.attrib['name'] == 'vendor':
+                        elif entity.attrib["name"] == "vendor":
                             template_vendor = entity.text
 
-                        elif entity.attrib['name'] == 'description':
+                        elif entity.attrib["name"] == "description":
                             template_description = entity.text
 
-                        elif entity.attrib['name'] == 'protocols':
+                        elif entity.attrib["name"] == "protocols":
                             template_protocols = entity.text
 
-                        elif entity.attrib['name'] == 'creator':
+                        elif entity.attrib["name"] == "creator":
                             template_creator = entity.text
 
                     print("   --template {0}".format(folder))
-                    print("       Unit:        {0} - {1}".format(template_vendor, template_unit))
+                    print(
+                        "       Unit:        {0} - {1}".format(
+                            template_vendor, template_unit
+                        )
+                    )
                     print("       Desc:        {0}".format(template_description))
                     print("       Protocols:   {0}".format(template_protocols))
                     print("       Created by:  {0}\n".format(template_creator))
@@ -265,172 +307,234 @@ def main():
         sys.exit(0)
 
     # Custom template supplied
-    if os.path.exists(os.path.join(args.template, 'template.xml')):
+    if os.path.exists(os.path.join(args.template, "template.xml")):
         root_template_directory = args.template
     # Check if the template name can be in the default templates directory
-    elif os.path.isfile(os.path.join(package_directory, 'templates', args.template, 'template.xml')):
-        root_template_directory = os.path.join(package_directory, 'templates', args.template)
+    elif os.path.isfile(
+        os.path.join(package_directory, "templates", args.template, "template.xml")
+    ):
+        root_template_directory = os.path.join(
+            package_directory, "templates", args.template
+        )
     else:
-        logger.error('Template not found: {}'.format(args.template))
+        logger.error("Template not found: {}".format(args.template))
         sys.exit(1)
 
     # Check if the configuration file exists..
     if not os.path.isfile(args.config):
-        logger.error('Config not found: {}'.format(args.config))
+        logger.error("Config not found: {}".format(args.config))
         sys.exit(1)
 
-    logger.info('Starting Conpot using template: {}'.format(root_template_directory))
-    logger.info('Starting Conpot using configuration found in: {}'.format(args.config))
+    logger.info("Starting Conpot using template: {}".format(root_template_directory))
+    logger.info("Starting Conpot using configuration found in: {}".format(args.config))
 
     servers = list()
 
-    template_base = os.path.join(root_template_directory, 'template.xml')
+    template_base = os.path.join(root_template_directory, "template.xml")
     if os.path.isfile(template_base):
-        validate_template(template_base, os.path.join(package_directory, 'tests/template_schemas/core.xsd'))
+        validate_template(
+            template_base,
+            os.path.join(package_directory, "tests/template_schemas/core.xsd"),
+        )
         dom_base = etree.parse(template_base)
     else:
-        logger.error('Could not access template configuration')
+        logger.error("Could not access template configuration")
         sys.exit(1)
 
     session_manager = conpot_core.get_sessionManager()
     conpot_core.get_databus().initialize(template_base)
 
     # initialize the virtual file system
-    fs_url = config.get('virtual_file_system', 'fs_url')
-    data_fs_url = config.get('virtual_file_system', 'data_fs_url')
+    fs_url = config.get("virtual_file_system", "fs_url")
+    data_fs_url = config.get("virtual_file_system", "data_fs_url")
     if os.path.isdir(args.temp_dir):
         temp_dir = args.temp_dir
     else:
-        temp_dir = os.path.join(conpot.__path__[0], 'ConpotTempFS')
-        logger.info("Can't find the temp directory. Conpot VFS would be kept at : {}".format(temp_dir))
+        temp_dir = os.path.join(conpot.__path__[0], "ConpotTempFS")
+        logger.info(
+            "Can't find the temp directory. Conpot VFS would be kept at : {}".format(
+                temp_dir
+            )
+        )
         if not os.path.exists(temp_dir):
             os.mkdir(temp_dir)
-    if fs_url == 'default' or data_fs_url == 'default':
+    if fs_url == "default" or data_fs_url == "default":
         if not args.force:
-            logger.error('Can\'t start conpot with default file system')
+            logger.error("Can't start conpot with default file system")
             sys.exit(3)
         else:
             fs_url, data_fs_url = None, None
     else:
-        logger.info('Serving {} as file system. File uploads will be kept at : {}'.format(fs_url, data_fs_url))
+        logger.info(
+            "Serving {} as file system. File uploads will be kept at : {}".format(
+                fs_url, data_fs_url
+            )
+        )
     conpot_core.initialize_vfs(fs_url, data_fs_url, temp_dir)
 
     public_ip = None
-    if config.getboolean('fetch_public_ip', 'enabled'):
+    if config.getboolean("fetch_public_ip", "enabled"):
         public_ip = ext_ip.get_ext_ip(config)
-    if config.getboolean('change_mac_addr', 'enabled'):
+    if config.getboolean("change_mac_addr", "enabled"):
         if os.getuid() == 0:
-            logger.info('Attempting to change mac address.')
+            logger.info("Attempting to change mac address.")
             mac_addr.change_mac(config=config)
         else:
-            logger.info('Changing mac address require sudo permissions. Skipping')
+            logger.info("Changing mac address require sudo permissions. Skipping")
     protocol_instance_mapping = (
-        ('modbus', ModbusServer),
-        ('s7comm', S7Server),
-        ('kamstrup_meter', KamstrupServer),
-        ('kamstrup_management', KamstrupManagementServer),
-        ('http', HTTPServer),
-        ('snmp', SNMPServer),
-        ('bacnet', BacnetServer),
-        ('ipmi', IpmiServer),
-        ('guardian_ast', GuardianASTServer),
-        ('enip', EnipServer),
-        ('IEC104', IEC104Server),
-        ('ftp', FTPServer),
-        ('tftp', TftpServer)
+        ("modbus", ModbusServer),
+        ("s7comm", S7Server),
+        ("kamstrup_meter", KamstrupServer),
+        ("kamstrup_management", KamstrupManagementServer),
+        ("http", HTTPServer),
+        ("snmp", SNMPServer),
+        ("bacnet", BacnetServer),
+        ("ipmi", IpmiServer),
+        ("guardian_ast", GuardianASTServer),
+        ("enip", EnipServer),
+        ("IEC104", IEC104Server),
+        ("ftp", FTPServer),
+        ("tftp", TftpServer),
     )
 
     # no need to fork process when we don't want to change MAC address
     pid = 0
-    if config.getboolean('change_mac_addr', 'enabled'):
+    if config.getboolean("change_mac_addr", "enabled"):
         pid = gevent.fork()
 
     if pid == 0:
         for protocol in protocol_instance_mapping:
             protocol_name, server_class = protocol
-            protocol_template = os.path.join(root_template_directory, protocol_name, '{0}.xml'.format(protocol_name))
+            protocol_template = os.path.join(
+                root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
+            )
             if os.path.isfile(protocol_template):
-                if 'kamstrup' in protocol_name:
-                    kamstrup_dir, kamstrup_protocol = os.path.split((protocol_name.replace('_', '/')) + '_protocol')
-                    xsd_file = os.path.join(package_directory, 'protocols', kamstrup_dir, kamstrup_protocol,
-                                            '{0}.xsd'.format(protocol_name))
+                if "kamstrup" in protocol_name:
+                    kamstrup_dir, kamstrup_protocol = os.path.split(
+                        (protocol_name.replace("_", "/")) + "_protocol"
+                    )
+                    xsd_file = os.path.join(
+                        package_directory,
+                        "protocols",
+                        kamstrup_dir,
+                        kamstrup_protocol,
+                        "{0}.xsd".format(protocol_name),
+                    )
                 else:
-                    xsd_file = os.path.join(package_directory, 'protocols', protocol_name,
-                                            '{0}.xsd'.format(protocol_name))
+                    xsd_file = os.path.join(
+                        package_directory,
+                        "protocols",
+                        protocol_name,
+                        "{0}.xsd".format(protocol_name),
+                    )
                 validate_template(protocol_template, xsd_file)
                 dom_protocol = etree.parse(protocol_template)
-                if dom_protocol.xpath('//{0}'.format(protocol_name)):
-                    if ast.literal_eval(dom_protocol.xpath('//{0}/@enabled'.format(protocol_name))[0]):
-                        host = dom_protocol.xpath('//{0}/@host'.format(protocol_name))[0]
+                if dom_protocol.xpath("//{0}".format(protocol_name)):
+                    if ast.literal_eval(
+                        dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
+                    ):
+                        host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[
+                            0
+                        ]
                         # -- > Are we running on testing config?
-                        if 'testing.cfg' in args.config:
-                            if '127.' not in host:
+                        if "testing.cfg" in args.config:
+                            if "127." not in host:
                                 if not args.force:
-                                    logger.error('To run conpot on a non local interface, please specify -f option')
+                                    logger.error(
+                                        "To run conpot on a non local interface, please specify -f option"
+                                    )
                                     sys.exit(1)
-                        port = ast.literal_eval(dom_protocol.xpath('//{0}/@port'.format(protocol_name))[0])
-                        server = server_class(protocol_template, root_template_directory, args)
+                        port = ast.literal_eval(
+                            dom_protocol.xpath("//{0}/@port".format(protocol_name))[0]
+                        )
+                        server = server_class(
+                            protocol_template, root_template_directory, args
+                        )
                         greenlet = gevent.spawn(server.start, host, port)
                         greenlet.link_exception(on_unhandled_greenlet_exception)
                         servers.append(server)
-                        logger.info('Found and enabled {} protocol.'.format(protocol[0], server))
+                        logger.info(
+                            "Found and enabled {} protocol.".format(protocol[0])
+                        )
                 else:
-                    logger.info('{} available but disabled by configuration.'.format(protocol_name))
+                    logger.info(
+                        "{} available but disabled by configuration.".format(
+                            protocol_name
+                        )
+                    )
             else:
-                logger.debug('No {} template found. Service will remain unconfigured/stopped.', protocol_name)
+                logger.debug(
+                    "No {} template found. Service will remain unconfigured/stopped.".format(
+                        protocol_name
+                    )
+                )
 
         log_worker = LogWorker(config, dom_base, session_manager, public_ip)
         greenlet = gevent.spawn(log_worker.start)
         greenlet.link_exception(on_unhandled_greenlet_exception)
 
         # TODO: Make proxy fit into protocol_instance_mapping
-        template_proxy = os.path.join(root_template_directory, 'proxy', 'proxy.xml')
+        template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
         if os.path.isfile(template_proxy):
-            xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), 'proxy.xsd')
+            xsd_file = os.path.join(
+                os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd"
+            )
             validate_template(template_proxy, xsd_file)
             dom_proxy = etree.parse(template_proxy)
-            if dom_proxy.xpath('//proxies'):
-                if ast.literal_eval(dom_proxy.xpath('//proxies/@enabled')[0]):
-                    proxies = dom_proxy.xpath('//proxies/*')
+            if dom_proxy.xpath("//proxies"):
+                if ast.literal_eval(dom_proxy.xpath("//proxies/@enabled")[0]):
+                    proxies = dom_proxy.xpath("//proxies/*")
                     for p in proxies:
-                        name = p.attrib['name']
-                        host = p.attrib['host']
+                        name = p.attrib["name"]
+                        host = p.attrib["host"]
                         keyfile = None
                         certfile = None
-                        if 'keyfile' in p.attrib and 'certfile' in p.attrib:
-                            keyfile = p.attrib['keyfile']
-                            certfile = p.attrib['certfile']
+                        if "keyfile" in p.attrib and "certfile" in p.attrib:
+                            keyfile = p.attrib["keyfile"]
+                            certfile = p.attrib["certfile"]
 
                             # if path is absolute we assert that the cert and key is located in
                             # the templates ssl standard location
 
                             if not os.path.isabs(keyfile):
-                                keyfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', keyfile)
-                                certfile = os.path.join(os.path.dirname(root_template_directory), 'ssl', certfile)
-                        port = ast.literal_eval(p.attrib['port'])
-                        proxy_host = p.xpath('./proxy_host/text()')[0]
-                        proxy_port = ast.literal_eval(p.xpath('./proxy_port/text()')[0])
-                        decoder = p.xpath('./decoder/text()')
+                                keyfile = os.path.join(
+                                    os.path.dirname(root_template_directory),
+                                    "ssl",
+                                    keyfile,
+                                )
+                                certfile = os.path.join(
+                                    os.path.dirname(root_template_directory),
+                                    "ssl",
+                                    certfile,
+                                )
+                        port = ast.literal_eval(p.attrib["port"])
+                        proxy_host = p.xpath("./proxy_host/text()")[0]
+                        proxy_port = ast.literal_eval(p.xpath("./proxy_port/text()")[0])
+                        decoder = p.xpath("./decoder/text()")
                         if len(decoder) > 0:
                             decoder = decoder[0]
                         else:
                             decoder = None
-                        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
+                        proxy_instance = Proxy(
+                            name, proxy_host, proxy_port, decoder, keyfile, certfile
+                        )
                         proxy_server = proxy_instance.get_server(host, port)
                         servers.append(proxy_instance)
                         proxy_greenlet = gevent.spawn(proxy_server.start)
                         proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
                 else:
-                    logger.info('Proxy available but disabled by template.')
+                    logger.info("Proxy available but disabled by template.")
         else:
-            logger.info('No proxy template found. Service will remain unconfigured/stopped.')
+            logger.info(
+                "No proxy template found. Service will remain unconfigured/stopped."
+            )
         # Wait for the services to bind ports before forking
         gevent.sleep(5)
         try:
             if len(servers) > 0:
                 gevent.wait()
         except KeyboardInterrupt:
-            logging.info('Stopping Conpot')
+            logging.info("Stopping Conpot")
             for server in servers:
                 server.stop()
         finally:
@@ -443,7 +547,7 @@ def main():
         except KeyboardInterrupt:
             pass
         # Revert MAC address
-        iface = config.get('change_mac_addr', 'iface')
+        iface = config.get("change_mac_addr", "iface")
         mac_addr.revert_mac(iface)
 
 

@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import gevent.monkey
+
 gevent.monkey.patch_all()
 import os
 import unittest
@@ -28,14 +29,15 @@ import conpot.core as conpot_core
 
 
 class TestS7Server(unittest.TestCase):
-
     def setUp(self):
         self.databus = conpot_core.get_databus()
         self.dir_name = os.path.dirname(conpot.__file__)
-        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
-        args = namedtuple('FakeArgs', '')
-        self.s7_instance = S7Server(self.dir_name + '/templates/default/s7comm/s7comm.xml', 'none', args)
-        gevent.spawn(self.s7_instance.start, '127.0.0.1', 0)
+        self.databus.initialize(self.dir_name + "/templates/default/template.xml")
+        args = namedtuple("FakeArgs", "")
+        self.s7_instance = S7Server(
+            self.dir_name + "/templates/default/s7comm/s7comm.xml", "none", args
+        )
+        gevent.spawn(self.s7_instance.start, "127.0.0.1", 0)
         gevent.sleep(0.5)
         self.server_port = self.s7_instance.server.server_port
 
@@ -48,7 +50,7 @@ class TestS7Server(unittest.TestCase):
         """
         src_tsaps = (0x100, 0x200)
         dst_tsaps = (0x102, 0x200, 0x201)
-        s7_con = s7comm_client.s7('127.0.0.1', self.server_port)
+        s7_con = s7comm_client.s7("127.0.0.1", self.server_port)
         res = None
         for src_tsap in src_tsaps:
             for dst_tsap in dst_tsaps:
@@ -65,7 +67,9 @@ class TestS7Server(unittest.TestCase):
         s7_con.s.settimeout(s7_con.timeout)
         s7_con.s.connect((s7_con.ip, s7_con.port))
         s7_con.Connect()
-        identities = s7comm_client.GetIdentity('127.0.0.1', self.server_port, res[0], res[1])
+        identities = s7comm_client.GetIdentity(
+            "127.0.0.1", self.server_port, res[0], res[1]
+        )
         s7_con.plc_stop_function()
 
         dic = {
@@ -78,8 +82,8 @@ class TestS7Server(unittest.TestCase):
                 5: "88111222",
                 7: "IM151-8 PN/DP CPU",
                 10: "",
-                11: ""
-            }
+                11: "",
+            },
         }
 
         for line in identities:
@@ -91,5 +95,5 @@ class TestS7Server(unittest.TestCase):
                 raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

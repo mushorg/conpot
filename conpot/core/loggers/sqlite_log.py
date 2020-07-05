@@ -24,8 +24,7 @@ import grp
 
 
 class SQLiteLogger(object):
-
-    def _chown_db(self, path, uid_name='nobody', gid_name='nogroup'):
+    def _chown_db(self, path, uid_name="nobody", gid_name="nogroup"):
         path = path.rpartition("/")[0]
         if not os.path.isdir(path):
             os.mkdir(path)
@@ -45,7 +44,8 @@ class SQLiteLogger(object):
 
     def _create_db(self):
         cursor = self.conn.cursor()
-        cursor.execute("""CREATE TABLE IF NOT EXISTS events
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS events
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session TEXT,
@@ -54,13 +54,20 @@ class SQLiteLogger(object):
                 protocol TEXT,
                 request TEXT,
                 response TEXT
-            )""")
+            )"""
+        )
 
     def log(self, event):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
-                       (str(event["id"]), str(event["remote"]), event['data_type'],
-                        str(event["data"].get('request')), str(event["data"].get('response')))
+        cursor.execute(
+            "INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
+            (
+                str(event["id"]),
+                str(event["remote"]),
+                event["data_type"],
+                str(event["data"].get("request")),
+                str(event["data"].get("response")),
+            ),
         )
         self.conn.commit()
         return cursor.lastrowid

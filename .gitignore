@@ -40,6 +40,7 @@ nosetests.xml
 .project
 .pydevproject
 .idea
+.vscode
 config.py
 modbus_tk
 conpot.db
@@ -59,6 +60,7 @@ log/
 
 # for fs testing
 fs_test/
+
 # dir that store conpot temp file system
 ConpotTempFS/
 docs/source/api/reference
