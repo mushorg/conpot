@@ -30,6 +30,7 @@ from cpppo.server.enip import logix
 from cpppo.server.enip import parser
 from cpppo.server.enip import device
 from conpot.core.protocol_wrapper import conpot_protocol
+import conpot.core as conpot_core
 logger = logging.getLogger(__name__)
 
 
@@ -125,7 +126,9 @@ class EnipServer(object):
         Handle an incoming connection
         """
         name = "ENIP_%s" % (address[1] if address else "UDP")
+        session = conpot_core.get_session('enip', address[0], address[1], conn.getsockname()[0], conn.getsockname()[1])
         logger.debug("ENIP server %s begins serving client %s", name, address)
+        session.add_event({'type': 'NEW_CONNECTION'})
 
         tcp = (conn.family == socket.AF_INET and conn.type == socket.SOCK_STREAM)
         udp = (conn.family == socket.AF_INET and conn.type == socket.SOCK_DGRAM)
@@ -139,13 +142,13 @@ class EnipServer(object):
                 conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             except Exception as e:
                 logger.error("%s unable to set SO_KEEPALIVE for client %r: %s", name, address, e)
-            self.handle_tcp(conn, address, name=name, enip_process=enip_process, delay=delay, **kwds)
+            self.handle_tcp(conn, address, session, name=name, enip_process=enip_process, delay=delay, **kwds)
         elif udp:
             self.handle_udp(conn, name=name, enip_process=enip_process, **kwds)
         else:
             raise NotImplemented("Unknown socket protocol for EtherNet/IP CIP")
 
-    def handle_tcp(self, conn, address, name, enip_process, delay=None, **kwds):
+    def handle_tcp(self, conn, address, session, name, enip_process, delay=None, **kwds):
         """
         Handle a TCP client
         """
@@ -255,6 +258,7 @@ class EnipServer(object):
                                 logger.info("Session ended (client initiated): %s", parser.enip_format(data))
                             stats['eof'] = True
                         logger.info( "Transaction complete after %7.3fs (w/ %7.3fs delay)", cpppo.timer() - begun, delayseconds)
+                        session.add_event({'type': 'CONNECTION_CLOSED'})
                     except:
                         logger.error("Failed request: %s", parser.enip_format(data))
                         enip_process(address, data=cpppo.dotdict())  # Terminate.
@@ -361,7 +365,7 @@ class EnipServer(object):
                         conn.sendto(rpy, addr)
 
                     logger.debug("Transaction complete after %7.3fs", cpppo.timer() - begun)
-
+                    session.add_event({'type': 'CONNECTION_CLOSED'})
                     stats['processed'] = source.sent
                 except:
                     # Parsing failure.  Suck out some remaining input to give us some context, but don't re-raise
@@ -375,6 +379,7 @@ class EnipServer(object):
                         repr(memory + future), '-' * (len(repr(memory)) - 1) + '^', pos)
                     logger.error("Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n", addr, where, ''.join(
                         traceback.format_exception(*sys.exc_info())))
+                    session.add_event({'type': 'CONNECTION_FAILED'})
 
     def set_tags(self):
         typenames = {
