@@ -21,32 +21,40 @@ import subprocess
 
 
 class TestMacAddrUtil(unittest.TestCase):
-
     def setUp(self):
-        self.change_mac_process = subprocess.Popen(["ip", "li", "delete", "dummy", "type", "dummy"],
-                                                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        self.change_mac_process = subprocess.Popen(
+            ["ip", "li", "delete", "dummy", "type", "dummy"],
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+        )
 
     def tearDown(self):
         self.change_mac_process.terminate()
 
-    @unittest.skip('shunt to a later phase')
+    @unittest.skip("shunt to a later phase")
     def test_mac(self):
         """
         Objective: Test if the spoofer is able to change MAC address
         """
-        testmac = b'00:de:ad:be:ef:00'
-        iface = b'dummy'
+        testmac = b"00:de:ad:be:ef:00"
+        iface = b"dummy"
         # Load dummy module
-        s = subprocess.Popen(["modprobe", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-        # Check if dummy is loaded 
-        data = s.stdout.read()        
+        s = subprocess.Popen(
+            ["modprobe", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE
+        )
+        # Check if dummy is loaded
+        data = s.stdout.read()
         if data:
-            self.skipTest("Can't create dummy device")            
+            self.skipTest("Can't create dummy device")
         # Create a dummy network interface
-        subprocess.Popen(["ip", "li", "add", "dummy", "type", "dummy"], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        subprocess.Popen(
+            ["ip", "li", "add", "dummy", "type", "dummy"],
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+        )
         s = subprocess.Popen(["ip", "link", "show"], stdout=subprocess.PIPE)
         data = s.stdout.read()
-        if b'dummy' in data:
+        if b"dummy" in data:
             # Change mac address of dummy interface and test it
             mac_addr.change_mac(iface=iface, mac=testmac)
             flag = mac_addr._check_mac(iface, testmac)
@@ -57,5 +65,5 @@ class TestMacAddrUtil(unittest.TestCase):
             self.skipTest("Can't change MAC address")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def _check_mac(iface, addr):
-    s = subprocess.Popen(['ifconfig', iface], stdout=subprocess.PIPE)
+    s = subprocess.Popen(["ifconfig", iface], stdout=subprocess.PIPE)
     data = s.stdout.read()
     if addr in data:
         return True
@@ -31,7 +31,9 @@ def _check_mac(iface, addr):
 
 
 def _is_dhcp(iface):
-    s = subprocess.Popen(['cat', '/var/lib/dhcp/dhclient.leases'], stdout=subprocess.PIPE)
+    s = subprocess.Popen(
+        ["cat", "/var/lib/dhcp/dhclient.leases"], stdout=subprocess.PIPE
+    )
     data = s.stdout.read()
     if iface in data:
         return True
@@ -40,33 +42,45 @@ def _is_dhcp(iface):
 
 
 def _renew_lease(iface):
-    subprocess.Popen(['dhclient', '-r'], stdout=subprocess.PIPE)
-    subprocess.Popen(['dhclient', iface], stdout=subprocess.PIPE)
+    subprocess.Popen(["dhclient", "-r"], stdout=subprocess.PIPE)
+    subprocess.Popen(["dhclient", iface], stdout=subprocess.PIPE)
 
 
 def change_mac(iface=None, mac=None, config=None, revert=None):
     if config:
-        iface = config.get('change_mac_addr', 'iface')
-        mac = config.get('change_mac_addr', 'addr')
+        iface = config.get("change_mac_addr", "iface")
+        mac = config.get("change_mac_addr", "addr")
 
     # Changing MAC address and restarting network
-    subprocess.Popen(['ip', 'link', 'set', iface, 'down'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    subprocess.Popen(['ip', 'link', 'set', 'dev', iface, 'address', mac], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    subprocess.Popen(['ip', 'link', 'set', iface, 'up'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    subprocess.Popen(
+        ["ip", "link", "set", iface, "down"],
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+    )
+    subprocess.Popen(
+        ["ip", "link", "set", "dev", iface, "address", mac],
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+    )
+    subprocess.Popen(
+        ["ip", "link", "set", iface, "up"],
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+    )
 
     if _check_mac(iface, mac):
         if revert:
-            logger.info('MAC address reverted for interface %s', iface)
+            logger.info("MAC address reverted for interface %s", iface)
         else:
-            logger.info('MAC address of interface %s changed %s', iface, mac)
+            logger.info("MAC address of interface %s changed %s", iface, mac)
         if _is_dhcp(iface):
             _renew_lease(iface)
-            logger.info('Interface has a DHCP lease, refreshed.')
+            logger.info("Interface has a DHCP lease, refreshed.")
     else:
-        logger.warning('Could not change MAC address.')
+        logger.warning("Could not change MAC address.")
 
 
 def revert_mac(iface):
-    s = subprocess.Popen(['ethtool', '-P', iface], stdout=subprocess.PIPE)
-    mac = s.stdout.read().split(' ')[2].strip()
+    s = subprocess.Popen(["ethtool", "-P", iface], stdout=subprocess.PIPE)
+    mac = s.stdout.read().split(" ")[2].strip()
     change_mac(iface, mac, revert=True)

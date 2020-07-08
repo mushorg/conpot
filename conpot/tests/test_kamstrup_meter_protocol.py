@@ -36,24 +36,30 @@ class TestKamstrup(unittest.TestCase):
         # get the conpot directory
         self.dir_name = os.path.dirname(conpot.__file__)
         self.kamstrup_management_server = KamstrupServer(
-            self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml', None, None
+            self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml",
+            None,
+            None,
         )
-        self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 0)
+        self.server_greenlet = gevent.spawn(
+            self.kamstrup_management_server.start, "127.0.0.1", 0
+        )
 
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/kamstrup_382/template.xml')
+        self.databus.initialize(self.dir_name + "/templates/kamstrup_382/template.xml")
         gevent.sleep(1)
 
         self.request_parser = request_parser.KamstrupRequestParser()
-        self.command_responder = CommandResponder(self.dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml')
+        self.command_responder = CommandResponder(
+            self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml"
+        )
 
     def tearDown(self):
         self.databus.reset()
 
     def test_request_get_register(self):
         # requesting register 1033
-        request_bytes = (0x80, 0x3f, 0x10, 0x01, 0x04, 0x09, 0x18, 0x6d, 0x0d)
+        request_bytes = (0x80, 0x3F, 0x10, 0x01, 0x04, 0x09, 0x18, 0x6D, 0x0D)
         for i in range(0, len(request_bytes)):
             self.request_parser.add_byte(chr(request_bytes[i]))
             if i < len(request_bytes) - 1:
@@ -69,15 +75,24 @@ class TestKamstrup(unittest.TestCase):
         self.assertEqual(len(self.request_parser.bytes), 0)
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.kamstrup_management_server.server.server_port))
-        s.sendall(chr_py3(0x80) + chr_py3(0x3f) + chr_py3(0x10) + chr_py3(0x01) + chr_py3(0x04) + chr_py3(0x09)
-                  + chr_py3(0x18) + chr_py3(0x6d) + chr_py3(0x0d))
+        s.connect(("127.0.0.1", self.kamstrup_management_server.server.server_port))
+        s.sendall(
+            chr_py3(0x80)
+            + chr_py3(0x3F)
+            + chr_py3(0x10)
+            + chr_py3(0x01)
+            + chr_py3(0x04)
+            + chr_py3(0x09)
+            + chr_py3(0x18)
+            + chr_py3(0x6D)
+            + chr_py3(0x0D)
+        )
         data = s.recv(1024)
         s.close()
         # FIXME: verify bytes received from server - ask jkv?
         pkt = [hex(data[i]) for i in range(len(data))]
-        self.assertTrue(('0x40' in pkt) and ('0x3f' in pkt) and ('0xd' in pkt))
+        self.assertTrue(("0x40" in pkt) and ("0x3f" in pkt) and ("0xd" in pkt))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

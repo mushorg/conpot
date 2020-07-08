@@ -38,7 +38,6 @@ def _monotonic_time():
 
 
 class FakeSession(Session):
-
     def __init__(self, bmc, userid, password, port):
         self.lastpayload = None
         self.servermode = True
@@ -57,7 +56,7 @@ class FakeSession(Session):
         self.server = None
         self.sol_handler = None
         self.ipmicallback = self._generic_callback
-        logger.info('New IPMI session initialized for client (%s)', self.sockaddr)
+        logger.info("New IPMI session initialized for client (%s)", self.sockaddr)
 
     def _generic_callback(self, response):
         self.lastresponse = response
@@ -101,7 +100,9 @@ class FakeSession(Session):
                 # we are in no shape to process a packet now
                 self.server.close_server_session()
                 return
-            expectedauthcode = hmac.new(self.k1, rawdata[4:-12], hashlib.sha1).digest()[:12]
+            expectedauthcode = hmac.new(self.k1, rawdata[4:-12], hashlib.sha1).digest()[
+                :12
+            ]
             if authcode != expectedauthcode:
                 # BMC failed to assure integrity to us, drop it
                 self.server.close_server_session()
@@ -112,17 +113,19 @@ class FakeSession(Session):
                 self.server.close_server_session()
                 return
             remseqnumber = struct.unpack("<I", rawdata[10:14])[0]
-            if hasattr(self, 'remseqnumber'):
-                if remseqnumber < self.remseqnumber and self.remseqnumber != 0xffffffff:
+            if hasattr(self, "remseqnumber"):
+                if remseqnumber < self.remseqnumber and self.remseqnumber != 0xFFFFFFFF:
                     self.server.close_server_session()
                     return
             self.remseqnumber = remseqnumber
             psize = data[14] + (data[15] << 8)
-            payload = data[16:16 + psize]
+            payload = data[16 : 16 + psize]
             if encryption_bit:
                 iv = rawdata[16:32]
                 decrypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                decrypted = decrypter.decrypt(struct.pack("%dB" % len(payload[16:]), *payload[16:]))
+                decrypted = decrypter.decrypt(
+                    struct.pack("%dB" % len(payload[16:]), *payload[16:])
+                )
                 payload = struct.unpack("%dB" % len(decrypted), decrypted)
                 padsize = payload[-1] + 1
                 payload = list(payload[:-padsize])
@@ -134,12 +137,21 @@ class FakeSession(Session):
                     self.last_payload_type = None
                     self.waiting_sessions.pop(self, None)
                     if len(self.pendingpayloads) > 0:
-                        (nextpayload, nextpayloadtype, retry) = self.pendingpayloads.popleft()
-                        self.send_payload(payload=nextpayload, payload_type=nextpayloadtype, retry=retry)
+                        (
+                            nextpayload,
+                            nextpayloadtype,
+                            retry,
+                        ) = self.pendingpayloads.popleft()
+                        self.send_payload(
+                            payload=nextpayload,
+                            payload_type=nextpayloadtype,
+                            retry=retry,
+                        )
                 if self.sol_handler:
-                    self.sol_handler(payload)
+                    # FIXME: self.sol_handler(payload)
+                    pass
         else:
-            logger.error('IPMI Unrecognized payload type.')
+            logger.error("IPMI Unrecognized payload type.")
             self.server.close_server_session()
             return
 
@@ -152,28 +164,36 @@ class FakeSession(Session):
         return
 
     def _parse_payload(self, payload):
-        if hasattr(self, 'hasretried'):
+        if hasattr(self, "hasretried"):
             if self.hasretried:
                 self.hasretried = 0
                 self.tabooseq[(self.expectednetfn, self.expectedcmd, self.seqlun)] = 16
-        self.expectednetfn = 0x1ff
-        self.expectedcmd = 0x1ff
+        self.expectednetfn = 0x1FF
+        self.expectedcmd = 0x1FF
         self.waiting_sessions.pop(self, None)
         self.lastpayload = None
         self.last_payload_type = None
         response = {}
-        response['netfn'] = payload[1] >> 2
+        response["netfn"] = payload[1] >> 2
         del payload[0:5]
         # remove the trailing checksum
         del payload[-1]
-        response['command'] = payload[0]
+        response["command"] = payload[0]
         del payload[0:1]
-        response['data'] = payload
+        response["data"] = payload
         self.timeout = 0.5 + (0.5 * random.random())
         self.ipmicallback(response)
 
-    def _send_ipmi_net_payload(self, netfn=None, command=None, data=None, code=0, bridge_request=None, \
-                               retry=None, delay_xmit=None):
+    def _send_ipmi_net_payload(
+        self,
+        netfn=None,
+        command=None,
+        data=None,
+        code=0,
+        bridge_request=None,
+        retry=None,
+        delay_xmit=None,
+    ):
         if data is None:
             data = []
         if retry is None:
@@ -187,19 +207,24 @@ class FakeSession(Session):
             self.server.close_server_session()
             return
         ipmipayload = self._make_ipmi_payload(netfn, command, bridge_request, data)
-        payload_type = constants.payload_types['ipmi']
-        self.send_payload(payload=ipmipayload, payload_type=payload_type, retry=retry, delay_xmit=delay_xmit)
+        payload_type = constants.payload_types["ipmi"]
+        self.send_payload(
+            payload=ipmipayload,
+            payload_type=payload_type,
+            retry=retry,
+            delay_xmit=delay_xmit,
+        )
 
     def _make_ipmi_payload(self, netfn, command, bridge_request=None, data=()):
         bridge_msg = []
         self.expectedcmd = command
         self.expectednetfn = netfn + 1
         # IPMI spec forbids gaps bigger then 7 in seq number.
-        seqincrement = 7
+        # seqincrement = 7
 
         if bridge_request:
-            addr = bridge_request.get('addr', 0x0)
-            channel = bridge_request.get('channel', 0x0)
+            addr = bridge_request.get("addr", 0x0)
+            channel = bridge_request.get("channel", 0x0)
             bridge_msg = self._make_bridge_request_msg(channel, netfn, command)
             rqaddr = constants.IPMI_BMC_ADDRESS
             rsaddr = addr
@@ -219,7 +244,6 @@ class FakeSession(Session):
             payload.append(tail_csum)
         return payload
 
-
     def _aespad(self, data):
         newdata = list(data)
         currlen = len(data) + 1
@@ -233,7 +257,14 @@ class FakeSession(Session):
         newdata.append(neededpad)
         return newdata
 
-    def send_payload(self, payload=(), payload_type=None, retry=True, delay_xmit=None, needskeepalive=False):
+    def send_payload(
+        self,
+        payload=(),
+        payload_type=None,
+        retry=True,
+        delay_xmit=None,
+        needskeepalive=False,
+    ):
         if payload and self.lastpayload:
             self.pendingpayloads.append((payload, payload_type, retry))
             return
@@ -242,7 +273,7 @@ class FakeSession(Session):
         if not payload:
             payload = self.lastpayload
         # constant RMCP header for IPMI
-        message = [0x6, 0x00, 0xff, 0x07]
+        message = [0x6, 0x00, 0xFF, 0x07]
         if retry:
             self.lastpayload = payload
             self.last_payload_type = payload_type
@@ -279,30 +310,37 @@ class FakeSession(Session):
                     # if no pad needed, then we take no more action
                     pad = 16 - pad
                 newpsize = psize + pad + 17
-                message.append(newpsize & 0xff)
+                message.append(newpsize & 0xFF)
                 message.append(newpsize >> 8)
                 iv = os.urandom(16)
                 message += list(struct.unpack("16B", iv))
                 payloadtocrypt = self._aespad(payload)
                 crypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                crypted = crypter.encrypt(struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt))
+                crypted = crypter.encrypt(
+                    struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)
+                )
                 crypted = list(struct.unpack("%dB" % len(crypted), crypted))
                 message += crypted
             else:
                 # no confidetiality algorithm
-                message.append(psize & 0xff)
+                message.append(psize & 0xFF)
                 message.append(psize >> 8)
                 message += list(payload)
             if self.integrityalgo:
                 neededpad = (len(message) - 2) % 4
                 if neededpad:
                     neededpad = 4 - neededpad
-                message += [0xff] * neededpad
+                message += [0xFF] * neededpad
                 message.append(neededpad)
                 message.append(7)
                 integdata = message[4:]
-                authcode = hmac.new(self.k1, struct.pack("%dB" % len(integdata), *integdata),
-                                    hashlib.sha1).digest()[:12]  # SHA1-96 - per RFC2404 truncates to 96 bits
+                authcode = hmac.new(
+                    self.k1,
+                    struct.pack("%dB" % len(integdata), *integdata),
+                    hashlib.sha1,
+                ).digest()[
+                    :12
+                ]  # SHA1-96 - per RFC2404 truncates to 96 bits
                 message += struct.unpack("12B", authcode)
         self.netpacket = struct.pack("!%dB" % len(message), *message)
         self.stage += 1
@@ -319,19 +357,21 @@ class FakeSession(Session):
         if delay_xmit is not None:
             # skip transmit, let retry timer do it's thing
             self.waiting_sessions[self] = {}
-            self.waiting_sessions[self]['ipmisession'] = self
-            self.waiting_sessions[self]['timeout'] = delay_xmit + _monotonic_time()
+            self.waiting_sessions[self]["ipmisession"] = self
+            self.waiting_sessions[self]["timeout"] = delay_xmit + _monotonic_time()
             return
         if self.sockaddr:
             self.send_data(self.netpacket, self.sockaddr)
         else:
             self.allsockaddrs = []
             try:
-                for res in socket.getaddrinfo(self.bmc, self.port, 0, socket.SOCK_DGRAM):
+                for res in socket.getaddrinfo(
+                    self.bmc, self.port, 0, socket.SOCK_DGRAM
+                ):
                     sockaddr = res[4]
                     if res[0] == socket.AF_INET:
                         # convert the sockaddr to AF_INET6
-                        newhost = '::ffff:' + sockaddr[0]
+                        newhost = "::ffff:" + sockaddr[0]
                         sockaddr = (newhost, sockaddr[1], 0, 0)
                     self.allsockaddrs.append(sockaddr)
                     self.bmc_handlers[sockaddr] = self
@@ -340,10 +380,10 @@ class FakeSession(Session):
                 raise exc.IpmiException("Unable to transmit to specified address")
         if retry:
             self.waiting_sessions[self] = {}
-            self.waiting_sessions[self]['ipmisession'] = self
-            self.waiting_sessions[self]['timeout'] = self.timeout + _monotonic_time()
+            self.waiting_sessions[self]["ipmisession"] = self
+            self.waiting_sessions[self]["timeout"] = self.timeout + _monotonic_time()
 
     def send_data(self, packet, address):
-        logger.info('IPMI response sent to %s', address)
-        logger.debug('IPMI: Sending response {} to client {}'.format(packet, address))
+        logger.info("IPMI response sent to %s", address)
+        logger.debug("IPMI: Sending response {} to client {}".format(packet, address))
         self.socket.sendto(packet, address)

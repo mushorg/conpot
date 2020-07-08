@@ -21,20 +21,24 @@ import unittest
 import conpot
 from gevent import socket
 import conpot.core as conpot_core
-from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import KamstrupManagementServer
+from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import (
+    KamstrupManagementServer,
+)
 from conpot.tests.data.kamstrup_management_data import RESPONSES
 
 
-def check_command_resp_help_message(packet_type, help_msg_command, packet_msg_command, kamstrup_management_server):
+def check_command_resp_help_message(
+    packet_type, help_msg_command, packet_msg_command, kamstrup_management_server
+):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('127.0.0.1', kamstrup_management_server.server.server_port))
+    s.connect(("127.0.0.1", kamstrup_management_server.server.server_port))
     _ = s.recv(1024)  # receive the banner
     s.sendall(help_msg_command)  # test the help command
     help_data = s.recv(1024)
-    help_response = (help_data == RESPONSES['H'][packet_type])
+    help_response = help_data == RESPONSES["H"][packet_type]
     s.sendall(packet_msg_command)
     pkt_data = s.recv(1024)
-    packet_resp = (pkt_data == RESPONSES[packet_type])
+    packet_resp = pkt_data == RESPONSES[packet_type]
     s.close()
     return help_response and packet_resp
 
@@ -53,13 +57,18 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
         # get the conpot directory
         self.dir_name = os.path.dirname(conpot.__file__)
         self.kamstrup_management_server = KamstrupManagementServer(
-            self.dir_name + '/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml', None, None
+            self.dir_name
+            + "/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml",
+            None,
+            None,
         )
-        self.server_greenlet = gevent.spawn(self.kamstrup_management_server.start, '127.0.0.1', 0)
+        self.server_greenlet = gevent.spawn(
+            self.kamstrup_management_server.start, "127.0.0.1", 0
+        )
 
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/kamstrup_382/template.xml')
+        self.databus.initialize(self.dir_name + "/templates/kamstrup_382/template.xml")
         gevent.sleep(1)
 
     def tearDown(self):
@@ -70,89 +79,162 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
 
     def test_help_command(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.kamstrup_management_server.server.server_port))
+        s.connect(("127.0.0.1", self.kamstrup_management_server.server.server_port))
         _ = s.recv(1024)  # receive the banner
-        s.sendall(b'H\r\n')  # test the help command
+        s.sendall(b"H\r\n")  # test the help command
         data = s.recv(1024)
         s.close()
-        self.assertEqual(data, RESPONSES['H']['H'])
+        self.assertEqual(data, RESPONSES["H"]["H"])
 
     def test_set_config_command(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.kamstrup_management_server.server.server_port))
+        s.connect(("127.0.0.1", self.kamstrup_management_server.server.server_port))
         _ = s.recv(1024)  # receive the banner
-        s.sendall(b'H !SC\r\n')  # test the help command
+        s.sendall(b"H !SC\r\n")  # test the help command
         data = s.recv(1024)
         s.close()
-        self.assertEqual(data, RESPONSES['H']['!SC'])
+        self.assertEqual(data, RESPONSES["H"]["!SC"])
 
     def test_access_control_command(self):
-        self.assertTrue(check_command_resp_help_message('!AC', b'H !AC\r\n', b'!AC 0 2 192.168.1.211\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!AC",
+                b"H !AC\r\n",
+                b"!AC 0 2 192.168.1.211\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_alarm_server_command(self):
-        self.assertTrue(check_command_resp_help_message('!AS', b'H !AS\r\n', b'!AC 192.168.1.4 4000\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!AS",
+                b"H !AS\r\n",
+                b"!AC 192.168.1.4 4000\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_get_config_command(self):
-        self.assertTrue(check_command_resp_help_message('!GC', b'H !GC\r\n', b'!GC\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!GC", b"H !GC\r\n", b"!GC\r\n", self.kamstrup_management_server
+            )
+        )
 
     def test_get_software_version_command(self):
-        self.assertTrue(check_command_resp_help_message('!GV', b'H !GV\r\n', b'!GV\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!GV", b"H !GV\r\n", b"!GV\r\n", self.kamstrup_management_server
+            )
+        )
 
     def test_set_kap1_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SA', b'H !SA\r\n', b'!SA 192168001002 61000\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SA",
+                b"H !SA\r\n",
+                b"!SA 192168001002 61000\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_kap2_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SB', b'H !SB\r\n', b'!SB 192.168.1.2 61000\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SB",
+                b"H !SB\r\n",
+                b"!SB 192.168.1.2 61000\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_device_name_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SD', b'H !SD\r\n', b'!SD\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SD", b"H !SD\r\n", b"!SD\r\n", self.kamstrup_management_server
+            )
+        )
 
     def test_set_lookup_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SH', b'H !SH\r\n', b'!SH hosting.kamstrup_meter.dk\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SH",
+                b"H !SH\r\n",
+                b"!SH hosting.kamstrup_meter.dk\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_ip_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SI', b'H !SI\r\n', b'!SI 192168001200\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SI",
+                b"H !SI\r\n",
+                b"!SI 192168001200\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_watchdog_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SK', b'H !SK\r\n', b'!SK 3600 60 10\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SK",
+                b"H !SK\r\n",
+                b"!SK 3600 60 10\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_name_server_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SN',
-                                                        b'H !SN\r\n',
-                                                        b'!SN 192168001200 192168001201 000000000000\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SN",
+                b"H !SN\r\n",
+                b"!SN 192168001200 192168001201 000000000000\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_ports_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SP', b'H !SP\r\n', b'!SP 50 1025 1026 50100\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SP",
+                b"H !SP\r\n",
+                b"!SP 50 1025 1026 50100\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_set_serial_command(self):
         # TODO: verify that values in the databus have actually changed!
-        self.assertTrue(check_command_resp_help_message('!SS', b'H !SS\r\n', b'!SS B 115200,8,E,1,L\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!SS",
+                b"H !SS\r\n",
+                b"!SS B 115200,8,E,1,L\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
     def test_request_connect_command(self):
-        self.assertTrue(check_command_resp_help_message('!RC', b'H !RC\r\n', b'!RC A 195.215.168.45\r\n',
-                                                        self.kamstrup_management_server))
+        self.assertTrue(
+            check_command_resp_help_message(
+                "!RC",
+                b"H !RC\r\n",
+                b"!RC A 195.215.168.45\r\n",
+                self.kamstrup_management_server,
+            )
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

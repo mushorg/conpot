@@ -28,7 +28,6 @@ import http.server
 import http.client
 import os
 from lxml import etree
-from lxml.etree import XPathEvalError
 from conpot.helpers import str_to_bytes
 import conpot.core as conpot_core
 import gevent
@@ -38,25 +37,45 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPServer(http.server.BaseHTTPRequestHandler):
-
     def log(self, version, request_type, addr, request, response=None):
 
-        session = conpot_core.get_session('http', addr[0], addr[1], self.connection._sock.getsockname()[0], self.connection._sock.getsockname()[1])
+        session = conpot_core.get_session(
+            "http",
+            addr[0],
+            addr[1],
+            self.connection._sock.getsockname()[0],
+            self.connection._sock.getsockname()[1],
+        )
 
-        log_dict = {'remote': addr,
-                    'timestamp': datetime.utcnow(),
-                    'data_type': 'http',
-                    'dst_port': self.server.server_port,
-                    'data': {0: {'request': '{0} {1}: {2}'.format(version, request_type, request)}}}
+        log_dict = {
+            "remote": addr,
+            "timestamp": datetime.utcnow(),
+            "data_type": "http",
+            "dst_port": self.server.server_port,
+            "data": {
+                0: {"request": "{0} {1}: {2}".format(version, request_type, request)}
+            },
+        }
 
-        logger.info('%s %s request from %s: %s. %s', version, request_type, addr, request, session.id)
+        logger.info(
+            "%s %s request from %s: %s. %s",
+            version,
+            request_type,
+            addr,
+            request,
+            session.id,
+        )
 
         if response:
-            logger.info('%s response to %s: %s. %s', version, addr, response, session.id)
-            log_dict['data'][0]['response'] = '{0} response: {1}'.format(version, response)
-            session.add_event({'request': str(request), 'response': str(response)})
+            logger.info(
+                "%s response to %s: %s. %s", version, addr, response, session.id
+            )
+            log_dict["data"][0]["response"] = "{0} response: {1}".format(
+                version, response
+            )
+            session.add_event({"request": str(request), "response": str(response)})
         else:
-            session.add_event({'request': str(request)})
+            session.add_event({"request": str(request)})
 
         # FIXME: Proper logging
 
@@ -70,7 +89,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # retrieve all headers assigned to this entity
             for header in xml_headers:
-                headers.append((header.attrib['name'], header.text))
+                headers.append((header.attrib["name"], header.text))
 
         return headers
 
@@ -81,12 +100,12 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         )
 
         if xml_triggers:
-            paramlist = rqparams.split('&')
+            paramlist = rqparams.split("&")
 
             # retrieve all subselect triggers assigned to this entity
             for triggers in xml_triggers:
 
-                triggerlist = triggers.text.split(';')
+                triggerlist = triggers.text.split(";")
                 trigger_missed = False
 
                 for trigger in triggerlist:
@@ -94,7 +113,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                         trigger_missed = True
 
                 if not trigger_missed:
-                    return triggers.attrib['appendix']
+                    return triggers.attrib["appendix"]
 
         return None
 
@@ -109,20 +128,21 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # retrieve all headers assigned to this entity
             for trailer in xml_trailers:
-                trailers.append((trailer.attrib['name'], trailer.text))
+                trailers.append((trailer.attrib["name"], trailer.text))
 
         return trailers
 
     def get_status_headers(self, status, headers, configuration):
 
-        xml_headers = configuration.xpath('//http/statuscodes/status[@name="' +
-                                          str(status) + '"]/headers/*')
+        xml_headers = configuration.xpath(
+            '//http/statuscodes/status[@name="' + str(status) + '"]/headers/*'
+        )
 
         if xml_headers:
 
             # retrieve all headers assigned to this status
             for header in xml_headers:
-                headers.append((header.attrib['name'], header.text))
+                headers.append((header.attrib["name"], header.text))
 
         return headers
 
@@ -137,7 +157,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # retrieve all trailers assigned to this status
             for trailer in xml_trailers:
-                trailers.append((trailer.attrib['name'], trailer.text))
+                trailers.append((trailer.attrib["name"], trailer.text))
 
         return trailers
 
@@ -154,10 +174,12 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             if code in self.responses:
                 message = self.responses[code][0]
             else:
-                message = ''
+                message = ""
 
-        if self.request_version != 'HTTP/0.9':
-            msg = str_to_bytes("{} {} {}\r\n".format(self.protocol_version, code, message))
+        if self.request_version != "HTTP/0.9":
+            msg = str_to_bytes(
+                "{} {} {}\r\n".format(self.protocol_version, code, message)
+            )
             self.wfile.write(msg)
 
         # the following two headers are omitted, which is why we override
@@ -177,22 +199,32 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # retrieve and return (substituted) payload
         return parser.payload
 
-    def load_status(self, status, requeststring, requestheaders, headers, configuration, docpath, method='GET', body=None):
+    def load_status(
+        self,
+        status,
+        requeststring,
+        requestheaders,
+        headers,
+        configuration,
+        docpath,
+        method="GET",
+        body=None,
+    ):
         """Retrieves headers and payload for a given status code.
            Certain status codes can be configured to forward the
            request to a remote system. If not available, generate
            a minimal response"""
 
         # handle PROXY tag
-        entity_proxy = configuration.xpath('//http/statuscodes/status[@name="' +
-                                           str(status) +
-                                           '"]/proxy')
+        entity_proxy = configuration.xpath(
+            '//http/statuscodes/status[@name="' + str(status) + '"]/proxy'
+        )
 
         if entity_proxy:
-            source = 'proxy'
-            target = entity_proxy[0].xpath('./text()')[0]
+            source = "proxy"
+            target = entity_proxy[0].xpath("./text()")[0]
         else:
-            source = 'filesystem'
+            source = "filesystem"
 
         # handle TARPIT tag
         entity_tarpit = configuration.xpath(
@@ -200,7 +232,9 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         )
 
         if entity_tarpit:
-            tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
+            tarpit = self.server.config_sanitize_tarpit(
+                entity_tarpit[0].xpath("./text()")[0]
+            )
         else:
             tarpit = None
 
@@ -216,7 +250,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
-        if source == 'filesystem':
+        if source == "filesystem":
 
             # retrieve headers from entities configuration block
             headers = self.get_status_headers(status, headers, configuration)
@@ -229,12 +263,15 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             try:
                 if not isinstance(status, int):
                     status = status.value
-                with open(os.path.join(docpath, 'statuscodes', str(int(status)) + '.status'), 'rb') as f:
+                with open(
+                    os.path.join(docpath, "statuscodes", str(int(status)) + ".status"),
+                    "rb",
+                ) as f:
                     payload = f.read()
 
             except IOError as e:
-                logger.exception('%s', e)
-                payload = ''
+                logger.exception("%s", e)
+                payload = ""
 
             # there might be template data that can be substituted within the
             # payload. We only substitute data that is going to be displayed
@@ -244,24 +281,25 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             payload = self.substitute_template_fields(payload)
 
             # How do we transport the content?
-            chunked_transfer = configuration.xpath('//http/htdocs/node[@name="' +
-                                                   str(status) + '"]/chunks')
+            chunked_transfer = configuration.xpath(
+                '//http/htdocs/node[@name="' + str(status) + '"]/chunks'
+            )
 
             if chunked_transfer:
                 # Append a chunked transfer encoding header
-                headers.append(('Transfer-Encoding', 'chunked'))
-                chunks = str(chunked_transfer[0].xpath('./text()')[0])
+                headers.append(("Transfer-Encoding", "chunked"))
+                chunks = str(chunked_transfer[0].xpath("./text()")[0])
             else:
                 # Calculate and append a content length header
-                headers.append(('Content-Length', payload.__len__()))
-                chunks = '0'
+                headers.append(("Content-Length", payload.__len__()))
+                chunks = "0"
 
             return status, headers, trailers, payload, chunks
 
         # the requested status code is configured to forward the
         # originally targeted resource to a remote system.
 
-        elif source == 'proxy':
+        elif source == "proxy":
 
             # open a connection to the remote system.
             # If something goes wrong, fall back to 503.
@@ -270,20 +308,22 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             # platform independent way to check file accessibility.
 
             trailers = []
-            chunks = '0'
+            chunks = "0"
 
             try:
                 # Modify a few headers to fit our new destination and the fact
                 # that we're proxying while being unaware of any session foo..
-                requestheaders['Host'] = target
-                requestheaders['Connection'] = 'close'
+                requestheaders["Host"] = target
+                requestheaders["Connection"] = "close"
 
                 conn = http.client.HTTPConnection(target)
                 conn.request(method, requeststring, body, dict(requestheaders))
                 response = conn.getresponse()
 
                 remotestatus = int(response.status)
-                headers = response.getheaders()   # We REPLACE the headers to avoid duplicates!
+                headers = (
+                    response.getheaders()
+                )  # We REPLACE the headers to avoid duplicates!
                 payload = response.read()
 
                 # WORKAROUND: to get around a strange httplib-behaviour when it comes
@@ -292,7 +332,10 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
                 for i, header in enumerate(headers):
 
-                    if header[0].lower() == 'transfer-encoding' and header[1].lower() == 'chunked':
+                    if (
+                        header[0].lower() == "transfer-encoding"
+                        and header[1].lower() == "chunked"
+                    ):
                         del headers[i]
                         break
 
@@ -307,21 +350,23 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, trailers, payload, chunks) = self.load_status(503,
-                                                                                    requeststring,
-                                                                                    self.headers,
-                                                                                    headers,
-                                                                                    configuration,
-                                                                                    docpath)
+                    (status, headers, trailers, payload, chunks) = self.load_status(
+                        503,
+                        requeststring,
+                        self.headers,
+                        headers,
+                        configuration,
+                        docpath,
+                    )
 
                 else:
 
                     # oops, we're heading towards an infinite loop here,
                     # generate a minimal 503 response regardless of the configuration.
                     status = 503
-                    payload = ''
-                    chunks = '0'
-                    headers.append(('Content-Length', 0))
+                    payload = ""
+                    chunks = "0"
+                    headers.append(("Content-Length", 0))
 
             return status, headers, trailers, payload, chunks
 
@@ -332,37 +377,41 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         """
 
         # extract filename and GET parameters from request string
-        rqfilename = requeststring.partition('?')[0]
-        rqparams = requeststring.partition('?')[2]
+        rqfilename = requeststring.partition("?")[0]
+        rqparams = requeststring.partition("?")[2]
 
         # handle ALIAS tag
         entity_alias = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/alias'
         )
         if entity_alias:
-            rqfilename = entity_alias[0].xpath('./text()')[0]
+            rqfilename = entity_alias[0].xpath("./text()")[0]
 
         # handle SUBSELECT tag
-        rqfilename_appendix = self.get_trigger_appendix(rqfilename, rqparams, configuration)
+        rqfilename_appendix = self.get_trigger_appendix(
+            rqfilename, rqparams, configuration
+        )
         if rqfilename_appendix:
-            rqfilename += '_' + rqfilename_appendix
+            rqfilename += "_" + rqfilename_appendix
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/proxy'
         )
         if entity_proxy:
-            source = 'proxy'
-            target = entity_proxy[0].xpath('./text()')[0]
+            source = "proxy"
+            target = entity_proxy[0].xpath("./text()")[0]
         else:
-            source = 'filesystem'
+            source = "filesystem"
 
         # handle TARPIT tag
         entity_tarpit = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/tarpit'
         )
         if entity_tarpit:
-            tarpit = self.server.config_sanitize_tarpit(entity_tarpit[0].xpath('./text()')[0])
+            tarpit = self.server.config_sanitize_tarpit(
+                entity_tarpit[0].xpath("./text()")[0]
+            )
         else:
             tarpit = None
 
@@ -378,7 +427,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
-        if source == 'filesystem':
+        if source == "filesystem":
 
             # handle STATUS tag
             # ( filesystem only, since proxied requests come with their own status )
@@ -386,7 +435,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 '//http/htdocs/node[@name="' + rqfilename + '"]/status'
             )
             if entity_status:
-                status = int(entity_status[0].xpath('./text()')[0])
+                status = int(entity_status[0].xpath("./text()")[0])
             else:
                 status = 200
 
@@ -404,13 +453,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 relrqfilename = rqfilename
 
             try:
-                with open(os.path.join(docpath, 'htdocs', relrqfilename), 'rb') as f:
+                with open(os.path.join(docpath, "htdocs", relrqfilename), "rb") as f:
                     payload = f.read()
 
             except IOError as e:
-                if not os.path.isdir(os.path.join(docpath, 'htdocs', relrqfilename)):
-                    logger.error('Failed to get template content: %s', e)
-                payload = ''
+                if not os.path.isdir(os.path.join(docpath, "htdocs", relrqfilename)):
+                    logger.error("Failed to get template content: %s", e)
+                payload = ""
 
             # there might be template data that can be substituted within the
             # payload. We only substitute data that is going to be displayed
@@ -418,7 +467,10 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             templated = False
             for header in headers:
-                if header[0].lower() == 'content-type' and header[1].lower() == 'text/html':
+                if (
+                    header[0].lower() == "content-type"
+                    and header[1].lower() == "text/html"
+                ):
                     templated = True
 
             if templated:
@@ -432,19 +484,19 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             if chunked_transfer:
                 # Calculate and append a chunked transfer encoding header
-                headers.append(('Transfer-Encoding', 'chunked'))
-                chunks = str(chunked_transfer[0].xpath('./text()')[0])
+                headers.append(("Transfer-Encoding", "chunked"))
+                chunks = str(chunked_transfer[0].xpath("./text()")[0])
             else:
                 # Calculate and append a content length header
-                headers.append(('Content-Length', payload.__len__()))
-                chunks = '0'
+                headers.append(("Content-Length", payload.__len__()))
+                chunks = "0"
 
             return status, headers, trailers, payload, chunks
 
         # the requested resource resides on another server,
         # so we act as a proxy between client and target system
 
-        elif source == 'proxy':
+        elif source == "proxy":
 
             # open a connection to the remote system.
             # If something goes wrong, fall back to 503
@@ -457,18 +509,17 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 response = conn.getresponse()
 
                 status = int(response.status)
-                headers = response.getheaders()    # We REPLACE the headers to avoid duplicates!
+                headers = (
+                    response.getheaders()
+                )  # We REPLACE the headers to avoid duplicates!
                 payload = response.read()
-                chunks = '0'
+                chunks = "0"
 
             except:
                 status = 503
-                (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                                requeststring,
-                                                                                self.headers,
-                                                                                headers,
-                                                                                configuration,
-                                                                                docpath)
+                (status, headers, trailers, payload, chunks) = self.load_status(
+                    status, requeststring, self.headers, headers, configuration, docpath
+                )
 
             return status, headers, trailers, payload, chunks
 
@@ -476,25 +527,25 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         """Send payload via chunked transfer encoding to the
         client, followed by eventual trailers."""
 
-        chunk_list = chunks.split(',')
+        chunk_list = chunks.split(",")
         pointer = 0
         for cwidth in chunk_list:
             cwidth = int(cwidth)
             # send chunk length indicator
-            self.wfile.write(format(cwidth, 'x').upper() + "\r\n")
+            self.wfile.write(format(cwidth, "x").upper() + "\r\n")
             # send chunk payload
-            self.wfile.write(payload[pointer:pointer + cwidth] + "\r\n")
+            self.wfile.write(payload[pointer : pointer + cwidth] + "\r\n")
             pointer += cwidth
 
         # is there another chunk that has not been configured? Send it anyway for the sake of completeness..
         if len(payload) > pointer:
             # send chunk length indicator
-            self.wfile.write(format(len(payload) - pointer, 'x').upper() + "\r\n")
+            self.wfile.write(format(len(payload) - pointer, "x").upper() + "\r\n")
             # send chunk payload
             self.wfile.write(payload[pointer:] + "\r\n")
 
         # we're done with the payload. Send a zero chunk as EOF indicator
-        self.wfile.write('0'+"\r\n")
+        self.wfile.write("0" + "\r\n")
 
         # if there are trailing headers :-) we send them now..
         for trailer in trailers:
@@ -514,10 +565,10 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         configuration = self.server.configuration
         docpath = self.server.docpath
 
-        if not hasattr(self, 'headers'):
-            self.headers = self.MessageClass(self.rfile, 0)
+        if not hasattr(self, "headers"):
+            self.headers = self.MessageClass(self.rfile)
 
-        trace_data_length = self.headers.get('content-length')
+        trace_data_length = self.headers.get("content-length")
         unsupported_request_data = None
 
         if trace_data_length:
@@ -525,21 +576,23 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # there are certain situations where variables are (not yet) registered
         # ( e.g. corrupted request syntax ). In this case, we set them manually.
-        if hasattr(self, 'path') and self.path is not None:
+        if hasattr(self, "path") and self.path is not None:
             requeststring = self.path
         else:
-            requeststring = ''
+            requeststring = ""
             self.path = None
             if message is not None:
                 logger.info(message)
 
         # generate the appropriate status code, header and payload
-        (status, headers, trailers, payload, chunks) = self.load_status(code,
-                                                                        requeststring.partition('?')[0],
-                                                                        self.headers,
-                                                                        headers,
-                                                                        configuration,
-                                                                        docpath)
+        (status, headers, trailers, payload, chunks) = self.load_status(
+            code,
+            requeststring.partition("?")[0],
+            self.headers,
+            headers,
+            configuration,
+            docpath,
+        )
 
         # send http status to client
         self.send_response(status)
@@ -551,7 +604,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # decide upon sending content as a whole or chunked
-        if chunks == '0':
+        if chunks == "0":
             # send payload as a whole to the client
             if type(payload) != bytes:
                 payload = payload.encode()
@@ -561,9 +614,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             self.send_chunked(chunks, payload, trailers)
 
         # loggers
-        self.log(self.request_version, self.command, self.client_address, (self.path,
-                                                                           self.headers._headers,
-                                                                           unsupported_request_data), status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, unsupported_request_data),
+            status,
+        )
 
     def do_TRACE(self):
         """Handle TRACE requests."""
@@ -579,7 +636,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        trace_data_length = self.headers.get('content-length')
+        trace_data_length = self.headers.get("content-length")
         trace_data = None
 
         if trace_data_length:
@@ -590,23 +647,22 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                            self.path,
-                                                                            self.headers,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath)
+            (status, headers, _, payload, _) = self.load_status(
+                status, self.path, self.headers, headers, configuration, docpath
+            )
 
         else:
 
             # Method is enabled
             status = 200
-            payload = ''
-            headers.append(('Content-Type', 'message/http'))
+            payload = ""
+            headers.append(("Content-Type", "message/http"))
 
             # Gather all request data and return it to sender..
             for rqheader in self.headers:
-                payload = payload + str(rqheader) + ': ' + self.headers.get(rqheader) + "\n"
+                payload = (
+                    payload + str(rqheader) + ": " + self.headers.get(rqheader) + "\n"
+                )
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -623,11 +679,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
         # loggers
-        self.log(self.request_version,
-                 self.command,
-                 self.client_address,
-                 (self.path, self.headers._headers, trace_data),
-                 status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, trace_data),
+            status,
+        )
 
     def do_HEAD(self):
         """Handle HEAD requests."""
@@ -643,7 +701,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        head_data_length = self.headers.get('content-length')
+        head_data_length = self.headers.get("content-length")
         head_data = None
 
         if head_data_length:
@@ -654,42 +712,37 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                            self.path,
-                                                                            self.headers,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath)
+            (status, headers, _, _, _) = self.load_status(
+                status, self.path, self.headers, headers, configuration, docpath
+            )
 
         else:
 
             # try to find a configuration item for this HEAD request
             try:
                 entity_xml = configuration.xpath(
-                    '//http/htdocs/node[@name="'
-                    + self.path.partition('?')[0] + '"]'
+                    '//http/htdocs/node[@name="' + self.path.partition("?")[0] + '"]'
                 )
-            except XPathEvalError:
+            except etree.XPathEvalError:
                 entity_xml = None
-                logger.debug('Malformed HTTP:HEAD URN. Failed to handle <{}>. (Client: {})'.format(self.path,
-                                                                                                   self.client_address))
+                logger.debug(
+                    "Malformed HTTP:HEAD URN. Failed to handle <{}>. (Client: {})".format(
+                        self.path, self.client_address
+                    )
+                )
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
-                (status, headers, trailers, payload, chunks) = self.load_entity(self.path,
-                                                                                headers,
-                                                                                configuration,
-                                                                                docpath)
+                (status, headers, _, _, _) = self.load_entity(
+                    self.path, headers, configuration, docpath
+                )
 
             else:
                 # No config item could be found. Fall back to a standard 404..
                 status = 404
-                (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                                self.path,
-                                                                                self.headers,
-                                                                                headers,
-                                                                                configuration,
-                                                                                docpath)
+                (status, headers, _, _, _) = self.load_status(
+                    status, self.path, self.headers, headers, configuration, docpath
+                )
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -701,11 +754,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # loggers
-        self.log(self.request_version,
-                 self.command,
-                 self.client_address,
-                 (self.path, self.headers._headers, head_data),
-                 status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, head_data),
+            status,
+        )
 
     def do_OPTIONS(self):
         """Handle OPTIONS requests."""
@@ -721,7 +776,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        options_data_length = self.headers.get('content-length')
+        options_data_length = self.headers.get("content-length")
         options_data = None
 
         if options_data_length:
@@ -732,40 +787,37 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                            self.path,
-                                                                            self.headers,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath)
+            (status, headers, _, payload, _) = self.load_status(
+                status, self.path, self.headers, headers, configuration, docpath
+            )
 
         else:
 
             status = 200
-            payload = ''
+            payload = ""
 
             # Add ALLOW header to response. GET, POST and OPTIONS are static, HEAD and TRACE are dynamic
-            allowed_methods = 'GET'
+            allowed_methods = "GET"
 
             if self.server.disable_method_head is False:
                 # add head to list of allowed methods
-                allowed_methods += ',HEAD'
+                allowed_methods += ",HEAD"
 
-            allowed_methods += ',POST,OPTIONS'
+            allowed_methods += ",POST,OPTIONS"
 
             if self.server.disable_method_trace is False:
-                allowed_methods += ',TRACE'
+                allowed_methods += ",TRACE"
 
-            headers.append(('Allow', allowed_methods))
+            headers.append(("Allow", allowed_methods))
 
             # Calculate and append a content length header
-            headers.append(('Content-Length', payload.__len__()))
+            headers.append(("Content-Length", payload.__len__()))
 
             # Append CC header
-            headers.append(('Connection', 'close'))
+            headers.append(("Connection", "close"))
 
             # Append CT header
-            headers.append(('Content-Type', 'text/html'))
+            headers.append(("Content-Type", "text/html"))
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -777,11 +829,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # loggers
-        self.log(self.request_version,
-                 self.command,
-                 self.client_address,
-                 (self.path, self.headers._headers, options_data),
-                 status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, options_data),
+            status,
+        )
 
     def do_GET(self):
         """Handle GET requests"""
@@ -797,7 +851,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         #   an attacker could though use the body to inject data if not flushed correctly,
         #   which is done by accessing the data like we do now - just to be secure.. )
 
-        get_data_length = self.headers.get('content-length')
+        get_data_length = self.headers.get("content-length")
         get_data = None
 
         if get_data_length:
@@ -806,30 +860,28 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # try to find a configuration item for this GET request
         try:
             entity_xml = configuration.xpath(
-                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+                '//http/htdocs/node[@name="' + self.path.partition("?")[0] + '"]'
             )
-        except XPathEvalError:
+        except etree.XPathEvalError:
             entity_xml = None
-            logger.debug('Malformed HTTP:GET URN. Failed to handle <{}>. (Client: {})'.format(self.path,
-                                                                                              self.client_address))
+            logger.debug(
+                "Malformed HTTP:GET URN. Failed to handle <{}>. (Client: {})".format(
+                    self.path, self.client_address
+                )
+            )
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, trailers, payload, chunks) = self.load_entity(self.path,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath)
+            (status, headers, trailers, payload, chunks) = self.load_entity(
+                self.path, headers, configuration, docpath
+            )
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                            self.path,
-                                                                            self.headers,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath,
-                                                                            'GET')
+            (status, headers, trailers, payload, chunks) = self.load_status(
+                status, self.path, self.headers, headers, configuration, docpath, "GET"
+            )
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -841,7 +893,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # decide upon sending content as a whole or chunked
-        if chunks == '0':
+        if chunks == "0":
             # send payload as a whole to the client
             self.wfile.write(str_to_bytes(payload))
         else:
@@ -849,11 +901,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             self.send_chunked(chunks, payload, trailers)
 
         # loggers
-        self.log(self.request_version,
-                 self.command,
-                 self.client_address,
-                 (self.path, self.headers._headers, get_data),
-                 status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, get_data),
+            status,
+        )
 
     def do_POST(self):
         """Handle POST requests"""
@@ -865,7 +919,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         docpath = self.server.docpath
 
         # retrieve POST data ( important to flush request buffers )
-        post_data_length = self.headers.get('content-length')
+        post_data_length = self.headers.get("content-length")
         post_data = None
 
         if post_data_length:
@@ -874,31 +928,35 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # try to find a configuration item for this POST request
         try:
             entity_xml = configuration.xpath(
-                '//http/htdocs/node[@name="' + self.path.partition('?')[0] + '"]'
+                '//http/htdocs/node[@name="' + self.path.partition("?")[0] + '"]'
             )
-        except XPathEvalError:
+        except etree.XPathEvalError:
             entity_xml = None
-            logger.debug('Malformed HTTP:POST URN. Failed to handle <{}>. (Client: {})'.format(self.path,
-                                                                                               self.client_address))
+            logger.debug(
+                "Malformed HTTP:POST URN. Failed to handle <{}>. (Client: {})".format(
+                    self.path, self.client_address
+                )
+            )
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, trailers, payload, chunks) = self.load_entity(self.path,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath)
+            (status, headers, trailers, payload, chunks) = self.load_entity(
+                self.path, headers, configuration, docpath
+            )
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, trailers, payload, chunks) = self.load_status(status,
-                                                                            self.path,
-                                                                            self.headers,
-                                                                            headers,
-                                                                            configuration,
-                                                                            docpath,
-                                                                            'POST',
-                                                                            post_data)
+            (status, headers, trailers, payload, chunks) = self.load_status(
+                status,
+                self.path,
+                self.headers,
+                headers,
+                configuration,
+                docpath,
+                "POST",
+                post_data,
+            )
 
         # send initial HTTP status line to client
         self.send_response(status)
@@ -910,7 +968,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
         # decide upon sending content as a whole or chunked
-        if chunks == '0':
+        if chunks == "0":
             # send payload as a whole to the client
             if type(payload) != bytes:
                 payload = payload.encode()
@@ -920,11 +978,13 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             self.send_chunked(chunks, payload, trailers)
 
         # loggers
-        self.log(self.request_version,
-                 self.command,
-                 self.client_address,
-                 (self.path, self.headers._headers, post_data),
-                 status)
+        self.log(
+            self.request_version,
+            self.command,
+            self.client_address,
+            (self.path, self.headers._headers, post_data),
+            status,
+        )
 
 
 class TemplateParser(HTMLParser):
@@ -948,40 +1008,40 @@ class TemplateParser(HTMLParser):
             with actual values.
         """
 
-        source = ''
-        key = ''
+        source = ""
+        key = ""
 
         # only parse tags that are conpot template tags ( <condata /> )
-        if tag == 'condata':
+        if tag == "condata":
 
             # initialize original tag (needed for value replacement)
-            origin = '<' + tag
+            origin = "<" + tag
 
             for attribute in attrs:
 
                 # extend original tag
-                origin = origin + ' ' + attribute[0] + '="' + attribute[1] + '"'
+                origin = origin + " " + attribute[0] + '="' + attribute[1] + '"'
 
                 # fill variables with all meta information needed to
                 # gather actual data from the other engines (databus, modbus, ..)
-                if attribute[0] == 'source':
+                if attribute[0] == "source":
                     source = attribute[1]
-                elif attribute[0] == 'key':
+                elif attribute[0] == "key":
                     key = attribute[1]
 
             # finalize original tag
-            origin += ' />'
+            origin += " />"
 
             # we really need a key in order to do our work..
             if key:
                 # deal with databus powered tags:
-                if source == 'databus':
+                if source == "databus":
                     self.result = self.databus.get_value(key)
                     self.payload = self.payload.replace(origin, str(self.result))
 
                 # deal with eval powered tags:
-                elif source == 'eval':
-                    result = ''
+                elif source == "eval":
+                    result = ""
                     # evaluate key
                     try:
                         result = eval(key)
@@ -997,6 +1057,7 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 class SubHTTPServer(ThreadedHTTPServer):
     """this class is necessary to allow passing custom request handler into
        the RequestHandlerClass"""
+
     daemon_threads = True
 
     def __init__(self, server_address, RequestHandlerClass, template, docpath):
@@ -1005,75 +1066,82 @@ class SubHTTPServer(ThreadedHTTPServer):
         self.docpath = docpath
 
         # default configuration
-        self.update_header_date = True             # this preserves authenticity
+        self.update_header_date = True  # this preserves authenticity
         self.disable_method_head = False
         self.disable_method_trace = False
         self.disable_method_options = False
-        self.tarpit = '0'
+        self.tarpit = "0"
 
         # load the configuration from template and parse it
         # for the first time in order to reduce further handling..
         self.configuration = etree.parse(template)
 
-        xml_config = self.configuration.xpath('//http/global/config/*')
+        xml_config = self.configuration.xpath("//http/global/config/*")
         if xml_config:
 
             # retrieve all global configuration entities
             for entity in xml_config:
 
-                if entity.attrib['name'] == 'protocol_version':
+                if entity.attrib["name"] == "protocol_version":
                     RequestHandlerClass.protocol_version = entity.text
 
-                elif entity.attrib['name'] == 'update_header_date':
-                    if entity.text.lower() == 'false':
+                elif entity.attrib["name"] == "update_header_date":
+                    if entity.text.lower() == "false":
                         # DATE header auto update disabled by configuration
                         self.update_header_date = False
-                    elif entity.text.lower() == 'true':
+                    elif entity.text.lower() == "true":
                         # DATE header auto update enabled by configuration
                         self.update_header_date = True
 
-                elif entity.attrib['name'] == 'disable_method_head':
-                    if entity.text.lower() == 'false':
+                elif entity.attrib["name"] == "disable_method_head":
+                    if entity.text.lower() == "false":
                         # HEAD method enabled by configuration
                         self.disable_method_head = False
-                    elif entity.text.lower() == 'true':
+                    elif entity.text.lower() == "true":
                         # HEAD method disabled by configuration
                         self.disable_method_head = True
 
-                elif entity.attrib['name'] == 'disable_method_trace':
-                    if entity.text.lower() == 'false':
+                elif entity.attrib["name"] == "disable_method_trace":
+                    if entity.text.lower() == "false":
                         # TRACE method enabled by configuration
                         self.disable_method_trace = False
-                    elif entity.text.lower() == 'true':
+                    elif entity.text.lower() == "true":
                         # TRACE method disabled by configuration
                         self.disable_method_trace = True
 
-                elif entity.attrib['name'] == 'disable_method_options':
-                    if entity.text.lower() == 'false':
+                elif entity.attrib["name"] == "disable_method_options":
+                    if entity.text.lower() == "false":
                         # OPTIONS method enabled by configuration
                         self.disable_method_options = False
-                    elif entity.text.lower() == 'true':
+                    elif entity.text.lower() == "true":
                         # OPTIONS method disabled by configuration
                         self.disable_method_options = True
 
-                elif entity.attrib['name'] == 'tarpit':
+                elif entity.attrib["name"] == "tarpit":
                     if entity.text:
                         self.tarpit = self.config_sanitize_tarpit(entity.text)
 
         # load global headers from XML
         self.global_headers = []
-        xml_headers = self.configuration.xpath('//http/global/headers/*')
+        xml_headers = self.configuration.xpath("//http/global/headers/*")
         if xml_headers:
 
             # retrieve all headers assigned to this status code
             for header in xml_headers:
-                if header.attrib['name'].lower() == 'date' and self.update_header_date is True:
+                if (
+                    header.attrib["name"].lower() == "date"
+                    and self.update_header_date is True
+                ):
                     # All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT),
                     # without exception ( RFC-2616 )
-                    self.global_headers.append((header.attrib['name'],
-                                                time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime())))
+                    self.global_headers.append(
+                        (
+                            header.attrib["name"],
+                            time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()),
+                        )
+                    )
                 else:
-                    self.global_headers.append((header.attrib['name'], header.text))
+                    self.global_headers.append((header.attrib["name"], header.text))
 
     def config_sanitize_tarpit(self, value):
 
@@ -1083,14 +1151,14 @@ class SubHTTPServer(ThreadedHTTPServer):
 
         if value is not None:
 
-            x, _, y = value.partition(';')
+            x, _, y = value.partition(";")
 
             try:
                 _ = float(x)
             except ValueError:
                 # first value is invalid, ignore the whole setting.
                 logger.error("Invalid tarpit value: '%s'. Assuming no latency.", value)
-                return '0;0'
+                return "0;0"
 
             try:
                 _ = float(y)
@@ -1101,7 +1169,7 @@ class SubHTTPServer(ThreadedHTTPServer):
                 return x
 
         else:
-            return '0;0'
+            return "0;0"
 
     def do_tarpit(self, delay):
 
@@ -1122,7 +1190,6 @@ class SubHTTPServer(ThreadedHTTPServer):
 
 
 class CommandResponder(object):
-
     def __init__(self, host, port, template, docpath):
 
         # Create HTTP server class
@@ -1133,5 +1200,7 @@ class CommandResponder(object):
         self.httpd.serve_forever()
 
     def stop(self):
-        logging.info("HTTP server will shut down gracefully as soon as all connections are closed.")
+        logging.info(
+            "HTTP server will shut down gracefully as soon as all connections are closed."
+        )
         self.httpd.shutdown()

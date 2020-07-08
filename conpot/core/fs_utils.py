@@ -26,7 +26,8 @@ import typing
 from fs.subfs import SubFS
 from fs.error_tools import unwrap_errors
 import logging
-_F = typing.TypeVar('_F', bound='FS', covariant=True)
+
+_F = typing.TypeVar("_F", bound="FS", covariant=True)
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ class FSOperationNotPermitted(fs.errors.FSError):
     """Custom class for filesystem-related exceptions."""
 
 
-def copy_files(source, dest, buffer_size=1024*1024):
+def copy_files(source, dest, buffer_size=1024 * 1024):
     """
     Copy a file from source to dest. source and dest must be file-like objects.
     """
@@ -51,31 +52,34 @@ def copy_files(source, dest, buffer_size=1024*1024):
 
 
 class _custom_conpot_file(object):
-
-    def __init__(self,
-                 file_system,
-                 parent_fs,
-                 path,
-                 mode,
-                 buffering=-1,
-                 encoding=None,
-                 newline='',
-                 line_buffering=False):
+    def __init__(
+        self,
+        file_system,
+        parent_fs,
+        path,
+        mode,
+        buffering=-1,
+        encoding=None,
+        newline="",
+        line_buffering=False,
+    ):
         self.file_system = file_system
         self._path = path
-        self._file = parent_fs.open(path=self._path,
-                                    mode=mode,
-                                    buffering=buffering,
-                                    encoding=encoding,
-                                    newline=newline,
-                                    line_buffering=line_buffering)
+        self._file = parent_fs.open(
+            path=self._path,
+            mode=mode,
+            buffering=buffering,
+            encoding=encoding,
+            newline=newline,
+            line_buffering=line_buffering,
+        )
         self.mode = self._file.mode
 
     def __getattr__(self, item):
         return getattr(self._file, item)
 
     def __repr__(self):
-        return '<conpot_fs cached file: {}>'.format(self._file.__repr__())
+        return "<conpot_fs cached file: {}>".format(self._file.__repr__())
 
     __str__ = __repr__
 
@@ -85,20 +89,33 @@ class _custom_conpot_file(object):
 
     def close(self):
         self._file.close()
-        if ('w' in self.mode) or ('a' in self.mode) or (self.file_system.built_cache is False) or ('x' in self.mode):
-            self.file_system._cache.update({self._path: self.file_system.getinfo(self._path, get_actual=True,
-                                                                                 namespaces=['basic', 'access',
-                                                                                             'details', 'stat'])})
-            self.file_system.chown(self._path, self.file_system.default_uid, self.file_system.default_gid)
+        if (
+            ("w" in self.mode)
+            or ("a" in self.mode)
+            or (self.file_system.built_cache is False)
+            or ("x" in self.mode)
+        ):
+            self.file_system._cache.update(
+                {
+                    self._path: self.file_system.getinfo(
+                        self._path,
+                        get_actual=True,
+                        namespaces=["basic", "access", "details", "stat"],
+                    )
+                }
+            )
+            self.file_system.chown(
+                self._path, self.file_system.default_uid, self.file_system.default_gid
+            )
             self.file_system.chmod(self._path, self.file_system.default_perms)
-        logger.debug('Updating modified/access time')
+        logger.debug("Updating modified/access time")
         self.file_system.setinfo(self._path, {})
 
     def __enter__(self):
         return self._file
 
     def __exit__(self, exc_type, exc_value, traceback):
-        logger.debug('Exiting file at : {}'.format(self._path))
+        logger.debug("Exiting file at : {}".format(self._path))
         self.close()
 
 
@@ -107,9 +124,13 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
     Creates a chroot jail sub file system. Each protocol can have an instance of this class. Use AbstractFS's
     create_jail method to access this. You won't be able to cd into an `up` directory.
     """
+
     def __init__(self, parent_fs, path):
         self.parent_fs = parent_fs
-        self._default_uid, self._default_gid = parent_fs.default_uid, parent_fs.default_gid
+        self._default_uid, self._default_gid = (
+            parent_fs.default_uid,
+            parent_fs.default_gid,
+        )
         self._default_perms = parent_fs.default_perms
         self.utime = self.settimes
         super(SubAbstractFS, self).__init__(parent_fs, path)
@@ -131,7 +152,9 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
             assert isinstance(perms, Permissions)
             self._default_perms = perms
         except AssertionError:
-            raise FilesystemError('Permissions provided must be of valid type (fs.permissions.Permission)')
+            raise FilesystemError(
+                "Permissions provided must be of valid type (fs.permissions.Permission)"
+            )
 
     @property
     def default_uid(self):
@@ -142,7 +165,7 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         if _uid in self.parent_fs._users.keys():
             self._default_uid = _uid
         else:
-            raise FilesystemError('User with id {} not registered with fs'.format(_uid))
+            raise FilesystemError("User with id {} not registered with fs".format(_uid))
 
     @property
     def default_gid(self):
@@ -153,17 +176,19 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         if _gid in self.parent_fs._grps.keys():
             self._default_gid = _gid
         else:
-            raise FilesystemError('Group with id {} not registered with fs'.format(_gid))
+            raise FilesystemError(
+                "Group with id {} not registered with fs".format(_gid)
+            )
 
     # ---- Other utilites
 
     @property
     def default_user(self):
-        return self.parent_fs._users[self.default_uid]['user']
+        return self.parent_fs._users[self.default_uid]["user"]
 
     @property
     def default_group(self):
-        return self.parent_fs._grps[self.default_gid]['group']
+        return self.parent_fs._grps[self.default_gid]["group"]
 
     def getcwd(self):
         return self._sub_dir
@@ -187,7 +212,9 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         with unwrap_errors(path):
             return _fs.check_access(_path, user, perms)
 
-    def chown(self, fs_path: str, uid: int, gid: int, recursive: Optional[bool]=False):
+    def chown(
+        self, fs_path: str, uid: int, gid: int, recursive: Optional[bool] = False
+    ):
         _fs, _path = self.delegate_path(fs_path)
         with unwrap_errors(fs_path):
             return _fs.chown(_path, uid, gid, recursive)
@@ -197,7 +224,9 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
         with unwrap_errors(path):
             return _fs.chmod(_path, mode, recursive)
 
-    def access(self, path: str, name_or_id: Union[int, str]=None, required_perms: str=None):
+    def access(
+        self, path: str, name_or_id: Union[int, str] = None, required_perms: str = None
+    ):
         _fs, _path = self.delegate_path(path)
         with unwrap_errors(path):
             return _fs.access(_path, name_or_id, required_perms)
@@ -234,9 +263,21 @@ class SubAbstractFS(SubFS[_F], typing.Generic[_F]):
             return _fs.move(_src_path, _dst_path, overwrite=overwrite)
 
     def __getattr__(self, item):
-        if hasattr(self.parent_fs, item) and item in {'_cache', 'create_group', 'register_user', 'take_snapshot',
-                                                      'norm_path', 'users', 'groups', 'add_users_to_group',
-                                                      'check_access'}:
+        if hasattr(self.parent_fs, item) and item in {
+            "_cache",
+            "create_group",
+            "register_user",
+            "take_snapshot",
+            "norm_path",
+            "users",
+            "groups",
+            "add_users_to_group",
+            "check_access",
+        }:
             return getattr(self.parent_fs, item)
         else:
-            raise NotImplementedError('Conpot\'s File System does not currently support method: {}'.format(item))
+            raise NotImplementedError(
+                "Conpot's File System does not currently support method: {}".format(
+                    item
+                )
+            )

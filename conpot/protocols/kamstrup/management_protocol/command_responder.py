@@ -24,11 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class CommandResponder(object):
-    COMMAND_NOT_FOUND = (
-        "\r\n"
-        "? Command not found.\r\n"
-        "Send 'H' for help.\r\n"
-    )
+    COMMAND_NOT_FOUND = "\r\n" "? Command not found.\r\n" "Send 'H' for help.\r\n"
 
     def __init__(self):
         self.commands = {

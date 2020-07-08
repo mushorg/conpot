@@ -32,23 +32,29 @@ class CommandResponder(object):
         self.registers = {}
 
         dom = etree.parse(template)
-        registers = dom.xpath('//kamstrup_meter/registers/*')
-        self.communication_address = int(dom.xpath('//kamstrup_meter/config/communication_address/text()')[0])
+        registers = dom.xpath("//kamstrup_meter/registers/*")
+        self.communication_address = int(
+            dom.xpath("//kamstrup_meter/config/communication_address/text()")[0]
+        )
         for register in registers:
-            name = int(register.attrib['name'])
-            length = int(register.attrib['length'])
-            units = int(register.attrib['units'])
-            unknown = int(register.attrib['unknown'])
-            databuskey = register.xpath('./value/text()')[0]
-            kamstrup_register = KamstrupRegister(name, units, length, unknown, databuskey)
+            name = int(register.attrib["name"])
+            length = int(register.attrib["length"])
+            units = int(register.attrib["units"])
+            unknown = int(register.attrib["unknown"])
+            databuskey = register.xpath("./value/text()")[0]
+            kamstrup_register = KamstrupRegister(
+                name, units, length, unknown, databuskey
+            )
             assert name not in self.registers
             self.registers[name] = kamstrup_register
 
     def respond(self, request):
         if request.communication_address != self.communication_address:
-            logger.warning('Kamstrup request received with wrong communication address, got {} but expected {}.'.format(
-                request.communication_address, self.communication_address
-            ))
+            logger.warning(
+                "Kamstrup request received with wrong communication address, got {} but expected {}.".format(
+                    request.communication_address, self.communication_address
+                )
+            )
             return None
         elif isinstance(request, messages.KamstrupRequestGetRegisters):
             response = messages.KamstrupResponseRegister(self.communication_address)

@@ -59,7 +59,9 @@ class CommandResponder(object):
         mib_builder = self.snmpEngine.getMibBuilder()
         addMibCompiler(mib_builder, destination=compiled_mibs)
         mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
-        mib_builder.getMibCompiler().addSources(HttpReader('mibs.snmplabs.com', 80, '/asn1/@mib@'))
+        mib_builder.getMibCompiler().addSources(
+            HttpReader("mibs.snmplabs.com", 80, "/asn1/@mib@")
+        )
 
         # Transport setup
         udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
@@ -67,54 +69,93 @@ class CommandResponder(object):
         udp_sock.bind((host, port))
         self.server_port = udp_sock.getsockname()[1]
         # UDP over IPv4
-        self.addSocketTransport(
-            self.snmpEngine,
-            udp.domainName,
-            udp_sock
-        )
+        self.addSocketTransport(self.snmpEngine, udp.domainName, udp_sock)
 
         # SNMPv1
-        config.addV1System(self.snmpEngine, 'public-read', 'public')
+        config.addV1System(self.snmpEngine, "public-read", "public")
 
         # SNMPv3/USM setup
         # user: usr-md5-des, auth: MD5, priv DES
         config.addV3User(
-            self.snmpEngine, 'usr-md5-des',
-            config.usmHMACMD5AuthProtocol, 'authkey1',
-            config.usmDESPrivProtocol, 'privkey1'
+            self.snmpEngine,
+            "usr-md5-des",
+            config.usmHMACMD5AuthProtocol,
+            "authkey1",
+            config.usmDESPrivProtocol,
+            "privkey1",
         )
         # user: usr-sha-none, auth: SHA, priv NONE
         config.addV3User(
-            self.snmpEngine, 'usr-sha-none',
-            config.usmHMACSHAAuthProtocol, 'authkey1'
+            self.snmpEngine, "usr-sha-none", config.usmHMACSHAAuthProtocol, "authkey1"
         )
         # user: usr-sha-aes128, auth: SHA, priv AES/128
         config.addV3User(
-            self.snmpEngine, 'usr-sha-aes128',
-            config.usmHMACSHAAuthProtocol, 'authkey1',
-            config.usmAesCfb128Protocol, 'privkey1'
+            self.snmpEngine,
+            "usr-sha-aes128",
+            config.usmHMACSHAAuthProtocol,
+            "authkey1",
+            config.usmAesCfb128Protocol,
+            "privkey1",
         )
 
         # Allow full MIB access for each user at VACM
-        config.addVacmUser(self.snmpEngine, 1, 'public-read', 'noAuthNoPriv',
-                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
-        config.addVacmUser(self.snmpEngine, 2, 'public-read', 'noAuthNoPriv',
-                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
-        config.addVacmUser(self.snmpEngine, 3, 'usr-md5-des', 'authPriv',
-                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
-        config.addVacmUser(self.snmpEngine, 3, 'usr-sha-none', 'authNoPriv',
-                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
-        config.addVacmUser(self.snmpEngine, 3, 'usr-sha-aes128', 'authPriv',
-                           readSubTree=(1, 3, 6, 1, 2, 1), writeSubTree=(1, 3, 6, 1, 2, 1))
+        config.addVacmUser(
+            self.snmpEngine,
+            1,
+            "public-read",
+            "noAuthNoPriv",
+            readSubTree=(1, 3, 6, 1, 2, 1),
+            writeSubTree=(1, 3, 6, 1, 2, 1),
+        )
+        config.addVacmUser(
+            self.snmpEngine,
+            2,
+            "public-read",
+            "noAuthNoPriv",
+            readSubTree=(1, 3, 6, 1, 2, 1),
+            writeSubTree=(1, 3, 6, 1, 2, 1),
+        )
+        config.addVacmUser(
+            self.snmpEngine,
+            3,
+            "usr-md5-des",
+            "authPriv",
+            readSubTree=(1, 3, 6, 1, 2, 1),
+            writeSubTree=(1, 3, 6, 1, 2, 1),
+        )
+        config.addVacmUser(
+            self.snmpEngine,
+            3,
+            "usr-sha-none",
+            "authNoPriv",
+            readSubTree=(1, 3, 6, 1, 2, 1),
+            writeSubTree=(1, 3, 6, 1, 2, 1),
+        )
+        config.addVacmUser(
+            self.snmpEngine,
+            3,
+            "usr-sha-aes128",
+            "authPriv",
+            readSubTree=(1, 3, 6, 1, 2, 1),
+            writeSubTree=(1, 3, 6, 1, 2, 1),
+        )
 
         # Get default SNMP context this SNMP engine serves
         snmpContext = context.SnmpContext(self.snmpEngine)
 
         # Register SNMP Applications at the SNMP engine for particular SNMP context
-        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator, host, port)
-        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator, host, port)
-        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator, host, port)
-        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(self.snmpEngine, snmpContext, self.databus_mediator, host, port)
+        self.resp_app_get = conpot_cmdrsp.c_GetCommandResponder(
+            self.snmpEngine, snmpContext, self.databus_mediator, host, port
+        )
+        self.resp_app_set = conpot_cmdrsp.c_SetCommandResponder(
+            self.snmpEngine, snmpContext, self.databus_mediator, host, port
+        )
+        self.resp_app_next = conpot_cmdrsp.c_NextCommandResponder(
+            self.snmpEngine, snmpContext, self.databus_mediator, host, port
+        )
+        self.resp_app_bulk = conpot_cmdrsp.c_BulkCommandResponder(
+            self.snmpEngine, snmpContext, self.databus_mediator, host, port
+        )
 
     def addSocketTransport(self, snmpEngine, transportDomain, transport):
         """Add transport object to socket dispatcher of snmpEngine"""
@@ -124,24 +165,42 @@ class CommandResponder(object):
 
     def register(self, mibname, symbolname, instance, value, profile_map_name):
         """Register OID"""
-        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(mibname)
+        self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.loadModules(
+            mibname
+        )
         s = self._get_mibSymbol(mibname, symbolname)
 
         if s:
-            self.oid_mapping[s.name+instance] = profile_map_name
+            self.oid_mapping[s.name + instance] = profile_map_name
 
-            MibScalarInstance, = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols('SNMPv2-SMI',
-                                                                                                            'MibScalarInstance')
+            (
+                MibScalarInstance,
+            ) = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols(
+                "SNMPv2-SMI", "MibScalarInstance"
+            )
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
-            self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(mibname, x)
+            self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(
+                mibname, x
+            )
 
-            logger.debug('Registered: OID %s Instance %s ASN.1 (%s @ %s) value %s dynrsp.', s.name, instance, s.label, mibname, value)
+            logger.debug(
+                "Registered: OID %s Instance %s ASN.1 (%s @ %s) value %s dynrsp.",
+                s.name,
+                instance,
+                s.label,
+                mibname,
+                value,
+            )
 
         else:
-            logger.warning('Skipped: OID for symbol %s not found in MIB %s', symbolname, mibname)
+            logger.warning(
+                "Skipped: OID for symbol %s not found in MIB %s", symbolname, mibname
+            )
 
     def _get_mibSymbol(self, mibname, symbolname):
-        modules = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        modules = (
+            self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.mibSymbols
+        )
         if mibname in modules:
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
@@ -151,9 +210,3 @@ class CommandResponder(object):
 
     def stop(self):
         self.snmpEngine.transportDispatcher.stop_accepting()
-
-
-if __name__ == "__main__":
-    server = CommandResponder()
-    print('Starting echo server on port 161')
-    server.serve_forever()

@@ -27,44 +27,53 @@ from lxml import etree
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
 import sdv.validators as validators
-#from conpot.tests.helpers.mitre_stix_validator import STIXValidator
+
+# from conpot.tests.helpers.mitre_stix_validator import STIXValidator
 
 
 class TestLoggers(unittest.TestCase):
-
-    @unittest.skip('disabled until STIX 2.0')
+    @unittest.skip("disabled until STIX 2.0")
     def test_stix_transform(self):
         """
         Objective: Test if our STIX xml can be validated.
         """
         config = ConfigParser()
-        config_file = os.path.join(os.path.dirname(__file__), '../conpot.cfg')
+        config_file = os.path.join(os.path.dirname(__file__), "../conpot.cfg")
         config.read(config_file)
-        config.set('taxii', 'enabled', True)
+        config.set("taxii", "enabled", True)
 
-        test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
-                      'public_ip': '111.222.111.222',
-                      'timestamp': datetime.now(),
-                      'session_id': str(uuid.uuid4()),
-                      'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
-                               1: {'request': 'give me apples', 'response': 'no way'}}}
-        dom = etree.parse('conpot/templates/default/template.xml')
+        test_event = {
+            "remote": ("127.0.0.1", 54872),
+            "data_type": "s7comm",
+            "public_ip": "111.222.111.222",
+            "timestamp": datetime.now(),
+            "session_id": str(uuid.uuid4()),
+            "data": {
+                0: {"request": "who are you", "response": "mr. blue"},
+                1: {"request": "give me apples", "response": "no way"},
+            },
+        }
+        dom = etree.parse("conpot/templates/default/template.xml")
         stixTransformer = StixTransformer(config, dom)
         stix_package_xml = stixTransformer.transform(test_event)
 
         validator = validators.STIXSchemaValidator()
-        result = validator.validate(StringIO(stix_package_xml.encode('utf-8'))).as_dict()
+        result = validator.validate(
+            StringIO(stix_package_xml.encode("utf-8"))
+        ).as_dict()
 
         has_errors = False
-        error_string = ''
-        if 'errors' in result:
+        error_string = ""
+        if "errors" in result:
             has_errors = True
-            for error in result['errors']:
-                error_string += error['message']
-                error_string += ', '
-        self.assertFalse(has_errors, 'Error while validations STIX xml: {0}'. format(error_string))
+            for error in result["errors"]:
+                error_string += error["message"]
+                error_string += ", "
+        self.assertFalse(
+            has_errors, "Error while validations STIX xml: {0}".format(error_string)
+        )
 
-    @unittest.skip('disabled until taxii server is up and running again')
+    @unittest.skip("disabled until taxii server is up and running again")
     def test_taxii(self):
         """
         Objective: Test if we can transmit data to MITRE's TAXII test server.
@@ -72,17 +81,22 @@ class TestLoggers(unittest.TestCase):
         before transmission.
         """
         config = ConfigParser()
-        config_file = os.path.join(os.path.dirname(__file__), '../conpot.cfg')
+        config_file = os.path.join(os.path.dirname(__file__), "../conpot.cfg")
         config.read(config_file)
-        config.set('taxii', 'enabled', True)
+        config.set("taxii", "enabled", True)
 
-        test_event = {'remote': ('127.0.0.1', 54872), 'data_type': 's7comm',
-                      'timestamp': datetime.now(),
-                      'public_ip': '111.222.111.222',
-                      'session_id': str(uuid.uuid4()),
-                      'data': {0: {'request': 'who are you', 'response': 'mr. blue'},
-                               1: {'request': 'give me apples', 'response': 'no way'}}}
-        dom = etree.parse('conpot/templates/default/template.xml')
+        test_event = {
+            "remote": ("127.0.0.1", 54872),
+            "data_type": "s7comm",
+            "timestamp": datetime.now(),
+            "public_ip": "111.222.111.222",
+            "session_id": str(uuid.uuid4()),
+            "data": {
+                0: {"request": "who are you", "response": "mr. blue"},
+                1: {"request": "give me apples", "response": "no way"},
+            },
+        }
+        dom = etree.parse("conpot/templates/default/template.xml")
         taxiiLogger = TaxiiLogger(config, dom)
         taxii_result = taxiiLogger.log(test_event)
         # TaxiiLogger returns false if the message could not be delivered

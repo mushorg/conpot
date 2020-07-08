@@ -2,13 +2,13 @@ from setuptools import setup, find_packages
 import conpot
 
 setup(
-    name='conpot',
+    name="conpot",
     version=conpot.__version__,
-    packages=find_packages(exclude=['*.pyc']),
-    python_requires='>=3.6',
-    scripts=['bin/conpot'],
+    packages=find_packages(exclude=["*.pyc"]),
+    python_requires=">=3.6",
+    scripts=["bin/conpot"],
     url="http://conpot.org",
-    license='GPL 2',
+    license="GPL 2",
     author="MushMush Foundation",
     author_email="glastopf@public.honeynet.org",
     classifiers=[
@@ -22,20 +22,15 @@ setup(
         "Programming Language :: Python",
         "Topic :: Security",
     ],
-    package_data={
-        "": ["*.txt", "*.rst"],
-        "conpot": ["conpot.cfg", "tests/data/*"],
-    },
+    package_data={"": ["*.txt", "*.rst"], "conpot": ["conpot.cfg", "tests/data/*"],},
     keywords="ICS SCADA honeypot",
     include_package_data=True,
-    long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
     and methods of adversaries targeting industrial control systems""",
-    test_suite='nose.collector',
+    test_suite="nose.collector",
     tests_require="nose",
-    dependency_links=[
-        "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
-    ],
-    install_requires=open('requirements.txt').read().splitlines(),
+    dependency_links=["https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",],
+    install_requires=open("requirements.txt").read().splitlines(),
 )

@@ -26,10 +26,12 @@ import conpot.core as conpot_core
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
+
 # import logging as logger
 # import sys
 # logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,24 +42,35 @@ class KamstrupServer(object):
         self.command_responder = CommandResponder(template)
         self.server_active = True
         self.server = None
-        conpot_core.get_databus().observe_value('reboot_signal', self.reboot)
-        logger.info('Kamstrup protocol server initialized.')
+        conpot_core.get_databus().observe_value("reboot_signal", self.reboot)
+        logger.info("Kamstrup protocol server initialized.")
 
     # pretending reboot... really just closing connecting while "rebooting"
     def reboot(self, key):
-        assert (key == 'reboot_signal')
+        assert key == "reboot_signal"
         self.server_active = False
-        logger.info('Pretending server reboot')
+        logger.info("Pretending server reboot")
         gevent.spawn_later(2, self.set_reboot_done)
 
     def set_reboot_done(self):
-        logger.info('Stopped pretending reboot')
+        logger.info("Stopped pretending reboot")
         self.server_active = True
 
     def handle(self, sock, address):
-        session = conpot_core.get_session('kamstrup_protocol', address[0], address[1], sock.getsockname()[0], sock.getsockname()[1])
-        logger.info('New Kamstrup connection from %s:%s. (%s)', address[0], address[1], session.id)
-        session.add_event({'type': 'NEW_CONNECTION'})
+        session = conpot_core.get_session(
+            "kamstrup_protocol",
+            address[0],
+            address[1],
+            sock.getsockname()[0],
+            sock.getsockname()[1],
+        )
+        logger.info(
+            "New Kamstrup connection from %s:%s. (%s)",
+            address[0],
+            address[1],
+            session.id,
+        )
+        session.add_event({"type": "NEW_CONNECTION"})
 
         self.server_active = True
 
@@ -67,8 +80,8 @@ class KamstrupServer(object):
                 raw_request = sock.recv(1024)
 
                 if not raw_request:
-                    logger.info('Kamstrup client disconnected. (%s)', session.id)
-                    session.add_event({'type': 'CONNECTION_LOST'})
+                    logger.info("Kamstrup client disconnected. (%s)", session.id)
+                    session.add_event({"type": "CONNECTION_LOST"})
                     break
 
                 for x in raw_request:
@@ -77,17 +90,26 @@ class KamstrupServer(object):
                 while True:
                     request = parser.get_request()
                     if not request:
-                        session.add_event({'type': 'CONNECTION_LOST'})
+                        session.add_event({"type": "CONNECTION_LOST"})
                         break
                     else:
-                        logdata = {'request': binascii.hexlify(bytearray(request.message_bytes))}
+                        logdata = {
+                            "request": binascii.hexlify(
+                                bytearray(request.message_bytes)
+                            )
+                        }
                         response = self.command_responder.respond(request)
                         # real Kamstrup meters has delay in this interval
                         gevent.sleep(random.uniform(0.24, 0.34))
                         if response:
                             serialized_response = response.serialize()
-                            logdata['response'] = binascii.hexlify(serialized_response)
-                            logger.info('Kamstrup traffic from %s: %s (%s)', address[0], logdata, session.id)
+                            logdata["response"] = binascii.hexlify(serialized_response)
+                            logger.info(
+                                "Kamstrup traffic from %s: %s (%s)",
+                                address[0],
+                                logdata,
+                                session.id,
+                            )
                             sock.send(serialized_response)
                             session.add_event(logdata)
                         else:
@@ -95,8 +117,8 @@ class KamstrupServer(object):
                             break
 
         except socket.timeout:
-            logger.debug('Socket timeout, remote: %s. (%s)', address[0], session.id)
-            session.add_event({'type': 'CONNECTION_LOST'})
+            logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
+            session.add_event({"type": "CONNECTION_LOST"})
 
         sock.close()
 
@@ -105,20 +127,27 @@ class KamstrupServer(object):
         self.port = port
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
-        logger.info('Kamstrup protocol server started on: %s', connection)
+        logger.info("Kamstrup protocol server started on: %s", connection)
         self.server.serve_forever()
 
     def stop(self):
         self.server.stop()
 
 
-if __name__ == '__main__':
-    TCP_IP = '127.0.0.1'
+if __name__ == "__main__":
+    TCP_IP = "127.0.0.1"
     TCP_PORT = 1025
     import os
+
     dir_name = os.path.dirname(conpot.__file__)
-    conpot_core.get_databus().initialize(dir_name + '/templates/kamstrup_382/template.xml')
-    server = KamstrupServer(dir_name + '/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml', None, None)
+    conpot_core.get_databus().initialize(
+        dir_name + "/templates/kamstrup_382/template.xml"
+    )
+    server = KamstrupServer(
+        dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml",
+        None,
+        None,
+    )
     try:
         server.start(TCP_IP, TCP_PORT)
     except KeyboardInterrupt:

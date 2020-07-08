@@ -30,11 +30,11 @@ import modbus_tk.modbus_tcp as modbus_tcp
 from gevent import socket
 from conpot.protocols.modbus import modbus_server
 import conpot.core as conpot_core
+
 monkey.patch_all()
 
 
 class TestModbusServer(unittest.TestCase):
-
     def setUp(self):
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
@@ -43,19 +43,21 @@ class TestModbusServer(unittest.TestCase):
         self.dir_name = os.path.dirname(conpot.__file__)
 
         # make paths platform-independent
-        template = self.dir_name + '/templates/default/template.xml'
-        modbus_template = self.dir_name + '/templates/default/modbus/modbus.xml'
+        template = self.dir_name + "/templates/default/template.xml"
+        modbus_template = self.dir_name + "/templates/default/modbus/modbus.xml"
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize(template)
-        self.modbus = modbus_server.ModbusServer(modbus_template, 'none', None, timeout=2)
-        self.modbus_server = StreamServer(('127.0.0.1', 0), self.modbus.handle)
+        self.modbus = modbus_server.ModbusServer(
+            modbus_template, "none", None, timeout=2
+        )
+        self.modbus_server = StreamServer(("127.0.0.1", 0), self.modbus.handle)
         self.modbus_server.start()
 
         # We have to use different slave IDs under different modes. In tcp mode,
         # only 255 and 0 make sense. However, modbus_tcp.TcpMaster explicitly
         # ignores slave ID 0. Therefore we can only use 255 in tcp mode.
-        self.target_slave_id = 1 if self.modbus.mode == 'serial' else 255
+        self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
         self.modbus_server.stop()
@@ -68,13 +70,22 @@ class TestModbusServer(unittest.TestCase):
         Objective: Test if we can extract the expected bits from a slave using the modbus protocol.
         """
 
-        self.databus.set_value('memoryModbusSlave%dBlockA' % self.target_slave_id, [1 for b in range(0, 128)])
+        self.databus.set_value(
+            "memoryModbusSlave%dBlockA" % self.target_slave_id,
+            [1 for b in range(0, 128)],
+        )
 
         # create READ_COILS request
-        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master = modbus_tcp.TcpMaster(
+            host="127.0.0.1", port=self.modbus_server.server_port
+        )
         master.set_timeout(1.0)
-        actual_bits = master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1,
-                                     quantity_of_x=128)
+        actual_bits = master.execute(
+            slave=self.target_slave_id,
+            function_code=cst.READ_COILS,
+            starting_address=1,
+            quantity_of_x=128,
+        )
 
         # the test template sets all bits to 1 in the range 1-128
         expected_bits = [1 for b in range(0, 128)]
@@ -84,14 +95,26 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if we can change values using the modbus protocol.
         """
-        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master = modbus_tcp.TcpMaster(
+            host="127.0.0.1", port=self.modbus_server.server_port
+        )
         master.set_timeout(1.0)
         set_bits = [1, 0, 0, 1, 0, 0, 1, 1]
 
         # write 8 bits
-        master.execute(slave=self.target_slave_id, function_code=cst.WRITE_MULTIPLE_COILS, starting_address=1, output_value=set_bits)
+        master.execute(
+            slave=self.target_slave_id,
+            function_code=cst.WRITE_MULTIPLE_COILS,
+            starting_address=1,
+            output_value=set_bits,
+        )
         # read 8 bit
-        actual_bit = master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=8)
+        actual_bit = master.execute(
+            slave=self.target_slave_id,
+            function_code=cst.READ_COILS,
+            starting_address=1,
+            quantity_of_x=8,
+        )
 
         self.assertSequenceEqual(set_bits, actual_bit)
 
@@ -99,10 +122,17 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if the correct exception is raised when trying to read from nonexistent slave.
         """
-        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master = modbus_tcp.TcpMaster(
+            host="127.0.0.1", port=self.modbus_server.server_port
+        )
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
-            master.execute(slave=5, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=1)
+            master.execute(
+                slave=5,
+                function_code=cst.READ_COILS,
+                starting_address=1,
+                quantity_of_x=1,
+            )
         self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
 
     def test_modbus_logging(self):
@@ -119,36 +149,51 @@ class TestModbusServer(unittest.TestCase):
                   'response': '0110ffffffffffffffffffffffffffffffff'}}
         """
 
-        self.databus.set_value('memoryModbusSlave%dBlockA' % self.target_slave_id, [1 for b in range(0,128)])
+        self.databus.set_value(
+            "memoryModbusSlave%dBlockA" % self.target_slave_id,
+            [1 for b in range(0, 128)],
+        )
 
-        master = modbus_tcp.TcpMaster(host='127.0.0.1', port=self.modbus_server.server_port)
+        master = modbus_tcp.TcpMaster(
+            host="127.0.0.1", port=self.modbus_server.server_port
+        )
         master.set_timeout(1.0)
 
         # issue request to modbus server
-        master.execute(slave=self.target_slave_id, function_code=cst.READ_COILS, starting_address=1, quantity_of_x=128)
+        master.execute(
+            slave=self.target_slave_id,
+            function_code=cst.READ_COILS,
+            starting_address=1,
+            quantity_of_x=128,
+        )
 
         # extract the generated log entries
         log_queue = conpot_core.get_sessionManager().log_queue
 
         conn_log_item = log_queue.get(True, 2)
-        conn_expected_payload = {'type': 'NEW_CONNECTION'}
-        self.assertDictEqual(conn_expected_payload, conn_log_item['data'])
+        conn_expected_payload = {"type": "NEW_CONNECTION"}
+        self.assertDictEqual(conn_expected_payload, conn_log_item["data"])
 
         modbus_log_item = log_queue.get(True, 2)
-        self.assertIsInstance(modbus_log_item['timestamp'], datetime)
-        self.assertTrue('data' in modbus_log_item)
+        self.assertIsInstance(modbus_log_item["timestamp"], datetime)
+        self.assertTrue("data" in modbus_log_item)
         # we expect session_id to be 36 characters long (32 x char, 4 x dashes)
-        self.assertTrue(len(str(modbus_log_item['id'])), modbus_log_item)
-        self.assertEqual('127.0.0.1', modbus_log_item['remote'][0])
-        self.assertEqual('modbus', modbus_log_item['data_type'])
+        self.assertTrue(len(str(modbus_log_item["id"])), modbus_log_item)
+        self.assertEqual("127.0.0.1", modbus_log_item["remote"][0])
+        self.assertEqual("modbus", modbus_log_item["data_type"])
 
-        req = ('000100000006%s0100010080' % ('01' if self.target_slave_id == 1 else 'ff')).encode()
+        req = (
+            "000100000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
+        ).encode()
         # testing the actual modbus data
-        modbus_expected_payload = {'function_code': 1, 'slave_id': self.target_slave_id,
-                                   'request': req,
-                                   'response': b'0110ffffffffffffffffffffffffffffffff'}
+        modbus_expected_payload = {
+            "function_code": 1,
+            "slave_id": self.target_slave_id,
+            "request": req,
+            "response": b"0110ffffffffffffffffffffffffffffffff",
+        }
 
-        self.assertDictEqual(modbus_expected_payload, modbus_log_item['data'])
+        self.assertDictEqual(modbus_expected_payload, modbus_log_item["data"])
 
     def test_report_slave_id(self):
         """
@@ -156,20 +201,20 @@ class TestModbusServer(unittest.TestCase):
         """
         # Function 17 is not currently supported by modbus_tk
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.modbus_server.server_port))
-        s.sendall(b'\x00\x00\x00\x00\x00\x02\x01\x11')
+        s.connect(("127.0.0.1", self.modbus_server.server_port))
+        s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
         data = s.recv(1024)
         s.close()
-        self.assertEqual(data, b'\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff')
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
 
     def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.modbus_server.server_port))
-        s.sendall(b'\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02')
+        s.connect(("127.0.0.1", self.modbus_server.server_port))
+        s.sendall(b"\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02")
         data = s.recv(1024)
         s.close()
-        self.assertTrue(b'SIMATIC' in data and b'Siemens' in data)
+        self.assertTrue(b"SIMATIC" in data and b"Siemens" in data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

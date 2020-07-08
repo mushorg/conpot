@@ -18,6 +18,7 @@
 
 import json
 import logging
+
 # import uuid
 import time
 
@@ -27,6 +28,7 @@ import configparser
 from gevent.queue import Empty
 
 from conpot.core.loggers.sqlite_log import SQLiteLogger
+
 # from conpot.core.loggers.mysql_log import MySQLlogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
@@ -50,7 +52,7 @@ class LogWorker(object):
         self.public_ip = public_ip
         self.taxii_logger = None
 
-        if config.getboolean('sqlite', 'enabled'):
+        if config.getboolean("sqlite", "enabled"):
             self.sqlite_logger = SQLiteLogger()
 
         # if config.getboolean('mysql', 'enabled'):
@@ -64,32 +66,34 @@ class LogWorker(object):
         #     sensorid = config.get('common', 'sensorid')
         #     self.mysql_logger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
 
-        if config.getboolean('json', 'enabled'):
-            filename = config.get('json', 'filename')
-            sensorid = config.get('common', 'sensorid')
+        if config.getboolean("json", "enabled"):
+            filename = config.get("json", "filename")
+            sensorid = config.get("common", "sensorid")
             self.json_logger = JsonLogger(filename, sensorid, public_ip)
 
-        if config.getboolean('hpfriends', 'enabled'):
-            host = config.get('hpfriends', 'host')
-            port = config.getint('hpfriends', 'port')
-            ident = config.get('hpfriends', 'ident')
-            secret = config.get('hpfriends', 'secret')
-            channels = eval(config.get('hpfriends', 'channels'))
+        if config.getboolean("hpfriends", "enabled"):
+            host = config.get("hpfriends", "host")
+            port = config.getint("hpfriends", "port")
+            ident = config.get("hpfriends", "ident")
+            secret = config.get("hpfriends", "secret")
+            channels = eval(config.get("hpfriends", "channels"))
             try:
-                self.friends_feeder = HPFriendsLogger(host, port, ident, secret, channels)
+                self.friends_feeder = HPFriendsLogger(
+                    host, port, ident, secret, channels
+                )
             except Exception as e:
-                logger.exception(e.message)
+                logger.exception(e)
                 self.friends_feeder = None
 
-        if config.getboolean('syslog', 'enabled'):
-            host = config.get('syslog', 'host')
-            port = config.getint('syslog', 'port')
-            facility = config.get('syslog', 'facility')
-            logdevice = config.get('syslog', 'device')
-            logsocket = config.get('syslog', 'socket')
+        if config.getboolean("syslog", "enabled"):
+            host = config.get("syslog", "host")
+            port = config.getint("syslog", "port")
+            facility = config.get("syslog", "facility")
+            logdevice = config.get("syslog", "device")
+            logsocket = config.get("syslog", "socket")
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
-        if config.getboolean('taxii', 'enabled'):
+        if config.getboolean("taxii", "enabled"):
             # TODO: support for certificates
             self.taxii_logger = TaxiiLogger(config, dom)
 
@@ -108,9 +112,11 @@ class LogWorker(object):
                 sec_last_event = 0
             sec_session_start = time.mktime(session.timestamp.timetuple())
             sec_now = time.mktime(datetime.utcnow().timetuple())
-            if (sec_now - (sec_session_start + sec_last_event)) >= float(session_timeout):
+            if (sec_now - (sec_session_start + sec_last_event)) >= float(
+                session_timeout
+            ):
                 # TODO: We need to close sockets in this case
-                logger.info('Session timed out: %s', session.id)
+                logger.info("Session timed out: %s", session.id)
                 session.set_ended()
                 sessions.remove(session)
 

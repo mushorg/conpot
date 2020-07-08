@@ -24,7 +24,6 @@ logger = logging.getLogger()
 
 
 class FakeBmc(Bmc):
-
     def __init__(self, authdata, port):
         self.authdata = authdata
         self.port = port
@@ -34,48 +33,48 @@ class FakeBmc(Bmc):
         self.firmwareminor = 0x1
         self.ipmiversion = 2
         self.additionaldevices = 0
-        self.mfgid = 0xf
-        self.prodid = 0xe
-        self.powerstate = 'off'
-        self.bootdevice = 'default'
-        logger.info('IPMI BMC initialized.')
+        self.mfgid = 0xF
+        self.prodid = 0xE
+        self.powerstate = "off"
+        self.bootdevice = "default"
+        logger.info("IPMI BMC initialized.")
 
     def get_boot_device(self):
-        logger.info('IPMI BMC Get_Boot_Device request.')
+        logger.info("IPMI BMC Get_Boot_Device request.")
         return self.bootdevice
 
     def set_boot_device(self, bootdevice):
-        logger.info('IPMI BMC Set_Boot_Device request.')
+        logger.info("IPMI BMC Set_Boot_Device request.")
         self.bootdevice = bootdevice
 
     def cold_reset(self):
-        logger.info('IPMI BMC Cold_Reset request.')
-        self.powerstate = 'off'
-        self.bootdevice = 'default'
+        logger.info("IPMI BMC Cold_Reset request.")
+        self.powerstate = "off"
+        self.bootdevice = "default"
 
     def get_power_state(self):
-        logger.info('IPMI BMC Get_Power_State request.')
+        logger.info("IPMI BMC Get_Power_State request.")
         return self.powerstate
 
     def power_off(self):
-        logger.info('IPMI BMC Power_Off request.')
-        self.powerstate = 'off'
+        logger.info("IPMI BMC Power_Off request.")
+        self.powerstate = "off"
 
     def power_on(self):
-        logger.info('IPMI BMC Power_On request.')
-        self.powerstate = 'on'
+        logger.info("IPMI BMC Power_On request.")
+        self.powerstate = "on"
 
     def power_reset(self):
-        logger.info('IPMI BMC Power_Reset request.')
-        self.powerstate = 'off'
+        logger.info("IPMI BMC Power_Reset request.")
+        self.powerstate = "off"
 
     def power_cycle(self):
-        logger.info('IPMI BMC Power_Cycle request.')
-        if self.powerstate == 'off':
-            self.powerstate = 'on'
+        logger.info("IPMI BMC Power_Cycle request.")
+        if self.powerstate == "off":
+            self.powerstate = "on"
         else:
-            self.powerstate = 'off'
+            self.powerstate = "off"
 
     def power_shutdown(self):
-        logger.info('IPMI BMC Power_Shutdown request.')
-        self.powerstate = 'off'
+        logger.info("IPMI BMC Power_Shutdown request.")
+        self.powerstate = "off"

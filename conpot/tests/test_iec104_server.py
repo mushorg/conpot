@@ -23,20 +23,20 @@ import conpot.core as conpot_core
 import gevent.monkey
 from gevent.server import StreamServer
 import conpot
+
 gevent.monkey.patch_all()
 
 
 class TestIEC104Server(unittest.TestCase):
-
     def setUp(self):
         self.dir_name = os.path.dirname(conpot.__file__)
-        template = self.dir_name + '/templates/IEC104/template.xml'
-        iec104_template = self.dir_name + '/templates/IEC104/IEC104/IEC104.xml'
+        template = self.dir_name + "/templates/IEC104/template.xml"
+        iec104_template = self.dir_name + "/templates/IEC104/IEC104/IEC104.xml"
 
         self.databus = conpot_core.get_databus()
         self.databus.initialize(template)
-        self.iec104_inst = IEC104_server.IEC104Server(iec104_template, 'none', None)
-        self.iec104_server = StreamServer(('127.0.0.1', 2404), self.iec104_inst.handle)
+        self.iec104_inst = IEC104_server.IEC104Server(iec104_template, "none", None)
+        self.iec104_server = StreamServer(("127.0.0.1", 2404), self.iec104_inst.handle)
         self.iec104_server.start()
 
     def tearDown(self):
@@ -48,7 +48,7 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
         s.send(frames.STARTDT_act.build())
         data = s.recv(6)
         self.assertSequenceEqual(data, frames.STARTDT_con.build())
@@ -59,7 +59,7 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
         s.send(frames.TESTFR_act.build())
         data = s.recv(6)
         self.assertEqual(data, frames.TESTFR_con.build())
@@ -71,17 +71,24 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
 
         s.send(frames.STARTDT_act.build())
         s.recv(6)
 
-        single_command = frames.i_frame() / frames.asdu_head(COT=6) / frames.asdu_infobj_45(IOA=0xEEEEEE, SCS=1)
+        single_command = (
+            frames.i_frame()
+            / frames.asdu_head(COT=6)
+            / frames.asdu_infobj_45(IOA=0xEEEEEE, SCS=1)
+        )
         s.send(single_command.build())
         data = s.recv(16)
 
-        bad_addr = frames.i_frame(RecvSeq=0x0002) / frames.asdu_head(COT=47) / frames.asdu_infobj_45(IOA=0xEEEEEE,
-                                                                                                     SCS=1)
+        bad_addr = (
+            frames.i_frame(RecvSeq=0x0002)
+            / frames.asdu_head(COT=47)
+            / frames.asdu_infobj_45(IOA=0xEEEEEE, SCS=1)
+        )
         self.assertSequenceEqual(data, bad_addr.build())
 
     def test_write_relation_for_existing(self):
@@ -93,30 +100,44 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
 
         s.send(frames.STARTDT_act.build())
         s.recv(6)
 
-        self.databus.set_value('22_20', 0)  # Must be in template and relation to 13_20
-        self.databus.set_value('13_20', 0)  # Must be in template
+        self.databus.set_value("22_20", 0)  # Must be in template and relation to 13_20
+        self.databus.set_value("13_20", 0)  # Must be in template
         # print str(hex(IEC104.addr_in_hex('13_20')))
-        single_command = frames.i_frame() / frames.asdu_head(COT=6) / frames.asdu_infobj_45(IOA=0x141600, SCS=1)
+        single_command = (
+            frames.i_frame()
+            / frames.asdu_head(COT=6)
+            / frames.asdu_infobj_45(IOA=0x141600, SCS=1)
+        )
         s.send(single_command.build())
 
         data = s.recv(16)
-        act_conf = frames.i_frame(RecvSeq=0x0002) / frames.asdu_head(COT=7) / frames.asdu_infobj_45(IOA=0x141600, SCS=1)
+        act_conf = (
+            frames.i_frame(RecvSeq=0x0002)
+            / frames.asdu_head(COT=7)
+            / frames.asdu_infobj_45(IOA=0x141600, SCS=1)
+        )
         self.assertSequenceEqual(data, act_conf.build())
 
         data = s.recv(16)
-        info = frames.i_frame(SendSeq=0x0002, RecvSeq=0x0002) / frames.asdu_head(COT=11) / frames.asdu_infobj_1(
-            IOA=0x140d00)
+        info = (
+            frames.i_frame(SendSeq=0x0002, RecvSeq=0x0002)
+            / frames.asdu_head(COT=11)
+            / frames.asdu_infobj_1(IOA=0x140D00)
+        )
         info.SIQ = frames.SIQ(SPI=1)
         self.assertSequenceEqual(data, info.build())
 
         data = s.recv(16)
-        act_term = frames.i_frame(SendSeq=0x0004, RecvSeq=0x0002) / frames.asdu_head(COT=10) / frames.asdu_infobj_45(
-            IOA=0x141600, SCS=1)
+        act_term = (
+            frames.i_frame(SendSeq=0x0004, RecvSeq=0x0002)
+            / frames.asdu_head(COT=10)
+            / frames.asdu_infobj_45(IOA=0x141600, SCS=1)
+        )
         self.assertSequenceEqual(data, act_term.build())
 
     def test_write_no_relation_for_existing(self):
@@ -126,23 +147,34 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
 
         s.send(frames.STARTDT_act.build())
         s.recv(6)
 
-        self.databus.set_value('22_19', 0)  # Must be in template and no relation
+        self.databus.set_value("22_19", 0)  # Must be in template and no relation
         # print str(hex(IEC104.addr_in_hex('13_20')))
-        single_command = frames.i_frame() / frames.asdu_head(COT=6) / frames.asdu_infobj_45(IOA=0x131600, SCS=0)
+        single_command = (
+            frames.i_frame()
+            / frames.asdu_head(COT=6)
+            / frames.asdu_infobj_45(IOA=0x131600, SCS=0)
+        )
         s.send(single_command.build())
 
         data = s.recv(16)
-        act_conf = frames.i_frame(RecvSeq=0x0002) / frames.asdu_head(COT=7) / frames.asdu_infobj_45(IOA=0x131600, SCS=0)
+        act_conf = (
+            frames.i_frame(RecvSeq=0x0002)
+            / frames.asdu_head(COT=7)
+            / frames.asdu_infobj_45(IOA=0x131600, SCS=0)
+        )
         self.assertSequenceEqual(data, act_conf.build())
 
         data = s.recv(16)
-        act_term = frames.i_frame(SendSeq=0x0002, RecvSeq=0x0002) / frames.asdu_head(COT=10) / frames.asdu_infobj_45(
-            IOA=0x131600, SCS=0)
+        act_term = (
+            frames.i_frame(SendSeq=0x0002, RecvSeq=0x0002)
+            / frames.asdu_head(COT=10)
+            / frames.asdu_infobj_45(IOA=0x131600, SCS=0)
+        )
         self.assertSequenceEqual(data, act_term.build())
 
     def test_write_wrong_type_for_existing(self):
@@ -153,21 +185,28 @@ class TestIEC104Server(unittest.TestCase):
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
 
         s.send(frames.STARTDT_act.build())
         s.recv(6)
 
-        self.databus.set_value('22_20', 0)  # Must be in template
+        self.databus.set_value("22_20", 0)  # Must be in template
         # print str(hex(IEC104.addr_in_hex('13_20')))
-        single_command = frames.i_frame() / frames.asdu_head(COT=6) / frames.asdu_infobj_46(IOA=0x141600, DCS=1)
+        single_command = (
+            frames.i_frame()
+            / frames.asdu_head(COT=6)
+            / frames.asdu_infobj_46(IOA=0x141600, DCS=1)
+        )
         s.send(single_command.build())
 
         data = s.recv(16)
-        act_conf = frames.i_frame(RecvSeq=0x0002) / frames.asdu_head(PN=1, COT=7) / frames.asdu_infobj_46(IOA=0x141600,
-                                                                                                          DCS=1)
+        act_conf = (
+            frames.i_frame(RecvSeq=0x0002)
+            / frames.asdu_head(PN=1, COT=7)
+            / frames.asdu_infobj_46(IOA=0x141600, DCS=1)
+        )
         self.assertSequenceEqual(data, act_conf.build())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -31,7 +31,9 @@ class KamstrupRequestParser(object):
         self.parsing = False
         self.data_escaped = False
         self.done = False
-        self.request_map = {KamstrupRequestGetRegisters.command_byte: KamstrupRequestGetRegisters}
+        self.request_map = {
+            KamstrupRequestGetRegisters.command_byte: KamstrupRequestGetRegisters
+        }
 
     def add_byte(self, byte):
         self.bytes.append(ord(byte))
@@ -42,8 +44,11 @@ class KamstrupRequestParser(object):
         while position < bytes_len:
             d = self.bytes[position]
             if not self.parsing and d != kamstrup_constants.REQUEST_MAGIC:
-                logger.info('Kamstrup skipping byte, expected kamstrup_meter request magic but got: {0}'
-                            .format(hex(d)))
+                logger.info(
+                    "Kamstrup skipping byte, expected kamstrup_meter request magic but got: {0}".format(
+                        hex(d)
+                    )
+                )
                 del self.bytes[position]
                 bytes_len -= 1
                 continue
@@ -52,7 +57,7 @@ class KamstrupRequestParser(object):
 
                 escape_escape_byte = False
                 if self.data_escaped:
-                    self.bytes[position] ^= 0xff
+                    self.bytes[position] ^= 0xFF
                     if d is kamstrup_constants.EOT_MAGIC:
                         escape_escape_byte = True
                     self.data_escaped = False
@@ -68,22 +73,28 @@ class KamstrupRequestParser(object):
                     if not self.valid_crc(self.bytes[1:position]):
                         self.parsing = False
                         del self.bytes[0:position]
-                        logger.warning('Kamstrup CRC check failed for request.')
+                        logger.warning("Kamstrup CRC check failed for request.")
                     # now we expect (0x80, 0x3f, 0x10) =>
                     # (request magic, communication address, command byte)
                     comm_address = self.bytes[1]
                     command_byte = self.bytes[2]
                     if self.bytes[2] in self.request_map:
-                        result = self.request_map[command_byte](comm_address, command_byte, self.bytes[3:-3])
-                        del self.bytes[:position + 1]
+                        result = self.request_map[command_byte](
+                            comm_address, command_byte, self.bytes[3:-3]
+                        )
+                        del self.bytes[: position + 1]
                     else:
-                        result = KamstrupRequestUnknown(comm_address, command_byte, self.bytes[3:-3])
-                        del self.bytes[:position + 1]
+                        result = KamstrupRequestUnknown(
+                            comm_address, command_byte, self.bytes[3:-3]
+                        )
+                        del self.bytes[: position + 1]
                     return result
                 position += 1
 
     @classmethod
     def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
-        calculated_crc = crc16.crc16xmodem(b''.join([chr_py3(item) for item in message[:-2]]))
+        calculated_crc = crc16.crc16xmodem(
+            b"".join([chr_py3(item) for item in message[:-2]])
+        )
         return supplied_crc == calculated_crc

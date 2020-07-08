@@ -26,18 +26,20 @@ def conpot_protocol(cls):
         def __init__(self, *args, **kwargs):
             self.wrapped = cls(*args, **kwargs)
             self.cls = cls
-            if self.cls.__name__ not in 'Proxy':
+            if self.cls.__name__ not in "Proxy":
                 if self.cls not in core_interface.protocols:
                     core_interface.protocols[self.cls] = []
 
                 core_interface.protocols[self.cls].append(self.wrapped)
 
         def __getattr__(self, name):
-            if name == 'handle':
+            if name == "handle":
                 # assuming that handle function from a class is only called when a client tries to connect with an
                 # enabled protocol, update the last_active (last_attacked attribute)
                 # FIXME: No handle function in HTTPServer
-                core_interface.last_active = datetime.now().strftime("%b %d %Y - %H:%M:%S")
+                core_interface.last_active = datetime.now().strftime(
+                    "%b %d %Y - %H:%M:%S"
+                )
             return self.wrapped.__getattribute__(name)
 
         def __repr__(self):
@@ -46,4 +48,5 @@ def conpot_protocol(cls):
         __doc__ = property(lambda self: self.cls.__doc__)
         __module__ = property(lambda self: self.cls.__module__)
         __name__ = property(lambda self: self.cls.__name__)
+
     return Wrapper

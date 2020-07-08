@@ -47,45 +47,66 @@ class VirtualFS(object):
     fs folders made by all the individual protocols.
     :type data_fs_path: fs.open_fs
     """
+
     def __init__(self, data_fs_path=None):
-        self._conpot_vfs = dict()   # dictionary to keep all the protocol vfs instances, maintain easy access for
+        self._conpot_vfs = (
+            dict()
+        )  # dictionary to keep all the protocol vfs instances, maintain easy access for
         # individual mounted protocols with paths
         if data_fs_path is None:
             try:
-                self.data_fs = open_fs(os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'tests', 'data',
-                                                    'data_temp_fs'))
+                self.data_fs = open_fs(
+                    os.path.join(
+                        "/".join(conpot.__file__.split("/")[:-1]),
+                        "tests",
+                        "data",
+                        "data_temp_fs",
+                    )
+                )
             except fs.errors.FSError:
-                logger.exception('Unable to create persistent storage for Conpot. Exiting')
+                logger.exception(
+                    "Unable to create persistent storage for Conpot. Exiting"
+                )
                 sys.exit(3)
         else:
             try:
                 assert data_fs_path and isinstance(data_fs_path, str)
-                self.data_fs = open_fs(data_fs_path)  # Specify the place where you would place the uploads
+                self.data_fs = open_fs(
+                    data_fs_path
+                )  # Specify the place where you would place the uploads
             except AssertionError:
-                logger.exception('Incorrect FS url specified. Please check documentation for more details.')
+                logger.exception(
+                    "Incorrect FS url specified. Please check documentation for more details."
+                )
                 sys.exit(3)
             except fs.errors.CreateFailed:
-                logger.exception('Unexpected error occurred while creating Conpot FS.')
+                logger.exception("Unexpected error occurred while creating Conpot FS.")
                 sys.exit(3)
         self.protocol_fs = None
 
     def initialize_vfs(self, fs_path=None, data_fs_path=None, temp_dir=None):
         if data_fs_path is not None:
-            logger.info('Opening path {} for persistent storage of files.'.format(data_fs_path))
+            logger.info(
+                "Opening path {} for persistent storage of files.".format(data_fs_path)
+            )
             self.__init__(data_fs_path=data_fs_path)
         if fs_path is None:
-            fs_path = 'tar://' + os.path.join('/'.join(conpot.__file__.split('/')[:-1]), 'data.tar')
-            logger.warning('Using default FS path. {}'.format(fs_path))
+            fs_path = "tar://" + os.path.join(
+                "/".join(conpot.__file__.split("/")[:-1]), "data.tar"
+            )
+            logger.warning("Using default FS path. {}".format(fs_path))
         self.protocol_fs = AbstractFS(src_path=fs_path, temp_dir=temp_dir)
 
-    def add_protocol(self,
-                     protocol_name: str,
-                     data_fs_subdir: str,
-                     vfs_dst_path: str,
-                     src_path=None,
-                     owner_uid=0,
-                     group_gid=0,
-                     perms=0o755) -> (SubAbstractFS, subfs.SubFS):
+    def add_protocol(
+        self,
+        protocol_name: str,
+        data_fs_subdir: str,
+        vfs_dst_path: str,
+        src_path=None,
+        owner_uid=0,
+        group_gid=0,
+        perms=0o755,
+    ) -> (SubAbstractFS, subfs.SubFS):
         """
         Method that would be used by protocols to initialize vfs. May be called by each protocol individually. This
         creates a chroot jail sub file system env which makes easier handling. It also creates a data_fs sub file system
@@ -108,20 +129,20 @@ class VirtualFS(object):
         if src_path:
             assert isinstance(src_path, str)
             if not os.path.isdir(src_path):
-                logger.error('Protocol directory is not a valid directory.')
+                logger.error("Protocol directory is not a valid directory.")
                 sys.exit(3)
-        logger.info('Creating persistent data store for protocol: {}'.format(protocol_name))
+        logger.info(
+            "Creating persistent data store for protocol: {}".format(protocol_name)
+        )
         # create a sub directory for persistent storage.
         if self.data_fs.isdir(data_fs_subdir):
             sub_data_fs = self.data_fs.opendir(path=data_fs_subdir)
         else:
             sub_data_fs = self.data_fs.makedir(path=data_fs_subdir)
         if protocol_name not in self._conpot_vfs.keys():
-            sub_protocol_fs = self.protocol_fs.mount_fs(vfs_dst_path,
-                                                        src_path,
-                                                        owner_uid,
-                                                        group_gid,
-                                                        perms)
+            sub_protocol_fs = self.protocol_fs.mount_fs(
+                vfs_dst_path, src_path, owner_uid, group_gid, perms
+            )
             self._conpot_vfs[protocol_name] = (sub_protocol_fs, sub_data_fs)
         return self._conpot_vfs[protocol_name]
 
@@ -138,7 +159,7 @@ class VirtualFS(object):
                     # Let us close the protocol_fs sub dirs for that protocol
                     self._conpot_vfs[_fs][0].close()
                 except fs.errors.FSError:
-                    logger.exception('Error occurred while closing FS {}'.format(_fs))
+                    logger.exception("Error occurred while closing FS {}".format(_fs))
                     del self._conpot_vfs[_fs][0]
         self.protocol_fs.close()
         self.protocol_fs.clean()

@@ -17,37 +17,43 @@ logger = logging.getLogger(__name__)
 
 class conpot_extension(object):
     def _getStateInfo(self, snmpEngine, stateReference):
-        for k, v in list(snmpEngine.messageProcessingSubsystems.items()):
-            if stateReference in v._cache.__dict__['_Cache__stateReferenceIndex']:
-                state_dict = v._cache.__dict__['_Cache__stateReferenceIndex'][stateReference][0]
+        for _, v in list(snmpEngine.messageProcessingSubsystems.items()):
+            if stateReference in v._cache.__dict__["_Cache__stateReferenceIndex"]:
+                state_dict = v._cache.__dict__["_Cache__stateReferenceIndex"][
+                    stateReference
+                ][0]
 
-        addr = state_dict['transportAddress']
+        addr = state_dict["transportAddress"]
 
         # msgVersion 0/1 to SNMPv1/2, msgversion 3 corresponds to SNMPv3
-        if state_dict['msgVersion'] < 3:
-            snmp_version = state_dict['msgVersion'] + 1
+        if state_dict["msgVersion"] < 3:
+            snmp_version = state_dict["msgVersion"] + 1
         else:
-            snmp_version = state_dict['msgVersion']
+            snmp_version = state_dict["msgVersion"]
 
         return addr, snmp_version
 
     def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None, sock=None):
-        session = conpot_core.get_session('snmp', addr[0], addr[1],  get_interface_ip(addr[0]), sock.getsockname()[1])
+        session = conpot_core.get_session(
+            "snmp", addr[0], addr[1], get_interface_ip(addr[0]), sock.getsockname()[1]
+        )
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
-        event_type = 'SNMPv{0} {1}'.format(version, msg_type)
-        request = {'oid': str(req_oid), 'val': str(req_val)}
+        event_type = "SNMPv{0} {1}".format(version, msg_type)
+        request = {"oid": str(req_oid), "val": str(req_val)}
         response = None
 
-        logger.info('%s request from %s: %s %s', event_type, addr, req_oid, req_val)
+        logger.info("%s request from %s: %s %s", event_type, addr, req_oid, req_val)
 
         if res_varBinds:
             res_oid = ".".join(map(str, res_varBinds[0][0]))
             res_val = res_varBinds[0][1]
-            logger.info('%s response to %s: %s %s', event_type, addr, res_oid, res_val)
-            response = {'oid': str(res_oid), 'val': str(res_val)}
+            logger.info("%s response to %s: %s %s", event_type, addr, res_oid, res_val)
+            response = {"oid": str(res_oid), "val": str(res_val)}
 
-        session.add_event({'type': event_type, 'request': request, 'response': response})
+        session.add_event(
+            {"type": event_type, "request": request, "response": response}
+        )
 
     def do_tarpit(self, delay):
 
@@ -72,18 +78,28 @@ class conpot_extension(object):
         # is considered to be a DoS request.
 
         state_individual, state_overall = state
-        threshold_individual, _, threshold_overall = threshold.partition(';')
+        threshold_individual, _, threshold_overall = threshold.partition(";")
 
         if int(threshold_individual) > 0:
             if int(state_individual) > int(threshold_individual):
-                logger.warning('SNMPv%s: DoS threshold for %s exceeded (%s/%s).', cmd, addr, state_individual,
-                               threshold_individual)
+                logger.warning(
+                    "SNMPv%s: DoS threshold for %s exceeded (%s/%s).",
+                    cmd,
+                    addr,
+                    state_individual,
+                    threshold_individual,
+                )
                 # DoS threshold exceeded.
                 return True
 
         if int(threshold_overall) > 0:
             if int(state_overall) > int(threshold_overall):
-                logger.warning('SNMPv%s: DDoS threshold exceeded (%s/%s).', cmd, state_individual, threshold_overall)
+                logger.warning(
+                    "SNMPv%s: DDoS threshold exceeded (%s/%s).",
+                    cmd,
+                    state_individual,
+                    threshold_overall,
+                )
                 # DDoS threshold exceeded
                 return True
 
@@ -94,16 +110,15 @@ class conpot_extension(object):
 class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
-        self.tarpit = '0;0'
-        self.threshold = '0;0'
+        self.tarpit = "0;0"
+        self.threshold = "0;0"
         self.host = host
         self.port = port
 
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
 
-    def handleMgmtOperation(
-            self, snmpEngine, stateReference, contextName, PDU, acInfo):
+    def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
         (acFun, acCtx) = acInfo
         # rfc1905: 4.2.1.1
         mgmtFun = self.snmpContext.getMibInstrum(contextName).readVars
@@ -112,7 +127,9 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
-        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Get'):
+        if self.check_evasive(
+            evasion_state, self.threshold, addr, str(snmp_version) + " Get"
+        ):
             return None
 
         rspVarBinds = None
@@ -122,16 +139,18 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 
             # determine the correct response class and update the dynamic value table
             reference_class = rspVarBinds[0][1].__class__.__name__
-            reference_value = rspVarBinds[0][1]
+            # reference_value = rspVarBinds[0][1]
 
-            response = self.databus_mediator.get_response(reference_class, tuple(rspVarBinds[0][0]))
+            response = self.databus_mediator.get_response(
+                reference_class, tuple(rspVarBinds[0][0])
+            )
             if response:
                 rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                 rspVarBinds = rspModBinds
 
         finally:
-            sock=snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, 'Get', addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transportDispatcher.socket
+            self.log(snmp_version, "Get", addr, varBinds, rspVarBinds, sock)
 
         # apply tarpit delay
         if self.tarpit is not 0:
@@ -145,8 +164,8 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
-        self.tarpit = '0;0'
-        self.threshold = '0;0'
+        self.tarpit = "0;0"
+        self.threshold = "0;0"
         self.host = host
         self.port = port
 
@@ -163,7 +182,9 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
-        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' GetNext'):
+        if self.check_evasive(
+            evasion_state, self.threshold, addr, str(snmp_version) + " GetNext"
+        ):
             return None
 
         rspVarBinds = None
@@ -173,9 +194,11 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 
                 # determine the correct response class and update the dynamic value table
                 reference_class = rspVarBinds[0][1].__class__.__name__
-                reference_value = rspVarBinds[0][1]
+                # reference_value = rspVarBinds[0][1]
 
-                response = self.databus_mediator.get_response(reference_class, tuple(rspVarBinds[0][0]))
+                response = self.databus_mediator.get_response(
+                    reference_class, tuple(rspVarBinds[0][0])
+                )
                 if response:
                     rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
                     rspVarBinds = rspModBinds
@@ -188,14 +211,14 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 try:
                     self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
                 except error.StatusInformation:
-                    idx = sys.exc_info()[1]['idx']
+                    idx = sys.exc_info()[1]["idx"]
                     varBinds[idx] = (rspVarBinds[idx][0], varBinds[idx][1])
                 else:
                     break
 
         finally:
-            sock=snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, 'GetNext', addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transportDispatcher.socket
+            self.log(snmp_version, "GetNext", addr, varBinds, rspVarBinds, sock)
 
         self.releaseStateInformation(stateReference)
 
@@ -203,8 +226,8 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
-        self.tarpit = '0;0'
-        self.threshold = '0;0'
+        self.tarpit = "0;0"
+        self.threshold = "0;0"
         self.host = host
         self.port = port
 
@@ -224,17 +247,22 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
-        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Bulk'):
+        if self.check_evasive(
+            evasion_state, self.threshold, addr, str(snmp_version) + " Bulk"
+        ):
             return None
-        raise Exception('This class is not converted to new architecture')
+        raise Exception("This class is not converted to new architecture")
         try:
             N = min(int(nonRepeaters), len(reqVarBinds))
             M = int(maxRepetitions)
             R = max(len(reqVarBinds) - N, 0)
 
-            if R: M = min(M, self.maxVarBinds / R)
+            if R:
+                M = min(M, self.maxVarBinds / R)
 
-            debug.logger & debug.flagApp and debug.logger('handleMgmtOperation: N %d, M %d, R %d' % (N, M, R))
+            debug.logger & debug.flagApp and debug.logger(
+                "handleMgmtOperation: N %d, M %d, R %d" % (N, M, R)
+            )
 
             mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
 
@@ -245,14 +273,12 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 
             varBinds = reqVarBinds[-R:]
             while M and R:
-                rspVarBinds.extend(
-                    mgmtFun(varBinds, (acFun, acCtx))
-                )
+                rspVarBinds.extend(mgmtFun(varBinds, (acFun, acCtx)))
                 varBinds = rspVarBinds[-R:]
                 M = M - 1
         finally:
-            sock=snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, 'Bulk', addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transportDispatcher.socket
+            self.log(snmp_version, "Bulk", addr, varBinds, rspVarBinds, sock)
 
         # apply tarpit delay
         if self.tarpit is not 0:
@@ -269,8 +295,8 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
 class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
     def __init__(self, snmpEngine, snmpContext, databus_mediator, host, port):
         self.databus_mediator = databus_mediator
-        self.tarpit = '0;0'
-        self.threshold = '0;0'
+        self.tarpit = "0;0"
+        self.threshold = "0;0"
         self.host = host
         self.port = port
 
@@ -286,7 +312,9 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
-        if self.check_evasive(evasion_state, self.threshold, addr, str(snmp_version)+' Set'):
+        if self.check_evasive(
+            evasion_state, self.threshold, addr, str(snmp_version) + " Set"
+        ):
             return None
 
         # rfc1905: 4.2.5.1-13
@@ -306,11 +334,13 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             oid = tuple(rspVarBinds[0][0])
             self.databus_mediator.set_value(oid, rspVarBinds[0][1])
 
-        except (pysnmp.smi.error.NoSuchObjectError,
-                pysnmp.smi.error.NoSuchInstanceError):
+        except (
+            pysnmp.smi.error.NoSuchObjectError,
+            pysnmp.smi.error.NoSuchInstanceError,
+        ):
             e = pysnmp.smi.error.NotWritableError()
             e.update(sys.exc_info()[1])
             raise e
         finally:
-            sock=snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, 'Set', addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transportDispatcher.socket
+            self.log(snmp_version, "Set", addr, varBinds, rspVarBinds, sock)

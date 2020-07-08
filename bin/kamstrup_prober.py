@@ -35,7 +35,7 @@ class KamstrupRegisterCopier(object):
         self._connect()
 
     def _connect(self):
-        print('Connecting to {0}:{1}'.format(self.ip_address, self.port))
+        print("Connecting to {0}:{1}".format(self.ip_address, self.port))
         if self._sock is not None:
             self._sock.close()
             time.sleep(1)
@@ -44,19 +44,26 @@ class KamstrupRegisterCopier(object):
         try:
             self._sock.connect((self.ip_address, self.port))
         except socket.error as socket_err:
-            print('Error while connecting: {0}'.format(str(socket_err)))
+            print("Error while connecting: {0}".format(str(socket_err)))
             self._connect()
 
     def get_register(self, register):
-        message = [kamstrup_constants.REQUEST_MAGIC, self.comm_address, 0x10, 0x01, register >> 8, register & 0xff]
-        crc = crc16.crc16xmodem(''.join([chr(item) for item in message[1:]]))
+        message = [
+            kamstrup_constants.REQUEST_MAGIC,
+            self.comm_address,
+            0x10,
+            0x01,
+            register >> 8,
+            register & 0xFF,
+        ]
+        crc = crc16.crc16xmodem("".join([chr(item) for item in message[1:]]))
         message.append(crc >> 8)
-        message.append(crc & 0xff)
+        message.append(crc & 0xFF)
         message_length = len(message)
         y = 1
         while y < message_length:
             if message[y] in kamstrup_constants.NEED_ESCAPE:
-                message[y] ^= 0xff
+                message[y] ^= 0xFF
                 message.insert(y, kamstrup_constants.ESCAPE)
                 y += 1
                 message_length += 1
@@ -70,7 +77,7 @@ class KamstrupRegisterCopier(object):
                 received_data = self._sock.recv(1024)
                 received_data = bytearray(received_data)
             except socket.error as socket_err:
-                print('Error while communicating: {0}'.format(str(socket_err)))
+                print("Error while communicating: {0}".format(str(socket_err)))
                 self._connect()
         data_length = len(received_data)
 
@@ -79,7 +86,7 @@ class KamstrupRegisterCopier(object):
         while p < data_length:
             if received_data[p] is kamstrup_constants.ESCAPE:
                 del received_data[p]
-                received_data[p] ^= 0xff
+                received_data[p] ^= 0xFF
                 data_length -= 1
             p += 1
 
@@ -93,28 +100,36 @@ def json_default(obj):
         return None
 
 
-parser = argparse.ArgumentParser(description='Probes kamstrup_meter meter registers.')
-parser.add_argument('host', help='Hostname or IP or Kamstrup meter')
-parser.add_argument('port', type=int, help='TCP port')
-parser.add_argument('--registerfile', dest='registerfile', help='Reads registers from previous dumps files instead of'
-                                                                'bruteforcing the meter.')
-parser.add_argument('--comaddress', dest='communication_address', default=0x3f)
+parser = argparse.ArgumentParser(description="Probes kamstrup_meter meter registers.")
+parser.add_argument("host", help="Hostname or IP or Kamstrup meter")
+parser.add_argument("port", type=int, help="TCP port")
+parser.add_argument(
+    "--registerfile",
+    dest="registerfile",
+    help="Reads registers from previous dumps files instead of"
+    "bruteforcing the meter.",
+)
+parser.add_argument("--comaddress", dest="communication_address", default=0x3F)
 args = parser.parse_args()
 
 if args.registerfile:
     candidate_registers_values = []
-    with open(args.registerfile, 'r') as register_file:
+    with open(args.registerfile, "r") as register_file:
         old_register_values = json.load(register_file)
     for value in old_register_values.iterkeys():
         candidate_registers_values.append(int(value))
 else:
-    candidate_registers_values = range(0x01, 0xffff)
+    candidate_registers_values = range(0x01, 0xFFFF)
 
-kamstrupRegisterCopier = KamstrupRegisterCopier(args.host, args.port, int(args.communication_address))
+kamstrupRegisterCopier = KamstrupRegisterCopier(
+    args.host, args.port, int(args.communication_address)
+)
 found_registers = {}
 not_found_counts = 0
 scanned = 0
-dumpfile = 'kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple()))
+dumpfile = "kamstrup_dump_{0}.json".format(
+    calendar.timegm(datetime.utcnow().utctimetuple())
+)
 
 for x in candidate_registers_values:
     result = kamstrupRegisterCopier.get_register(x)
@@ -127,19 +142,24 @@ for x in candidate_registers_values:
         for p in range(length):
             register_value += result[8 + p] << (8 * ((length - p) - 1))
 
-        found_registers[x] = {'timestamp': datetime.utcnow(),
-                              'units': units,
-                              'value': register_value,
-                              'value_length': length,
-                              'unknown': unknown}
-        print('Found register value at {0}:{1}'.format(hex(x), register_value))
-        with open(dumpfile, 'w') as json_file:
+        found_registers[x] = {
+            "timestamp": datetime.utcnow(),
+            "units": units,
+            "value": register_value,
+            "value_length": length,
+            "unknown": unknown,
+        }
+        print("Found register value at {0}:{1}".format(hex(x), register_value))
+        with open(dumpfile, "w") as json_file:
             json_file.write(json.dumps(found_registers, indent=4, default=json_default))
     else:
         not_found_counts += 1
         if not_found_counts % 10 == 0:
-            print('Hang on, still scanning, so far scanned {0} and found {1} registers'
-                  .format(scanned, len(found_registers)))
+            print(
+                "Hang on, still scanning, so far scanned {0} and found {1} registers".format(
+                    scanned, len(found_registers)
+                )
+            )
     scanned += 1
 
 
@@ -147,12 +167,15 @@ def generate_conpot_config(result_list):
     config_xml = """<conpot_template name="Kamstrup-Auto382" description="Register clone of an existing Kamstrup meter">
     <core><databus><key_value_mappings>"""
     for key, value in result_list.items():
-        config_xml += """<key name="register_{0}"><value type="value">{1}</value></key>""".format(key, value['value'])
+        config_xml += """<key name="register_{0}"><value type="value">{1}</value></key>""".format(
+            key, value["value"]
+        )
     config_xml += """</key_value_mappings></databus></core><protocols><kamstrup_meter enabled="True" host="0.0.0.0" port="1025"><registers>"""
 
     for key, value in result_list.items():
-        config_xml += """<register name="{0}" units="{1}" unknown="{2}" length="{3}"><value>register_{0}</value></register>"""\
-            .format(key, value['units'], value['unknown'], value['value_length'])
+        config_xml += """<register name="{0}" units="{1}" unknown="{2}" length="{3}"><value>register_{0}</value></register>""".format(
+            key, value["units"], value["unknown"], value["value_length"]
+        )
     config_xml += "</registers></kamstrup_meter></protocols></conpot_template>"
 
     parsed_xml = xml.dom.minidom.parseString(config_xml)
@@ -160,7 +183,11 @@ def generate_conpot_config(result_list):
     return pretty_xml
 
 
-print('Scanned {0} registers, found {1}.'.format(len(candidate_registers_values), len(found_registers)))
+print(
+    "Scanned {0} registers, found {1}.".format(
+        len(candidate_registers_values), len(found_registers)
+    )
+)
 # with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
 #    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
 print("""*** Sample Conpot configuration from this scrape:""")

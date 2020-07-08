@@ -15,7 +15,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey; gevent.monkey.patch_all()
+import gevent.monkey
+
+gevent.monkey.patch_all()
 import unittest
 import datetime
 from collections import namedtuple
@@ -30,20 +32,21 @@ import conpot.core as conpot_core
 
 
 class TestHTTPServer(unittest.TestCase):
-
     def setUp(self):
 
         # clean up before we start...
         conpot_core.get_sessionManager().purge_sessions()
         self.dir_name = os.path.dirname(conpot.__file__)
-        args = namedtuple('FakeArgs', '')
-        self.http_server = web_server.HTTPServer(self.dir_name + '/templates/default/http/http.xml',
-                                                 self.dir_name + '/templates/default/',
-                                                 args)
-        self.http_worker = gevent.spawn(self.http_server.start, '127.0.0.1', 0)
+        args = namedtuple("FakeArgs", "")
+        self.http_server = web_server.HTTPServer(
+            self.dir_name + "/templates/default/http/http.xml",
+            self.dir_name + "/templates/default/",
+            args,
+        )
+        self.http_worker = gevent.spawn(self.http_server.start, "127.0.0.1", 0)
         # initialize the databus
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
+        self.databus.initialize(self.dir_name + "/templates/default/template.xml")
         gevent.sleep(1)
 
     def tearDown(self):
@@ -56,64 +59,98 @@ class TestHTTPServer(unittest.TestCase):
         """
         Objective: Test if http service delivers data on request
         """
-        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_base.html".format(self.http_server.server_port))
-        self.assertIn('ONLINE', ret.text, "Could not retrieve expected data from test output.")
+        ret = requests.get(
+            "http://127.0.0.1:{0}/tests/unittest_base.html".format(
+                self.http_server.server_port
+            )
+        )
+        self.assertIn(
+            "ONLINE", ret.text, "Could not retrieve expected data from test output."
+        )
 
     def test_http_backend_databus(self):
         """
         Objective: Test if http backend is able to retrieve data from databus
         """
         # retrieve configuration from xml
-        dom = etree.parse(self.dir_name + '/templates/default/template.xml')
+        dom = etree.parse(self.dir_name + "/templates/default/template.xml")
 
         # retrieve reference value from configuration
-        sysName = dom.xpath('//core/databus/key_value_mappings/key[@name="sysName"]/value')
+        sysName = dom.xpath(
+            '//core/databus/key_value_mappings/key[@name="sysName"]/value'
+        )
         if sysName:
             # print(sysName)
-            assert_reference = sysName[0].xpath('./text()')[0][1:-1]
+            assert_reference = sysName[0].xpath("./text()")[0][1:-1]
         else:
             assert_reference = None
         if assert_reference is not None:
-            ret = requests.get("http://127.0.0.1:{0}/tests/unittest_databus.html".format(self.http_server.server_port))
-            self.assertIn(assert_reference, ret.text,
-                          "Could not find databus entity 'sysName' (value '{0}') in output.".format(assert_reference))
+            ret = requests.get(
+                "http://127.0.0.1:{0}/tests/unittest_databus.html".format(
+                    self.http_server.server_port
+                )
+            )
+            self.assertIn(
+                assert_reference,
+                ret.text,
+                "Could not find databus entity 'sysName' (value '{0}') in output.".format(
+                    assert_reference
+                ),
+            )
         else:
-            raise Exception("Assertion failed. Key 'sysName' not found in databus definition table.")
+            raise Exception(
+                "Assertion failed. Key 'sysName' not found in databus definition table."
+            )
 
     def test_http_backend_tarpit(self):
         """
         Objective: Test if http tarpit delays responses properly
         """
         # retrieve configuration from xml
-        dom = etree.parse(self.dir_name + '/templates/default/http/http.xml')
+        dom = etree.parse(self.dir_name + "/templates/default/http/http.xml")
 
         # check for proper tarpit support
-        tarpit = dom.xpath('//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit')
+        tarpit = dom.xpath(
+            '//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit'
+        )
 
         if tarpit:
-            tarpit_delay = tarpit[0].xpath('./text()')[0]
+            tarpit_delay = tarpit[0].xpath("./text()")[0]
 
             # requesting file via HTTP along with measuring the timedelta
             dt_req_start = datetime.datetime.now()
-            requests.get("http://127.0.0.1:{0}/tests/unittest_tarpit.html".format(self.http_server.server_port))
+            requests.get(
+                "http://127.0.0.1:{0}/tests/unittest_tarpit.html".format(
+                    self.http_server.server_port
+                )
+            )
             dt_req_delta = datetime.datetime.now() - dt_req_start
 
             # check if the request took at least the expected delay to be processed
             self.assertLessEqual(
                 int(tarpit_delay),
                 dt_req_delta.seconds,
-                "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(tarpit_delay, dt_req_delta.seconds)
+                "Expected delay: >= {0} seconds. Actual delay: {1} seconds".format(
+                    tarpit_delay, dt_req_delta.seconds
+                ),
             )
         else:
-            raise AssertionError("Assertion failed. Tarpit delay not found in HTTP template.")
+            raise AssertionError(
+                "Assertion failed. Tarpit delay not found in HTTP template."
+            )
 
     def test_http_subselect_trigger(self):
         """
         Objective: Test if http subselect triggers work correctly
         """
-        ret = requests.get("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
-            self.http_server.server_port))
-        self.assertIn('SUCCESSFUL', ret.text, "Trigger missed. An unexpected page was delivered.")
+        ret = requests.get(
+            "http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+                self.http_server.server_port
+            )
+        )
+        self.assertIn(
+            "SUCCESSFUL", ret.text, "Trigger missed. An unexpected page was delivered."
+        )
 
     def test_do_TRACE(self):
         """
@@ -121,72 +158,89 @@ class TestHTTPServer(unittest.TestCase):
         """
         # requests has no trace method.. So resorting to the good'ol socket - sending raw data
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.http_server.server_port))
-        s.sendall(b'TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        s.connect(("127.0.0.1", self.http_server.server_port))
+        s.sendall(b"TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
         # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
-        self.assertIn(b'HTTP/1.1 200 OK', data)
+        self.assertIn(b"HTTP/1.1 200 OK", data)
         # test for 501 - Disable TRACE method
         self.http_server.cmd_responder.httpd.disable_method_trace = True
-        s.sendall(b'TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        s.sendall(b"TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
         s.close()
-        self.assertIn(b'501', data)
+        self.assertIn(b"501", data)
 
     def test_do_HEAD(self):
         """
         Objective: Test the web server by sending a HTTP HEAD request.
         Should be responded back by the valid HTTP headers
         """
-        ret = requests.head("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
-            self.http_server.server_port))
-        self.assertTrue(ret.status_code == 200 and ret.headers['Content-Length'] == '370')
+        ret = requests.head(
+            "http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+                self.http_server.server_port
+            )
+        )
+        self.assertTrue(
+            ret.status_code == 200 and ret.headers["Content-Length"] == "370"
+        )
 
         # Test for 404
-        ret = requests.head("http://127.0.0.1:{0}/tests/random_page_does_not_exists.html".format(
-            self.http_server.server_port
-        ))
+        ret = requests.head(
+            "http://127.0.0.1:{0}/tests/random_page_does_not_exists.html".format(
+                self.http_server.server_port
+            )
+        )
         self.assertEqual(ret.status_code, 404)
 
         # test for 501 - Disable HEAD method
         self.http_server.cmd_responder.httpd.disable_method_head = True
-        ret = requests.head("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
-            self.http_server.server_port))
+        ret = requests.head(
+            "http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+                self.http_server.server_port
+            )
+        )
         self.assertEqual(ret.status_code, 501)
 
     def test_do_OPTIONS(self):
         """
         Objective: Test the web server by sending a valid OPTIONS HTTP request
         """
-        ret = requests.options("http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
-            self.http_server.server_port))
-        self.assertEqual((ret.headers['allow']), 'GET,HEAD,POST,OPTIONS,TRACE')
+        ret = requests.options(
+            "http://127.0.0.1:{0}/tests/unittest_subselects.html?action=unit&subaction=test".format(
+                self.http_server.server_port
+            )
+        )
+        self.assertEqual((ret.headers["allow"]), "GET,HEAD,POST,OPTIONS,TRACE")
         # test for 501 - Disable OPTIONS method
         self.http_server.cmd_responder.httpd.disable_method_options = True
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', self.http_server.server_port))
-        s.sendall(b'OPTIONS /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n')
+        s.connect(("127.0.0.1", self.http_server.server_port))
+        s.sendall(b"OPTIONS /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
-        self.assertIn(b'501', data)
+        self.assertIn(b"501", data)
 
     def test_do_POST(self):
         """
         Objective: send a POST request to a invalid URI. Should get a 404 response
         """
-        payload = {'key1': 'value1', 'key2': 'value2'}
-        ret = requests.post("http://127.0.0.1:{0}/tests/demo.html".format(
-            self.http_server.server_port), data=payload)
+        payload = {"key1": "value1", "key2": "value2"}
+        ret = requests.post(
+            "http://127.0.0.1:{0}/tests/demo.html".format(self.http_server.server_port),
+            data=payload,
+        )
         self.assertEqual(ret.status_code, 404)
 
     def test_not_implemented_method(self):
         """
         Objective: PUT HTTP method is not implemented in Conpot, should raise 501
         """
-        payload = b'PUT /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n'
-        ret = requests.put("http://127.0.0.1:{0}/tests/demo.html".format(
-            self.http_server.server_port), data=payload)
+        payload = b"PUT /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n"
+        ret = requests.put(
+            "http://127.0.0.1:{0}/tests/demo.html".format(self.http_server.server_port),
+            data=payload,
+        )
         self.assertEqual(ret.status_code, 501)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

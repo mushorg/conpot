@@ -16,7 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import unittest
-# from conpot.core.loggers.mysql_log import MySQLlogger
+
+from conpot.core.loggers.mysql_log import MySQLlogger
 
 
 @unittest.skip("switch for a more generic db solution in py3")
@@ -28,28 +29,34 @@ class Test_MySQLlogger(unittest.TestCase):
         """
 
         # instanciate our mysql logging infrastructure
-        host = '127.0.0.1'
+        host = "127.0.0.1"
         port = 3306
-        username = 'travis'
-        passphrase = ''
-        db = 'conpot_unittest'
-        logdevice = ''
-        logsocket = 'tcp'
-        sensorid = 'default'
+        username = "travis"
+        passphrase = ""
+        db = "conpot_unittest"
+        logdevice = ""
+        logsocket = "tcp"
+        sensorid = "default"
 
-        mysqllogger = MySQLlogger(host, port, db, username, passphrase, logdevice, logsocket, sensorid)
+        mysqllogger = MySQLlogger(
+            host, port, db, username, passphrase, logdevice, logsocket, sensorid
+        )
 
         # create a test event
         test_event = dict()
-        test_event['id'] = 1337
-        test_event['remote'] = "127.0.0.2"
-        test_event['data_type'] = "unittest"
-        test_event['data'] = {'request': 'foo', 'response': 'bar'}
+        test_event["id"] = 1337
+        test_event["remote"] = "127.0.0.2"
+        test_event["data_type"] = "unittest"
+        test_event["data"] = {"request": "foo", "response": "bar"}
 
         # lets do it, but do not retry in case of failure
         success = mysqllogger.log(test_event, 0)
-        self.assertTrue(success, 'Could not log to mysql database')
+        self.assertTrue(success, "Could not log to mysql database")
 
         # now that we logged something, lets try to retrieve the event again..
-        retrieved_event = mysqllogger.select_session_data(test_event['id'])
-        self.assertEqual(len(retrieved_event), 1, 'Retrieved wrong number of events (or no event at all)')
+        retrieved_event = mysqllogger.select_session_data(test_event["id"])
+        self.assertEqual(
+            len(retrieved_event),
+            1,
+            "Retrieved wrong number of events (or no event at all)",
+        )
