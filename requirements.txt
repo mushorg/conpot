@@ -1,6 +1,7 @@
 gevent>=1.0
 cffi
 pysnmp
+pysnmp-mibs
 pysmi
 lxml
 bottle
