@@ -134,8 +134,11 @@ class ModbusServer(modbus.Server):
                     break
                 _, _, length = struct.unpack(">HHH", request[:6])
                 while len(request) < (length + 6):
-                    new_byte = sock.recv(1)
-                    request += new_byte
+                    try:
+                        new_byte = sock.recv(1)
+                        request += new_byte
+                    except Exception:
+                        break
                 query = modbus_tcp.TcpQuery()
 
                 # logdata is a dictionary containing request, slave_id,
