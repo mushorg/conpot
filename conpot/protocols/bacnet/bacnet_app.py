@@ -65,8 +65,7 @@ class BACnetApp(BIPSimpleApplication):
         self.objectIdentifier = {device.objectIdentifier: device}
         self.datagram_server = datagram_server
         self.deviceIdentifier = None
-        # this might not be initialized properly?
-        super().__init__(self.localDevice, datagram_server)
+        super(BIPSimpleApplication, self).__init__()
 
     def get_objects_and_properties(self, dom):
         """

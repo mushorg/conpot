@@ -129,9 +129,10 @@ class EnipServer(object):
         """
         Handle an incoming connection
         """
-        name = "ENIP_%s" % (address[1] if address else "UDP")
+        host, port = address if address else ("UDP", "UDP")
+        name = "ENIP_%s" % port
         session = conpot_core.get_session(
-            "enip", address[0], address[1], conn.getsockname()[0], conn.getsockname()[1]
+            "enip", host, port, conn.getsockname()[0], conn.getsockname()[1]
         )
         logger.debug("ENIP server %s begins serving client %s", name, address)
         session.add_event({"type": "NEW_CONNECTION"})

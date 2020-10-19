@@ -3,7 +3,7 @@
 
 import logging
 
-from pysmi.reader import FileReader, HttpReader
+from pysmi.reader import FileReader, FtpReader
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
 from pysnmp.carrier.asynsock.dgram import udp
@@ -60,7 +60,7 @@ class CommandResponder(object):
         addMibCompiler(mib_builder, destination=compiled_mibs)
         mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
         mib_builder.getMibCompiler().addSources(
-            HttpReader("mibs.snmplabs.com", 80, "/asn1/@mib@")
+            FtpReader('ftp.cisco.com', '/pub/mibs/v2/@mib@', 80)
         )
 
         # Transport setup
