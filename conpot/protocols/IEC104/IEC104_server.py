@@ -132,7 +132,7 @@ class IEC104Server(object):
             session.add_event({"type": "CONNECTION_LOST"})
         except socket.error as err:
             if isinstance(err.args, tuple):
-                if err == errno.EPIPE:
+                if err.errno == errno.EPIPE:
                     # remote peer disconnected
                     logger.info("IEC104 Station disconnected. (%s)", session.id)
                     session.add_event({"type": "CONNECTION_LOST"})
