@@ -93,74 +93,88 @@ class KamstrupRegisterCopier(object):
         return received_data
 
 
-def json_default(obj):
-    if isinstance(obj, datetime):
-        return obj.isoformat()
+def find_registers_in_candidates():
+
+    args = parse_args()
+    if args.registerfile:
+        candidate_registers_values = []
+        with open(args.registerfile, "r") as register_file:
+            old_register_values = json.load(register_file)
+        for value in old_register_values.iterkeys():
+            candidate_registers_values.append(int(value))
     else:
-        return None
+        candidate_registers_values = range(0x01, 0xFFFF)
+
+    found_registers = registers_from_candidates(candidate_registers_values, args)
+
+    print(
+        "Scanned {0} registers, found {1}.".format(
+            len(candidate_registers_values), len(found_registers)
+        )
+    )
+    # with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
+    #    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
+    print("""*** Sample Conpot configuration from this scrape:""")
+    print(generate_conpot_config(found_registers))
 
 
-parser = argparse.ArgumentParser(description="Probes kamstrup_meter meter registers.")
-parser.add_argument("host", help="Hostname or IP or Kamstrup meter")
-parser.add_argument("port", type=int, help="TCP port")
-parser.add_argument(
-    "--registerfile",
-    dest="registerfile",
-    help="Reads registers from previous dumps files instead of"
-    "bruteforcing the meter.",
-)
-parser.add_argument("--comaddress", dest="communication_address", default=0x3F)
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser(description="Probes kamstrup_meter meter registers.")
+    parser.add_argument("host", help="Hostname or IP or Kamstrup meter")
+    parser.add_argument("port", type=int, help="TCP port")
+    parser.add_argument(
+        "--registerfile",
+        dest="registerfile",
+        help="Reads registers from previous dumps files instead of"
+             "bruteforcing the meter.",
+    )
+    parser.add_argument("--comaddress", dest="communication_address", default=0x3F)
+    return parser.parse_args()
 
-if args.registerfile:
-    candidate_registers_values = []
-    with open(args.registerfile, "r") as register_file:
-        old_register_values = json.load(register_file)
-    for value in old_register_values.iterkeys():
-        candidate_registers_values.append(int(value))
-else:
-    candidate_registers_values = range(0x01, 0xFFFF)
 
-kamstrupRegisterCopier = KamstrupRegisterCopier(
-    args.host, args.port, int(args.communication_address)
-)
-found_registers = {}
-not_found_counts = 0
-scanned = 0
-dumpfile = "kamstrup_dump_{0}.json".format(
-    calendar.timegm(datetime.utcnow().utctimetuple())
-)
+def registers_from_candidates(candidate_registers_values, args):
 
-for x in candidate_registers_values:
-    result = kamstrupRegisterCopier.get_register(x)
-    if len(result) > 12:
-        units = result[5]
-        length = result[6]
-        unknown = result[7]
+    kamstrupRegisterCopier = KamstrupRegisterCopier(
+        args.host, args.port, int(args.communication_address)
+    )
+    found_registers = {}
+    not_found_counts = 0
+    scanned = 0
+    dumpfile = "kamstrup_dump_{0}.json".format(
+        calendar.timegm(datetime.utcnow().utctimetuple())
+    )
+    for x in candidate_registers_values:
+        result = kamstrupRegisterCopier.get_register(x)
+        if len(result) > 12:
+            units = result[5]
+            length = result[6]
+            unknown = result[7]
 
-        register_value = 0
-        for p in range(length):
-            register_value += result[8 + p] << (8 * ((length - p) - 1))
+            register_value = 0
+            for p in range(length):
+                register_value += result[8 + p] << (8 * ((length - p) - 1))
 
-        found_registers[x] = {
-            "timestamp": datetime.utcnow(),
-            "units": units,
-            "value": register_value,
-            "value_length": length,
-            "unknown": unknown,
-        }
-        print("Found register value at {0}:{1}".format(hex(x), register_value))
-        with open(dumpfile, "w") as json_file:
-            json_file.write(json.dumps(found_registers, indent=4, default=json_default))
-    else:
-        not_found_counts += 1
-        if not_found_counts % 10 == 0:
-            print(
-                "Hang on, still scanning, so far scanned {0} and found {1} registers".format(
-                    scanned, len(found_registers)
+            found_registers[x] = {
+                "timestamp": datetime.utcnow(),
+                "units": units,
+                "value": register_value,
+                "value_length": length,
+                "unknown": unknown,
+            }
+            print("Found register value at {0}:{1}".format(hex(x), register_value))
+            with open(dumpfile, "w") as json_file:
+                json_file.write(json.dumps(found_registers, indent=4, default=json_default))
+        else:
+            not_found_counts += 1
+            if not_found_counts % 10 == 0:
+                print(
+                    "Hang on, still scanning, so far scanned {0} and found {1} registers".format(
+                        scanned, len(found_registers)
+                    )
                 )
-            )
-    scanned += 1
+        scanned += 1
+
+    return found_registers
 
 
 def generate_conpot_config(result_list):
@@ -183,12 +197,12 @@ def generate_conpot_config(result_list):
     return pretty_xml
 
 
-print(
-    "Scanned {0} registers, found {1}.".format(
-        len(candidate_registers_values), len(found_registers)
-    )
-)
-# with open('kamstrup_dump_{0}.json'.format(calendar.timegm(datetime.utcnow().utctimetuple())), 'w') as json_file:
-#    json_file.write(json.dumps(found_registers, indent=4, default=json_default))
-print("""*** Sample Conpot configuration from this scrape:""")
-print(generate_conpot_config(found_registers))
+def json_default(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    else:
+        return None
+
+
+if __name__ == '__main__':
+    find_registers_in_candidates()
