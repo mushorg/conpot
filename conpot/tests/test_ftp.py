@@ -34,10 +34,10 @@ import ftplib  # Use ftplib's client for more authentic testing
 class TestFTPServer(unittest.TestCase):
 
     """
-        All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
-        response. Testing is done by sending/receiving files in data channel related commands.
-        Implementation Note: There are no explicit tests for active/passive mode. These are covered in list and nlst
-        tests
+    All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
+    response. Testing is done by sending/receiving files in data channel related commands.
+    Implementation Note: There are no explicit tests for active/passive mode. These are covered in list and nlst
+    tests
     """
 
     def setUp(self):

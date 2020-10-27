@@ -42,19 +42,21 @@ def StripUnprintable(msg):
 
 
 class TPKTPacket:
-    """ TPKT packet. RFC 1006
-    """
+    """TPKT packet. RFC 1006"""
 
     def __init__(self, data=""):
         self.data = data
 
     def pack(self):
-        return pack(
-            "!BBH",
-            3,  # version
-            0,  # reserved
-            len(bytes(self.data)) + 4,  # packet size
-        ) + str_to_bytes(bytes(self.data))
+        return (
+            pack(
+                "!BBH",
+                3,  # version
+                0,  # reserved
+                len(bytes(self.data)) + 4,  # packet size
+            )
+            + str_to_bytes(bytes(self.data))
+        )
 
     def unpack(self, packet):
         try:
@@ -67,8 +69,7 @@ class TPKTPacket:
 
 
 class COTPConnectionPacket:
-    """ COTP Connection Request or Connection Confirm packet (ISO on TCP). RFC 1006
-    """
+    """COTP Connection Request or Connection Confirm packet (ISO on TCP). RFC 1006"""
 
     def __init__(self, dst_ref=0, src_ref=0, dst_tsap=0, src_tsap=0, tpdu_size=0):
         self.dst_ref = dst_ref
@@ -78,8 +79,7 @@ class COTPConnectionPacket:
         self.tpdu_size = tpdu_size
 
     def pack(self):
-        """ make Connection Request Packet
-        """
+        """make Connection Request Packet"""
         return pack(
             "!BBHHBBBHBBHBBB",
             17,  # size
@@ -99,8 +99,7 @@ class COTPConnectionPacket:
         )
 
     def unpack(self, packet):
-        """ parse Connection Confirm Packet (header only)
-        """
+        """parse Connection Confirm Packet (header only)"""
         try:
             size, pdu_type, self.dst_ref, self.src_ref, _ = unpack("!BBHHB", packet[:7])
         except struct.error:
@@ -116,8 +115,7 @@ class COTPConnectionPacket:
 
 
 class COTPDataPacket:
-    """ COTP Data packet (ISO on TCP). RFC 1006
-    """
+    """COTP Data packet (ISO on TCP). RFC 1006"""
 
     def __init__(self, data=""):
         self.data = data
@@ -136,8 +134,7 @@ class COTPDataPacket:
 
 
 class S7Packet:
-    """ S7 packet
-    """
+    """S7 packet"""
 
     def __init__(self, _type=1, req_id=0, parameters="", data=""):
         self.type = _type
@@ -238,8 +235,7 @@ class S7Error(Exception):
 
 
 def Split(ar, size):
-    """ split sequence into blocks of given size
-    """
+    """split sequence into blocks of given size"""
     return [ar[i : i + size] for i in range(0, len(ar), size)]
 
 
@@ -257,8 +253,7 @@ class s7:
         self.timeout = timeout
 
     def Connect(self):
-        """ Establish ISO on TCP connection and negotiate PDU
-        """
+        """Establish ISO on TCP connection and negotiate PDU"""
         # sleep(1)
         # self.src_ref = randint(1, 20)
         self.src_ref = 10
@@ -278,8 +273,7 @@ class s7:
         self.NegotiatePDU()
 
     def Request(self, _type, parameters="", data=""):
-        """ Send s7 request and receive response
-        """
+        """Send s7 request and receive response"""
         packet = TPKTPacket(
             COTPDataPacket(S7Packet(_type, self.req_id, parameters, data))
         ).pack()
@@ -293,8 +287,7 @@ class s7:
         return response
 
     def NegotiatePDU(self, pdu=480):
-        """ Send negotiate pdu request and receive response. Reply no matter
-        """
+        """Send negotiate pdu request and receive response. Reply no matter"""
         response = self.Request(
             0x01,
             pack(

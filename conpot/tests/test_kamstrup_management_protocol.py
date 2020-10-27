@@ -45,8 +45,8 @@ def check_command_resp_help_message(
 
 class TestKamstrupManagementProtocol(unittest.TestCase):
     """
-        All tests work in similar way. We send a get command check for a valid reply. We send in set command and
-        expect things to change in the databus.
+    All tests work in similar way. We send a get command check for a valid reply. We send in set command and
+    expect things to change in the databus.
     """
 
     def setUp(self):

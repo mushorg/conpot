@@ -377,7 +377,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     def start_data_channel(self, send_recv="send"):
         """
-        Starts the data channel. To be called from the command process greenlet. 
+        Starts the data channel. To be called from the command process greenlet.
         :param send_recv: Whether the event is a send event or recv event. When set to 'send' data channel's socket
         writes data in the output queues else when set to 'read' data channel's socket reads data into the input queue.
         :type send_recv: str

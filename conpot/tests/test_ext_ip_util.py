@@ -43,7 +43,11 @@ class TestExtIPUtil(unittest.TestCase):
 
     def test_ext_util(self):
         ip_address = str(
-            conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000",])
+            conpot.utils.ext_ip._fetch_data(
+                urls=[
+                    "http://127.0.0.1:8000",
+                ]
+            )
         )
         self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
 

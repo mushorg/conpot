@@ -298,7 +298,9 @@ class IpmiServer(object):
         self.username = struct.pack("%dB" % len(usernamebytes), *usernamebytes)
         if self.username not in self.authdata:
             logger.info(
-                "User {} supplied by client not in user_db.".format(self.username,)
+                "User {} supplied by client not in user_db.".format(
+                    self.username,
+                )
             )
             self.close_server_session()
             return

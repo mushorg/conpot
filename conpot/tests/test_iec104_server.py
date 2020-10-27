@@ -212,7 +212,7 @@ class TestIEC104Server(unittest.TestCase):
     @patch("conpot.protocols.IEC104.IEC104_server.gevent._socket3.socket.recv")
     def test_failing_connection_connection_lost_event(self, mock_timeout):
         """
-        Objective: Test if correct exception is executed when a socket.error 
+        Objective: Test if correct exception is executed when a socket.error
         with EPIPE occurs
         """
         mock_timeout.side_effect = OSError(32, "Socket Error")

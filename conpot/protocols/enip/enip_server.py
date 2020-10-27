@@ -545,9 +545,10 @@ class EnipServer(object):
             if tag_address:
                 # Resolve the @cls/ins/att, and optionally [elm] or /elm
                 segments, _, cnt = device.parse_path_elements("@" + tag_address)
-                assert not cnt or cnt == 1, (
-                    "A Tag may be specified to indicate a single element: %s"
-                    % (tag_address)
+                assert (
+                    not cnt or cnt == 1
+                ), "A Tag may be specified to indicate a single element: %s" % (
+                    tag_address
                 )
                 path = {"segment": segments}
                 cls, ins, att = device.resolve(path, attribute=True)
@@ -562,9 +563,9 @@ class EnipServer(object):
                         assert (
                             te.attribute.parser.__class__ is tag_class
                             and len(te.attribute) == tag_size
-                        ), (
-                            "Incompatible Attribute types for tags %r and %r"
-                            % (tn, tag_name)
+                        ), "Incompatible Attribute types for tags %r and %r" % (
+                            tn,
+                            tag_name,
                         )
                         attribute = te.attribute
                         break
