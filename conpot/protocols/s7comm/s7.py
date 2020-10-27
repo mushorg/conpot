@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 # S7 packet
 class S7(object):
-
     ssl_lists = {}
 
     def __init__(
@@ -68,7 +67,6 @@ class S7(object):
         self.data_bus = conpot_core.get_databus()
 
     def __len__(self):
-
         if self.pdu_type in (2, 3):
             return 12 + int(self.param_length) + int(self.data_length)
         else:
@@ -85,7 +83,6 @@ class S7(object):
         raise ParseException("s7comm", "request not implemented in honeypot yet.")
 
     def pack(self):
-
         if self.pdu_type not in self.pdu_mapping:
             raise AssembleException("s7comm", "invalid or unsupported pdu type")
         elif self.pdu_type in (2, 3):
@@ -120,7 +117,6 @@ class S7(object):
             )
 
     def parse(self, packet):
-
         # dissect fixed header
         try:
             fixed_header = unpack("!BBHHHH", packet[:10])
@@ -176,7 +172,6 @@ class S7(object):
         return str_to_bytes("0x00"), str_to_bytes("0x29")
 
     def request_diagnostics(self):
-
         # semi-check
         try:
             unpack("!BBBBBBBB", self.parameters[:8])
@@ -224,7 +219,6 @@ class S7(object):
 
     # W#16#xy11 - module identification
     def request_ssl_17(self, data_ssl_index):
-
         # just for convenience
         current_ssl = S7.ssl_lists["W#16#xy11"]
 
@@ -254,7 +248,6 @@ class S7(object):
             )  # 1  WORD   ( Length of following data )
 
         elif data_ssl_index == 6:  # 0x0006 - hardware identification
-
             ssl_index_description = "Hardware identification"
 
             ssl_resp_data = pack(
@@ -279,7 +272,6 @@ class S7(object):
             )  # 1  WORD   ( Length of following data )
 
         elif data_ssl_index == 7:  # 0x0007 - firmware identification
-
             ssl_index_description = "Firmware identification"
 
             ssl_resp_data = pack(
@@ -301,7 +293,6 @@ class S7(object):
                 0x09,  # 1  BYTE   ( Data Type. 0x09 = Char/String )
                 len(ssl_resp_data),
             )  # 1  WORD   ( Length of following data )
-
         else:
             ssl_index_description = "UNKNOWN / UNDEFINED / RESERVED {0}".format(
                 hex(data_ssl_index)
@@ -324,7 +315,6 @@ class S7(object):
 
     # W#16#011C
     def request_ssl_28(self, data_ssl_index):
-
         # just for convenience
         current_ssl = S7.ssl_lists["W#16#xy1C"]
         # initiate header for mass component block

@@ -84,7 +84,9 @@ class KamstrupRegisterCopier(object):
                 received_data = self._sock.recv(1024)
                 received_data = bytearray(received_data)
             except socket.error as socket_err:
-                logger.exception("Error while communicating: {0}".format(str(socket_err)))
+                logger.exception(
+                    "Error while communicating: {0}".format(str(socket_err))
+                )
                 self._connect()
         data_length = len(received_data)
 
@@ -151,9 +153,15 @@ def registers_from_candidates(candidate_registers_values, args):
                 "value_length": length,
                 "unknown": unknown,
             }
-            logger.info("Found register value at {0}:{1}".format(hex(register_id), register_value))
+            logger.info(
+                "Found register value at {0}:{1}".format(
+                    hex(register_id), register_value
+                )
+            )
             with open(dumpfile, "w") as json_file:
-                json_file.write(json.dumps(found_registers, indent=4, default=json_default))
+                json_file.write(
+                    json.dumps(found_registers, indent=4, default=json_default)
+                )
         else:
             not_found_counts += 1
             if not_found_counts % 10 == 0:
@@ -196,8 +204,10 @@ def json_default(obj):
         return None
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Probes kamstrup_meter meter registers.")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Probes kamstrup_meter meter registers."
+    )
     parser.add_argument("host", help="Hostname or IP or Kamstrup meter")
     parser.add_argument("port", type=int, help="TCP port")
     parser.add_argument(
@@ -205,6 +215,8 @@ if __name__ == '__main__':
         dest="registerfile",
         help="Reads registers from previous dumps files instead of bruteforcing the meter.",
     )
-    parser.add_argument("--comm-addr", dest="communication_address", default=default_comm_port)
+    parser.add_argument(
+        "--comm-addr", dest="communication_address", default=default_comm_port
+    )
 
     find_registers_in_candidates(parser.parse_args())
