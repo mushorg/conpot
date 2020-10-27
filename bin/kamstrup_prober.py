@@ -51,7 +51,7 @@ class KamstrupRegisterCopier(object):
         try:
             self._sock.connect((self.ip_address, self.port))
         except socket.error as socket_err:
-            logger.error("Error while connecting: {0}".format(str(socket_err)))
+            logger.exception("Error while connecting: {0}".format(str(socket_err)))
             self._connect()
 
     def get_register(self, register):
@@ -84,7 +84,7 @@ class KamstrupRegisterCopier(object):
                 received_data = self._sock.recv(1024)
                 received_data = bytearray(received_data)
             except socket.error as socket_err:
-                logger.error("Error while communicating: {0}".format(str(socket_err)))
+                logger.exception("Error while communicating: {0}".format(str(socket_err)))
                 self._connect()
         data_length = len(received_data)
 
