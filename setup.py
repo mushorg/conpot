@@ -22,7 +22,10 @@ setup(
         "Programming Language :: Python",
         "Topic :: Security",
     ],
-    package_data={"": ["*.txt", "*.rst"], "conpot": ["conpot.cfg", "tests/data/*"],},
+    package_data={
+        "": ["*.txt", "*.rst"],
+        "conpot": ["conpot.cfg", "tests/data/*"],
+    },
     keywords="ICS SCADA honeypot",
     include_package_data=True,
     long_description=open("README.md").read(),
@@ -31,6 +34,8 @@ setup(
     and methods of adversaries targeting industrial control systems""",
     test_suite="nose.collector",
     tests_require="nose",
-    dependency_links=["https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",],
+    dependency_links=[
+        "https://github.com/rep/hpfeeds/archive/master.zip#egg=hpfeeds",
+    ],
     install_requires=open("requirements.txt").read().splitlines(),
 )

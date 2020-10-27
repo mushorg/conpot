@@ -31,7 +31,7 @@ from fs.time import epoch_to_datetime
 
 class TestFileSystem(unittest.TestCase):
     """
-        Tests related to Conpot's virtual file system.
+    Tests related to Conpot's virtual file system.
     """
 
     def setUp(self):
@@ -326,8 +326,8 @@ class TestFileSystem(unittest.TestCase):
 
 class TestSubFileSystem(unittest.TestCase):
     """
-        Tests related to Conpot's virtual sub file system. This would test fs generated folders for each and
-        every protocol.
+    Tests related to Conpot's virtual sub file system. This would test fs generated folders for each and
+    every protocol.
     """
 
     def setUp(self):

@@ -54,7 +54,12 @@ CONPOT_NAMESPACE_URL = "http://mushmush.org/conpot"
 
 class StixTransformer(object):
     def __init__(self, config, dom):
-        self.protocol_to_port_mapping = dict(modbus=502, snmp=161, http=80, s7comm=102,)
+        self.protocol_to_port_mapping = dict(
+            modbus=502,
+            snmp=161,
+            http=80,
+            s7comm=102,
+        )
         port_path_list = [
             "//conpot_template/protocols/" + x + "/@port"
             for x in list(self.protocol_to_port_mapping.keys())

@@ -135,9 +135,9 @@ class AbstractFS(WrapFS):
 
     def _initialize_fs(self, src_path: str) -> None:
         """
-            Copies all data into Conpot's created fs folder and builds up the cache.
-            :param src_path: FS URLS
-            """
+        Copies all data into Conpot's created fs folder and builds up the cache.
+        :param src_path: FS URLS
+        """
         # copy all contents from the source path the filesystem.
         src_fs = open_fs(src_path)
         logger.debug(
@@ -195,18 +195,18 @@ class AbstractFS(WrapFS):
     @contextlib.contextmanager
     def check_access(self, path=None, user=None, perms=None):
         """
-            Checks whether the current user has permissions to do a specific operation. Raises FSOperationNotPermitted
-            exception in case permissions are not satisfied.
-            Handy utility to check whether the user with uid provided has permissions specified. Examples:
+        Checks whether the current user has permissions to do a specific operation. Raises FSOperationNotPermitted
+        exception in case permissions are not satisfied.
+        Handy utility to check whether the user with uid provided has permissions specified. Examples:
 
-            >>> import conpot.core as conpot_core
-            >>> _vfs, _ = conpot_core.get_vfs('ftp')
-            >>> with _vfs.check_access(path='/', user=13, perms='rwx'):
-            >>>     _vfs.listdir('/')
+        >>> import conpot.core as conpot_core
+        >>> _vfs, _ = conpot_core.get_vfs('ftp')
+        >>> with _vfs.check_access(path='/', user=13, perms='rwx'):
+        >>>     _vfs.listdir('/')
 
-            >>> with _vfs.check_access(path='/', user=45, perms='w'):
-            >>>     with _vfs.open('/test', mode='wb') as _file:
-            >>>         _file.write(b'Hello World!')
+        >>> with _vfs.check_access(path='/', user=45, perms='w'):
+        >>>     with _vfs.open('/test', mode='wb') as _file:
+        >>>         _file.write(b'Hello World!')
         """
         if not self.access(path=path, name_or_id=user, required_perms=perms):
             raise FSOperationNotPermitted(
@@ -794,13 +794,13 @@ class AbstractFS(WrapFS):
         self, path: str, name_or_id: Union[int, str] = None, required_perms: str = None
     ):
         """
-            Returns bool w.r.t  the a user/group has permissions to read/write/execute a file.
-            This is a wrapper around os.access. But it would accept name or id instead of of just ids.
-            Also it can accept required permissions in the form of strings rather than os.F_OK, os.R_OK, os.W_OK etc.
+        Returns bool w.r.t  the a user/group has permissions to read/write/execute a file.
+        This is a wrapper around os.access. But it would accept name or id instead of of just ids.
+        Also it can accept required permissions in the form of strings rather than os.F_OK, os.R_OK, os.W_OK etc.
 
-            *Implementation Note*: First we would check whether the current user has the required permissions. If not,
-            then we check the group to which this user belongs to. Finally if the user's group also does not meet the
-            perms we check for other permissions.
+        *Implementation Note*: First we would check whether the current user has the required permissions. If not,
+        then we check the group to which this user belongs to. Finally if the user's group also does not meet the
+        perms we check for other permissions.
         """
         try:
             _path = self.norm_path(path)

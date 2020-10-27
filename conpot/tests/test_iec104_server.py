@@ -212,13 +212,13 @@ class TestIEC104Server(unittest.TestCase):
     @patch("conpot.protocols.IEC104.IEC104_server.gevent._socket3.socket.recv")
     def test_failing_connection_connection_lost_event(self, mock_timeout):
         """
-        Objective: Test if correct exception is executed when a socket.error 
+        Objective: Test if correct exception is executed when a socket.error
         with EPIPE occurs
         """
         mock_timeout.side_effect = OSError(32, "Socket Error")
         conpot_core.get_sessionManager().purge_sessions()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('127.0.0.1', 2404))
+        s.connect(("127.0.0.1", 2404))
         time.sleep(0.1)
         log_queue = conpot_core.get_sessionManager().log_queue
         con_new_event = log_queue.get()
@@ -226,7 +226,7 @@ class TestIEC104Server(unittest.TestCase):
 
         self.assertEqual("NEW_CONNECTION", con_new_event["data"]["type"])
         self.assertEqual("CONNECTION_LOST", con_lost_event["data"]["type"])
-        
+
         s.close()
 
 

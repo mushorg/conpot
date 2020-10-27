@@ -60,7 +60,7 @@ class CommandResponder(object):
         addMibCompiler(mib_builder, destination=compiled_mibs)
         mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
         mib_builder.getMibCompiler().addSources(
-            FtpReader('ftp.cisco.com', '/pub/mibs/v2/@mib@', 80)
+            FtpReader("ftp.cisco.com", "/pub/mibs/v2/@mib@", 80)
         )
 
         # Transport setup

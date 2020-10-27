@@ -68,7 +68,10 @@ class SNMPClient(object):
             callback = self.cbFun
             # Prepare and send a request message
         cmdgen.GetCommandGenerator().sendReq(
-            self.snmpEngine, "my-router", (OID,), callback,
+            self.snmpEngine,
+            "my-router",
+            (OID,),
+            callback,
         )
         self.snmpEngine.transportDispatcher.runDispatcher()
         # Run I/O dispatcher which would send pending queries and process responses
@@ -78,7 +81,10 @@ class SNMPClient(object):
         if not callback:
             callback = self.cbFun
         cmdgen.SetCommandGenerator().sendReq(
-            self.snmpEngine, "my-router", (OID,), callback,
+            self.snmpEngine,
+            "my-router",
+            (OID,),
+            callback,
         )
         self.snmpEngine.transportDispatcher.runDispatcher()
 
@@ -86,7 +92,10 @@ class SNMPClient(object):
         if not callback:
             callback = self.cbFun
         cmdgen.NextCommandGenerator().sendReq(
-            self.snmpEngine, "my-router", (OID,), callback,
+            self.snmpEngine,
+            "my-router",
+            (OID,),
+            callback,
         )
 
 

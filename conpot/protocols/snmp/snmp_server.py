@@ -51,40 +51,40 @@ class SNMPServer(object):
                 if entity.attrib["name"].lower() == "tarpit":
 
                     if entity.attrib["command"].lower() == "get":
-                        self.cmd_responder.resp_app_get.tarpit = self.config_sanitize_tarpit(
-                            entity.text
+                        self.cmd_responder.resp_app_get.tarpit = (
+                            self.config_sanitize_tarpit(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "set":
-                        self.cmd_responder.resp_app_set.tarpit = self.config_sanitize_tarpit(
-                            entity.text
+                        self.cmd_responder.resp_app_set.tarpit = (
+                            self.config_sanitize_tarpit(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "next":
-                        self.cmd_responder.resp_app_next.tarpit = self.config_sanitize_tarpit(
-                            entity.text
+                        self.cmd_responder.resp_app_next.tarpit = (
+                            self.config_sanitize_tarpit(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "bulk":
-                        self.cmd_responder.resp_app_bulk.tarpit = self.config_sanitize_tarpit(
-                            entity.text
+                        self.cmd_responder.resp_app_bulk.tarpit = (
+                            self.config_sanitize_tarpit(entity.text)
                         )
 
                 # EVASION: response thresholds
                 if entity.attrib["name"].lower() == "evasion":
 
                     if entity.attrib["command"].lower() == "get":
-                        self.cmd_responder.resp_app_get.threshold = self.config_sanitize_threshold(
-                            entity.text
+                        self.cmd_responder.resp_app_get.threshold = (
+                            self.config_sanitize_threshold(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "set":
-                        self.cmd_responder.resp_app_set.threshold = self.config_sanitize_threshold(
-                            entity.text
+                        self.cmd_responder.resp_app_set.threshold = (
+                            self.config_sanitize_threshold(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "next":
-                        self.cmd_responder.resp_app_next.threshold = self.config_sanitize_threshold(
-                            entity.text
+                        self.cmd_responder.resp_app_next.threshold = (
+                            self.config_sanitize_threshold(entity.text)
                         )
                     elif entity.attrib["command"].lower() == "bulk":
-                        self.cmd_responder.resp_app_bulk.threshold = self.config_sanitize_threshold(
-                            entity.text
+                        self.cmd_responder.resp_app_bulk.threshold = (
+                            self.config_sanitize_threshold(entity.text)
                         )
 
     def xml_mib_config(self):

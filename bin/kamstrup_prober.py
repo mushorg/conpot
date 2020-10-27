@@ -167,8 +167,10 @@ def generate_conpot_config(result_list):
     config_xml = """<conpot_template name="Kamstrup-Auto382" description="Register clone of an existing Kamstrup meter">
     <core><databus><key_value_mappings>"""
     for key, value in result_list.items():
-        config_xml += """<key name="register_{0}"><value type="value">{1}</value></key>""".format(
-            key, value["value"]
+        config_xml += (
+            """<key name="register_{0}"><value type="value">{1}</value></key>""".format(
+                key, value["value"]
+            )
         )
     config_xml += """</key_value_mappings></databus></core><protocols><kamstrup_meter enabled="True" host="0.0.0.0" port="1025"><registers>"""
 

@@ -339,8 +339,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(b"550 Create directory operation failed.")
 
     def do_RMD(self, path):
-        """Remove the specified directory. On success return the directory path, else None.
-        """
+        """Remove the specified directory. On success return the directory path, else None."""
         if self.ftp_path(path) == self.working_dir or path == "/":
             self.respond(b"550 Can't remove root directory.")
             return
@@ -486,8 +485,8 @@ class FTPCommandChannel(FTPHandlerBase):
 
     def do_PASV(self, arg):
         """
-            Starts a Passive Data Channel using IPv4. We don't actually need to start the full duplex connection here.
-            Just need to figure the host ip and the port. The DTP connection would start in each command.
+        Starts a Passive Data Channel using IPv4. We don't actually need to start the full duplex connection here.
+        Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
         if self._data_channel:
             self.stop_data_channel(purge=True, reason="Switching from PASV mode.")

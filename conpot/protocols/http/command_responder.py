@@ -211,9 +211,9 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         body=None,
     ):
         """Retrieves headers and payload for a given status code.
-           Certain status codes can be configured to forward the
-           request to a remote system. If not available, generate
-           a minimal response"""
+        Certain status codes can be configured to forward the
+        request to a remote system. If not available, generate
+        a minimal response"""
 
         # handle PROXY tag
         entity_proxy = configuration.xpath(
@@ -998,14 +998,14 @@ class TemplateParser(HTMLParser):
         self.feed(self.data)
 
     def handle_startendtag(self, tag, attrs):
-        """ handles template tags provided in XHTML notation.
+        """handles template tags provided in XHTML notation.
 
-            Expected format:    <condata source="(engine)" key="(descriptor)" />
-            Example:            <condata source="databus" key="SystemDescription" />
+        Expected format:    <condata source="(engine)" key="(descriptor)" />
+        Example:            <condata source="databus" key="SystemDescription" />
 
-            at the moment, the parser is space- and case-sensitive(!),
-            this could be improved by using REGEX for replacing the template tags
-            with actual values.
+        at the moment, the parser is space- and case-sensitive(!),
+        this could be improved by using REGEX for replacing the template tags
+        with actual values.
         """
 
         source = ""
@@ -1056,7 +1056,7 @@ class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
 
 class SubHTTPServer(ThreadedHTTPServer):
     """this class is necessary to allow passing custom request handler into
-       the RequestHandlerClass"""
+    the RequestHandlerClass"""
 
     daemon_threads = True
 
