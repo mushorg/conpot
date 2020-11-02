@@ -3,7 +3,6 @@ pysnmp
 pysnmp-mibs
 pysmi
 lxml
-beautifulsoup4
 requests
 sphinx
 libtaxii>=1.1.0
