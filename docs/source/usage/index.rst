@@ -9,4 +9,3 @@ Conpot usage
 
     usage
     customization
-    hmi
