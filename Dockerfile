@@ -12,17 +12,10 @@ RUN mkdir /opt/conpot
 COPY . /opt/conpot/
 RUN chown conpot:conpot -R /opt/conpot
 
-# Install Python requirements
+# Install Conpot
 USER conpot
-
-WORKDIR /opt/conpot
-
 ENV PATH=$PATH:/home/conpot/.local/bin
-
-RUN pip3 install --user --no-cache-dir -r requirements.txt
-
-# Install the Conpot application
-RUN python3 setup.py install --user --prefix=
+RUN pip3 install --user --no-cache-dir /opt/conpot
 
 
 # Run container
