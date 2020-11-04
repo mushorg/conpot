@@ -1,16 +1,20 @@
-FROM alpine:3.12.1 as conpot-builder
+FROM python:3.8-slim AS conpot-builder
 
 # Install dependencies
-RUN apk update \
-    && apk add --no-cache ipmitool git python3-dev build-base py-cffi libxslt-dev libffi-dev py3-pip \
-    && apk add --virtual build-deps gcc musl-dev \
-    && apk add --no-cache mariadb-dev
+#RUN apt update \
+#    && apt install ipmitool git python3-dev build-base py-cffi libxslt-dev libffi-dev py3-pip \
+#    && apt install mysqlclient-dev
+
+RUN apt-get update && apt-get install -y \
+    libmariadb-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the app from the host folder (probably a cloned repo) to the container
-RUN adduser -s /bin/ash -D conpot
+RUN adduser --disabled-password --gecos "" conpot
 
-WORKDIR /opt/
-RUN git clone --depth=1 https://github.com/mushorg/conpot.git
+RUN mkdir /opt/conpot
+COPY . /opt/conpot/
 RUN chown conpot:conpot -R /opt/conpot
 
 # Install Python requirements
@@ -20,8 +24,6 @@ WORKDIR /opt/conpot
 
 ENV PATH=$PATH:/home/conpot/.local/bin
 
-RUN pip3 install --user --no-cache-dir -U pip wheel
-RUN pip3 install --user --no-cache-dir setuptools
 RUN pip3 install --user --no-cache-dir -r requirements.txt
 
 # Install the Conpot application
@@ -29,12 +31,13 @@ RUN python3 setup.py install --user --prefix=
 
 
 # Run container
-FROM alpine:3.12.1
+FROM python:3.8-slim
 
-RUN apk update \
-    && apk add --no-cache ipmitool ca-certificates python3 wget py-cffi libxslt openssl
+RUN apt-get update && apt-get install -y \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN adduser -s /bin/ash -D conpot
+RUN adduser --disabled-password --gecos "" conpot
 WORKDIR /home/conpot
 
 COPY --from=conpot-builder --chown=conpot:conpot /home/conpot/.local/ /home/conpot/.local/
@@ -46,9 +49,6 @@ RUN mkdir -p /var/log/conpot/ \
     && mkdir -p /data/tftp/ \
     && chown conpot:conpot /var/log/conpot \
     && chown conpot:conpot -R /data
-
-# Clean
-RUN apk del --purge wget ca-certificates
 
 USER conpot
 WORKDIR /home/conpot
