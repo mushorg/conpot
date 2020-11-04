@@ -1,4 +1,4 @@
-FROM python:3.8-slim AS conpot-builder
+FROM python:3.8 AS conpot-builder
 
 # Install dependencies
 #RUN apt update \
