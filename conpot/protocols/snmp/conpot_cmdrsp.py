@@ -9,7 +9,7 @@ import pysnmp.smi.error
 from pysnmp import debug
 import gevent
 import conpot.core as conpot_core
-from conpot.utils.ext_ip import get_interface_ip
+from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
 

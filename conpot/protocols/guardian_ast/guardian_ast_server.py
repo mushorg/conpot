@@ -26,7 +26,7 @@ import logging
 import random
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
-from conpot.helpers import str_to_bytes
+from conpot.utils.networking import str_to_bytes
 
 logger = logging.getLogger(__name__)
 

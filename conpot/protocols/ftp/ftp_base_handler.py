@@ -25,8 +25,8 @@ import time
 import fs
 from datetime import datetime
 import os
-from conpot.helpers import sanitize_file_name
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
+from conpot.utils.networking import sanitize_file_name
 from gevent import socket
 
 logger = logging.getLogger(__name__)

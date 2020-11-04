@@ -18,10 +18,10 @@
 
 from struct import pack, unpack
 from optparse import OptionGroup
-from conpot.helpers import str_to_bytes
 import struct
 import socket
 import string
+from conpot.utils.networking import str_to_bytes
 
 __FILTER = "".join(
     [" "]

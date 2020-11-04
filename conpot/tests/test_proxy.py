@@ -21,10 +21,10 @@ import gevent
 from gevent.server import StreamServer
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
-from conpot.helpers import fix_sslwrap
 import conpot
 from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
 from conpot.protocols.proxy.proxy import Proxy
+from conpot.utils.networking import fix_sslwrap
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 

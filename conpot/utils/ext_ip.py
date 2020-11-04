@@ -22,7 +22,6 @@ import socket
 import requests
 from requests.exceptions import Timeout, ConnectionError
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -62,15 +61,6 @@ def get_ext_ip(config=None, urls=None):
     else:
         logger.warning("Could not fetch public ip: %s", public_ip)
     return public_ip
-
-
-def get_interface_ip(destination_ip: str):
-    # returns interface ip from socket in case direct udp socket access not possible
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect((destination_ip, 80))
-    socket_ip = s.getsockname()[0]
-    s.close()
-    return socket_ip
 
 
 if __name__ == "__main__":

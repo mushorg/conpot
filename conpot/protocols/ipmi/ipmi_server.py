@@ -24,11 +24,11 @@ import uuid
 import hmac
 import hashlib
 import os
-from conpot.helpers import chr_py3
 import collections
 from lxml import etree
 from conpot.protocols.ipmi.fakebmc import FakeBmc
 from conpot.protocols.ipmi.fakesession import FakeSession
+from conpot.utils.networking import chr_py3
 import conpot.core as conpot_core
 import logging as logger
 

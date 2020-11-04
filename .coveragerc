@@ -1,7 +1,6 @@
 [report]
 omit =
     */tests/*
-    */helpers.py
     conpot/core/loggers/hpfriends.py
     conpot/core/loggers/log_worker.py
     conpot/core/loggers/syslog.py
