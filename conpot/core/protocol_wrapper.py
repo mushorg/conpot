@@ -32,6 +32,8 @@ def conpot_protocol(cls):
 
                 core_interface.protocols[self.cls].append(self.wrapped)
 
+            self.__class__.__name__ = self.cls.__name__
+
         def __getattr__(self, name):
             if name == "handle":
                 # assuming that handle function from a class is only called when a client tries to connect with an
@@ -45,8 +47,7 @@ def conpot_protocol(cls):
         def __repr__(self):
             return self.wrapped.__repr__()
 
-        __doc__ = property(lambda self: self.cls.__doc__)
-        __module__ = property(lambda self: self.cls.__module__)
-        __name__ = property(lambda self: self.cls.__name__)
+        __doc__ = cls.__doc__
+        __module__ = cls.__module__
 
     return Wrapper

@@ -15,16 +15,16 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
-import os
+from gevent import monkey
+
+monkey.patch_all()
 import unittest
-import conpot
 from gevent import socket
-import conpot.core as conpot_core
 from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import (
     KamstrupManagementServer,
 )
 from conpot.tests.data.kamstrup_management_data import RESPONSES
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 def check_command_resp_help_message(
@@ -50,32 +50,12 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
     """
 
     def setUp(self):
-
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-
-        # get the conpot directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        self.kamstrup_management_server = KamstrupManagementServer(
-            self.dir_name
-            + "/templates/kamstrup_382/kamstrup_management/kamstrup_management.xml",
-            None,
-            None,
+        self.kamstrup_management_server, self.server_greenlet = spawn_test_server(
+            KamstrupManagementServer, "kamstrup_382", "kamstrup_management"
         )
-        self.server_greenlet = gevent.spawn(
-            self.kamstrup_management_server.start, "127.0.0.1", 0
-        )
-
-        # initialize the databus
-        self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + "/templates/kamstrup_382/template.xml")
-        gevent.sleep(1)
 
     def tearDown(self):
-        self.kamstrup_management_server.stop()
-        gevent.joinall([self.server_greenlet])
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        teardown_test_server(self.kamstrup_management_server, self.server_greenlet)
 
     def test_help_command(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

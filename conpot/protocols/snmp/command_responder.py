@@ -209,4 +209,4 @@ class CommandResponder(object):
         self.snmpEngine.transportDispatcher.serve_forever()
 
     def stop(self):
-        self.snmpEngine.transportDispatcher.stop_accepting()
+        self.snmpEngine.transportDispatcher.stop()

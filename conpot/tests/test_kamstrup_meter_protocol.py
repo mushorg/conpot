@@ -15,13 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import conpot.core as conpot_core
+from gevent import monkey
+
+monkey.patch_all()
+import conpot
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from conpot.protocols.kamstrup.meter_protocol.kamstrup_server import KamstrupServer
 from conpot.helpers import chr_py3
-import conpot
-import gevent
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 from gevent import socket
 import os
 import unittest
@@ -29,33 +31,19 @@ import unittest
 
 class TestKamstrup(unittest.TestCase):
     def setUp(self):
-
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-
         # get the conpot directory
         self.dir_name = os.path.dirname(conpot.__file__)
-        self.kamstrup_management_server = KamstrupServer(
-            self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml",
-            None,
-            None,
-        )
-        self.server_greenlet = gevent.spawn(
-            self.kamstrup_management_server.start, "127.0.0.1", 0
-        )
-
-        # initialize the databus
-        self.databus = conpot_core.get_databus()
-        self.databus.initialize(self.dir_name + "/templates/kamstrup_382/template.xml")
-        gevent.sleep(1)
-
         self.request_parser = request_parser.KamstrupRequestParser()
         self.command_responder = CommandResponder(
             self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml"
         )
 
+        self.kamstrup_management_server, self.server_greenlet = spawn_test_server(
+            KamstrupServer, "kamstrup_382", "kamstrup_meter"
+        )
+
     def tearDown(self):
-        self.databus.reset()
+        teardown_test_server(self.kamstrup_management_server, self.server_greenlet)
 
     def test_request_get_register(self):
         # requesting register 1033

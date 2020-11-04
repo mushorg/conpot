@@ -15,19 +15,16 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
 from gevent import monkey
 
-gevent.monkey.patch_all()
-import unittest
-from gevent import socket
-import os
-import conpot
-import conpot.core as conpot_core
-from collections import namedtuple
+monkey.patch_all()
 import re
-from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
+import unittest
 
+from gevent import socket
+
+from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 DATA = {
     "I20100": b"\nI20100\n05/30/2018 19:15\n\nSTATOIL STATION\n\n\n\nIN-TANK INVENTORY\n\nTANK PRODUCT             VOLUME TC VOLUME   ULLAGE   HEIGHT    WATER     TEMP\n  1  SUPER                 2428      2540     4465    39.88     6.62    53.74\n  2  UNLEAD                7457      7543     7874    65.59     8.10    58.17\n  3  DIESEL                6532      6664     4597    33.06     5.91    57.91\n  4  PREMIUM               2839      2867     4597    66.57     4.49    57.88\n",
@@ -40,31 +37,12 @@ DATA = {
 
 class TestGuardianAST(unittest.TestCase):
     def setUp(self):
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        args = namedtuple("FakeArgs", "")
-        self.guardian_ast_server = GuardianASTServer(
-            self.dir_name + "/templates/guardian_ast/guardian_ast/guardian_ast.xml",
-            self.dir_name + "/templates/guardian_ast",
-            args,
+        self.guardian_ast_server, self.server_greenlet = spawn_test_server(
+            GuardianASTServer, "guardian_ast", "guardian_ast"
         )
-        self.server_greenlet = gevent.spawn(
-            self.guardian_ast_server.start, "127.0.0.1", 0
-        )
-        # initialize the databus
-        self.guardian_ast_server.databus.initialize(
-            self.dir_name + "/templates/guardian_ast/template.xml"
-        )
-        gevent.sleep(1)
 
     def tearDown(self):
-        self.guardian_ast_server.stop()
-        gevent.joinall([self.server_greenlet])
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        teardown_test_server(self.guardian_ast_server, self.server_greenlet)
 
     def test_I20100(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

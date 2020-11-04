@@ -15,9 +15,6 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
 import socketserver
 import gevent
 from gevent import queue

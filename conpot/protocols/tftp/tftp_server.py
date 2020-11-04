@@ -20,9 +20,6 @@
 
 import gevent
 import os
-from gevent import monkey
-
-gevent.monkey.patch_all()
 from lxml import etree
 from conpot.protocols.tftp import tftp_handler
 from gevent.server import DatagramServer
@@ -31,14 +28,9 @@ from conpot.core.protocol_wrapper import conpot_protocol
 from gevent import event
 from tftpy import TftpException, TftpTimeout
 import logging
-
-logger = logging.getLogger(__name__)
 from conpot.utils.ext_ip import get_interface_ip
 
-# For debugging --
-# import logging as logger
-# import sys
-# logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 @conpot_protocol
@@ -189,21 +181,3 @@ class TftpServer(object):
 
     def stop(self):
         self.server.close()
-
-
-if __name__ == "__main__":
-    import conpot
-
-    # initialize the file system.
-    conpot_core.initialize_vfs()
-    # get the current directory
-    dir_name = os.path.dirname(conpot.__file__)
-    server = TftpServer(
-        dir_name + "/templates/default/tftp/tftp.xml",
-        dir_name + "/templates/default",
-        args=None,
-    )
-    try:
-        server.start("127.0.0.1", 6090)
-    except KeyboardInterrupt:
-        server.stop()

@@ -24,12 +24,13 @@ logger = logging.getLogger(__name__)
 @conpot_protocol
 class ModbusServer(modbus.Server):
     def __init__(self, template, template_directory, args, timeout=5):
-
         self.timeout = timeout
         self.delay = None
         self.mode = None
         self.host = None
         self.port = None
+        self.server = None
+
         databank = slave_db.SlaveBase(template)
 
         # Constructor: initializes the server settings
@@ -190,6 +191,9 @@ class ModbusServer(modbus.Server):
         self.host = host
         self.port = port
         connection = (host, port)
-        server = StreamServer(connection, self.handle)
+        self.server = StreamServer(connection, self.handle)
         logger.info("Modbus server started on: %s", connection)
-        server.start()
+        self.server.serve_forever()
+
+    def stop(self):
+        self.server.stop()

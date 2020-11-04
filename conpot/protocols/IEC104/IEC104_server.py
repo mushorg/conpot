@@ -147,7 +147,7 @@ class IEC104Server(object):
         connection = (host, port)
         self.server = StreamServer(connection, self.handle)
         logger.info("IEC 60870-5-104 protocol server started on: %s", connection)
-        self.server.start()
+        self.server.serve_forever()
 
     def stop(self):
         self.server.stop()

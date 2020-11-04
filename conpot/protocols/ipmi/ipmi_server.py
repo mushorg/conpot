@@ -24,20 +24,13 @@ import uuid
 import hmac
 import hashlib
 import os
-from os import urandom
 from conpot.helpers import chr_py3
 import collections
 from lxml import etree
 from conpot.protocols.ipmi.fakebmc import FakeBmc
 from conpot.protocols.ipmi.fakesession import FakeSession
-import sys
 import conpot.core as conpot_core
-
-# import logging
-# logger = logging.getLogger(__name__)
 import logging as logger
-
-logger.basicConfig(stream=sys.stdout, level=logger.DEBUG)
 
 
 class IpmiServer(object):
@@ -537,22 +530,3 @@ class IpmiServer(object):
 
     def stop(self):
         self.server.stop()
-
-
-if __name__ == "__main__":
-    TCP_IP = "127.0.0.1"
-    TCP_PORT = 10002
-    import os
-    import conpot
-
-    dir_name = os.path.dirname(conpot.__file__)
-    conpot_core.get_databus().initialize(dir_name + "/templates/default/template.xml")
-    server = IpmiServer(
-        dir_name + "/templates/default/ipmi/ipmi.xml",
-        dir_name + "/templates/default/",
-        None,
-    )
-    try:
-        server.start(TCP_IP, TCP_PORT)
-    except KeyboardInterrupt:
-        server.stop()
