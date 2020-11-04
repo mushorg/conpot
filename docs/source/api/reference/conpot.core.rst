@@ -51,6 +51,14 @@ conpot.core.internal\_interface module
    :undoc-members:
    :show-inheritance:
 
+conpot.core.log\_worker module
+------------------------------
+
+.. automodule:: conpot.core.log_worker
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 conpot.core.protocol\_wrapper module
 ------------------------------------
 

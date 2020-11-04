@@ -28,14 +28,6 @@ conpot.core.loggers.json\_log module
    :undoc-members:
    :show-inheritance:
 
-conpot.core.loggers.log\_worker module
---------------------------------------
-
-.. automodule:: conpot.core.loggers.log_worker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.core.loggers.sqlite\_log module
 --------------------------------------
 
