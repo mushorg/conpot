@@ -3,7 +3,7 @@ name: XML Lint
 on: [push]
 
 jobs:
-  black:
+  xmllint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
