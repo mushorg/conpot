@@ -20,7 +20,6 @@ Utils related to ConpotVFS
 """
 import fs
 from typing import Optional, Union
-from fs import errors
 from fs.permissions import Permissions
 import typing
 from fs.subfs import SubFS

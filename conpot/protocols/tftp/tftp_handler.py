@@ -4,7 +4,6 @@ import logging
 import tftpy
 import time
 from gevent import socket
-from fs import errors
 from tftpy import TftpException, TftpErrors
 from tftpy.TftpStates import TftpStateExpectACK, TftpStateExpectDAT
 from tftpy.TftpPacketTypes import TftpPacketRRQ, TftpPacketWRQ

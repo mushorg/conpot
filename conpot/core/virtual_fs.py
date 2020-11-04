@@ -20,7 +20,7 @@ import os
 import sys
 import fs
 import conpot
-from fs import open_fs, errors, subfs
+from fs import open_fs, subfs
 from conpot.core.filesystem import AbstractFS, SubAbstractFS
 
 logger = logging.getLogger(__name__)

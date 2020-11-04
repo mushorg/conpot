@@ -23,7 +23,6 @@ import re
 import sys
 from bacpypes.pdu import GlobalBroadcast
 import bacpypes.object
-from bacpypes import errors
 from bacpypes.app import BIPSimpleApplication
 from bacpypes.constructeddata import Any
 from bacpypes.constructeddata import InvalidParameterDatatype

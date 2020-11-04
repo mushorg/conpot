@@ -29,11 +29,7 @@ from stix.incident import Incident
 from stix.incident.time import Time as StixTime
 from stix.indicator import Indicator
 from stix.ttp import TTP, VictimTargeting
-from stix.extensions.identity.ciq_identity_3_0 import (
-    CIQIdentity3_0Instance,
-    STIXCIQIdentity3_0,
-    OrganisationInfo,
-)
+from stix.extensions.identity.ciq_identity_3_0 import CIQIdentity3_0Instance
 
 from cybox.core import Observable
 from cybox.objects.socket_address_object import SocketAddress
