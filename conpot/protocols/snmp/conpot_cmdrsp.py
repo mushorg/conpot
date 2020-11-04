@@ -1,7 +1,6 @@
 import sys
 import logging
 import random
-from datetime import datetime
 
 from pysnmp.entity.rfc3413 import cmdrsp
 from pysnmp.proto import error

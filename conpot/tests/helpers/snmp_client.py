@@ -4,7 +4,6 @@
 from pysnmp.entity import engine, config
 from pysnmp.carrier.asynsock.dgram import udp
 from pysnmp.entity.rfc3413 import cmdgen
-from pysnmp.proto import rfc1902
 
 
 class SNMPClient(object):

@@ -27,7 +27,6 @@ from datetime import datetime
 from os import F_OK, R_OK, W_OK
 from typing import Optional, Union, Text, Any, List
 from fs import open_fs, mirror, errors, subfs, base
-from fs.time import datetime_to_epoch
 from fs.mode import Mode
 from fs.wrapfs import WrapFS
 from fs.permissions import Permissions

@@ -32,8 +32,6 @@ from bacpypes.apdu import (
     WhoHasRequest,
     ReadPropertyRequest,
     ReadPropertyACK,
-    AtomicReadFileRequest,
-    AuthenticateRequest,
 )
 from bacpypes.constructeddata import Any
 from bacpypes.primitivedata import Real

@@ -17,8 +17,6 @@
 
 import socketserver
 import gevent
-from gevent import queue
-from gevent import select
 import conpot.core as conpot_core
 from conpot.core.filesystem import FilesystemError
 import logging
@@ -27,10 +25,7 @@ import time
 import fs
 from datetime import datetime
 import os
-from fs import errors
-from fs.path import frombase
 from conpot.helpers import sanitize_file_name
-from gevent import event
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
 from gevent import socket
 

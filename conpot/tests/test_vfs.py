@@ -25,7 +25,6 @@ import conpot
 from freezegun import freeze_time
 import fs
 from datetime import datetime
-from fs import permissions
 from fs.time import epoch_to_datetime
 
 
