@@ -15,16 +15,13 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent
-from conpot.protocols.ipmi.ipmi_server import IpmiServer
-import conpot.core as conpot_core
-import subprocess
-from gevent import subprocess
-from gevent.subprocess import PIPE
+from gevent import monkey
+
+monkey.patch_all()
+from gevent.subprocess import Popen, PIPE
 import unittest
-import os
-import conpot
-from collections import namedtuple
+from conpot.protocols.ipmi.ipmi_server import IpmiServer
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 def run_cmd(cmd, port):
@@ -43,7 +40,7 @@ def run_cmd(cmd, port):
         "Password",
     ]
     _cmd += cmd
-    _process = subprocess.Popen(_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    _process = Popen(_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     _result_out, _result_err = _process.communicate()
     rc = _process.returncode
     return _result_out, _result_err
@@ -51,28 +48,12 @@ def run_cmd(cmd, port):
 
 class TestIPMI(unittest.TestCase):
     def setUp(self):
-        # clean up before we start...
-        conpot_core.get_sessionManager().purge_sessions()
-        # get the current directory
-
-        dir_name = os.path.dirname(conpot.__file__)
-        args = namedtuple("FakeArgs", "port")
-        args.port = 0
-        conpot_core.get_databus().initialize(
-            dir_name + "/templates/default/template.xml"
+        self.ipmi_server, self.greenlet = spawn_test_server(
+            IpmiServer, "default", "ipmi"
         )
-        self.ipmi_server = IpmiServer(
-            dir_name + "/templates/default/ipmi/ipmi.xml",
-            dir_name + "/templates/default/",
-            args,
-        )
-        self.greenlet = gevent.spawn(self.ipmi_server.start, "127.0.0.1", 0)
-        gevent.sleep(1)
 
     def tearDown(self):
-        self.greenlet.kill()
-        # tidy up (again)...
-        conpot_core.get_sessionManager().purge_sessions()
+        teardown_test_server(self.ipmi_server, self.greenlet)
 
     def test_boot_device(self):
         """

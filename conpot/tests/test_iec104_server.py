@@ -14,35 +14,28 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import os
-import unittest
-import socket
-from collections import namedtuple
-from conpot.protocols.IEC104 import IEC104_server, frames
-import conpot.core as conpot_core
-import gevent.monkey
-from gevent.server import StreamServer
-import conpot
-import time
-from unittest.mock import patch
+from gevent import monkey
 
-gevent.monkey.patch_all()
+monkey.patch_all()
+import socket
+import time
+import unittest
+from unittest.mock import patch
+import conpot.core as conpot_core
+from conpot.protocols.IEC104 import IEC104_server, frames
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestIEC104Server(unittest.TestCase):
     def setUp(self):
-        self.dir_name = os.path.dirname(conpot.__file__)
-        template = self.dir_name + "/templates/IEC104/template.xml"
-        iec104_template = self.dir_name + "/templates/IEC104/IEC104/IEC104.xml"
-
         self.databus = conpot_core.get_databus()
-        self.databus.initialize(template)
-        self.iec104_inst = IEC104_server.IEC104Server(iec104_template, "none", None)
-        self.iec104_server = StreamServer(("127.0.0.1", 2404), self.iec104_inst.handle)
-        self.iec104_server.start()
+
+        self.iec104_inst, self.greenlet = spawn_test_server(
+            IEC104_server.IEC104Server, "IEC104", "IEC104", port=2404
+        )
 
     def tearDown(self):
-        self.iec104_server.stop()
+        teardown_test_server(self.iec104_inst, self.greenlet)
 
     def test_startdt(self):
         """

@@ -15,50 +15,49 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
+from gevent import monkey
 
-gevent.monkey.patch_all()
+monkey.patch_all()
 import unittest
-import os
-from gevent import socket
-import conpot
-from conpot.protocols.enip.enip_server import EnipServer
+
 from cpppo.server.enip import client
+from gevent import socket
+
+from conpot.protocols.enip.enip_server import EnipServer
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+
+
+# In lieu of creating dedicated test templates we modify
+# EnipServer config through inheritance
+class EnipServerTCP(EnipServer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.addr = "127.0.0.1"
+        self.port = 50002
+        self.config.mode = "tcp"
+
+
+class EnipServerUDP(EnipServer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.addr = "127.0.0.1"
+        self.port = 60002
+        self.config.mode = "udp"
 
 
 class TestENIPServer(unittest.TestCase):
     def setUp(self):
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        template = self.dir_name + "/templates/default/enip/enip.xml"
-        # start the tcp server
-        self.enip_server_tcp = EnipServer(template, None, None)
-        self.enip_server_tcp.port = 50002
-        self.server_greenlet_tcp = gevent.spawn(
-            self.enip_server_tcp.start,
-            self.enip_server_tcp.addr,
-            self.enip_server_tcp.port,
+        self.enip_server_tcp, self.server_greenlet_tcp = spawn_test_server(
+            EnipServerTCP, "default", "enip", port=50002
         )
-        self.enip_server_tcp.start_event.wait()
-        self.assertFalse(self.server_greenlet_tcp.exception)
 
-        # start the udp server
-        self.enip_server_udp = EnipServer(template, None, None)
-        self.enip_server_udp.config.mode = "udp"
-        self.enip_server_udp.port = 60002
-        self.server_greenlet_udp = gevent.spawn(
-            self.enip_server_udp.start,
-            self.enip_server_udp.addr,
-            self.enip_server_udp.port,
+        self.enip_server_udp, self.server_greenlet_udp = spawn_test_server(
+            EnipServerUDP, "default", "enip", port=60002
         )
-        self.enip_server_udp.start_event.wait()
-        self.assertFalse(self.server_greenlet_udp.exception)
 
     def tearDown(self):
-        self.enip_server_tcp.stop()
-        self.enip_server_udp.stop()
-        self.server_greenlet_tcp.join()
-        self.server_greenlet_udp.join()
+        teardown_test_server(self.enip_server_udp, self.server_greenlet_udp)
+        teardown_test_server(self.enip_server_tcp, self.server_greenlet_tcp)
 
     @staticmethod
     def attribute_operations(paths, int_type=None, **kwds):
