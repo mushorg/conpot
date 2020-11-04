@@ -32,6 +32,7 @@ from Crypto.Cipher import AES
 
 logger = logging.getLogger(__name__)
 
+
 def _monotonic_time():
     return os.times()[4]
 
