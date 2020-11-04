@@ -1,10 +1,5 @@
 FROM python:3.8 AS conpot-builder
 
-# Install dependencies
-#RUN apt update \
-#    && apt install ipmitool git python3-dev build-base py-cffi libxslt-dev libffi-dev py3-pip \
-#    && apt install mysqlclient-dev
-
 RUN apt-get update && apt-get install -y \
     libmariadb-dev \
     gcc \
