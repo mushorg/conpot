@@ -99,19 +99,13 @@ class TestFTPServer(unittest.TestCase):
         cmds = self.ftp_server.handler.config.enabled_commands
         [cmds.remove(i) for i in ("SITE HELP", "SITE CHMOD") if i in cmds]
         help_text = self.client.sendcmd("help")
-        self.assertTrue(all([True if i in help_text else False for i in cmds]))
+        self.assertTrue(all([i in help_text for i in cmds]))
+
         # test command specific help
-        cmds_help = {ftp_commands[k]["help"] for k in cmds}
-        self.assertTrue(
-            all(
-                [
-                    True
-                    for i in cmds
-                    if self.client.sendcmd("help {}".format(i))
-                    and i != "HELP" in cmds_help
-                ]
-            )
-        )
+        for i in cmds:
+            response = self.client.sendcmd("help {}".format(i))
+            self.assertIn(ftp_commands[i]["help"], response)
+
         # test unrecognized command
         self.assertRaisesRegex(
             ftplib.error_perm,
