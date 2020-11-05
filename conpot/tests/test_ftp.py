@@ -14,13 +14,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 from gevent import monkey
 
 monkey.patch_all()
 import unittest
 import os
 from datetime import datetime
+from tempfile import NamedTemporaryFile
 from freezegun import freeze_time
 import conpot
 import conpot.core as conpot_core
@@ -503,27 +503,37 @@ class TestFTPServer(unittest.TestCase):
     def test_appe(self):
         _data_1 = "This is just a test!\n"
         _data_2 = "This is another test\n"
-        _vfs, _ = conpot_core.get_vfs("ftp")
-        with _vfs.open("ftp_appe_test.txt", mode="w") as _file:
-            _file.write(_data_1)
+        _file_name = "ftp_appe_test.txt"
+        _vfs, _data_fs = conpot_core.get_vfs("ftp")
+
+        with _vfs.open(_file_name, mode="w") as _server_file:
+            _server_file.write(_data_1)
+
         try:
             self.client.connect(
                 host="127.0.0.1", port=self.ftp_server.server.server_port
             )
             self.client.login(user="nobody", passwd="nobody")
-            _path = os.path.join(
-                "".join(conpot.__path__), "tests", "data", "data_temp_fs", "ftp"
-            )
-            with open(_path + "/ftp_appe.txt", mode="w+") as _file:
-                _file.write(_data_2)
-            with open(_path + "/ftp_appe.txt", mode="rb+") as _file:
-                self.client.storbinary("appe ftp_appe_test.txt", _file)
-            _buffer = ""
-            with _vfs.open("ftp_appe_test.txt", mode="r") as _file:
-                _buffer += _file.read()
-            self.assertEqual(_buffer, _data_1 + _data_2)
+
+            with NamedTemporaryFile(mode="w+") as _temp:
+                _temp.write(_data_2)
+                _temp.flush()
+
+                with open(_temp.name, mode="rb+") as _source:
+                    self.client.storbinary(f"appe {_file_name}", _source)
+
+            with _vfs.open(_file_name, mode="r") as _server_file:
+                _file_contents = _server_file.read()
+
+            self.assertEqual(_file_contents, _data_1 + _data_2)
         finally:
-            _vfs.remove("ftp_appe_test.txt")
+            _vfs.remove(_file_name)
+            _data_fs_file = sanitize_file_name(
+                _file_name,
+                self.client.sock.getsockname()[0],
+                self.client.sock.getsockname()[1],
+            )
+            _data_fs.remove(_data_fs_file)
 
     def test_abor(self):
         self.client.connect(host="127.0.0.1", port=self.ftp_server.server.server_port)
