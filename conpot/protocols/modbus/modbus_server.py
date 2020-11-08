@@ -170,7 +170,9 @@ class ModbusServer(modbus.Server):
                         logger.info(
                             "Modbus connection terminated with client %s.", address[0]
                         )
-                        session.add_event({"type": attack_session.CONNECTION_TERMINATED})
+                        session.add_event(
+                            {"type": attack_session.CONNECTION_TERMINATED}
+                        )
                         sock.shutdown(socket.SHUT_RDWR)
                         sock.close()
                         break
@@ -180,7 +182,9 @@ class ModbusServer(modbus.Server):
                             "Modbus client ignored due to invalid addressing." " (%s)",
                             session.id,
                         )
-                        session.add_event({"type": attack_session.CONNECTION_TERMINATED})
+                        session.add_event(
+                            {"type": attack_session.CONNECTION_TERMINATED}
+                        )
                         sock.shutdown(socket.SHUT_RDWR)
                         sock.close()
                         break

@@ -938,7 +938,9 @@ class FTPCommandChannel(FTPHandlerBase):
                         )
                         # TODO: what to respond here? For now just terminate the session
                         self.disconnect_client = True
-                        self.session.add_event({"type": attack_session.CONNECTION_TERMINATED})
+                        self.session.add_event(
+                            {"type": attack_session.CONNECTION_TERMINATED}
+                        )
             elif not (self.metrics.timeout() < self.config.timeout) and (
                 not self._data_channel
             ):

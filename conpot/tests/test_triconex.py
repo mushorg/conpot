@@ -9,7 +9,7 @@ class TestTriconexServer(unittest.TestCase):
         self.triconex_server, self.greenlet = spawn_test_server(
             TriconexServer, template="default", protocol="triconex"
         )
-    
+
     def tearDown(self):
         teardown_test_server(self.triconex_server, self.greenlet)
 
