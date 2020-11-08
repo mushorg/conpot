@@ -37,3 +37,4 @@ pytest
 tox
 pycrypto
 sphinx_rtd_theme
+crcmod==1.7

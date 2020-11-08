@@ -23,6 +23,7 @@ from gevent.server import StreamServer
 import gevent
 from conpot.helpers import chr_py3
 import conpot.core as conpot_core
+from conpot.core import attack_session
 from conpot.protocols.kamstrup.meter_protocol import request_parser
 from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
@@ -65,7 +66,7 @@ class KamstrupServer(object):
             address[1],
             session.id,
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.add_event({"type": attack_session.NEW_CONNECTION})
 
         self.server_active = True
 
@@ -76,7 +77,7 @@ class KamstrupServer(object):
 
                 if not raw_request:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.add_event({"type": attack_session.CONNECTION_LOST})
                     break
 
                 for x in raw_request:
@@ -85,7 +86,7 @@ class KamstrupServer(object):
                 while True:
                     request = parser.get_request()
                     if not request:
-                        session.add_event({"type": "CONNECTION_LOST"})
+                        session.add_event({"type": attack_session.CONNECTION_LOST})
                         break
                     else:
                         logdata = {
@@ -113,7 +114,7 @@ class KamstrupServer(object):
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.add_event({"type": attack_session.CONNECTION_LOST})
 
         sock.close()
 

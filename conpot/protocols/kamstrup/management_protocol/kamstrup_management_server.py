@@ -19,6 +19,7 @@ import socket
 import gevent
 from gevent.server import StreamServer
 import conpot.core as conpot_core
+from conpot.core import attack_session
 from conpot.protocols.kamstrup.management_protocol.command_responder import (
     CommandResponder,
 )
@@ -52,7 +53,7 @@ class KamstrupManagementServer(object):
             address[1],
             session.id,
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.add_event({"type": attack_session.NEW_CONNECTION})
 
         try:
             sock.send(
@@ -67,7 +68,7 @@ class KamstrupManagementServer(object):
                 data = sock.recv(1024)
                 if not data:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.add_event({"type": attack_session.CONNECTION_LOST})
                     break
                 request = data.decode()
                 logdata = {"request": request}
@@ -83,7 +84,7 @@ class KamstrupManagementServer(object):
                 gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.add_event({"type": attack_session.CONNECTION_LOST})
                     break
                 # encode data before sending
                 reply = str_to_bytes(response)
@@ -91,7 +92,7 @@ class KamstrupManagementServer(object):
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.add_event({"type": attack_session.CONNECTION_LOST})
 
         sock.close()
 

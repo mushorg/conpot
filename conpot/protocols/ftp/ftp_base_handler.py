@@ -21,6 +21,7 @@ from gevent import queue
 from gevent import select
 import conpot.core as conpot_core
 from conpot.core.filesystem import FilesystemError
+from conpot.core import attack_session
 import logging
 import errno
 import time
@@ -241,7 +242,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 self.client_address[0], self.client_address[1], self.session.id
             )
         )
-        self.session.add_event({"type": "NEW_CONNECTION"})
+        self.session.add_event({"type": attack_session.NEW_CONNECTION})
         # send 200 + banner -- new client has connected!
         self.respond(b"200 " + self.config.banner.encode())
         #  Is there a delay in command response? < gevent.sleep(0.5) ?
@@ -297,7 +298,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.add_event({"type": attack_session.CONNECTION_LOST})
                 self.finish()
                 return
             socket_read, socket_write, _ = gevent.select.select(
@@ -354,7 +355,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id, se
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.add_event({"type": attack_session.CONNECTION_LOST})
                 self.finish()
 
     def respond(self, response):
