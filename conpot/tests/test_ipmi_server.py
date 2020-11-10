@@ -48,6 +48,7 @@ def run_cmd(cmd, port):
 
 class TestIPMI(unittest.TestCase):
     __test__ = False
+
     def setUp(self):
         self.ipmi_server, self.greenlet = spawn_test_server(
             IpmiServer, "default", "ipmi"
