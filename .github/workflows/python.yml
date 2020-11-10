@@ -16,7 +16,7 @@ jobs:
       - name: Display Python version
         run: python -c "import sys; print(sys.version)"
       - name: Install packages
-        run: sudo apt-get install libmariadb-dev gcc
+        run: sudo apt-get install libmariadb-dev gcc ipmitool
       - name: Cache pip
         uses: actions/cache@v2
         with:
