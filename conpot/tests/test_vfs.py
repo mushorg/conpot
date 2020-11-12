@@ -190,7 +190,7 @@ class TestFileSystem(unittest.TestCase):
         with self.test_vfs.openbin("new_file", mode="wb") as _file:
             _file.write(b"This is just a test")
         self.assertIn("new_file", self.test_vfs.listdir("/"))
-        _test = self.test_vfs.gettext("/new_file")
+        _test = self.test_vfs.readtext("/new_file")
         self.test_vfs.getinfo("new_file", namespaces=["basic"])
         self.assertEqual(_test, "This is just a test")
 
@@ -198,7 +198,7 @@ class TestFileSystem(unittest.TestCase):
         with self.test_vfs.open("new_file", mode="w+") as _file:
             _file.write("This is just a test")
         self.assertIn("new_file", self.test_vfs.listdir("/"))
-        _test = self.test_vfs.gettext("/new_file")
+        _test = self.test_vfs.readtext("/new_file")
         self.test_vfs.getinfo("new_file", namespaces=["basic"])
         self.assertEqual(_test, "This is just a test")
 
@@ -306,7 +306,7 @@ class TestFileSystem(unittest.TestCase):
         self.test_vfs.copy(
             src_path="test_fs.txt", dst_path="test_fs_copy.txt", overwrite=True
         )
-        _text = self.test_vfs.gettext("test_fs_copy.txt")
+        _text = self.test_vfs.readtext("test_fs_copy.txt")
         self.assertEqual(_text, "This is just a test file checking copyfile")
         self.assertTrue(self.test_vfs.getbasic("test_fs_copy.txt"))
 
@@ -317,7 +317,7 @@ class TestFileSystem(unittest.TestCase):
             _file.write("This is just a test file checking copyfile")
         _uid = self.test_vfs.getinfo("test_fs.txt", namespaces=["access"]).uid
         self.test_vfs.move("test_fs.txt", "test_fs_copy.txt", overwrite=True)
-        _text = self.test_vfs.gettext("test_fs_copy.txt")
+        _text = self.test_vfs.readtext("test_fs_copy.txt")
         self.assertEqual(
             self.test_vfs.getinfo("test_fs_copy.txt", namespaces=["access"]).uid, _uid
         )
@@ -402,7 +402,7 @@ class TestSubFileSystem(unittest.TestCase):
         self.test_vfs.settimes(
             "/new_file", accessed=datetime.now(), modified=datetime.now()
         )
-        _test = self.test_vfs.gettext("/new_file")
+        _test = self.test_vfs.readtext("/new_file")
         self.assertEqual(_test, "This is just a test")
         self.assertEqual(
             self.test_vfs.getinfo("new_file", namespaces=["details"]).modified.ctime(),

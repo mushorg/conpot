@@ -135,7 +135,7 @@ class Proxy(object):
                 except _socket.error as socket_err:
                     data = []
                     socket_close_reason = str(socket_err)
-                if not data:
+                if len(data) == 0:
                     self._close([proxy_socket, sock])
                     if s is proxy_socket:
                         logging.warning(
