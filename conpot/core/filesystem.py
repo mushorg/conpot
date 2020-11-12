@@ -663,7 +663,7 @@ class AbstractFS(WrapFS):
                 }
             }
             if self.isdir(path) and recursive:
-                if self.norm_path(path) is not "/":
+                if self.norm_path(path) != "/":
                     self.setinfo(path, chown_cache)
                 sub_dir = self.opendir(path)
                 for _path, _ in sub_dir.walk.info():
@@ -866,7 +866,7 @@ class AbstractFS(WrapFS):
             mode = int(mode, 8)
         chmod_cache_info = {"access": {"permissions": Permissions.create(mode)}}
         if self.isdir(path) and recursive:
-            if path is not "/":
+            if path != "/":
                 self.setinfo(path, chmod_cache_info)
             # create a walker
             sub_dir = self.opendir(path)

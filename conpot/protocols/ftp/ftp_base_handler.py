@@ -386,7 +386,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 # waait till that process finishes.
                 self._data_channel_send.wait()
                 self._data_channel_recv.wait()
-            if send_recv is "send":
+            if send_recv == "send":
                 # we just want to do send and not receive
                 self._data_channel_send.clear()
                 self._data_channel_recv.set()

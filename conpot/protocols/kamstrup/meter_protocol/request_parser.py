@@ -17,7 +17,7 @@
 
 import logging
 from conpot.helpers import chr_py3
-import crc16
+from crc16.crc16pure import crc16xmodem
 
 from . import kamstrup_constants
 from .messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
@@ -94,7 +94,5 @@ class KamstrupRequestParser(object):
     @classmethod
     def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
-        calculated_crc = crc16.crc16xmodem(
-            b"".join([chr_py3(item) for item in message[:-2]])
-        )
+        calculated_crc = crc16xmodem(b"".join([chr_py3(item) for item in message[:-2]]))
         return supplied_crc == calculated_crc
