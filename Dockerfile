@@ -8,9 +8,7 @@ RUN apt-get update && apt-get install -y \
 # Copy the app from the host folder (probably a cloned repo) to the container
 RUN adduser --disabled-password --gecos "" conpot
 
-RUN mkdir /opt/conpot
-COPY . /opt/conpot/
-RUN chown conpot:conpot -R /opt/conpot
+COPY --chown=conpot:conpot . /opt/conpot/
 
 # Install Conpot
 USER conpot
