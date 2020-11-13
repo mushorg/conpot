@@ -20,7 +20,6 @@ hpfeeds3
 modbus-tk
 stix-validator
 stix
-pycrypto
 cybox
 bacpypes==0.17.0
 pyghmi==1.4.1

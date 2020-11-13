@@ -1,50 +1,37 @@
 language: python
 python:
-- '3.7'
+  - "3.7"
 virtualenv:
   system_site_packages: false
 sudo: false
 cache:
-- apt
-- pip
+  - apt
+  - pip
 before_install:
-- export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
-- REPO=`pwd`
-- echo $REPO
-- echo $TRAVIS_TAG
-- pwd
+  - export TRAVIS_COMMIT_MSG="$(git log --format=%B --no-merges -n 1)"
+  - REPO=`pwd`
+  - echo $REPO
+  - echo $TRAVIS_TAG
+  - pwd
 services:
   - mysql
 addons:
   apt:
     packages:
-    - python3-pip
-    - git
-    - unzip
-    - python-dev
-    - libevent-dev
-    - libxml2
-    - libxml2-dev
-    - libxml2-utils
-    - python-mysqldb
-    - libmysqlclient-dev
-    - ipmitool
+      - ipmitool
 install:
-- export PYTHONIOENCODING=UTF8
-- git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
-- pip install coveralls
-- pip install tox
-- pip install -r requirements.txt
+  - export PYTHONIOENCODING=UTF8
+  - git show HEAD:conpot/__init__.py > docs/source/conpot_version.py
+  - pip install coveralls
+  - pip install tox
+  - pip install -r requirements.txt
 before_script:
-- mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
-- chmod +x "$REPO/bin/conpot"
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS conpot_unittest;'
+  - chmod +x "$REPO/bin/conpot"
 script:
-- tox
-- xmllint --schema conpot/tests/template_schemas/core.xsd conpot/templates/default/template.xml
+  - tox
 after_success:
-- coveralls
+  - coveralls
 notifications:
-  irc:
-  - irc.freenode.org#conpot-dev
   slack:
     secure: kNsZ0yGar7bcvU4xazqCeGf8zJ8PfbQ16X+Q4Fzu4mHNcnmmal80BHMwHKHfg5SBZViDVqZeA+yEGFAK4z93IXGKLhcCkXiw7qm9K29dP7DWgAFwDn42XNPjx5mQF9elr6T8AD0S1oQM4ML+0h1I+nYY+SK28UUjvDh65o9NHqA=

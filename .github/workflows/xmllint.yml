@@ -1,0 +1,14 @@
+name: XML Lint
+
+on: [push]
+
+jobs:
+  xmllint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Run XMLLint
+      uses: ChristophWurst/xmllint-action@v1
+      with:
+        xml-file: ./conpot/templates/default/template.xml
+        xml-schema-file: ./conpot/tests/template_schemas/core.xsd
