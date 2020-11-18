@@ -853,23 +853,23 @@ class asdu_infobj_64(Packet):
 
 class asdu_infobj_100(Packet):
     name = "C_IC_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
+    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
 
 
 class asdu_infobj_101(Packet):
     name = "C_CI_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
+    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
 
 
 class asdu_infobj_102(Packet):
     name = "C_RD_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0)]
+    fields_desc = [LEX3BytesField("IOA", 0x0)]
 
 
 class asdu_infobj_103(Packet):
     name = "C_CS_NA_1"
     fields_desc = [
-        X3BytesField("IOA", 0x0),
+        LEX3BytesField("IOA", 0x0),
         PacketField("CP56Time", CP56Time(), CP56Time),
     ]
 
