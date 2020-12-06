@@ -17,8 +17,6 @@
 
 import socketserver
 import gevent
-from gevent import queue
-from gevent import select
 import conpot.core as conpot_core
 from conpot.core.filesystem import FilesystemError
 import logging
@@ -27,10 +25,7 @@ import time
 import fs
 from datetime import datetime
 import os
-from fs import errors
-from fs.path import frombase
 from conpot.helpers import sanitize_file_name
-from gevent import event
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
 from gevent import socket
 
@@ -386,7 +381,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 # waait till that process finishes.
                 self._data_channel_send.wait()
                 self._data_channel_recv.wait()
-            if send_recv is "send":
+            if send_recv == "send":
                 # we just want to do send and not receive
                 self._data_channel_send.clear()
                 self._data_channel_recv.set()

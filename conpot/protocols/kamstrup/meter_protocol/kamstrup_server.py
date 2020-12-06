@@ -32,8 +32,7 @@ logger = logging.getLogger(__name__)
 
 @conpot_protocol
 class KamstrupServer(object):
-    def __init__(self, template, template_directory, args, timeout=0):
-        self.timeout = timeout
+    def __init__(self, template, template_directory, args):
         self.command_responder = CommandResponder(template)
         self.server_active = True
         self.server = None

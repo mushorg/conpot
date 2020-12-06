@@ -25,7 +25,6 @@ from conpot.protocols.tftp import tftp_handler
 from gevent.server import DatagramServer
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
-from gevent import event
 from tftpy import TftpException, TftpTimeout
 import logging
 from conpot.utils.ext_ip import get_interface_ip

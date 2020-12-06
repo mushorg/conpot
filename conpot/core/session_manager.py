@@ -55,16 +55,6 @@ class SessionManager:
             self._sessions.append(attack_session)
         return attack_session
 
-    def get_session_count(self, protocol=None):
-        count = 0
-        if protocol:
-            for session in self._sessions:
-                if session.protocol == protocol:
-                    count += 1
-        else:
-            count = len(self._sessions)
-        return count
-
     def purge_sessions(self):
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()

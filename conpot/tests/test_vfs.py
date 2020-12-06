@@ -25,7 +25,6 @@ import conpot
 from freezegun import freeze_time
 import fs
 from datetime import datetime
-from fs import permissions
 from fs.time import epoch_to_datetime
 
 
@@ -509,7 +508,3 @@ class TestSubFileSystem(unittest.TestCase):
         [_result] = [i for i in self._f_list]
         self.assertIn(self.test_vfs.default_user, _result)
         self.assertIn("Jul 15 17:51", _result)
-
-
-if __name__ == "__main__":
-    unittest.main()

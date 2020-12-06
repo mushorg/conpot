@@ -18,7 +18,7 @@
 
 from struct import pack, unpack
 from optparse import OptionGroup
-from conpot.helpers import chr_py3, str_to_bytes
+from conpot.helpers import str_to_bytes
 import struct
 import socket
 import string

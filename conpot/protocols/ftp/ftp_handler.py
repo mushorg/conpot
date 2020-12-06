@@ -11,7 +11,6 @@ import tempfile
 from datetime import datetime
 import gevent
 from gevent import socket
-from fs import errors
 from conpot.core.filesystem import FilesystemError, FSOperationNotPermitted
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException, get_data_from_iter
 

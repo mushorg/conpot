@@ -769,7 +769,7 @@ def parse_ip(ip_string):
     else:
         octets = [int(ip_string[i : i + 3]) for i in range(0, len(ip_string), 3)]
 
-    if len(octets) is not 4:
+    if len(octets) != 4:
         return default
     for octet in octets:
         if int(octet) < 0 or int(octet) > 255:

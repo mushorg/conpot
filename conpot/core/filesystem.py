@@ -16,7 +16,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import time
-import typing
 import stat
 import tempfile
 import logging
@@ -28,7 +27,6 @@ from datetime import datetime
 from os import F_OK, R_OK, W_OK
 from typing import Optional, Union, Text, Any, List
 from fs import open_fs, mirror, errors, subfs, base
-from fs.time import datetime_to_epoch
 from fs.mode import Mode
 from fs.wrapfs import WrapFS
 from fs.permissions import Permissions
@@ -42,8 +40,6 @@ from conpot.core.fs_utils import (
     FilesystemError,
 )
 from conpot.core.fs_utils import FSOperationNotPermitted
-
-_F = typing.TypeVar("_F", bound="FS", covariant=True)
 
 logger = logging.getLogger(__name__)
 
@@ -663,7 +659,7 @@ class AbstractFS(WrapFS):
                 }
             }
             if self.isdir(path) and recursive:
-                if self.norm_path(path) is not "/":
+                if self.norm_path(path) != "/":
                     self.setinfo(path, chown_cache)
                 sub_dir = self.opendir(path)
                 for _path, _ in sub_dir.walk.info():
@@ -866,7 +862,7 @@ class AbstractFS(WrapFS):
             mode = int(mode, 8)
         chmod_cache_info = {"access": {"permissions": Permissions.create(mode)}}
         if self.isdir(path) and recursive:
-            if path is not "/":
+            if path != "/":
                 self.setinfo(path, chmod_cache_info)
             # create a walker
             sub_dir = self.opendir(path)

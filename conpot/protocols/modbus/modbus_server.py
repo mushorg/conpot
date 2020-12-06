@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 @conpot_protocol
 class ModbusServer(modbus.Server):
-    def __init__(self, template, template_directory, args, timeout=5):
-        self.timeout = timeout
+    def __init__(self, template, template_directory, args):
+        self.timeout = 5
         self.delay = None
         self.mode = None
         self.host = None

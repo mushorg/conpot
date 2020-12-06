@@ -71,11 +71,3 @@ class SQLiteLogger(object):
         )
         self.conn.commit()
         return cursor.lastrowid
-
-    def log_session(self, session):
-        pass
-
-    def select_data(self):
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM events")
-        print((cursor.fetchall()))

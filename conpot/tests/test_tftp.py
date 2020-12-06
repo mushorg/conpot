@@ -65,7 +65,3 @@ class TestTFTPServer(unittest.TestCase):
         finally:
             _, _data_fs = conpot_core.get_vfs("tftp")
             _data_fs.remove("download")
-
-
-if __name__ == "__main__":
-    unittest.main()

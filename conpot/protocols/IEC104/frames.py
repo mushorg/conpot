@@ -1035,8 +1035,6 @@ class asdu_head(Packet):
             return asdu_infobj_63
         elif self.TypeID == 64:
             return asdu_infobj_64
-        # elif self.TypeID == 70:
-        #    return asdu_infobj_70
         elif self.TypeID == 100:
             return asdu_infobj_100
         elif self.TypeID == 101:

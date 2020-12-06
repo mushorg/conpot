@@ -26,8 +26,6 @@ import conpot
 from conpot.emulators.proxy import Proxy
 from conpot.protocols.misc.ascii_decoder import AsciiDecoder
 
-# gevent.monkey.patch_all()
-
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
@@ -145,7 +143,3 @@ class TestProxy(unittest.TestCase):
     def echo_server(self, sock, address):
         r = sock.recv(len(self.test_input))
         sock.send(r)
-
-
-if __name__ == "__main__":
-    unittest.main()

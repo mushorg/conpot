@@ -55,7 +55,3 @@ class TestExtIPUtil(unittest.TestCase):
         self.assertIsNotNone(
             conpot.utils.ext_ip.get_ext_ip(urls=["https://api.ipify.org"])
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
