@@ -26,20 +26,22 @@ class SysLogger(object):
     def __init__(self, host, port, facility, logdevice, logsocket):
         self.logger = logging.getLogger("conpot")
         handler = logging.StreamHandler()
-        
+
         if str(logsocket).lower() == "udp":
             handler = SysLogHandler(
-                    address=(host, port),
-                    facility=getattr(SysLogHandler, "LOG_" + str(facility).upper()),
-                    socktype=socket.SOCK_DGRAM,
-                )
+                address=(host, port),
+                facility=getattr(SysLogHandler, "LOG_" + str(facility).upper()),
+                socktype=socket.SOCK_DGRAM,
+            )
         elif str(logsocket).lower() == "dev":
             handler = SysLogHandler(address=logdevice)
-        
+
         elif str(logsocket).lower() == "journald":
             handler = JournaldLogHandler()
 
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
