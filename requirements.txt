@@ -26,4 +26,3 @@ freezegun==1.0.0
 pytest
 pycrypto
 sphinx_rtd_theme
-systemd==0.16.1

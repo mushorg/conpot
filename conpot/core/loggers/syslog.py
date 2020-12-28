@@ -19,7 +19,6 @@ import logging
 import socket
 
 from logging.handlers import SysLogHandler
-from systemd.journal import JournaldLogHandler
 
 
 class SysLogger(object):
@@ -35,9 +34,6 @@ class SysLogger(object):
             )
         elif str(logsocket).lower() == "dev":
             handler = SysLogHandler(address=logdevice)
-
-        elif str(logsocket).lower() == "journald":
-            handler = JournaldLogHandler()
 
         formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
