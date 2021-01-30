@@ -49,7 +49,7 @@ class TestIPMI(unittest.TestCase):
             "Password",
         ]
         _cmd += cmd
-        _process = Popen(_cmd, stdout=PIPE, stderr=STDOUT)
+        _process = Popen(_cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
         _result_out, _ = _process.communicate()
         return _result_out
 
@@ -58,7 +58,7 @@ class TestIPMI(unittest.TestCase):
         Objective: test boot device get and set
         """
         result = self.run_cmd(["chassis", "bootdev", "pxe"])
-        self.assertEqual(result, b"Set Boot Device to pxe\n")
+        self.assertEqual(result, "Set Boot Device to pxe\n")
 
     def test_power_state(self):
         """
@@ -66,73 +66,73 @@ class TestIPMI(unittest.TestCase):
         """
         # power status
         result = self.run_cmd(["chassis", "power", "status"])
-        self.assertEqual(result, b"Chassis Power is off\n")
+        self.assertEqual(result, "Chassis Power is off\n")
 
         # power on
         result = self.run_cmd(["chassis", "power", "on"])
-        self.assertEqual(result, b"Chassis Power Control: Up/On\n")
+        self.assertEqual(result, "Chassis Power Control: Up/On\n")
 
         # power off
         result = self.run_cmd(["chassis", "power", "off"])
-        self.assertEqual(result, b"Chassis Power Control: Down/Off\n")
+        self.assertEqual(result, "Chassis Power Control: Down/Off\n")
 
         # power reset
         result = self.run_cmd(["chassis", "power", "reset"])
-        self.assertEqual(result, b"Chassis Power Control: Reset\n")
+        self.assertEqual(result, "Chassis Power Control: Reset\n")
 
         # power cycle
         result = self.run_cmd(["chassis", "power", "cycle"])
-        self.assertEqual(result, b"Chassis Power Control: Cycle\n")
+        self.assertEqual(result, "Chassis Power Control: Cycle\n")
 
         # shutdown gracefully
         result = self.run_cmd(["chassis", "power", "soft"])
-        self.assertEqual(result, b"Chassis Power Control: Soft\n")
+        self.assertEqual(result, "Chassis Power Control: Soft\n")
 
     def test_chassis_status(self):
         result = self.run_cmd(["chassis", "status"])
         self.assertEqual(
             result,
-            b"System Power         : off\n"
-            b"Power Overload       : false\n"
-            b"Power Interlock      : inactive\n"
-            b"Main Power Fault     : false\n"
-            b"Power Control Fault  : false\n"
-            b"Power Restore Policy : always-off\n"
-            b"Last Power Event     : \n"
-            b"Chassis Intrusion    : inactive\n"
-            b"Front-Panel Lockout  : inactive\n"
-            b"Drive Fault          : false\n"
-            b"Cooling/Fan Fault    : false\n",
+            "System Power         : off\n"
+            "Power Overload       : false\n"
+            "Power Interlock      : inactive\n"
+            "Main Power Fault     : false\n"
+            "Power Control Fault  : false\n"
+            "Power Restore Policy : always-off\n"
+            "Last Power Event     : \n"
+            "Chassis Intrusion    : inactive\n"
+            "Front-Panel Lockout  : inactive\n"
+            "Drive Fault          : false\n"
+            "Cooling/Fan Fault    : false\n",
         )
 
     def test_user_list(self):
         result = self.run_cmd(["user", "list"])
         self.assertEqual(
             result,
-            b"ID  Name\t     Callin  Link Auth\tIPMI Msg   Channel Priv Limit\n"
-            b"1   Administrator    true    true       true       ADMINISTRATOR\n"
-            b"2   Operator         true    false      false      OPERATOR\n"
-            b"3   User1            true    true       true       USER\n"
-            b"4   User2            true    false      false      USER\n"
-            b"5   User3            true    true       true       CALLBACK\n",
+            "ID  Name\t     Callin  Link Auth\tIPMI Msg   Channel Priv Limit\n"
+            "1   Administrator    true    true       true       ADMINISTRATOR\n"
+            "2   Operator         true    false      false      OPERATOR\n"
+            "3   User1            true    true       true       USER\n"
+            "4   User2            true    false      false      USER\n"
+            "5   User3            true    true       true       CALLBACK\n",
         )
 
     def test_channel_get_access(self):
         result = self.run_cmd(["channel", "getaccess", "1", "3"])
         self.assertIn(
-            b"Maximum User IDs     : 5\n"
-            b"Enabled User IDs     : 3\n\n"
-            b"User ID              : 3\n"
-            b"User Name            : User1\n"
-            b"Fixed Name           : Yes\n"
-            b"Access Available     : call-in / callback\n"
-            b"Link Authentication  : enabled\n"
-            b"IPMI Messaging       : enabled\n"
-            b"Privilege Level      : USER\n",
+            "Maximum User IDs     : 5\n"
+            "Enabled User IDs     : 3\n\n"
+            "User ID              : 3\n"
+            "User Name            : User1\n"
+            "Fixed Name           : Yes\n"
+            "Access Available     : call-in / callback\n"
+            "Link Authentication  : enabled\n"
+            "IPMI Messaging       : enabled\n"
+            "Privilege Level      : USER\n",
             result,
         )
 
     def test_misc(self):
         # change the session pass
         result = self.run_cmd(["set", "password", "1", "TEST"])
-        self.assertEqual(result, b"Set session password\n")
+        self.assertEqual(result, "Set session password\n")
