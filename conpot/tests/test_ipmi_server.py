@@ -18,7 +18,7 @@
 from gevent import monkey
 
 monkey.patch_all()
-from gevent.subprocess import Popen, PIPE
+from gevent.subprocess import Popen, PIPE, STDOUT
 import unittest
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -40,10 +40,9 @@ def run_cmd(cmd, port):
         "Password",
     ]
     _cmd += cmd
-    _process = Popen(_cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    _result_out, _result_err = _process.communicate()
-    rc = _process.returncode
-    return _result_out, _result_err
+    _process = Popen(_cmd, stdout=PIPE, stderr=STDOUT)
+    _result_out, _ = _process.communicate()
+    return _result_out
 
 
 class TestIPMI(unittest.TestCase):
@@ -59,7 +58,7 @@ class TestIPMI(unittest.TestCase):
         """
         Objective: test boot device get and set
         """
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "bootdev", "pxe"],
             port=str(self.ipmi_server.server.server_port),
         )
@@ -70,44 +69,44 @@ class TestIPMI(unittest.TestCase):
         Objective: test power on/off/reset/cycle/shutdown
         """
         # power status
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "status"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power is off\n")
         # power on
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "on"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power Control: Up/On\n")
         # power off
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "off"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power Control: Down/Off\n")
         # power reset
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "reset"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power Control: Reset\n")
         # power cycle
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "cycle"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power Control: Cycle\n")
         # shutdown gracefully
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "power", "soft"],
             port=str(self.ipmi_server.server.server_port),
         )
         self.assertEqual(result, b"Chassis Power Control: Soft\n")
 
     def test_chassis_status(self):
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["chassis", "status"], port=str(self.ipmi_server.server.server_port)
         )
         self.assertEqual(
@@ -126,7 +125,7 @@ class TestIPMI(unittest.TestCase):
         )
 
     def test_user_list(self):
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["user", "list"], port=str(self.ipmi_server.server.server_port)
         )
         self.assertEqual(
@@ -140,7 +139,7 @@ class TestIPMI(unittest.TestCase):
         )
 
     def test_channel_get_access(self):
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["channel", "getaccess", "1", "3"],
             port=str(self.ipmi_server.server.server_port),
         )
@@ -159,7 +158,7 @@ class TestIPMI(unittest.TestCase):
 
     def test_misc(self):
         # change the session pass
-        result, _ = run_cmd(
+        result = run_cmd(
             cmd=["set", "password", "1", "TEST"],
             port=str(self.ipmi_server.server.server_port),
         )
