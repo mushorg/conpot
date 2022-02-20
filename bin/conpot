@@ -361,156 +361,136 @@ def main():
     public_ip = None
     if config.getboolean("fetch_public_ip", "enabled"):
         public_ip = ext_ip.get_ext_ip(config)
-    if config.getboolean("change_mac_addr", "enabled"):
-        if os.getuid() == 0:
-            logger.info("Attempting to change mac address.")
-            mac_addr.change_mac(config=config)
-        else:
-            logger.info("Changing mac address require sudo permissions. Skipping")
 
-    # no need to fork process when we don't want to change MAC address
-    pid = 0
-    if config.getboolean("change_mac_addr", "enabled"):
-        pid = gevent.fork()
 
-    if pid == 0:
-        for protocol_name, server_class in protocols.name_mapping.items():
-            protocol_template = os.path.join(
-                root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
+
+    for protocol_name, server_class in protocols.name_mapping.items():
+        protocol_template = os.path.join(
+            root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
+        )
+        if os.path.isfile(protocol_template):
+            xsd_file = os.path.join(
+                package_directory,
+                "protocols",
+                protocol_name,
+                "{0}.xsd".format(protocol_name),
             )
-            if os.path.isfile(protocol_template):
-                xsd_file = os.path.join(
-                    package_directory,
-                    "protocols",
-                    protocol_name,
-                    "{0}.xsd".format(protocol_name),
-                )
-                validate_template(protocol_template, xsd_file)
-                dom_protocol = etree.parse(protocol_template)
-                if dom_protocol.xpath("//{0}".format(protocol_name)):
-                    if ast.literal_eval(
-                        dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
-                    ):
-                        host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[
-                            0
-                        ]
-                        # -- > Are we running on testing config?
-                        if "testing.cfg" in args.config:
-                            if "127." not in host:
-                                if not args.force:
-                                    logger.error(
-                                        "To run conpot on a non local interface, please specify -f option"
-                                    )
-                                    sys.exit(1)
-                        port = ast.literal_eval(
-                            dom_protocol.xpath("//{0}/@port".format(protocol_name))[0]
-                        )
-                        server = server_class(
-                            protocol_template, root_template_directory, args
-                        )
-                        greenlet = spawn_startable_greenlet(server, host, port)
-                        greenlet.link_exception(on_unhandled_greenlet_exception)
-                        servers.append((server, greenlet))
-                        logger.info(
-                            "Found and enabled {} protocol.".format(
-                                protocol_name, server
-                            )
-                        )
-                else:
+            validate_template(protocol_template, xsd_file)
+            dom_protocol = etree.parse(protocol_template)
+            if dom_protocol.xpath("//{0}".format(protocol_name)):
+                if ast.literal_eval(
+                    dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
+                ):
+                    host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[
+                        0
+                    ]
+                    # -- > Are we running on testing config?
+                    if "testing.cfg" in args.config:
+                        if "127." not in host:
+                            if not args.force:
+                                logger.error(
+                                    "To run conpot on a non local interface, please specify -f option"
+                                )
+                                sys.exit(1)
+                    port = ast.literal_eval(
+                        dom_protocol.xpath("//{0}/@port".format(protocol_name))[0]
+                    )
+                    server = server_class(
+                        protocol_template, root_template_directory, args
+                    )
+                    greenlet = spawn_startable_greenlet(server, host, port)
+                    greenlet.link_exception(on_unhandled_greenlet_exception)
+                    servers.append((server, greenlet))
                     logger.info(
-                        "{} available but disabled by configuration.".format(
-                            protocol_name
+                        "Found and enabled {} protocol.".format(
+                            protocol_name, server
                         )
                     )
             else:
-                logger.debug(
-                    "No {} template found. Service will remain unconfigured/stopped.".format(
+                logger.info(
+                    "{} available but disabled by configuration.".format(
                         protocol_name
                     )
                 )
-
-        log_worker = LogWorker(config, dom_base, session_manager, public_ip)
-        greenlet = spawn_startable_greenlet(log_worker)
-        greenlet.link_exception(on_unhandled_greenlet_exception)
-        servers.append((log_worker, greenlet))
-
-        # TODO: Line up Proxy init with other protocols
-        template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
-        if os.path.isfile(template_proxy):
-            xsd_file = os.path.join(
-                os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd"
-            )
-            validate_template(template_proxy, xsd_file)
-            dom_proxy = etree.parse(template_proxy)
-            if dom_proxy.xpath("//proxies"):
-                if ast.literal_eval(dom_proxy.xpath("//proxies/@enabled")[0]):
-                    proxies = dom_proxy.xpath("//proxies/*")
-                    for p in proxies:
-                        name = p.attrib["name"]
-                        host = p.attrib["host"]
-                        keyfile = None
-                        certfile = None
-                        if "keyfile" in p.attrib and "certfile" in p.attrib:
-                            keyfile = p.attrib["keyfile"]
-                            certfile = p.attrib["certfile"]
-
-                            # if path is absolute we assert that the cert and key is located in
-                            # the templates ssl standard location
-
-                            if not os.path.isabs(keyfile):
-                                keyfile = os.path.join(
-                                    os.path.dirname(root_template_directory),
-                                    "ssl",
-                                    keyfile,
-                                )
-                                certfile = os.path.join(
-                                    os.path.dirname(root_template_directory),
-                                    "ssl",
-                                    certfile,
-                                )
-                        port = ast.literal_eval(p.attrib["port"])
-                        proxy_host = p.xpath("./proxy_host/text()")[0]
-                        proxy_port = ast.literal_eval(p.xpath("./proxy_port/text()")[0])
-                        decoder = p.xpath("./decoder/text()")
-                        if len(decoder) > 0:
-                            decoder = decoder[0]
-                        else:
-                            decoder = None
-                        proxy_instance = Proxy(
-                            name, proxy_host, proxy_port, decoder, keyfile, certfile
-                        )
-                        proxy_server = proxy_instance.get_server(host, port)
-                        proxy_greenlet = spawn_startable_greenlet(proxy_server)
-                        proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
-                        servers.append((proxy_instance, proxy_greenlet))
-                else:
-                    logger.info("Proxy available but disabled by template.")
         else:
-            logger.info(
-                "No proxy template found. Service will remain unconfigured/stopped."
+            logger.debug(
+                "No {} template found. Service will remain unconfigured/stopped.".format(
+                    protocol_name
+                )
             )
 
-        try:
-            if len(servers) > 0:
-                gevent.wait()
-        except KeyboardInterrupt:
-            logging.info("Stopping Conpot")
-            for server, greenlet in servers:
-                logging.debug(f"Shutting down {greenlet.name}")
-                server.stop()
-                greenlet.get()
-        finally:
-            conpot_core.close_fs()
+    log_worker = LogWorker(config, dom_base, session_manager, public_ip)
+    greenlet = spawn_startable_greenlet(log_worker)
+    greenlet.link_exception(on_unhandled_greenlet_exception)
+    servers.append((log_worker, greenlet))
 
+    # TODO: Line up Proxy init with other protocols
+    template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
+    if os.path.isfile(template_proxy):
+        xsd_file = os.path.join(
+            os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd"
+        )
+        validate_template(template_proxy, xsd_file)
+        dom_proxy = etree.parse(template_proxy)
+        if dom_proxy.xpath("//proxies"):
+            if ast.literal_eval(dom_proxy.xpath("//proxies/@enabled")[0]):
+                proxies = dom_proxy.xpath("//proxies/*")
+                for p in proxies:
+                    name = p.attrib["name"]
+                    host = p.attrib["host"]
+                    keyfile = None
+                    certfile = None
+                    if "keyfile" in p.attrib and "certfile" in p.attrib:
+                        keyfile = p.attrib["keyfile"]
+                        certfile = p.attrib["certfile"]
+
+                        # if path is absolute we assert that the cert and key is located in
+                        # the templates ssl standard location
+
+                        if not os.path.isabs(keyfile):
+                            keyfile = os.path.join(
+                                os.path.dirname(root_template_directory),
+                                "ssl",
+                                keyfile,
+                            )
+                            certfile = os.path.join(
+                                os.path.dirname(root_template_directory),
+                                "ssl",
+                                certfile,
+                            )
+                    port = ast.literal_eval(p.attrib["port"])
+                    proxy_host = p.xpath("./proxy_host/text()")[0]
+                    proxy_port = ast.literal_eval(p.xpath("./proxy_port/text()")[0])
+                    decoder = p.xpath("./decoder/text()")
+                    if len(decoder) > 0:
+                        decoder = decoder[0]
+                    else:
+                        decoder = None
+                    proxy_instance = Proxy(
+                        name, proxy_host, proxy_port, decoder, keyfile, certfile
+                    )
+                    proxy_server = proxy_instance.get_server(host, port)
+                    proxy_greenlet = spawn_startable_greenlet(proxy_server)
+                    proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
+                    servers.append((proxy_instance, proxy_greenlet))
+            else:
+                logger.info("Proxy available but disabled by template.")
     else:
-        # wait for the child to end
-        try:
-            os.waitpid(pid, 0)
-        except KeyboardInterrupt:
-            pass
-        # Revert MAC address
-        iface = config.get("change_mac_addr", "iface")
-        mac_addr.revert_mac(iface)
+        logger.info(
+            "No proxy template found. Service will remain unconfigured/stopped."
+        )
+
+    try:
+        if len(servers) > 0:
+            gevent.wait()
+    except KeyboardInterrupt:
+        logging.info("Stopping Conpot")
+        for server, greenlet in servers:
+            logging.debug(f"Shutting down {greenlet.name}")
+            server.stop()
+            greenlet.get()
+    finally:
+        conpot_core.close_fs()
 
 
 if __name__ == "__main__":
