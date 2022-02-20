@@ -29,7 +29,7 @@ from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.json_log import JsonLogger
-from .helpers import json_default
+from .loggers.helpers import json_default
 
 logger = logging.getLogger(__name__)
 

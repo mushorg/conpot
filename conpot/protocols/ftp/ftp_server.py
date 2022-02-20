@@ -15,15 +15,18 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import logging
+
 from os import R_OK, W_OK
+from datetime import datetime
+
 from lxml import etree
-import conpot.core as conpot_core
 from gevent.server import StreamServer
+
 from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
-from datetime import datetime
-import logging
+import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
 

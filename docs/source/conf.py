@@ -47,8 +47,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"Conpot"
-copyright = u"2018, MushMush Foundation"
+project = "Conpot"
+copyright = "2018, MushMush Foundation"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -192,7 +192,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "Conpot.tex", u"Conpot Documentation", u"MushMush Foundation", "manual"),
+    ("index", "Conpot.tex", "Conpot Documentation", "MushMush Foundation", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -220,7 +220,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [("index", "conpot", u"Conpot Documentation", [u"MushMush Foundation"], 1)]
+man_pages = [("index", "conpot", "Conpot Documentation", ["MushMush Foundation"], 1)]
 
 # If true, show URL addresses after external links.
 #  man_show_urls = False
@@ -235,8 +235,8 @@ texinfo_documents = [
     (
         "index",
         "Conpot",
-        u"Conpot Documentation",
-        u"MushMush Foundation",
+        "Conpot Documentation",
+        "MushMush Foundation",
         "Conpot",
         "ICS/SCADA honeypot.",
         "Miscellaneous",

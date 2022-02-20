@@ -40,7 +40,7 @@ class Network(object):
 
 
 class Interface(object):
-    """ Conpot's internal interface """
+    """Conpot's internal interface"""
 
     def __init__(self):
         self.network = Network()

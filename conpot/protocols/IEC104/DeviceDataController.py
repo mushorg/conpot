@@ -28,6 +28,10 @@ class DeviceDataController(object):
     def __init__(self, template):
         # key: IEC104 address, value: register object
         self.registers = {}
+        self.common_address = int(
+            conpot_core.get_databus().get_value("CommonAddress"), 0
+        )
+
         dom = etree.parse(template)
         categories = dom.xpath("//IEC104/categories/*")
 

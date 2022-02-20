@@ -1,0 +1,777 @@
+<?xml version="1.0" encoding="utf-8"?>
+<snmp enabled="True" host="0.0.0.0" port="16100">
+    <config>
+        <!-- Configure individual delays for SNMP commands -->
+        <entity name="tarpit" command="get">0.1;0.2</entity>
+        <entity name="tarpit" command="set">0.1;0.2</entity>
+        <entity name="tarpit" command="next">0.0;0.1</entity>
+        <entity name="tarpit" command="bulk">0.2;0.4</entity>
+
+        <!-- Configure DoS evasion thresholds (req_per_ip/minute;req_overall/minute) -->
+        <entity name="evasion" command="get">120;240</entity>
+        <entity name="evasion" command="set">120;240</entity>
+        <entity name="evasion" command="next">600;1200</entity>
+        <entity name="evasion" command="bulk">120;240</entity>
+    </config>
+    <mibs>
+        <mib name="SNMPv2-MIB">
+            <symbol name="sysDescr">
+                <!-- Value is key in databus -->
+                <value>SystemDescription</value> <!-- Siemens, SIMATIC, S7-300 -->
+            </symbol>
+            <symbol name="sysObjectID">
+                <value>sysObjectID</value><!-- 0.0 -->
+            </symbol>
+            <symbol name="sysUpTime">
+                <value>Uptime</value>
+            </symbol>
+            <symbol name="sysContact">
+                <value>sysContact</value><!-- Siemens AG -->
+            </symbol>
+            <symbol name="sysLocation">
+                <value>sysLocation</value><!-- Paris -->
+            </symbol>
+            <symbol name="sysServices">
+                <value>sysServices</value><!-- 72 -->
+            </symbol>
+        </mib>
+        <!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="IF-MIB">
+            <symbol name="ifNumber" instance="0">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifIndex" instance="1">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifDescr" instance="1">
+                <value>ifDescr</value>
+            </symbol>
+            <symbol name="ifType" instance="1">
+                <value>ifType</value>
+            </symbol>
+            <symbol name="ifMtu" instance="1">
+                <value>ifMtu</value>
+            </symbol>
+            <symbol name="ifSpeed" instance="1">
+                <value>ifSpeed</value>
+            </symbol>
+            <symbol name="ifPhysAddress" instance="1">
+                <value>ifPhysAddress</value>
+            </symbol>
+            <symbol name="ifAdminStatus" instance="1">
+                <value>ifAdminStatus</value>
+            </symbol>
+            <symbol name="ifOperStatus" instance="1">
+                <value>ifOperStatus</value>
+            </symbol>
+            <symbol name="ifLastChange" instance="1">
+                <value>ifLastChange</value>
+            </symbol>
+            <symbol name="ifInOctets" instance="1">
+                <value>ifInOctets</value>
+            </symbol>
+            <symbol name="ifInUcastPkts" instance="1">
+                <value>ifInUcastPkts</value>
+            </symbol>
+            <symbol name="ifInNUcastPkts" instance="1">
+                <value>ifInNUcastPkts</value>
+            </symbol>
+            <symbol name="ifInDiscards" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifInErrors" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifInUnknownProtos" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutOctets" instance="1">
+                <value>ifOutOctets</value>
+            </symbol>
+            <symbol name="ifOutUcastPkts" instance="1">
+                <value>ifOutUcastPkts</value>
+            </symbol>
+            <symbol name="ifOutUNcastPkts" instance="1">
+                <value>ifOutUNcastPkts</value>
+            </symbol>
+            <symbol name="ifOutDiscards" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutErrors" instance="1">
+                <value>0</value>
+            </symbol>
+            <symbol name="ifOutQLen" instance="1">
+                <value>1</value>
+            </symbol>
+            <symbol name="ifSpecific" instance="1">
+                <value>sysObjectID</value>
+            </symbol>
+        </mib>
+        <!-- # Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="IP-MIB">
+            <symbol name="ipForwarding">
+                <value>ipForwarding</value>
+            </symbol>
+            <symbol name="ipDefaultTTL">
+                <value>ipDefaultTTL</value>
+            </symbol>
+            <symbol name="ipInReceives">
+                <value>ipInReceives</value>
+            </symbol>
+            <symbol name="ipInHdrErrors">
+                <value>ipInHdrErrors</value>
+            </symbol>
+            <symbol name="ipInAddrErrors">
+                <value>ipInAddrErrors</value>
+            </symbol>
+            <symbol name="ipForwDatagrams">
+                <value>ipForwDatagrams</value>
+            </symbol>
+            <symbol name="ipInUnknownProtos">
+                <value>ipInUnknownProtos</value>
+            </symbol>
+            <symbol name="ipInDiscards">
+                <value>ipInDiscards</value>
+            </symbol>
+            <symbol name="ipInDelivers">
+                <value>ipInDelivers</value>
+            </symbol>
+            <symbol name="ipOutRequests">
+                <value>ipOutRequests</value>
+            </symbol>
+            <symbol name="ipOutDiscards">
+                <value>ipOutDiscards</value>
+            </symbol>
+            <symbol name="ipOutNoRoutes">
+                <value>ipOutNoRoutes</value>
+            </symbol>
+            <symbol name="ipReasmTimeout">
+                <value>ipReasmTimeout</value>
+            </symbol>
+            <symbol name="ipReasmReqds">
+                <value>ipReasmReqds</value>
+            </symbol>
+            <symbol name="ipReasmOKs">
+                <value>ipReasmOKs</value>
+            </symbol>
+            <symbol name="ipReasmFails">
+                <value>ipReasmFails</value>
+            </symbol>
+            <symbol name="ipFragOKs">
+                <value>ipFragOKs</value>
+            </symbol>
+            <symbol name="ipFragFails">
+                <value>ipFragFails</value>
+            </symbol>
+            <symbol name="ipFragCreates">
+                <value>ipFragCreates</value>
+            </symbol>
+            <symbol name="ipAdEntAddr" instance="163.172.189.137">
+                <value>ipAdEntAddr</value>
+            </symbol>
+            <symbol name="ipAdEntIfIndex" instance="163.172.189.137">
+                <value>ipAdEntIfIndex</value>
+            </symbol>
+            <symbol name="ipAdEntNetMask" instance="163.172.189.137">
+                <value>ipAdEntNetMask</value>
+            </symbol>
+            <symbol name="ipAdEntBcastAddr" instance="163.172.189.137">
+                <value>ipAdEntBcastAddr</value>
+            </symbol>
+            <symbol name="ipAdEntReasmMaxSize" instance="163.172.189.137">
+                <value>ipAdEntReasmMaxSize</value>
+            </symbol>
+            <symbol name="icmpInMsgs">
+                <value>icmpInMsgs</value>
+            </symbol>
+            <symbol name="icmpInErrors">
+                <value>icmpInErrors</value>
+            </symbol>
+            <symbol name="icmpInDestUnreachs">
+                <value>icmpInDestUnreachs</value>
+            </symbol>
+            <symbol name="icmpInTimeExcds">
+                <value>icmpInTimeExcds</value>
+            </symbol>
+            <symbol name="icmpInParmProbs">
+                <value>icmpInParmProbs</value>
+            </symbol>
+            <symbol name="icmpInSrcQuenchs">
+                <value>icmpInSrcQuenchs</value>
+            </symbol>
+            <symbol name="icmpInRedirects">
+                <value>icmpInRedirects</value>
+            </symbol>
+            <symbol name="icmpInEchos">
+                <value>icmpInEchos</value>
+            </symbol>
+            <symbol name="icmpInEchoReps">
+                <value>icmpInEchoReps</value>
+            </symbol>
+            <symbol name="icmpInTimestamps">
+                <value>icmpInTimestamps</value>
+            </symbol>
+            <symbol name="icmpInTimestampReps">
+                <value>icmpInTimestampReps</value>
+            </symbol>
+            <symbol name="icmpInAddrMasks">
+                <value>icmpInAddrMasks</value>
+            </symbol>
+            <symbol name="icmpInAddrMaskReps">
+                <value>icmpInAddrMaskReps</value>
+            </symbol>
+            <symbol name="icmpOutMsgs">
+                <value>icmpOutMsgs</value>
+            </symbol>
+            <symbol name="icmpOutErrors">
+                <value>icmpOutErrors</value>
+            </symbol>
+            <symbol name="icmpOutDestUnreachs">
+                <value>icmpOutDestUnreachs</value>
+            </symbol>
+            <symbol name="icmpOutTimeExcds">
+                <value>icmpOutTimeExcds</value>
+            </symbol>
+            <symbol name="icmpOutParmProbs">
+                <value>icmpOutParmProbs</value>
+            </symbol>
+            <symbol name="icmpOutSrcQuenchs">
+                <value>icmpOutSrcQuenchs</value>
+            </symbol>
+            <symbol name="icmpOutRedirects">
+                <value>icmpOutRedirects</value>
+            </symbol>
+            <symbol name="icmpOutEchos">
+                <value>icmpOutEchos</value>
+            </symbol>
+            <symbol name="icmpOutEchoReps">
+                <value>icmpOutEchoReps</value>
+            </symbol>
+            <symbol name="icmpOutTimestamps">
+                <value>icmpOutTimestamps</value>
+            </symbol>
+            <symbol name="icmpOutTimestampReps">
+                <value>icmpOutTimestampReps</value>
+            </symbol>
+            <symbol name="icmpOutAddrMasks">
+                <value>icmpOutAddrMasks</value>
+            </symbol>
+            <symbol name="icmpOutAddrMaskReps">
+                <value>icmpOutAddrMaskReps</value>
+            </symbol>
+        </mib>
+        <!--  Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="TCP-MIB">
+            <symbol name="tcpRtoAlgorithm">
+                <value>tcpRtoAlgorithm</value>
+            </symbol>
+            <symbol name="tcpRtoMin">
+                <value>tcpRtoMin</value>
+            </symbol>
+            <symbol name="tcpRtoMax">
+                <value>tcpRtoMax</value>
+            </symbol>
+            <symbol name="tcpMaxConn">
+                <value>tcpMaxConn</value>
+            </symbol>
+            <symbol name="tcpActiveOpens">
+                <value>tcpActiveOpens</value>
+            </symbol>
+            <symbol name="tcpPassiveOpens">
+                <value>tcpPassiveOpens</value>
+            </symbol>
+            <symbol name="tcpAttemptFails">
+                <value>tcpAttemptFails</value>
+            </symbol>
+            <symbol name="tcpEstabResets">
+                <value>tcpEstabResets</value>
+            </symbol>
+            <symbol name="tcpCurrEstab">
+                <value>tcpCurrEstab</value>
+            </symbol>
+            <symbol name="tcpInSegs">
+                <value>tcpInSegs</value>
+            </symbol>
+            <symbol name="tcpOutSegs">
+                <value>tcpOutSegs</value>
+            </symbol>
+            <symbol name="tcpRetransSegs">
+                <value>tcpRetransSegs</value>
+            </symbol>
+            <symbol name="tcpConnState" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnState</value>
+            </symbol>
+            <symbol name="tcpConnLocalAddress" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnLocalAddress</value>
+            </symbol>
+            <symbol name="tcpConnLocalPort" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnLocalPort</value>
+            </symbol>
+            <symbol name="tcpConnRemAddress" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnRemAddress</value>
+            </symbol>
+            <symbol name="tcpConnRemPort" instance="163.172.189.137.2404.0.0.0.0.0">
+                <value>tcpConnRemPort</value>
+            </symbol>
+        </mib>
+        <!-- Copyright (C) 2017  Patrick Reichenberger <patrick.reichenberger@t-online.de> -->
+        <mib name="UDP-MIB">
+            <symbol name="udpInDatagrams">
+                <value>udpInDatagrams</value>
+            </symbol>
+            <symbol name="udpNoPorts">
+                <value>udpNoPorts</value>
+            </symbol>
+            <symbol name="udpInErrors">
+                <value>udpInErrors</value>
+            </symbol>
+            <symbol name="udpOutDatagrams">
+                <value>udpOutDatagrams</value>
+            </symbol>
+            <symbol name="udpLocalAddress" instance="163.172.189.137.161">
+                <value>udpLocalAddress</value>
+            </symbol>
+            <symbol name="udpLocalPort" instance="163.172.189.137.161">
+                <value>udpLocalPort</value>
+            </symbol>
+        </mib>
+        <mib name="HOST-RESOURCES-MIB">
+            <symbol name="hrSystemUptime">
+                <value>hrSystemUptime</value>
+            </symbol>
+            <symbol name="hrSystemDate">
+                <value>hrSystemDate</value>
+            </symbol>
+            <symbol name="hrSystemInitialLoadDevice">
+                <value>hrSystemInitialLoadDevice</value>
+            </symbol>
+            <symbol name="hrSystemInitialLoadParameters">
+                <value>hrSystemInitialLoadParameters</value>
+            </symbol>
+            <symbol name="hrSystemNumUsers">
+                <value>hrSystemNumUsers</value>
+            </symbol>
+            <symbol name="hrSystemProcesses">
+                <value>hrSystemProcesses</value>
+            </symbol>
+            <symbol name="hrSystemMaxProcesses">
+                <value>hrSystemMaxProcesses</value>
+            </symbol>
+            <symbol name="hrMemorySize">
+                <value>hrMemorySize</value>
+            </symbol>
+            <symbol name="hrStorageIndex" instance="0">
+                <value>hrStorageIndex0</value>
+            </symbol>
+            <symbol name="hrStorageIndex" instance="1">
+                <value>hrStorageIndex1</value>
+            </symbol>
+            <symbol name="hrStorageDescr" instance="0">
+                <value>hrStorageDescr0</value>
+            </symbol>
+            <symbol name="hrStorageDescr" instance="1">
+                <value>hrStorageDescr1</value>
+            </symbol>
+            <symbol name="hrStorageAllocationUnits" instance="0">
+                <value>hrStorageAllocationUnits0</value>
+            </symbol>
+            <symbol name="hrStorageAllocationUnits" instance="1">
+                <value>hrStorageAllocationUnits1</value>
+            </symbol>
+            <symbol name="hrStorageSize" instance="0">
+                <value>hrStorageSize0</value>
+            </symbol>
+            <symbol name="hrStorageSize" instance="1">
+                <value>hrStorageSize1</value>
+            </symbol>
+            <symbol name="hrStorageUsed" instance="0">
+                <value>hrStorageUsed0</value>
+            </symbol>
+            <symbol name="hrStorageUsed" instance="1">
+                <value>hrStorageUsed1</value>
+            </symbol>
+            <symbol name="hrStorageAllocationFailures" instance="0">
+                <value>hrStorageAllocationFailures0</value>
+            </symbol>
+            <symbol name="hrStorageAllocationFailures" instance="1">
+                <value>hrStorageAllocationFailures1</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="1">
+                <value>hrDeviceIndex1</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="2">
+                <value>hrDeviceIndex2</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="3">
+                <value>hrDeviceIndex3</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="4">
+                <value>hrDeviceIndex4</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="5">
+                <value>hrDeviceIndex5</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="6">
+                <value>hrDeviceIndex6</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="7">
+                <value>hrDeviceIndex7</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="8">
+                <value>hrDeviceIndex8</value>
+            </symbol>
+            <symbol name="hrDeviceIndex" instance="9">
+                <value>hrDeviceIndex9</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="1">
+                <value>hrDeviceDescr1</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="2">
+                <value>hrDeviceDescr2</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="3">
+                <value>hrDeviceDescr3</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="4">
+                <value>hrDeviceDescr4</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="5">
+                <value>hrDeviceDescr5</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="6">
+                <value>hrDeviceDescr6</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="7">
+                <value>hrDeviceDescr7</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="8">
+                <value>hrDeviceDescr8</value>
+            </symbol>
+            <symbol name="hrDeviceDescr" instance="9">
+                <value>hrDeviceDescr9</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="1">
+                <value>hrDeviceStatus1</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="2">
+                <value>hrDeviceStatus2</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="3">
+                <value>hrDeviceStatus3</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="4">
+                <value>hrDeviceStatus4</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="5">
+                <value>hrDeviceStatus5</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="6">
+                <value>hrDeviceStatus6</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="7">
+                <value>hrDeviceStatus7</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="8">
+                <value>hrDeviceStatus8</value>
+            </symbol>
+            <symbol name="hrDeviceStatus" instance="9">
+                <value>hrDeviceStatus9</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="1">
+                <value>hrDeviceErrors1</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="2">
+                <value>hrDeviceErrors2</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="3">
+                <value>hrDeviceErrors3</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="4">
+                <value>hrDeviceErrors4</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="5">
+                <value>hrDeviceErrors5</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="6">
+                <value>hrDeviceErrors6</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="7">
+                <value>hrDeviceErrors7</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="8">
+                <value>hrDeviceErrors8</value>
+            </symbol>
+            <symbol name="hrDeviceErrors" instance="9">
+                <value>hrDeviceErrors9</value>
+            </symbol>
+            <symbol name="hrProcessorLoad">
+                <value>hrProcessorLoad</value>
+            </symbol>
+            <symbol name="hrNetworkIfIndex" instance="2">
+                <value>hrNetworkIfIndex2</value>
+            </symbol>
+            <symbol name="hrNetworkIfIndex" instance="3">
+                <value>hrNetworkIfIndex3</value>
+            </symbol>
+            <symbol name="hrNetworkIfIndex" instance="4">
+                <value>hrNetworkIfIndex4</value>
+            </symbol>
+            <symbol name="hrNetworkIfIndex" instance="5">
+                <value>hrNetworkIfIndex5</value>
+            </symbol>
+            <symbol name="hrNetworkIfIndex" instance="6">
+                <value>hrNetworkIfIndex6</value>
+            </symbol>
+            <symbol name="hrDiskStorageAccess" instance="7">
+                <value>hrDiskStorageAccess7</value>
+            </symbol>
+            <symbol name="hrDiskStorageMedia" instance="7">
+                <value>hrDiskStorageMedia7</value>
+            </symbol>
+            <symbol name="hrDiskStorageRemoveble" instance="7">
+                <value>hrDiskStorageRemoveble7</value>
+            </symbol>
+            <symbol name="hrDiskStorageCapacity" instance="7">
+                <value>hrDiskStorageCapacity7</value>
+            </symbol>
+            <symbol name="hrFSIndex" instance="1">
+                <value>hrFSIndex1</value>
+            </symbol>
+            <symbol name="hrFSMountPoint" instance="1">
+                <value>hrFSMountPoint1</value>
+            </symbol>
+            <symbol name="hrFSRemoteMountPoint" instance="1">
+                <value>hrFSRemoteMountPoint1</value>
+            </symbol>
+            <symbol name="hrFSAccess" instance="1">
+                <value>hrFSAccess1</value>
+            </symbol>
+            <symbol name="hrFSBootable" instance="1">
+                <value>hrFSBootable1</value>
+            </symbol>
+            <symbol name="hrFSStorageIndex" instance="1">
+                <value>hrFSStorageIndex1</value>
+            </symbol>
+            <symbol name="hrFSLastFullBackupDate" instance="1">
+                <value>hrFSLastFullBackupDate1</value>
+            </symbol>
+            <symbol name="hrFSLastPartialBackupDate" instance="1">
+                <value>hrFSLastPartialBackupDate1</value>
+            </symbol>
+            <symbol name="hrSWOSIndex" instance="0">
+                <value>hrSWOSIndex0</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="4194306">
+                <value>hrSWRunIndex4194306</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="8126482">
+                <value>hrSWRunIndex8126482</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="17891378">
+                <value>hrSWRunIndex17891378</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="73728034">
+                <value>hrSWRunIndex73728034</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="76939274">
+                <value>hrSWRunIndex76939274</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="77201418">
+                <value>hrSWRunIndex77201418</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="78446594">
+                <value>hrSWRunIndex78446594</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="88211530">
+                <value>hrSWRunIndex88211530</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="93782086">
+                <value>hrSWRunIndex93782086</value>
+            </symbol>
+            <symbol name="hrSWRunIndex" instance="97058862">
+                <value>hrSWRunIndex97058862</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="4194306">
+                <value>hrSWRunPath4194306</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="8126482">
+                <value>hrSWRunPath8126482</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="17891378">
+                <value>hrSWRunPath17891378</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="73728034">
+                <value>hrSWRunPath73728034</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="76939274">
+                <value>hrSWRunPath76939274</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="77201418">
+                <value>hrSWRunPath77201418</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="78446594">
+                <value>hrSWRunPath78446594</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="88211530">
+                <value>hrSWRunPath88211530</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="93782086">
+                <value>hrSWRunPath93782086</value>
+            </symbol>
+            <symbol name="hrSWRunPath" instance="97058862">
+                <value>hrSWRunPath97058862</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="4194306">
+                <value>hrSWRunParameters4194306</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="8126482">
+                <value>hrSWRunParameters8126482</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="17891378">
+                <value>hrSWRunParameters17891378</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="73728034">
+                <value>hrSWRunParameters73728034</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="76939274">
+                <value>hrSWRunParameters76939274</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="77201418">
+                <value>hrSWRunParameters77201418</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="78446594">
+                <value>hrSWRunParameters78446594</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="88211530">
+                <value>hrSWRunParameters88211530</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="93782086">
+                <value>hrSWRunParameters93782086</value>
+            </symbol>
+            <symbol name="hrSWRunParameters" instance="97058862">
+                <value>hrSWRunParameters97058862</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="4194306">
+                <value>hrSWRunType4194306</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="8126482">
+                <value>hrSWRunType8126482</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="17891378">
+                <value>hrSWRunType17891378</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="73728034">
+                <value>hrSWRunType73728034</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="76939274">
+                <value>hrSWRunType76939274</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="77201418">
+                <value>hrSWRunType77201418</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="78446594">
+                <value>hrSWRunType78446594</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="88211530">
+                <value>hrSWRunType88211530</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="93782086">
+                <value>hrSWRunType93782086</value>
+            </symbol>
+            <symbol name="hrSWRunType" instance="97058862">
+                <value>hrSWRunType97058862</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="4194306">
+                <value>hrSWRunStatus4194306</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="8126482">
+                <value>hrSWRunStatus8126482</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="17891378">
+                <value>hrSWRunStatus17891378</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="73728034">
+                <value>hrSWRunStatus73728034</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="76939274">
+                <value>hrSWRunStatus76939274</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="77201418">
+                <value>hrSWRunStatus77201418</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="78446594">
+                <value>hrSWRunStatus78446594</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="88211530">
+                <value>hrSWRunStatus88211530</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="93782086">
+                <value>hrSWRunStatus93782086</value>
+            </symbol>
+            <symbol name="hrSWRunStatus" instance="97058862">
+                <value>hrSWRunStatus97058862</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="4194306">
+                <value>hrSWRunPerfCPU4194306</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="8126482">
+                <value>hrSWRunPerfCPU8126482</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="17891378">
+                <value>hrSWRunPerfCPU17891378</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="73728034">
+                <value>hrSWRunPerfCPU73728034</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="76939274">
+                <value>hrSWRunPerfCPU76939274</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="77201418">
+                <value>hrSWRunPerfCPU77201418</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="78446594">
+                <value>hrSWRunPerfCPU78446594</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="88211530">
+                <value>hrSWRunPerfCPU88211530</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="93782086">
+                <value>hrSWRunPerfCPU93782086</value>
+            </symbol>
+            <symbol name="hrSWRunPerfCPU" instance="97058862">
+                <value>hrSWRunPerfCPU97058862</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="4194306">
+                <value>hrSWRunPerfMem4194306</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="8126482">
+                <value>hrSWRunPerfMem8126482</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="17891378">
+                <value>hrSWRunPerfMem17891378</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="73728034">
+                <value>hrSWRunPerfMem73728034</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="76939274">
+                <value>hrSWRunPerfMem76939274</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="77201418">
+                <value>hrSWRunPerfMem77201418</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="78446594">
+                <value>hrSWRunPerfMem78446594</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="88211530">
+                <value>hrSWRunPerfMem88211530</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="93782086">
+                <value>hrSWRunPerfMem93782086</value>
+            </symbol>
+            <symbol name="hrSWRunPerfMem" instance="97058862">
+                <value>hrSWRunPerfMem97058862</value>
+            </symbol>
+        </mib>
+    </mibs>
+</snmp>
+

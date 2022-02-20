@@ -21,10 +21,10 @@ import gevent
 from gevent.server import StreamServer
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
-from conpot.helpers import fix_sslwrap
 import conpot
-from conpot.emulators.proxy import Proxy
-from conpot.protocols.misc.ascii_decoder import AsciiDecoder
+from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
+from conpot.protocols.proxy.proxy import Proxy
+from conpot.utils.networking import fix_sslwrap
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
@@ -96,7 +96,7 @@ class TestProxy(unittest.TestCase):
             "proxy",
             "127.0.0.1",
             mock_service.server_port,
-            decoder="conpot.protocols.misc.ascii_decoder.AsciiDecoder",
+            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
         )
         server = proxy.get_server("127.0.0.1", 0)
         gevent.spawn(server.start)
@@ -125,7 +125,7 @@ class TestProxy(unittest.TestCase):
             "proxy",
             "127.0.0.1",
             mock_service.server_port,
-            decoder="conpot.protocols.misc.ascii_decoder.AsciiDecoder",
+            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
             keyfile=keyfile,
             certfile=certfile,
         )

@@ -18,10 +18,10 @@
 
 from struct import pack, unpack
 from optparse import OptionGroup
-from conpot.helpers import str_to_bytes
 import struct
 import socket
 import string
+from conpot.utils.networking import str_to_bytes
 
 __FILTER = "".join(
     [" "]
@@ -48,15 +48,12 @@ class TPKTPacket:
         self.data = data
 
     def pack(self):
-        return (
-            pack(
-                "!BBH",
-                3,  # version
-                0,  # reserved
-                len(bytes(self.data)) + 4,  # packet size
-            )
-            + str_to_bytes(bytes(self.data))
-        )
+        return pack(
+            "!BBH",
+            3,  # version
+            0,  # reserved
+            len(bytes(self.data)) + 4,  # packet size
+        ) + str_to_bytes(bytes(self.data))
 
     def unpack(self, packet):
         try:

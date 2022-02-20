@@ -18,7 +18,8 @@ Build docker image from source
 
 1. Install `Docker`_
 2. Clone this repo with ``git clone https://github.com/mushorg/conpot.git``
-3. Run ``sudo make run-docker``
+3. Run ``sudo make build-docker``
+4. Run ``sudo make run-docker``
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 

@@ -30,7 +30,6 @@ setup(
     include_package_data=True,
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives
-    and methods of adversaries targeting industrial control systems""",
+    description="""Conpot is an ICS honeypot with the goal to collect intelligence about the motives and methods of adversaries targeting industrial control systems""",
     install_requires=open("requirements.txt").read().splitlines(),
 )

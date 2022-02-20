@@ -20,7 +20,7 @@ from gevent import monkey
 monkey.patch_all()
 import unittest
 from gevent import socket
-from conpot.protocols.kamstrup.management_protocol.kamstrup_management_server import (
+from conpot.protocols.kamstrup_management.kamstrup_management_server import (
     KamstrupManagementServer,
 )
 from conpot.tests.data.kamstrup_management_data import RESPONSES
