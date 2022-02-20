@@ -7,5 +7,7 @@ def json_default(obj):
         return obj.isoformat()
     elif isinstance(obj, uuid.UUID):
         return str(obj)
+    elif isinstance(obj, bytes):
+        return str(obj)
     else:
         return None
