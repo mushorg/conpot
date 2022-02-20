@@ -24,10 +24,10 @@ from tempfile import NamedTemporaryFile
 from freezegun import freeze_time
 import conpot
 import conpot.core as conpot_core
-from conpot.helpers import sanitize_file_name
 from conpot.protocols.ftp.ftp_server import FTPServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.networking import sanitize_file_name
 import ftplib  # Use ftplib's client for more authentic testing
 
 

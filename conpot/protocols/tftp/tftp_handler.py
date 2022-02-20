@@ -7,7 +7,7 @@ from gevent import socket
 from tftpy import TftpException, TftpErrors
 from tftpy.TftpStates import TftpStateExpectACK, TftpStateExpectDAT
 from tftpy.TftpPacketTypes import TftpPacketRRQ, TftpPacketWRQ
-from conpot.helpers import sanitize_file_name
+from conpot.utils.networking import sanitize_file_name
 
 logger = logging.getLogger(__name__)
 

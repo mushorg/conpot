@@ -31,7 +31,6 @@ from fs.mode import Mode
 from fs.wrapfs import WrapFS
 from fs.permissions import Permissions
 from fs.osfs import Info
-from conpot.helpers import months_map
 from types import FunctionType
 from conpot.core.fs_utils import (
     _custom_conpot_file,
@@ -42,6 +41,21 @@ from conpot.core.fs_utils import (
 from conpot.core.fs_utils import FSOperationNotPermitted
 
 logger = logging.getLogger(__name__)
+
+months_map = {
+    1: "Jan",
+    2: "Feb",
+    3: "Mar",
+    4: "Apr",
+    5: "May",
+    6: "Jun",
+    7: "Jul",
+    8: "Aug",
+    9: "Sep",
+    10: "Oct",
+    11: "Nov",
+    12: "Dec",
+}
 
 
 # ---------------------------------------------------

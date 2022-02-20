@@ -35,14 +35,6 @@ conpot.tests.test\_enip\_server module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_ext\_ip\_util module
----------------------------------------
-
-.. automodule:: conpot.tests.test_ext_ip_util
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.tests.test\_ftp module
 -----------------------------
 
@@ -55,14 +47,6 @@ conpot.tests.test\_guardian\_ast module
 ---------------------------------------
 
 .. automodule:: conpot.tests.test_guardian_ast
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-conpot.tests.test\_hpfriends module
------------------------------------
-
-.. automodule:: conpot.tests.test_hpfriends
    :members:
    :undoc-members:
    :show-inheritance:
@@ -99,18 +83,26 @@ conpot.tests.test\_kamstrup\_decoder module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_kamstrup\_management\_protocol module
---------------------------------------------------------
+conpot.tests.test\_kamstrup\_management module
+----------------------------------------------
 
-.. automodule:: conpot.tests.test_kamstrup_management_protocol
+.. automodule:: conpot.tests.test_kamstrup_management
    :members:
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_kamstrup\_meter\_protocol module
----------------------------------------------------
+conpot.tests.test\_kamstrup\_meter module
+-----------------------------------------
 
-.. automodule:: conpot.tests.test_kamstrup_meter_protocol
+.. automodule:: conpot.tests.test_kamstrup_meter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+conpot.tests.test\_logger\_hpfriends module
+-------------------------------------------
+
+.. automodule:: conpot.tests.test_logger_hpfriends
    :members:
    :undoc-members:
    :show-inheritance:
@@ -123,10 +115,10 @@ conpot.tests.test\_logger\_json module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_mac\_addr module
------------------------------------
+conpot.tests.test\_logger\_taxii module
+---------------------------------------
 
-.. automodule:: conpot.tests.test_mac_addr
+.. automodule:: conpot.tests.test_logger_taxii
    :members:
    :undoc-members:
    :show-inheritance:
@@ -171,18 +163,26 @@ conpot.tests.test\_snmp\_server module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_taxii module
--------------------------------
-
-.. automodule:: conpot.tests.test_taxii
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.tests.test\_tftp module
 ------------------------------
 
 .. automodule:: conpot.tests.test_tftp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+conpot.tests.test\_utils\_ext\_ip module
+----------------------------------------
+
+.. automodule:: conpot.tests.test_utils_ext_ip
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+conpot.tests.test\_utils\_mac\_addr module
+------------------------------------------
+
+.. automodule:: conpot.tests.test_utils_mac_addr
    :members:
    :undoc-members:
    :show-inheritance:

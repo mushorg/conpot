@@ -21,10 +21,8 @@ from .ftp.ftp_server import FTPServer
 from .guardian_ast.guardian_ast_server import GuardianASTServer
 from .http.web_server import HTTPServer
 from .ipmi.ipmi_server import IpmiServer
-from .kamstrup.management_protocol.kamstrup_management_server import (
-    KamstrupManagementServer,
-)
-from .kamstrup.meter_protocol.kamstrup_server import KamstrupServer
+from .kamstrup_management.kamstrup_management_server import KamstrupManagementServer
+from .kamstrup_meter.kamstrup_server import KamstrupServer
 from .modbus.modbus_server import ModbusServer
 from .s7comm.s7_server import S7Server
 from .snmp.snmp_server import SNMPServer

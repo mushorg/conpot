@@ -28,10 +28,10 @@ from bacpypes.errors import DecodingError
 import conpot.core as conpot_core
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.networking import get_interface_ip
 import logging
 
 logger = logging.getLogger(__name__)
-from conpot.utils.ext_ip import get_interface_ip
 
 
 @conpot_protocol

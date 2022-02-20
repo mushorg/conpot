@@ -28,8 +28,8 @@ from socketserver import ThreadingMixIn
 import http.server
 import http.client
 from lxml import etree
-from conpot.helpers import str_to_bytes
 import conpot.core as conpot_core
+from conpot.utils.networking import str_to_bytes
 import gevent
 
 

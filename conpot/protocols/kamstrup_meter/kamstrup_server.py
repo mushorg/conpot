@@ -21,10 +21,10 @@ import random
 import socket
 from gevent.server import StreamServer
 import gevent
-from conpot.helpers import chr_py3
 import conpot.core as conpot_core
-from conpot.protocols.kamstrup.meter_protocol import request_parser
-from conpot.protocols.kamstrup.meter_protocol.command_responder import CommandResponder
+from conpot.utils.networking import chr_py3
+from .request_parser import KamstrupRequestParser
+from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class KamstrupServer(object):
 
         self.server_active = True
 
-        parser = request_parser.KamstrupRequestParser()
+        parser = KamstrupRequestParser()
         try:
             while self.server_active:
                 raw_request = sock.recv(1024)

@@ -17,8 +17,8 @@
 
 import logging
 import binascii
-from conpot.helpers import chr_py3
 from crc16.crc16pure import crc16xmodem
+from conpot.utils.networking import chr_py3
 from . import kamstrup_constants
 import conpot.core as conpot_core
 

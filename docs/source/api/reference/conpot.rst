@@ -12,17 +12,6 @@ Subpackages
    conpot.tests
    conpot.utils
 
-Submodules
-----------
-
-conpot.helpers module
----------------------
-
-.. automodule:: conpot.helpers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 
 Module contents
 ---------------

@@ -13,9 +13,10 @@ Subpackages
    conpot.protocols.guardian_ast
    conpot.protocols.http
    conpot.protocols.ipmi
-   conpot.protocols.kamstrup
-   conpot.protocols.misc
+   conpot.protocols.kamstrup_management
+   conpot.protocols.kamstrup_meter
    conpot.protocols.modbus
+   conpot.protocols.proxy
    conpot.protocols.s7comm
    conpot.protocols.snmp
    conpot.protocols.tftp

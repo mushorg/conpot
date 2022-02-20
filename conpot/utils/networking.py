@@ -1,7 +1,6 @@
-"""
-Some python3 fixtures - helper methods for handy conversions + fix ssl
-"""
+import socket
 from datetime import datetime
+
 from slugify import slugify
 
 
@@ -35,22 +34,6 @@ def chr_py3(x):
 # convert a string to an ascii byte string
 def str_to_bytes(x):
     return x if isinstance(x, bytes) else str(x).encode("ascii")
-
-
-months_map = {
-    1: "Jan",
-    2: "Feb",
-    3: "Mar",
-    4: "Apr",
-    5: "May",
-    6: "Jun",
-    7: "Jul",
-    8: "Aug",
-    9: "Sep",
-    10: "Oct",
-    11: "Nov",
-    12: "Dec",
-}
 
 
 # https://www.bountysource.com/issues/4335201-ssl-broken-for-python-2-7-9
@@ -90,3 +73,12 @@ def fix_sslwrap():
 
     if not hasattr(_ssl, "sslwrap"):
         _ssl.sslwrap = new_sslwrap
+
+
+def get_interface_ip(destination_ip: str):
+    # returns interface ip from socket in case direct udp socket access not possible
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect((destination_ip, 80))
+    socket_ip = s.getsockname()[0]
+    s.close()
+    return socket_ip

@@ -16,9 +16,10 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from conpot.helpers import chr_py3
+
 from crc16.crc16pure import crc16xmodem
 
+from conpot.utils.networking import chr_py3
 from . import kamstrup_constants
 from .messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
 
