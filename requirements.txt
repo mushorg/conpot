@@ -22,7 +22,7 @@ cpppo
 fs==2.3.0
 python-slugify
 tftpy
-freezegun==1.0.0
+freezegun==1.1.0
 pytest
 pycrypto
 sphinx_rtd_theme
