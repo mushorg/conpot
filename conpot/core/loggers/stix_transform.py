@@ -16,7 +16,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import json
-import ast
 import textwrap
 
 from mixbox import idgen
@@ -49,24 +48,13 @@ CONPOT_NAMESPACE_URL = "http://mushmush.org/conpot"
 
 
 class StixTransformer(object):
-    def __init__(self, config, dom):
+    def __init__(self, config, template):
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
             http=80,
             s7comm=102,
         )
-        port_path_list = [
-            "//conpot_template/protocols/" + x + "/@port"
-            for x in list(self.protocol_to_port_mapping.keys())
-        ]
-        for port_path in port_path_list:
-            try:
-                protocol_port = ast.literal_eval(dom.xpath(port_path)[0])
-                protocol_name = port_path.rsplit("/", 2)[1]
-                self.protocol_to_port_mapping[protocol_name] = protocol_port
-            except IndexError:
-                continue
         conpot_namespace = Namespace(CONPOT_NAMESPACE_URL, CONPOT_NAMESPACE, "")
         idgen.set_id_namespace(conpot_namespace)
 
