@@ -16,14 +16,16 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from gevent import monkey
-
 monkey.patch_all()
+
 import unittest
-from datetime import datetime
-from modbus_tk.exceptions import ModbusError
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
+
+from datetime import datetime
+from modbus_tk.exceptions import ModbusError
 from gevent import socket
+
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
