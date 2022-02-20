@@ -29,14 +29,14 @@ class TestTFTPServer(unittest.TestCase):
 
     @freeze_time("2018-07-15 17:51:17")
     def test_tftp_upload(self):
-        """Testing TFTP upload files. """
+        """Testing TFTP upload files."""
         self.client.upload("test.txt", self._test_file)
         _, _data_fs = conpot_core.get_vfs("tftp")
         [_file] = [
             i for i in _data_fs.listdir("./") if "2018-07-15 17:51:17-test-txt" in i
         ]
         self.assertEqual(
-            _data_fs.gettext(_file),
+            _data_fs.readtext(_file),
             "This is just a test file for Conpot's TFTP server\n",
         )
         _data_fs.remove(_file)
@@ -50,7 +50,7 @@ class TestTFTPServer(unittest.TestCase):
             i for i in _data_fs.listdir("./") if "2018-07-15 17:51:17-test-txt" in i
         ]
         self.assertEqual(
-            _data_fs.gettext(_file),
+            _data_fs.readtext(_file),
             "This is just a test file for Conpot's TFTP server\n",
         )
         _data_fs.remove(_file)
@@ -65,7 +65,3 @@ class TestTFTPServer(unittest.TestCase):
         finally:
             _, _data_fs = conpot_core.get_vfs("tftp")
             _data_fs.remove("download")
-
-
-if __name__ == "__main__":
-    unittest.main()

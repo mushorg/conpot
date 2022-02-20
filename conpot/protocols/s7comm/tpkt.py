@@ -1,7 +1,7 @@
 from struct import pack, unpack
 import struct
-from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import ParseException
+from conpot.utils.networking import str_to_bytes
 
 
 class TPKT:

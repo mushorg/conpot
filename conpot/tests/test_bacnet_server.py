@@ -32,8 +32,6 @@ from bacpypes.apdu import (
     WhoHasRequest,
     ReadPropertyRequest,
     ReadPropertyACK,
-    AtomicReadFileRequest,
-    AuthenticateRequest,
 )
 from bacpypes.constructeddata import Any
 from bacpypes.primitivedata import Real
@@ -188,7 +186,3 @@ class TestBACnetServer(unittest.TestCase):
         with Timeout(1, False):
             results = [s.recvfrom(buf_size) for i in range(len(test_requests))]
         self.assertIsNone(results)
-
-
-if __name__ == "__main__":
-    unittest.main()

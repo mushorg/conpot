@@ -1,7 +1,6 @@
 import sys
 import logging
 import random
-from datetime import datetime
 
 from pysnmp.entity.rfc3413 import cmdrsp
 from pysnmp.proto import error
@@ -10,7 +9,7 @@ import pysnmp.smi.error
 from pysnmp import debug
 import gevent
 import conpot.core as conpot_core
-from conpot.utils.ext_ip import get_interface_ip
+from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +152,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             self.log(snmp_version, "Get", addr, varBinds, rspVarBinds, sock)
 
         # apply tarpit delay
-        if self.tarpit is not 0:
+        if self.tarpit != 0:
             self.do_tarpit(self.tarpit)
 
         # send response
@@ -204,7 +203,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                     rspVarBinds = rspModBinds
 
                 # apply tarpit delay
-                if self.tarpit is not 0:
+                if self.tarpit != 0:
                     self.do_tarpit(self.tarpit)
 
                 # send response
@@ -281,7 +280,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             self.log(snmp_version, "Bulk", addr, varBinds, rspVarBinds, sock)
 
         # apply tarpit delay
-        if self.tarpit is not 0:
+        if self.tarpit != 0:
             self.do_tarpit(self.tarpit)
 
         # send response
@@ -321,7 +320,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         rspVarBinds = None
 
         # apply tarpit delay
-        if self.tarpit is not 0:
+        if self.tarpit != 0:
             self.do_tarpit(self.tarpit)
 
         try:

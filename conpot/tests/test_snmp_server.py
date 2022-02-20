@@ -87,7 +87,3 @@ class TestSNMPServer(unittest.TestCase):
         else:
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
-
-
-if __name__ == "__main__":
-    unittest.main()

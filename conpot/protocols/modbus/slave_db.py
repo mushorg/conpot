@@ -86,7 +86,7 @@ class SlaveBase(Databank):
                     return (
                         None,
                         {
-                            "request": request_pdu.encode("hex"),
+                            "request": request_pdu.hex(),
                             "slave_id": slave_id,
                             "function_code": func_code,
                             "response": "",

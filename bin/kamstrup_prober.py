@@ -24,7 +24,7 @@ import time
 import argparse
 import crc16
 import xml.dom.minidom
-from conpot.protocols.kamstrup.meter_protocol import kamstrup_constants
+from conpot.protocols.kamstrup_meter import kamstrup_constants
 
 logger = logging.getLogger(__name__)
 

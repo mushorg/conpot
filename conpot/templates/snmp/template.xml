@@ -1,0 +1,785 @@
+<!-- Copyright (C) 2017  Patrick Reichenberger (University of Passau) <patrick.reichenberger@t-online.de>
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU General Public License
+ as published by the Free Software Foundation; either version 2
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+-->
+
+<core>
+    <template>
+        <!-- General information about the template -->
+        <entity name="unit">S7-300</entity>
+        <entity name="vendor">Siemens</entity>
+        <entity name="description">Creates a simple device for SNMP</entity>
+        <entity name="protocols">IEC104, SNMP</entity>
+        <entity name="creator">Patrick Reichenberger</entity>
+    </template>
+    <databus>
+        <!-- Core value that can be retrieved from the databus by key -->
+        <key_value_mappings>
+            <!-- SNMPv2-MIB -->
+            <key name="SystemDescription">
+                <value type="value">"Siemens, SIMATIC, S7-300"</value>
+            </key>
+            <key name="sysObjectID">
+                <value type="value">"0.0"</value>
+            </key>
+            <key name="Uptime">
+                <value type="function">conpot.emulators.misc.uptime.Uptime</value>
+            </key>
+            <key name="sysContact">
+                <value type="value">""</value>
+            </key>
+            <key name="sysName">
+                <value type="value">""</value>
+            </key>
+            <key name="sysLocation">
+                <value type="value">""</value>
+            </key>
+            <key name="sysServices">
+                <value type="value">"72"</value>
+            </key>
+            <!-- IF-MIB -->
+            <key name="ifNumber">
+                <value type="value">1</value>
+            </key>
+            <key name="ifIndex">
+                <value type="value">1</value>
+            </key>
+            <key name="ifDescr">
+                <value type="value">"Siemens, SIMATIC NET, CP 343-1 PN, 6GK7 343-1EX21-0XE0, HW: Version 2, FW: Version V1.2.3, Ethernet Port 1, Rack 0, 100Mbit"</value>
+            </key>
+            <key name="ifType">
+                <value type="value">6</value>
+            </key>
+            <key name="ifMtu">
+                <value type="value">1000</value>
+            </key>
+            <key name="ifSpeed">
+                <value type="value">100000000</value>
+            </key>
+            <key name="ifPhysAddress">
+                <value type="value">"0x000e8c29c51a"</value>
+            </key>
+            <key name="ifAdminStatus">
+                <value type="value">1</value>
+            </key>
+            <key name="ifOperStatus">
+                <value type="value">1</value>
+            </key>
+            <key name="ifLastChange">
+                <value type="function">conpot.emulators.misc.uptime.Uptime</value>
+            </key>
+            <key name="FacilityName">
+                <value type="value">"Compagnie Generale des Eaux"</value>
+            </key>
+            <key name="0">
+                <value type="value">0</value>
+            </key>
+            <key name="1">
+                <value type="value">1</value>
+            </key>
+            <key name="ifInOctets">
+                <value type="function">conpot.emulators.misc.sysinfo.BytesRecv</value>
+            </key>
+            <key name="ifInUcastPkts">
+                <value type="function">conpot.emulators.misc.sysinfo.PacketsRecv</value>
+            </key>
+            <key name="ifInNUcastPkts">
+                <value type="value">291</value>
+            </key>
+            <key name="ifOutOctets">
+                <value type="function">conpot.emulators.misc.sysinfo.BytesSent</value>
+            </key>
+            <key name="ifOutUcastPkts">
+                <value type="function">conpot.emulators.misc.sysinfo.PacketsSent</value>
+            </key>
+            <key name="ifOutUNcastPkts">
+                <value type="value">143</value>
+            </key>
+
+            <!-- IP-MIB -->
+            <key name="ipForwarding">
+                <value type="value">2</value>
+            </key>
+            <key name="ipDefaultTTL">
+                <value type="value">60</value>
+            </key>
+            <key name="ipInReceives">
+                <value type="value">31271</value>
+            </key>
+            <key name="ipInHdrErrors">
+                <value type="value">0</value>
+            </key>
+            <key name="ipInAddrErrors">
+                <value type="value">0</value>
+            </key>
+            <key name="ipForwDatagrams">
+                <value type="value">0</value>
+            </key>
+            <key name="ipInUnknownProtos">
+                <value type="value">0</value>
+            </key>
+            <key name="ipInDiscards">
+                <value type="value">0</value>
+            </key>
+            <key name="ipInDelivers">
+                <value type="value">31282</value>
+            </key>
+            <key name="ipOutRequests">
+                <value type="value">69023</value>
+            </key>
+            <key name="ipOutDiscards">
+                <value type="value">0</value>
+            </key>
+            <key name="ipOutNoRoutes">
+                <value type="value">0</value>
+            </key>
+            <key name="ipReasmTimeout">
+                <value type="value">60</value>
+            </key>
+            <key name="ipReasmReqds">
+                <value type="value">7</value>
+            </key>
+            <key name="ipReasmOKs">
+                <value type="value">3</value>
+            </key>
+            <key name="ipReasmFails">
+                <value type="value">0</value>
+            </key>
+            <key name="ipFragOKs">
+                <value type="value">0</value>
+            </key>
+            <key name="ipFragFails">
+                <value type="value">0</value>
+            </key>
+            <key name="ipFragCreates">
+                <value type="value">0</value>
+            </key>
+            <key name="ipAdEntAddr">
+                <value type="function">conpot.emulators.misc.sysinfo.LocalIP</value>
+            </key>
+            <key name="ipAdEntIfIndex">
+                <value type="value">1</value>
+            </key>
+            <key name="ipAdEntNetMask">
+                <value type="value">"255.255.255.255"</value>
+            </key>
+            <key name="ipAdEntBcastAddr">
+                <value type="value">1</value>
+            </key>
+            <key name="ipAdEntReasmMaxSize">
+                <value type="value">65528</value>
+            </key>
+            <key name="ipRoutingDiscards">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInMsgs">
+                <value type="value">4</value>
+            </key>
+            <key name="icmpInErrors">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInDestUnreachs">
+                <value type="value">1</value>
+            </key>
+            <key name="icmpInTimeExcds">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInParmProbs">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInSrcQuenchs">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInRedirects">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInEchos">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInEchoReps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInTimestamps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInTimestampReps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInAddrMasks">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpInAddrMaskReps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutMsgs">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutErrors">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutDestUnreachs">
+                <value type="value">144</value>
+            </key>
+            <key name="icmpOutTimeExcds">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutParmProbs">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutSrcQuenchs">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutRedirects">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutEchos">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutEchoReps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutTimestamps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutTimestampReps">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutAddrMasks">
+                <value type="value">0</value>
+            </key>
+            <key name="icmpOutAddrMaskReps">
+                <value type="value">0</value>
+            </key>
+
+            <!-- TCP-MIB -->
+            <key name="tcpRtoAlgorithm">
+                <value type="value">2</value>
+            </key>
+            <key name="tcpRtoMin">
+                <value type="value">0</value>
+            </key>
+            <key name="tcpRtoMax">
+                <value type="value">100</value>
+            </key>
+            <key name="tcpMaxConn">
+                <value type="value">-1</value>
+            </key>
+            <key name="tcpActiveOpens">
+                <value type="value">0</value>
+            </key>
+            <key name="tcpPassiveOpens">
+                <value type="value">101</value>
+            </key>
+            <key name="tcpAttemptFails">
+                <value type="value">42</value>
+            </key>
+            <key name="tcpEstabResets">
+                <value type="value">45</value>
+            </key>
+            <key name="tcpCurrEstab">
+                <value type="function">conpot.emulators.misc.sysinfo.TcpCurrEstab</value>
+            </key>
+            <key name="tcpInSegs">
+                <value type="value">30321</value>
+            </key>
+            <key name="tcpOutSegs">
+                <value type="value">67821</value>
+            </key>
+            <key name="tcpRetransSegs">
+                <value type="value">2511</value>
+            </key>
+            <key name="tcpConnState">
+                <value type="value">2</value>
+            </key>
+            <key name="tcpConnLocalAddress">
+                <value type="function">conpot.emulators.misc.sysinfo.LocalIP</value>
+            </key>
+            <key name="tcpConnLocalPort">
+                <value type="value">2404</value>
+            </key>
+            <key name="tcpConnRemAddress">
+                <value type="value">"0.0.0.0"</value>
+            </key>
+            <key name="tcpConnRemPort">
+                <value type="value">0</value>
+            </key>
+            <key name="tcpInErrs">
+                <value type="value">1</value>
+            </key>
+            <key name="tcpOutRsts">
+                <value type="value">728</value>
+            </key>
+            <!-- UDP-MIB -->
+            <key name="udpInDatagrams">
+                <value type="value">1441</value>
+            </key>
+            <key name="udpNoPorts">
+                <value type="value">1280</value>
+            </key>
+            <key name="udpInErrors">
+                <value type="value">23</value>
+            </key>
+            <key name="udpOutDatagrams">
+                <value type="value">47</value>
+            </key>
+            <key name="udpLocalAddress">
+                <value type="value">"163.172.189.137"</value>
+            </key>
+            <key name="udpLocalPort">
+                <value type="value">161</value>
+            </key>
+            <key name="SystemName">
+                <value type="value">"CP 343-1 IT"</value>
+            </key>
+            <!-- HOST-RESOURCES-MIB -->
+            <key name="hrSystemUptime">
+                <value type="function">conpot.emulators.misc.sysinfo.BootTime</value>
+            </key>
+            <key name="hrSystemDate">
+                <value type="function">conpot.emulators.misc.sysinfo.CurrentDatetime</value>
+            </key>
+            <key name="hrSystemInitialLoadDevice">
+                <value type="value">7</value>
+            </key>
+            <key name="hrSystemInitialLoadParameters">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSystemNumUsers">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSystemProcesses">
+                <value type="value">10</value>
+            </key>
+            <key name="hrSystemMaxProcesses">
+                <value type="value">32</value>
+            </key>
+            <key name="hrMemorySize">
+                <value type="function">conpot.emulators.misc.sysinfo.TotalRam</value>
+            </key>
+            <key name="hrStorageIndex0">
+                <value type="value">1</value>
+            </key>
+            <key name="hrStorageIndex1">
+                <value type="value">2</value>
+            </key>
+            <key name="hrStorageDescr0">
+                <value type="value">"CE Object Store"</value>
+            </key>
+            <key name="hrStorageDescr1">
+                <value type="value">"Virtual Memory"</value>
+            </key>
+            <key name="hrStorageAllocationUnits0">
+                <value type="value">1</value>
+            </key>
+            <key name="hrStorageAllocationUnits1">
+                <value type="value">65536</value>
+            </key>
+            <key name="hrStorageSize0">
+                <value type="function">conpot.emulators.misc.sysinfo.StorageSize</value>
+            </key>
+            <key name="hrStorageSize1">
+                <value type="value">16384</value>
+            </key>
+            <key name="hrStorageUsed0">
+                <value type="function">conpot.emulators.misc.sysinfo.StorageUsed</value>
+            </key>
+            <key name="hrStorageUsed1">
+                <value type="value">185</value>
+            </key>
+            <key name="hrStorageAllocationFailures0">
+                <value type="value">0</value>
+            </key>
+            <key name="hrStorageAllocationFailures1">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceIndex1">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceIndex2">
+                <value type="value">2</value>
+            </key>
+            <key name="hrDeviceIndex3">
+                <value type="value">3</value>
+            </key>
+            <key name="hrDeviceIndex4">
+                <value type="value">4</value>
+            </key>
+            <key name="hrDeviceIndex5">
+                <value type="value">5</value>
+            </key>
+            <key name="hrDeviceIndex6">
+                <value type="value">6</value>
+            </key>
+            <key name="hrDeviceIndex7">
+                <value type="value">7</value>
+            </key>
+            <key name="hrDeviceIndex8">
+                <value type="value">8</value>
+            </key>
+            <key name="hrDeviceIndex9">
+                <value type="value">9</value>
+            </key>
+            <key name="hrDeviceDescr1">
+                <value type="value">"Unknown Processor Type"</value>
+            </key>
+            <key name="hrDeviceDescr2">
+                <value type="value">"Software Loopback Interface 1"</value>
+            </key>
+            <key name="hrDeviceDescr3">
+                <value type="value">"FEC1"</value>
+            </key>
+            <key name="hrDeviceDescr4">
+                <value type="value">"L2TP1"</value>
+            </key>
+            <key name="hrDeviceDescr5">
+                <value type="value">"PPTP1"</value>
+            </key>
+            <key name="hrDeviceDescr6">
+                <value type="value">"ASYNCMAC1"</value>
+            </key>
+            <key name="hrDeviceDescr7">
+                <value type="value">"WinCE Object Store"</value>
+            </key>
+            <key name="hrDeviceDescr8">
+                <value type="value">"Unknown keyboard"</value>
+            </key>
+            <key name="hrDeviceDescr9">
+                <value type="value">"COM1:"</value>
+            </key>
+            <key name="hrDeviceStatus1">
+                <value type="value">2</value>
+            </key>
+            <key name="hrDeviceStatus2">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceStatus3">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceStatus4">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceStatus5">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceStatus6">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceStatus7">
+                <value type="value">2</value>
+            </key>
+            <key name="hrDeviceStatus8">
+                <value type="value">2</value>
+            </key>
+            <key name="hrDeviceStatus9">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDeviceErrors1">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors2">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors3">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors4">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors5">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors6">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors7">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors8">
+                <value type="value">0</value>
+            </key>
+            <key name="hrDeviceErrors9">
+                <value type="value">0</value>
+            </key>
+            <key name="hrProcessorLoad">
+                <value type="function">conpot.emulators.misc.sysinfo.CpuLoad</value>
+            </key>
+            <key name="hrNetworkIfIndex2">
+                <value type="value">1</value>
+            </key>
+            <key name="hrNetworkIfIndex3">
+                <value type="value">2</value>
+            </key>
+            <key name="hrNetworkIfIndex4">
+                <value type="value">3</value>
+            </key>
+            <key name="hrNetworkIfIndex5">
+                <value type="value">4</value>
+            </key>
+            <key name="hrNetworkIfIndex6">
+                <value type="value">5</value>
+            </key>
+            <key name="hrDiskStorageAccess7">
+                <value type="value">1</value>
+            </key>
+            <key name="hrDiskStorageMedia7">
+                <value type="value">8</value>
+            </key>
+            <key name="hrDiskStorageRemoveble7">
+                <value type="value">2</value>
+            </key>
+            <key name="hrDiskStorageCapacity7">
+                <value type="value">117604</value>
+            </key>
+            <key name="hrFSIndex1">
+                <value type="value">1</value>
+            </key>
+            <key name="hrFSMountPoint1">
+                <value type="value">"\\"</value>
+            </key>
+            <key name="hrFSRemoteMountPoint1">
+                <value type="value">""</value>
+            </key>
+            <key name="hrFSAccess1">
+                <value type="value">1</value>
+            </key>
+            <key name="hrFSBootable1">
+                <value type="value">2</value>
+            </key>
+            <key name="hrFSStorageIndex1">
+                <value type="value">0</value>
+            </key>
+            <key name="hrFSLastFullBackupDate1">
+                <value type="value">"0-1-1,0:0:0.0"</value>
+            </key>
+            <key name="hrFSLastPartialBackupDate1">
+                <value type="value">"0-1-1,0:0:0.0"</value>
+            </key>
+            <key name="hrSWOSIndex0">
+                <value type="value">4194306</value>
+            </key>
+            <key name="hrSWRunIndex4194306">
+                <value type="value">4194306</value>
+            </key>
+            <key name="hrSWRunIndex8126482">
+                <value type="value">8126482</value>
+            </key>
+            <key name="hrSWRunIndex17891378">
+                <value type="value">17891378</value>
+            </key>
+            <key name="hrSWRunIndex73728034">
+                <value type="value">73728034</value>
+            </key>
+            <key name="hrSWRunIndex76939274">
+                <value type="value">76939274</value>
+            </key>
+            <key name="hrSWRunIndex77201418">
+                <value type="value">77201418</value>
+            </key>
+            <key name="hrSWRunIndex78446594">
+                <value type="value">78446594</value>
+            </key>
+            <key name="hrSWRunIndex88211530">
+                <value type="value">88211530</value>
+            </key>
+            <key name="hrSWRunIndex93782086">
+                <value type="value">93782086</value>
+            </key>
+            <key name="hrSWRunIndex97058862">
+                <value type="value">97058862</value>
+            </key>
+            <key name="hrSWRunPath4194306">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath8126482">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath17891378">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath73728034">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath76939274">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath77201418">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath78446594">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath88211530">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath93782086">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunPath97058862">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters4194306">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters8126482">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters17891378">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters73728034">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters76939274">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters77201418">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters78446594">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters88211530">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters93782086">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunParameters97058862">
+                <value type="value">""</value>
+            </key>
+            <key name="hrSWRunType4194306">
+                <value type="value">2</value>
+            </key>
+            <key name="hrSWRunType8126482">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType17891378">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType73728034">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType76939274">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType77201418">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType78446594">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType88211530">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType93782086">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunType97058862">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunStatus4194306">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus8126482">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus17891378">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus73728034">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus76939274">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus77201418">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus78446594">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus88211530">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus93782086">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunStatus97058862">
+                <value type="value">1</value>
+            </key>
+            <key name="hrSWRunPerfCPU4194306">
+                <value type="value">10909</value>
+            </key>
+            <key name="hrSWRunPerfCPU8126482">
+                <value type="value">5</value>
+            </key>
+            <key name="hrSWRunPerfCPU17891378">
+                <value type="value">11</value>
+            </key>
+            <key name="hrSWRunPerfCPU73728034">
+                <value type="value">2136</value>
+            </key>
+            <key name="hrSWRunPerfCPU76939274">
+                <value type="value">54</value>
+            </key>
+            <key name="hrSWRunPerfCPU77201418">
+                <value type="value">4</value>
+            </key>
+            <key name="hrSWRunPerfCPU78446594">
+                <value type="value">3</value>
+            </key>
+            <key name="hrSWRunPerfCPU88211530">
+                <value type="value">12</value>
+            </key>
+            <key name="hrSWRunPerfCPU93782086">
+                <value type="value">11</value>
+            </key>
+            <key name="hrSWRunPerfCPU97058862">
+                <value type="value">11</value>
+            </key>
+            <key name="hrSWRunPerfMem4194306">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem8126482">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem17891378">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem73728034">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem76939274">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem77201418">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem78446594">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem88211530">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem93782086">
+                <value type="value">0</value>
+            </key>
+            <key name="hrSWRunPerfMem97058862">
+                <value type="value">0</value>
+            </key>
+        </key_value_mappings>
+    </databus>
+</core>

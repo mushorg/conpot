@@ -18,7 +18,8 @@ Build docker image from source
 
 1. Install `Docker`_
 2. Clone this repo with ``git clone https://github.com/mushorg/conpot.git``
-3. Run ``sudo make run-docker``
+3. Run ``sudo make build-docker``
+4. Run ``sudo make run-docker``
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
@@ -28,7 +29,7 @@ Build from source and run with docker-compose
 1. Install `docker-compose`_
 2. Clone this repo with
    ``git clone https://github.com/mushorg/conpot.git`` and
-   ``cd conpot/docker``
+   ``cd conpot``
 3. Build the image with ``docker-compose build``
 4. Test if everything is running correctly with ``docker-compose up``
 5. Permanently run as a daemon with ``docker-compose up -d``

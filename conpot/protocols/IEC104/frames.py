@@ -18,9 +18,6 @@
 from scapy.all import *
 from datetime import datetime
 
-# Station Address (maybe better in databus)
-station_addr = 0x1E28
-
 
 # Structure of control field formats
 class i_frame(Packet):
@@ -213,7 +210,7 @@ class LESignedShortField(Field):
 
 class NormValueField(LESignedShortField):
     def i2repr(self, pkt, x):
-        normalized = 2 * ((x + 2 ** 15) / ((2 ** 15 + 2 ** 15.0) - 1)) - 1
+        normalized = 2 * ((x + 2**15) / ((2**15 + 2**15.0) - 1)) - 1
         return self.i2h(pkt, normalized)
 
 
@@ -853,23 +850,23 @@ class asdu_infobj_64(Packet):
 
 class asdu_infobj_100(Packet):
     name = "C_IC_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
+    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
 
 
 class asdu_infobj_101(Packet):
     name = "C_CI_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
+    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
 
 
 class asdu_infobj_102(Packet):
     name = "C_RD_NA_1"
-    fields_desc = [X3BytesField("IOA", 0x0)]
+    fields_desc = [LEX3BytesField("IOA", 0x0)]
 
 
 class asdu_infobj_103(Packet):
     name = "C_CS_NA_1"
     fields_desc = [
-        X3BytesField("IOA", 0x0),
+        LEX3BytesField("IOA", 0x0),
         PacketField("CP56Time", CP56Time(), CP56Time),
     ]
 
@@ -889,7 +886,7 @@ class asdu_head(Packet):
         BitField("COT", 6, 6),
         # XByteField("COT", 0x06),
         XByteField("OrigAddr", 0x00),
-        LEShortField("Addr", station_addr),
+        LEShortField("COA", 0),
     ]
 
     def __str__(self):
@@ -1035,8 +1032,6 @@ class asdu_head(Packet):
             return asdu_infobj_63
         elif self.TypeID == 64:
             return asdu_infobj_64
-        # elif self.TypeID == 70:
-        #    return asdu_infobj_70
         elif self.TypeID == 100:
             return asdu_infobj_100
         elif self.TypeID == 101:

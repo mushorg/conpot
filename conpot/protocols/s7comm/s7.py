@@ -7,8 +7,8 @@ from struct import pack, unpack
 
 import struct
 import conpot.core as conpot_core
-from conpot.helpers import str_to_bytes
 from conpot.protocols.s7comm.exceptions import AssembleException, ParseException
+from conpot.utils.networking import str_to_bytes
 import logging
 
 logger = logging.getLogger(__name__)

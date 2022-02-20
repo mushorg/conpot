@@ -4,11 +4,10 @@ import logging
 import tftpy
 import time
 from gevent import socket
-from fs import errors
 from tftpy import TftpException, TftpErrors
 from tftpy.TftpStates import TftpStateExpectACK, TftpStateExpectDAT
 from tftpy.TftpPacketTypes import TftpPacketRRQ, TftpPacketWRQ
-from conpot.helpers import sanitize_file_name
+from conpot.utils.networking import sanitize_file_name
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class TFTPState(tftpy.TftpStates.TftpState):
 
 
 class TFTPServerState(TFTPState):
-    """The base class for server states. """
+    """The base class for server states."""
 
     # We had to rewrite the because -- had to check os.* wrappers.
     vfs, data_fs = None, None

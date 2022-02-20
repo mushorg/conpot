@@ -11,7 +11,7 @@ from modbus_tk.modbus import (
     OverlapModbusBlockError,
 )
 from modbus_tk import defines, utils
-from conpot.helpers import str_to_bytes
+from conpot.utils.networking import str_to_bytes
 from .modbus_block_databus_mediator import ModbusBlockDatabusMediator
 
 logger = logging.getLogger(__name__)

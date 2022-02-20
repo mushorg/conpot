@@ -35,12 +35,12 @@ from lxml import etree
 import conpot
 import conpot.core as conpot_core
 from conpot import protocols
-from conpot.core.loggers.log_worker import LogWorker
-from conpot.emulators.proxy import Proxy
-from conpot.helpers import fix_sslwrap
+from conpot.core.log_worker import LogWorker
+from conpot.protocols.proxy.proxy import Proxy
 from conpot.utils import ext_ip
 from conpot.utils.greenlet import spawn_startable_greenlet
 from conpot.utils import mac_addr
+from conpot.utils.networking import fix_sslwrap
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -320,8 +320,7 @@ def main():
     template_base = os.path.join(root_template_directory, "template.xml")
     if os.path.isfile(template_base):
         validate_template(
-            template_base,
-            os.path.join(package_directory, "tests/template_schemas/core.xsd"),
+            template_base, os.path.join(package_directory, "template.xsd")
         )
         dom_base = etree.parse(template_base)
     else:
@@ -380,24 +379,12 @@ def main():
                 root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
             )
             if os.path.isfile(protocol_template):
-                if "kamstrup" in protocol_name:
-                    kamstrup_dir, kamstrup_protocol = os.path.split(
-                        (protocol_name.replace("_", "/")) + "_protocol"
-                    )
-                    xsd_file = os.path.join(
-                        package_directory,
-                        "protocols",
-                        kamstrup_dir,
-                        kamstrup_protocol,
-                        "{0}.xsd".format(protocol_name),
-                    )
-                else:
-                    xsd_file = os.path.join(
-                        package_directory,
-                        "protocols",
-                        protocol_name,
-                        "{0}.xsd".format(protocol_name),
-                    )
+                xsd_file = os.path.join(
+                    package_directory,
+                    "protocols",
+                    protocol_name,
+                    "{0}.xsd".format(protocol_name),
+                )
                 validate_template(protocol_template, xsd_file)
                 dom_protocol = etree.parse(protocol_template)
                 if dom_protocol.xpath("//{0}".format(protocol_name)):
