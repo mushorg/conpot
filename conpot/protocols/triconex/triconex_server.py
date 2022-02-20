@@ -35,7 +35,7 @@ import struct
 from lxml import etree
 from gevent.server import DatagramServer
 import conpot.core as conpot_core
-from conpot.utils.ext_ip import get_interface_ip
+from conpot.utils.networking import get_interface_ip
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.core import attack_session
 import crcmod
