@@ -26,7 +26,7 @@ import conpot.core as conpot_core
 
 class DatabusMediator(object):
     def __init__(self, oid_mappings):
-        """ initiate variables """
+        """initiate variables"""
 
         self.evasion_table = {}  # stores the number of requests
         self.start_time = datetime.now()
@@ -78,7 +78,7 @@ class DatabusMediator(object):
         self.databus.set_value(self.oid_map[OID], value)
 
     def update_evasion_table(self, client_ip):
-        """ updates dynamic evasion table """
+        """updates dynamic evasion table"""
 
         # get current minute as epoch..
         now = datetime.now()

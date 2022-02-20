@@ -17,7 +17,7 @@
 
 
 class FTPException(Exception):
-    """General FTP related exceptions. """
+    """General FTP related exceptions."""
 
     pass
 

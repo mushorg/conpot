@@ -21,7 +21,7 @@ class TFTPState(tftpy.TftpStates.TftpState):
 
 
 class TFTPServerState(TFTPState):
-    """The base class for server states. """
+    """The base class for server states."""
 
     # We had to rewrite the because -- had to check os.* wrappers.
     vfs, data_fs = None, None

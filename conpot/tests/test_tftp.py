@@ -29,7 +29,7 @@ class TestTFTPServer(unittest.TestCase):
 
     @freeze_time("2018-07-15 17:51:17")
     def test_tftp_upload(self):
-        """Testing TFTP upload files. """
+        """Testing TFTP upload files."""
         self.client.upload("test.txt", self._test_file)
         _, _data_fs = conpot_core.get_vfs("tftp")
         [_file] = [

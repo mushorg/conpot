@@ -48,15 +48,12 @@ class TPKTPacket:
         self.data = data
 
     def pack(self):
-        return (
-            pack(
-                "!BBH",
-                3,  # version
-                0,  # reserved
-                len(bytes(self.data)) + 4,  # packet size
-            )
-            + str_to_bytes(bytes(self.data))
-        )
+        return pack(
+            "!BBH",
+            3,  # version
+            0,  # reserved
+            len(bytes(self.data)) + 4,  # packet size
+        ) + str_to_bytes(bytes(self.data))
 
     def unpack(self, packet):
         try:

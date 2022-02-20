@@ -18,6 +18,7 @@
 import logging
 import time
 import random
+import os
 
 from datetime import datetime
 
@@ -26,7 +27,6 @@ from socketserver import ThreadingMixIn
 
 import http.server
 import http.client
-import os
 from lxml import etree
 from conpot.helpers import str_to_bytes
 import conpot.core as conpot_core

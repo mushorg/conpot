@@ -210,7 +210,7 @@ class LESignedShortField(Field):
 
 class NormValueField(LESignedShortField):
     def i2repr(self, pkt, x):
-        normalized = 2 * ((x + 2 ** 15) / ((2 ** 15 + 2 ** 15.0) - 1)) - 1
+        normalized = 2 * ((x + 2**15) / ((2**15 + 2**15.0) - 1)) - 1
         return self.i2h(pkt, normalized)
 
 

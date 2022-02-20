@@ -16,8 +16,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import os
-from conpot.protocols.http.command_responder import CommandResponder
 import logging
+
+from conpot.protocols.http.command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
 
 logger = logging.getLogger(__name__)
