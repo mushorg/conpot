@@ -21,6 +21,7 @@ from gevent.server import StreamServer
 import conpot.core as conpot_core
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.core import attack_session
 from conpot.utils.networking import str_to_bytes
 
 logger = logging.getLogger(__name__)

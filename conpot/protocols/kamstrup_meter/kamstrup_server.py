@@ -26,6 +26,7 @@ from conpot.utils.networking import chr_py3
 from .request_parser import KamstrupRequestParser
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.core import attack_session
 
 logger = logging.getLogger(__name__)
 
