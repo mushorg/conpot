@@ -1,0 +1,11 @@
+.github
+.vscode
+.coveragerc
+.gitignore
+.landscape.yaml
+.travis.yaml
+Changelog.txt
+docker-compose.xml
+Dockerfile
+LICENSE.txt
+Makefile

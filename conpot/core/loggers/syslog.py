@@ -24,11 +24,15 @@ class SysLogger(object):
     def __init__(self, host, port, facility, logdevice, logsocket):
         logger = logging.getLogger()
 
-        if str(logsocket).lower() == 'udp':
-            logger.addHandler(SysLogHandler(address=(host, port),
-                                            facility=getattr(SysLogHandler, 'LOG_' + str(facility).upper()),
-                                            socktype=socket.SOCK_DGRAM))
-        elif str(logsocket).lower() == 'dev':
+        if str(logsocket).lower() == "udp":
+            logger.addHandler(
+                SysLogHandler(
+                    address=(host, port),
+                    facility=getattr(SysLogHandler, "LOG_" + str(facility).upper()),
+                    socktype=socket.SOCK_DGRAM,
+                )
+            )
+        elif str(logsocket).lower() == "dev":
             logger.addHandler(SysLogHandler(logdevice))
 
     def log(self, data):

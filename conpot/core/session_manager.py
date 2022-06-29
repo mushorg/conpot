@@ -18,14 +18,12 @@
 from gevent.queue import Queue
 
 from conpot.core.attack_session import AttackSession
-from conpot.core.databus import Databus
 
 
 # one instance only
 class SessionManager:
     def __init__(self):
         self._sessions = []
-        self._databus = Databus()
         self.log_queue = Queue()
 
     def _find_sessions(self, protocol, source_ip):
@@ -35,27 +33,28 @@ class SessionManager:
                     return session
         return None
 
-    def get_session(self, protocol, source_ip, source_port, destination_ip=None, destination_port=None):
+    def get_session(
+        self,
+        protocol,
+        source_ip,
+        source_port,
+        destination_ip=None,
+        destination_port=None,
+    ):
         # around here we would inject dependencies into the attack session
         attack_session = self._find_sessions(protocol, source_ip)
         if not attack_session:
-            attack_session = AttackSession(protocol, source_ip, source_port, destination_ip, destination_port, self.log_queue)
+            attack_session = AttackSession(
+                protocol,
+                source_ip,
+                source_port,
+                destination_ip,
+                destination_port,
+                self.log_queue,
+            )
             self._sessions.append(attack_session)
         return attack_session
-
-    def get_session_count(self, protocol=None):
-        count = 0
-        if protocol:
-            for session in self._sessions:
-                if session.protocol == protocol:
-                    count += 1
-        else:
-            count = len(self._sessions)
-        return count
 
     def purge_sessions(self):
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()
-
-    def initialize_databus(self, config_file):
-        self._databus.initialize(config_file)

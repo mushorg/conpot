@@ -1,4 +1,3 @@
-
 from modbus_tk.hooks import call_hooks
 import conpot.core as conpot_core
 
@@ -21,7 +20,7 @@ class ModbusBlockDatabusMediator(object):
         would overlap this block
         """
         if starting_address > self.starting_address:
-            return (self.starting_address+self.size) > starting_address
+            return (self.starting_address + self.size) > starting_address
         elif starting_address < self.starting_address:
             return (starting_address + size) > self.starting_address
         return True

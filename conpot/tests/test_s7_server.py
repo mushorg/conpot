@@ -15,32 +15,26 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
-import os
+from gevent import monkey
+
+monkey.patch_all()
 import unittest
-from collections import namedtuple
-import conpot
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
-
-import conpot.core as conpot_core
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestS7Server(unittest.TestCase):
-
     def setUp(self):
-        self.databus = conpot_core.get_databus()
-        self.dir_name = os.path.dirname(conpot.__file__)
-        self.databus.initialize(self.dir_name + '/templates/default/template.xml')
-        args = namedtuple('FakeArgs', '')
-        self.s7_instance = S7Server(self.dir_name + '/templates/default/s7comm/s7comm.xml', 'none', args)
-        gevent.spawn(self.s7_instance.start, '127.0.0.1', 0)
-        gevent.sleep(0.5)
+        self.s7_instance, self.greenlet = spawn_test_server(
+            S7Server, "default", "s7comm"
+        )
+
+        self.server_host = self.s7_instance.server.server_host
         self.server_port = self.s7_instance.server.server_port
 
     def tearDown(self):
-        self.s7_instance.stop()
+        teardown_test_server(self.s7_instance, self.greenlet)
 
     def test_s7(self):
         """
@@ -48,7 +42,7 @@ class TestS7Server(unittest.TestCase):
         """
         src_tsaps = (0x100, 0x200)
         dst_tsaps = (0x102, 0x200, 0x201)
-        s7_con = s7comm_client.s7('127.0.0.1', self.server_port)
+        s7_con = s7comm_client.s7(self.server_host, self.server_port)
         res = None
         for src_tsap in src_tsaps:
             for dst_tsap in dst_tsaps:
@@ -65,7 +59,9 @@ class TestS7Server(unittest.TestCase):
         s7_con.s.settimeout(s7_con.timeout)
         s7_con.s.connect((s7_con.ip, s7_con.port))
         s7_con.Connect()
-        identities = s7comm_client.GetIdentity('127.0.0.1', self.server_port, res[0], res[1])
+        identities = s7comm_client.GetIdentity(
+            self.server_host, self.server_port, res[0], res[1]
+        )
         s7_con.plc_stop_function()
 
         dic = {
@@ -78,8 +74,8 @@ class TestS7Server(unittest.TestCase):
                 5: "88111222",
                 7: "IM151-8 PN/DP CPU",
                 10: "",
-                11: ""
-            }
+                11: "",
+            },
         }
 
         for line in identities:
@@ -89,7 +85,3 @@ class TestS7Server(unittest.TestCase):
             except AssertionError:
                 print((sec, item, val))
                 raise
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -21,7 +21,6 @@ import unittest
 
 
 class TestMakeDocs(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -32,7 +31,9 @@ class TestMakeDocs(unittest.TestCase):
         cmd = "make -C docs/ html"
         project_root = os.path.join(os.path.dirname(__file__), "..", "..")
 
-        process = subprocess.Popen(cmd.split(), cwd=project_root, stdout=subprocess.PIPE)
+        process = subprocess.Popen(
+            cmd.split(), cwd=project_root, stdout=subprocess.PIPE
+        )
         output = process.communicate()[0].decode()
 
         self.assertIn("Build finished. The HTML pages are in build/html.", output)

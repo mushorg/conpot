@@ -1,0 +1,13 @@
+name: Code Quality Checks
+
+on: [push]
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Run Black
+      uses: lgeiger/black-action@master
+      with:
+        args: --check conpot/ bin/

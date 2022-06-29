@@ -21,12 +21,14 @@ def test_add_event_is_logged():
     destination_port = 22
     log_queue = LogQueueFake()
 
-    session = AttackSession(protocol=protocol,
-                            source_ip=source_ip,
-                            source_port=source_port,
-                            destination_ip=destination_ip,
-                            destination_port=destination_port,
-                            log_queue=log_queue)
+    session = AttackSession(
+        protocol=protocol,
+        source_ip=source_ip,
+        source_port=source_port,
+        destination_ip=destination_ip,
+        destination_port=destination_port,
+        log_queue=log_queue,
+    )
 
     event = {"foo": "bar"}
     session.add_event(event)
@@ -50,12 +52,14 @@ def test_add_event_is_logged():
 def test_add_event_same_id():
     log_queue = LogQueueFake()
 
-    session = AttackSession(protocol=None,
-                            source_ip=None,
-                            source_port=None,
-                            destination_ip=None,
-                            destination_port=None,
-                            log_queue=log_queue)
+    session = AttackSession(
+        protocol=None,
+        source_ip=None,
+        source_port=None,
+        destination_ip=None,
+        destination_port=None,
+        log_queue=log_queue,
+    )
 
     session.add_event({"foo": "bar"})
     session.add_event({"bar": "baz"})
@@ -66,19 +70,23 @@ def test_add_event_same_id():
 def test_add_event_sessions_have_unique_ids():
     log_queue = LogQueueFake()
 
-    session_1 = AttackSession(protocol=None,
-                              source_ip=None,
-                              source_port=None,
-                              destination_ip=None,
-                              destination_port=None,
-                              log_queue=log_queue)
+    session_1 = AttackSession(
+        protocol=None,
+        source_ip=None,
+        source_port=None,
+        destination_ip=None,
+        destination_port=None,
+        log_queue=log_queue,
+    )
 
-    session_2 = AttackSession(protocol=None,
-                              source_ip=None,
-                              source_port=None,
-                              destination_ip=None,
-                              destination_port=None,
-                              log_queue=log_queue)
+    session_2 = AttackSession(
+        protocol=None,
+        source_ip=None,
+        source_port=None,
+        destination_ip=None,
+        destination_port=None,
+        log_queue=log_queue,
+    )
 
     session_1.add_event({"foo": "bar"})
     session_2.add_event({"bar": "baz"})
@@ -91,12 +99,14 @@ def test_add_event_uses_session_timestamp():
     session_start = datetime(2000, 1, 1)
 
     with freeze_time(session_start) as frozen_time:
-        session = AttackSession(protocol=None,
-                                source_ip=None,
-                                source_port=None,
-                                destination_ip=None,
-                                destination_port=None,
-                                log_queue=log_queue)
+        session = AttackSession(
+            protocol=None,
+            source_ip=None,
+            source_port=None,
+            destination_ip=None,
+            destination_port=None,
+            log_queue=log_queue,
+        )
 
         frozen_time.tick(timedelta(days=1))
         session.add_event({"foo": "bar"})
@@ -117,12 +127,14 @@ def test_dump_collects_events():
     destination_port = 22
     log_queue = LogQueueFake()
 
-    session = AttackSession(protocol=protocol,
-                            source_ip=source_ip,
-                            source_port=source_port,
-                            destination_ip=destination_ip,
-                            destination_port=destination_port,
-                            log_queue=log_queue)
+    session = AttackSession(
+        protocol=protocol,
+        source_ip=source_ip,
+        source_port=source_port,
+        destination_ip=destination_ip,
+        destination_port=destination_port,
+        log_queue=log_queue,
+    )
 
     event_1 = {"foo": "bar"}
     event_2 = {"bar": "baz"}

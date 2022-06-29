@@ -21,29 +21,28 @@ import gevent
 from gevent.server import StreamServer
 from gevent.socket import socket
 from gevent.ssl import wrap_socket
-from conpot.helpers import fix_sslwrap
 import conpot
-from conpot.emulators.proxy import Proxy
-from conpot.protocols.misc.ascii_decoder import AsciiDecoder
-# gevent.monkey.patch_all()
+from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
+from conpot.protocols.proxy.proxy import Proxy
+from conpot.utils.networking import fix_sslwrap
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
 class TestProxy(unittest.TestCase):
     def test_proxy(self):
-        self.test_input = 'Hiya, this is a test'.encode('utf-8')
-        mock_service = StreamServer(('127.0.0.1', 0), self.echo_server)
+        self.test_input = "Hiya, this is a test".encode("utf-8")
+        mock_service = StreamServer(("127.0.0.1", 0), self.echo_server)
         gevent.spawn(mock_service.start)
         gevent.sleep(1)
 
-        proxy = Proxy('proxy', '127.0.0.1', mock_service.server_port)
-        server = proxy.get_server('127.0.0.1', 0)
+        proxy = Proxy("proxy", "127.0.0.1", mock_service.server_port)
+        server = proxy.get_server("127.0.0.1", 0)
         gevent.spawn(server.start)
         gevent.sleep(1)
 
         s = socket()
-        s.connect(('127.0.0.1', server.server_port))
+        s.connect(("127.0.0.1", server.server_port))
         s.sendall(self.test_input)
         received = s.recv(len(self.test_input))
         self.assertEqual(self.test_input, received)
@@ -51,21 +50,29 @@ class TestProxy(unittest.TestCase):
 
     def test_ssl_proxy(self):
         fix_sslwrap()
-        self.test_input = 'Hiya, this is a test'.encode('utf-8')
-        keyfile = os.path.join(package_directory, 'templates/default/ssl/ssl.key')
-        certfile = os.path.join(package_directory, 'templates/default/ssl/ssl.crt')
+        self.test_input = "Hiya, this is a test".encode("utf-8")
+        keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
+        certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
 
-        mock_service = StreamServer(('127.0.0.1', 0), self.echo_server, keyfile=keyfile, certfile=certfile)
+        mock_service = StreamServer(
+            ("127.0.0.1", 0), self.echo_server, keyfile=keyfile, certfile=certfile
+        )
         gevent.spawn(mock_service.start)
         gevent.sleep(1)
 
-        proxy = Proxy('proxy', '127.0.0.1', mock_service.server_port, keyfile=keyfile, certfile=certfile)
-        server = proxy.get_server('127.0.0.1', 0)
+        proxy = Proxy(
+            "proxy",
+            "127.0.0.1",
+            mock_service.server_port,
+            keyfile=keyfile,
+            certfile=certfile,
+        )
+        server = proxy.get_server("127.0.0.1", 0)
         gevent.spawn(server.start)
         gevent.sleep(1)
 
-        s = wrap_socket(socket(), keyfile, certfile)
-        s.connect(('127.0.0.1', server.server_port))
+        s = wrap_socket(socket(), keyfile=keyfile, certfile=certfile)
+        s.connect(("127.0.0.1", server.server_port))
         s.sendall(self.test_input)
         received = s.recv(len(self.test_input))
         self.assertEqual(self.test_input, received)
@@ -74,23 +81,29 @@ class TestProxy(unittest.TestCase):
     def test_ascii_decoder(self):
         test_decoder = AsciiDecoder()
         # should not raise a UnicodeDecodeError
-        self.assertTrue((test_decoder.decode_in(b'\x80abc') == b'\xef\xbf\xbdabc') and
-                        (test_decoder.decode_out(b'\x80abc') == b'\xef\xbf\xbdabc'))
+        self.assertTrue(
+            (test_decoder.decode_in(b"\x80abc") == b"\xef\xbf\xbdabc")
+            and (test_decoder.decode_out(b"\x80abc") == b"\xef\xbf\xbdabc")
+        )
 
     def test_proxy_with_decoder(self):
-        self.test_input = 'Hiya, this is a test'.encode('utf-8')
-        mock_service = StreamServer(('127.0.0.1', 0), self.echo_server)
+        self.test_input = "Hiya, this is a test".encode("utf-8")
+        mock_service = StreamServer(("127.0.0.1", 0), self.echo_server)
         gevent.spawn(mock_service.start)
         gevent.sleep(1)
 
-        proxy = Proxy('proxy', '127.0.0.1', mock_service.server_port,
-                      decoder='conpot.protocols.misc.ascii_decoder.AsciiDecoder')
-        server = proxy.get_server('127.0.0.1', 0)
+        proxy = Proxy(
+            "proxy",
+            "127.0.0.1",
+            mock_service.server_port,
+            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
+        )
+        server = proxy.get_server("127.0.0.1", 0)
         gevent.spawn(server.start)
         gevent.sleep(1)
 
         s = socket()
-        s.connect(('127.0.0.1', server.server_port))
+        s.connect(("127.0.0.1", server.server_port))
         s.sendall(self.test_input)
         received = s.recv(len(self.test_input))
         self.assertEqual(self.test_input, received)
@@ -98,22 +111,30 @@ class TestProxy(unittest.TestCase):
 
     def test_ssl_proxy_with_decoder(self):
         fix_sslwrap()
-        self.test_input = 'Hiya, this is a test'.encode('utf-8')
-        keyfile = os.path.join(package_directory, 'templates/default/ssl/ssl.key')
-        certfile = os.path.join(package_directory, 'templates/default/ssl/ssl.crt')
+        self.test_input = "Hiya, this is a test".encode("utf-8")
+        keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
+        certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
 
-        mock_service = StreamServer(('127.0.0.1', 0), self.echo_server, keyfile=keyfile, certfile=certfile)
+        mock_service = StreamServer(
+            ("127.0.0.1", 0), self.echo_server, keyfile=keyfile, certfile=certfile
+        )
         gevent.spawn(mock_service.start)
         gevent.sleep(1)
 
-        proxy = Proxy('proxy', '127.0.0.1', mock_service.server_port,
-                      decoder='conpot.protocols.misc.ascii_decoder.AsciiDecoder', keyfile=keyfile, certfile=certfile)
-        server = proxy.get_server('127.0.0.1', 0)
+        proxy = Proxy(
+            "proxy",
+            "127.0.0.1",
+            mock_service.server_port,
+            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
+            keyfile=keyfile,
+            certfile=certfile,
+        )
+        server = proxy.get_server("127.0.0.1", 0)
         gevent.spawn(server.start)
         gevent.sleep(1)
 
-        s = wrap_socket(socket(), keyfile, certfile)
-        s.connect(('127.0.0.1', server.server_port))
+        s = wrap_socket(socket(), keyfile=keyfile, certfile=certfile)
+        s.connect(("127.0.0.1", server.server_port))
         s.sendall(self.test_input)
         received = s.recv(len(self.test_input))
         self.assertEqual(self.test_input, received)
@@ -122,7 +143,3 @@ class TestProxy(unittest.TestCase):
     def echo_server(self, sock, address):
         r = sock.recv(len(self.test_input))
         sock.send(r)
-
-
-if __name__ == '__main__':
-    unittest.main()

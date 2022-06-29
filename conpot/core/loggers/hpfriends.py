@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 class HPFriendsLogger(object):
-
     def __init__(self, host, port, ident, secret, channels):
         self.host = host
         self.port = port
@@ -54,14 +53,17 @@ class HPFriendsLogger(object):
                     self.hpc.publish(self.channels, data)
                 except socket.error:
                     retries += 1
-                    self.__init__(self.host, self.port, self.ident, self.secret, self.channels)
+                    self.__init__(
+                        self.host, self.port, self.ident, self.secret, self.channels
+                    )
                     gevent.sleep(0.5)
                 else:
                     break
             error_msg = self.hpc.wait()
             return error_msg
         else:
-            error_msg = 'Not logging event because initial hpfeeds connect has not happend yet.'
+            error_msg = (
+                "Not logging event because initial hpfeeds connect has not happend yet."
+            )
             logger.warning(error_msg)
             return error_msg
-

@@ -15,40 +15,39 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-gevent.monkey.patch_all()
+from gevent import monkey
 
-import unittest
-import tempfile
+monkey.patch_all()
+
 import shutil
+import tempfile
+import unittest
 from collections import namedtuple
 
-import gevent
-import os
 from pysnmp.proto import rfc1902
-import conpot
+
 import conpot.core as conpot_core
-from conpot.tests.helpers import snmp_client
 from conpot.protocols.snmp.snmp_server import SNMPServer
+from conpot.tests.helpers import snmp_client
+from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestSNMPServer(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
-        self.host = '127.0.0.1'
-        databus = conpot_core.get_databus()
-        # get the current directory
-        self.dir_name = os.path.dirname(conpot.__file__)
-        databus.initialize(self.dir_name + '/templates/default/template.xml')
-        args = namedtuple('FakeArgs', 'mibpaths raw_mib')
-        args.mibpaths = [self.tmp_dir]
-        args.raw_mib = [self.tmp_dir]
-        self.snmp_server = SNMPServer(self.dir_name + '/templates/default/snmp/snmp.xml', 'none', args)
-        self.server_greenlet = gevent.spawn(self.snmp_server.start, self.host, 0)
-        gevent.sleep(1)
+
+        args = namedtuple("FakeArgs", "mibcache")
+        args.mibcache = self.tmp_dir
+
+        self.snmp_server, self.greenlet = spawn_test_server(
+            SNMPServer, template="default", protocol="snmp", args=args
+        )
+
+        self.host = "127.0.0.1"
         self.port = self.snmp_server.get_port()
 
     def tearDown(self):
+        teardown_test_server(self.snmp_server, self.greenlet)
         shutil.rmtree(self.tmp_dir)
 
     def test_snmp_get(self):
@@ -66,12 +65,20 @@ class TestSNMPServer(unittest.TestCase):
         """
         client = snmp_client.SNMPClient(self.host, self.port)
         # syslocation
-        oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString('TESTVALUE'))
+        oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString("TESTVALUE"))
         client.set_command(oid, callback=self.mock_callback)
         databus = conpot_core.get_databus()
-        self.assertEqual('TESTVALUE', databus.get_value('sysLocation')._value.decode())
+        self.assertEqual("TESTVALUE", databus.get_value("sysLocation")._value.decode())
 
-    def mock_callback(self, sendRequestHandle, errorIndication, errorStatus, errorIndex, varBindTable, cbCtx):
+    def mock_callback(
+        self,
+        sendRequestHandle,
+        errorIndication,
+        errorStatus,
+        errorIndex,
+        varBindTable,
+        cbCtx,
+    ):
         self.result = None
         if errorIndication:
             self.result = errorIndication
@@ -80,7 +87,3 @@ class TestSNMPServer(unittest.TestCase):
         else:
             for oid, val in varBindTable:
                 self.result = val.prettyPrint()
-
-
-if __name__ == '__main__':
-    unittest.main()
