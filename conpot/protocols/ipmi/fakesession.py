@@ -28,7 +28,7 @@ from pyghmi.ipmi.private.session import Session
 import random
 import hmac
 import hashlib
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 logger = logging.getLogger(__name__)
 
@@ -122,10 +122,9 @@ class FakeSession(Session):
             payload = data[16 : 16 + psize]
             if encryption_bit:
                 iv = rawdata[16:32]
-                decrypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                decrypted = decrypter.decrypt(
-                    struct.pack("%dB" % len(payload[16:]), *payload[16:])
-                )
+                cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
+                decryptor = cipher.decryptor()
+                decrypted = decryptor.update(struct.pack("%dB" % len(payload[16:]), *payload[16:])) + decryptor.finalize()
                 payload = struct.unpack("%dB" % len(decrypted), decrypted)
                 padsize = payload[-1] + 1
                 payload = list(payload[:-padsize])
@@ -315,10 +314,9 @@ class FakeSession(Session):
                 iv = os.urandom(16)
                 message += list(struct.unpack("16B", iv))
                 payloadtocrypt = self._aespad(payload)
-                crypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                crypted = crypter.encrypt(
-                    struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)
-                )
+                cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
+                encryptor = cipher.encryptor()
+                crypted = encryptor.update(struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)) + encryptor.finalize()
                 crypted = list(struct.unpack("%dB" % len(crypted), crypted))
                 message += crypted
             else:

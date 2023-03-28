@@ -25,6 +25,6 @@ tftpy
 # some freezegun versions broken
 freezegun!=0.3.13
 pytest
-pycrypto
+cryptography
 sphinx_rtd_theme
 psutil
