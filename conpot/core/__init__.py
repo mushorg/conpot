@@ -41,6 +41,9 @@ def get_databus():
 def get_session(*args, **kwargs):
     return sessionManager.get_session(*args, **kwargs)
 
+def delete_session(*args, **kwargs):
+    return sessionManager.delete_session(*args, **kwargs)
+
 
 # file-system related  --
 
