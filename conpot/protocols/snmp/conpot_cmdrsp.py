@@ -55,7 +55,6 @@ class conpot_extension(object):
         )
 
     def do_tarpit(self, delay):
-
         # sleeps the thread for $delay ( should be either 1 float to apply a static period of time to sleep,
         # or 2 floats seperated by semicolon to sleep a randomized period of time determined by ( rand[x;y] )
 
@@ -72,7 +71,6 @@ class conpot_extension(object):
             gevent.sleep(random.uniform(float(lbound), float(ubound)))
 
     def check_evasive(self, state, threshold, addr, cmd):
-
         # checks if current states are > thresholds and returns True if the request
         # is considered to be a DoS request.
 

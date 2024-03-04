@@ -46,10 +46,8 @@ class SNMPServer(object):
         snmp_config = dom.xpath("//snmp/config/*")
         if snmp_config:
             for entity in snmp_config:
-
                 # TARPIT: individual response delays
                 if entity.attrib["name"].lower() == "tarpit":
-
                     if entity.attrib["command"].lower() == "get":
                         self.cmd_responder.resp_app_get.tarpit = (
                             self.config_sanitize_tarpit(entity.text)
@@ -69,7 +67,6 @@ class SNMPServer(object):
 
                 # EVASION: response thresholds
                 if entity.attrib["name"].lower() == "evasion":
-
                     if entity.attrib["command"].lower() == "get":
                         self.cmd_responder.resp_app_get.threshold = (
                             self.config_sanitize_threshold(entity.text)
@@ -118,13 +115,11 @@ class SNMPServer(object):
                 )
 
     def config_sanitize_tarpit(self, value):
-
         # checks tarpit value for being either a single int or float,
         # or a series of two concatenated integers and/or floats separated by semicolon and returns
         # either the (sanitized) value or zero.
 
         if value is not None:
-
             x, _, y = value.partition(";")
 
             try:
@@ -148,12 +143,10 @@ class SNMPServer(object):
             return "0;0"
 
     def config_sanitize_threshold(self, value):
-
         # checks DoS thresholds for being either a single int or a series of two concatenated integers
         # separated by semicolon and returns either the (sanitized) value or zero.
 
         if value is not None:
-
             x, _, y = value.partition(";")
 
             try:

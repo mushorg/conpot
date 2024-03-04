@@ -43,7 +43,6 @@ class COTP(object):
             )
 
     def parse(self, packet):
-
         try:
             header = unpack("!BBB", packet[:3])
         except struct.error:
@@ -88,7 +87,6 @@ class COTPConnectionPacket:
         #           "n" Block repeats until end of packet
 
     def dissect(self, packet):
-
         # dissect fixed header
         try:
             fixed_header = unpack("!HHB", packet[:5])

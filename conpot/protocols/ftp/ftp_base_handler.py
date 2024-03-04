@@ -120,7 +120,6 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
     _ac_out_buffer_size = 4096  # outgoing data buffer size (defaults 4096)
 
     def __init__(self, request, client_address, server):
-
         # ------------------------ Environment -------------------------
         self.client_sock = request._sock
         # only commands that are enabled should work! This is configured in the FTPConfig class.

@@ -223,7 +223,6 @@ class S7(object):
         current_ssl = S7.ssl_lists["W#16#xy11"]
 
         if data_ssl_index == 1:  # 0x0001 - component identification
-
             ssl_index_description = "Component identification"
 
             ssl_resp_data = pack(

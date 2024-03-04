@@ -47,7 +47,6 @@ class SNMPDispatcher(DatagramServer):
 
 class CommandResponder(object):
     def __init__(self, host, port, raw_mibs, compiled_mibs):
-
         self.oid_mapping = {}
         self.databus_mediator = DatabusMediator(self.oid_mapping)
         # mapping between OID and databus keys

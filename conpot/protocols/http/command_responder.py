@@ -38,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 class HTTPServer(http.server.BaseHTTPRequestHandler):
     def log(self, version, request_type, addr, request, response=None):
-
         session = conpot_core.get_session(
             "http",
             addr[0],
@@ -80,13 +79,11 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # FIXME: Proper logging
 
     def get_entity_headers(self, rqfilename, headers, configuration):
-
         xml_headers = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/headers/*'
         )
 
         if xml_headers:
-
             # retrieve all headers assigned to this entity
             for header in xml_headers:
                 headers.append((header.attrib["name"], header.text))
@@ -94,7 +91,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         return headers
 
     def get_trigger_appendix(self, rqfilename, rqparams, configuration):
-
         xml_triggers = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/triggers/*'
         )
@@ -104,7 +100,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             # retrieve all subselect triggers assigned to this entity
             for triggers in xml_triggers:
-
                 triggerlist = triggers.text.split(";")
                 trigger_missed = False
 
@@ -118,14 +113,12 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         return None
 
     def get_entity_trailers(self, rqfilename, configuration):
-
         trailers = []
         xml_trailers = configuration.xpath(
             '//http/htdocs/node[@name="' + rqfilename + '"]/trailers/*'
         )
 
         if xml_trailers:
-
             # retrieve all headers assigned to this entity
             for trailer in xml_trailers:
                 trailers.append((trailer.attrib["name"], trailer.text))
@@ -133,13 +126,11 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         return trailers
 
     def get_status_headers(self, status, headers, configuration):
-
         xml_headers = configuration.xpath(
             '//http/statuscodes/status[@name="' + str(status) + '"]/headers/*'
         )
 
         if xml_headers:
-
             # retrieve all headers assigned to this status
             for header in xml_headers:
                 headers.append((header.attrib["name"], header.text))
@@ -147,14 +138,12 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         return headers
 
     def get_status_trailers(self, status, configuration):
-
         trailers = []
         xml_trailers = configuration.xpath(
             '//http/statuscodes/status[@name="' + str(status) + '"]/trailers/*'
         )
 
         if xml_trailers:
-
             # retrieve all trailers assigned to this status
             for trailer in xml_trailers:
                 trailers.append((trailer.attrib["name"], trailer.text))
@@ -189,7 +178,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # - self.send_header('Date', self.date_time_string())
 
     def substitute_template_fields(self, payload):
-
         # initialize parser with our payload
         parser = TemplateParser(payload)
 
@@ -251,7 +239,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
         if source == "filesystem":
-
             # retrieve headers from entities configuration block
             headers = self.get_status_headers(status, headers, configuration)
 
@@ -300,7 +287,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # originally targeted resource to a remote system.
 
         elif source == "proxy":
-
             # open a connection to the remote system.
             # If something goes wrong, fall back to 503.
 
@@ -331,7 +317,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 # valid Content-Length header:
 
                 for i, header in enumerate(headers):
-
                     if (
                         header[0].lower() == "transfer-encoding"
                         and header[1].lower() == "chunked"
@@ -342,12 +327,10 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 status = remotestatus
 
             except:
-
                 # before falling back to 503, we check if we are ALREADY dealing with a 503
                 # to prevent an infinite request handling loop...
 
                 if status != 503:
-
                     # we're handling another error here.
                     # generate a 503 response from configuration.
                     (status, headers, trailers, payload, chunks) = self.load_status(
@@ -360,7 +343,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                     )
 
                 else:
-
                     # oops, we're heading towards an infinite loop here,
                     # generate a minimal 503 response regardless of the configuration.
                     status = 503
@@ -428,7 +410,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # If the requested resource resides on our filesystem,
         # we try retrieve all metadata and the resource itself from there.
         if source == "filesystem":
-
             # handle STATUS tag
             # ( filesystem only, since proxied requests come with their own status )
             entity_status = configuration.xpath(
@@ -497,7 +478,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # so we act as a proxy between client and target system
 
         elif source == "proxy":
-
             # open a connection to the remote system.
             # If something goes wrong, fall back to 503
 
@@ -644,7 +624,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # check configuration: are we allowed to use this method?
         if self.server.disable_method_trace is True:
-
             # Method disabled by configuration. Fall back to 501.
             status = 501
             (status, headers, _, payload, _) = self.load_status(
@@ -652,7 +631,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             )
 
         else:
-
             # Method is enabled
             status = 200
             payload = ""
@@ -709,7 +687,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # check configuration: are we allowed to use this method?
         if self.server.disable_method_head is True:
-
             # Method disabled by configuration. Fall back to 501.
             status = 501
             (status, headers, _, _, _) = self.load_status(
@@ -717,7 +694,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             )
 
         else:
-
             # try to find a configuration item for this HEAD request
             try:
                 entity_xml = configuration.xpath(
@@ -784,7 +760,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         # check configuration: are we allowed to use this method?
         if self.server.disable_method_options is True:
-
             # Method disabled by configuration. Fall back to 501.
             status = 501
             (status, headers, _, payload, _) = self.load_status(
@@ -792,7 +767,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             )
 
         else:
-
             status = 200
             payload = ""
 
@@ -1013,12 +987,10 @@ class TemplateParser(HTMLParser):
 
         # only parse tags that are conpot template tags ( <condata /> )
         if tag == "condata":
-
             # initialize original tag (needed for value replacement)
             origin = "<" + tag
 
             for attribute in attrs:
-
                 # extend original tag
                 origin = origin + " " + attribute[0] + '="' + attribute[1] + '"'
 
@@ -1078,10 +1050,8 @@ class SubHTTPServer(ThreadedHTTPServer):
 
         xml_config = self.configuration.xpath("//http/global/config/*")
         if xml_config:
-
             # retrieve all global configuration entities
             for entity in xml_config:
-
                 if entity.attrib["name"] == "protocol_version":
                     RequestHandlerClass.protocol_version = entity.text
 
@@ -1125,7 +1095,6 @@ class SubHTTPServer(ThreadedHTTPServer):
         self.global_headers = []
         xml_headers = self.configuration.xpath("//http/global/headers/*")
         if xml_headers:
-
             # retrieve all headers assigned to this status code
             for header in xml_headers:
                 if (
@@ -1144,13 +1113,11 @@ class SubHTTPServer(ThreadedHTTPServer):
                     self.global_headers.append((header.attrib["name"], header.text))
 
     def config_sanitize_tarpit(self, value):
-
         # checks tarpit value for being either a single int or float,
         # or a series of two concatenated integers and/or floats seperated by semicolon and returns
         # either the (sanitized) value or zero.
 
         if value is not None:
-
             x, _, y = value.partition(";")
 
             try:
@@ -1172,7 +1139,6 @@ class SubHTTPServer(ThreadedHTTPServer):
             return "0;0"
 
     def do_tarpit(self, delay):
-
         # sleeps the thread for $delay ( should be either 1 float to apply a static period of time to sleep,
         # or 2 floats seperated by semicolon to sleep a randomized period of time determined by ( rand[x;y] )
 
@@ -1191,7 +1157,6 @@ class SubHTTPServer(ThreadedHTTPServer):
 
 class CommandResponder(object):
     def __init__(self, host, port, template, docpath):
-
         # Create HTTP server class
         self.httpd = SubHTTPServer((host, port), HTTPServer, template, docpath)
         self.server_port = self.httpd.server_port

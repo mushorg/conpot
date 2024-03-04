@@ -124,7 +124,12 @@ class FakeSession(Session):
                 iv = rawdata[16:32]
                 cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
                 decryptor = cipher.decryptor()
-                decrypted = decryptor.update(struct.pack("%dB" % len(payload[16:]), *payload[16:])) + decryptor.finalize()
+                decrypted = (
+                    decryptor.update(
+                        struct.pack("%dB" % len(payload[16:]), *payload[16:])
+                    )
+                    + decryptor.finalize()
+                )
                 payload = struct.unpack("%dB" % len(decrypted), decrypted)
                 padsize = payload[-1] + 1
                 payload = list(payload[:-padsize])
@@ -316,7 +321,12 @@ class FakeSession(Session):
                 payloadtocrypt = self._aespad(payload)
                 cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
                 encryptor = cipher.encryptor()
-                crypted = encryptor.update(struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)) + encryptor.finalize()
+                crypted = (
+                    encryptor.update(
+                        struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)
+                    )
+                    + encryptor.finalize()
+                )
                 crypted = list(struct.unpack("%dB" % len(crypted), crypted))
                 message += crypted
             else:
