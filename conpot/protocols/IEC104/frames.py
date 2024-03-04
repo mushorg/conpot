@@ -253,7 +253,7 @@ class IOA(Packet):
 class QOS(Packet):
     #  Quality of set-point command
     name = "QOS"
-    fields_desc = [XBitField("S/E", 0, 1), XBitField("QL", 0, 7)]
+    fields_desc = [XBitField("seq", 0, 1), XBitField("QL", 0, 7)] # seq used to be S/E, threw an error
 
 
 class QDS(Packet):
@@ -372,7 +372,7 @@ class SPE(Packet):
         XBitField("SRD", 0, 1),
         XBitField("SIE", 0, 1),
         XBitField("SL3", 0, 1),
-        XBitField("SL2", 0, 1),
+        # XBitField("SL2", 0, 1), Duplicate field, commented
         XBitField("SL2", 0, 1),
         XBitField("GS", 0, 1),
     ]
