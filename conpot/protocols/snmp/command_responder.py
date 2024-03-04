@@ -172,10 +172,10 @@ class CommandResponder(object):
         if s:
             self.oid_mapping[s.name + instance] = profile_map_name
 
-            (
-                MibScalarInstance,
-            ) = self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols(
-                "SNMPv2-SMI", "MibScalarInstance"
+            (MibScalarInstance,) = (
+                self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.importSymbols(
+                    "SNMPv2-SMI", "MibScalarInstance"
+                )
             )
             x = MibScalarInstance(s.name, instance, s.syntax.clone(value))
             self.snmpEngine.msgAndPduDsp.mibInstrumController.mibBuilder.exportSymbols(

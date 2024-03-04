@@ -275,9 +275,9 @@ class AbstractFS(WrapFS):
                         self._cache[path].raw["access"]["permissions"] = access[
                             "permissions"
                         ]
-                        self._cache[path].raw["details"][
-                            "metadata_changed"
-                        ] = fs.time.datetime_to_epoch(datetime.now())
+                        self._cache[path].raw["details"]["metadata_changed"] = (
+                            fs.time.datetime_to_epoch(datetime.now())
+                        )
                     if "user" in access or "uid" in access:
                         try:
                             if "user" in access or (
@@ -290,9 +290,9 @@ class AbstractFS(WrapFS):
                                     if value == {"user": access["user"]}
                                 ]
                                 self._cache[path].raw["access"]["uid"] = _uid
-                                self._cache[path].raw["details"][
-                                    "metadata_changed"
-                                ] = fs.time.datetime_to_epoch(datetime.now())
+                                self._cache[path].raw["details"]["metadata_changed"] = (
+                                    fs.time.datetime_to_epoch(datetime.now())
+                                )
                             else:
                                 # Must be 'uid' that is available.
                                 _uid = int(access["uid"])  # type: ignore
@@ -300,9 +300,9 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["access"]["user"] = self._users[
                                     _uid
                                 ]["user"]
-                                self._cache[path].raw["details"][
-                                    "metadata_changed"
-                                ] = fs.time.datetime_to_epoch(datetime.now())
+                                self._cache[path].raw["details"]["metadata_changed"] = (
+                                    fs.time.datetime_to_epoch(datetime.now())
+                                )
                         except (TypeError, AssertionError, KeyError):
                             raise
                     if "group" in access or "gid" in access:
@@ -319,9 +319,9 @@ class AbstractFS(WrapFS):
                                     if value == {"group": access["group"]}
                                 ]
                                 self._cache[path].raw["access"]["gid"] = _gid
-                                self._cache[path].raw["details"][
-                                    "metadata_changed"
-                                ] = fs.time.datetime_to_epoch(datetime.now())
+                                self._cache[path].raw["details"]["metadata_changed"] = (
+                                    fs.time.datetime_to_epoch(datetime.now())
+                                )
                             else:
                                 # Must be 'gid' that is available.
                                 _gid = int(access["gid"])  # type: ignore
@@ -329,9 +329,9 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["access"]["group"] = self._grps[
                                     _gid
                                 ]["group"]
-                                self._cache[path].raw["details"][
-                                    "metadata_changed"
-                                ] = fs.time.datetime_to_epoch(datetime.now())
+                                self._cache[path].raw["details"]["metadata_changed"] = (
+                                    fs.time.datetime_to_epoch(datetime.now())
+                                )
                         except (TypeError, AssertionError, KeyError):
                             raise
         else:

@@ -32,7 +32,6 @@ import ftplib  # Use ftplib's client for more authentic testing
 
 
 class TestFTPServer(unittest.TestCase):
-
     """
     All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
     response. Testing is done by sending/receiving files in data channel related commands.

@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 class MBSlave(Slave):
-
     """
     Customized Modbus slave representation extending modbus_tk.modbus.Slave
     """

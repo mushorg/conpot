@@ -41,7 +41,6 @@ from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 class TestBACnetServer(unittest.TestCase):
-
     """
     All tests are executed in a similar way. We initiate a service request to the BACnet server and wait for response.
     Instead of decoding the response, we create an expected response. We encode the expected response and compare the

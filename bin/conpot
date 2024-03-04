@@ -163,7 +163,10 @@ def main():
         default=False,
     )
     parser.add_argument(
-        "-c", "--config", help="The configuration file to use", metavar="conpot.cfg",
+        "-c",
+        "--config",
+        help="The configuration file to use",
+        metavar="conpot.cfg",
     )
 
     parser.add_argument(
@@ -256,9 +259,9 @@ def main():
                 package_directory, "templates", folder, "template.xml"
             )
             if os.path.isfile(template_xml):
-                template_unit = (
-                    template_vendor
-                ) = template_description = template_protocols = template_creator = "N/A"
+                template_unit = template_vendor = template_description = (
+                    template_protocols
+                ) = template_creator = "N/A"
                 dom_template = etree.parse(template_xml)
                 template_details = dom_template.xpath("//core/template/*")
                 if template_details:
