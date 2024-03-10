@@ -37,10 +37,13 @@ import conpot.core as conpot_core
 from conpot import protocols
 from conpot.core.log_worker import LogWorker
 from conpot.protocols.proxy.proxy import Proxy
+import conpot.protocols.schemas
 from conpot.utils import ext_ip
 from conpot.utils.greenlet import spawn_startable_greenlet
 from conpot.utils import mac_addr
 from conpot.utils.networking import fix_sslwrap
+from conpot.templates import validate as template_validate
+from conpot.templates import parse as template_parse
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -131,17 +134,6 @@ def drop_privileges(uid_name=None, gid_name=None):
         )
     )
 
-
-def validate_template(xml_file, xsd_file):
-    xml_schema = etree.parse(xsd_file)
-    xsd = etree.XMLSchema(xml_schema)
-    xml = etree.parse(xml_file)
-    xsd.validate(xml)
-    if xsd.error_log:
-        logger.error("Error parsing XML template: {}".format(xsd.error_log))
-        sys.exit(1)
-
-
 def main():
     logo()
 
@@ -191,18 +183,18 @@ def main():
 
     setup_logging(args.logfile, args.verbose)
 
-    core_interface.config = ConfigParser(os.environ)
-    config = core_interface.config
+    config = ConfigParser(os.environ)
+    core_interface.config = config
 
     if os.getuid() == 0:
         if not args.force:
             logger.critical(
-                "Can't start conpot with root. Please ref user docs for more info."
+                "Can't start conpot as root. Please ref user docs for more info."
             )
             sys.exit(3)
         else:
             logger.warning(
-                "Running conpot with root. Running conpot with root isn't recommended. "
+                "Running conpot as root. Running conpot as root isn't recommended."
             )
 
     if os.getuid() == 0:
@@ -228,10 +220,7 @@ def main():
     else:
         # sanity check: see that both config and template arguments are provided - else exit
         if not (args.config and args.template):
-            print(
-                "Invalid arguments supplied. Please check that you pass both template and config arguments before"
-                " running Conpot"
-            )
+            print("Invalid arguments supplied. Please check that you pass both template and config arguments before running Conpot")
             sys.exit(3)
         try:
             if not os.path.isfile(os.path.join(package_directory, args.config)):
@@ -297,11 +286,11 @@ def main():
         sys.exit(0)
 
     # Custom template supplied
-    if os.path.exists(os.path.join(args.template, "template.xml")):
+    if os.path.exists(os.path.join(args.template, "template.toml")):
         root_template_directory = args.template
-    # Check if the template name can be in the default templates directory
+    # Check if the template name can be found in the default templates directory
     elif os.path.isfile(
-        os.path.join(package_directory, "templates", args.template, "template.xml")
+        os.path.join(package_directory, "templates", args.template, "template.toml")
     ):
         root_template_directory = os.path.join(
             package_directory, "templates", args.template
@@ -320,18 +309,21 @@ def main():
 
     servers = list()
 
-    template_base = os.path.join(root_template_directory, "template.xml")
+    template_base = os.path.join(root_template_directory, "template.toml")
+    template = dict()
     if os.path.isfile(template_base):
-        validate_template(
-            template_base, os.path.join(package_directory, "template.xsd")
-        )
-        dom_base = etree.parse(template_base)
+        try:
+            template = template_parse.parse_toml_config(template_base)
+            template_validate.validate_toml_template(template, template_validate.base_schema)
+        except schema.SchemaError as se:
+            logger.error("Template validation error: {}".format(se))
+            sys.exit(1)
     else:
-        logger.error("Could not access template configuration")
+        logger.error("Template not found")
         sys.exit(1)
 
     session_manager = conpot_core.get_sessionManager()
-    conpot_core.get_databus().initialize(template_base)
+    conpot_core.get_databus().initialize(template)
 
     # initialize the virtual file system
     fs_url = config.get("virtual_file_system", "fs_url")
@@ -379,46 +371,32 @@ def main():
     if pid == 0:
         for protocol_name, server_class in protocols.name_mapping.items():
             protocol_template = os.path.join(
-                root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
+                root_template_directory, "{0}.toml".format(protocol_name)
             )
             if os.path.isfile(protocol_template):
-                xsd_file = os.path.join(
-                    package_directory,
-                    "protocols",
-                    protocol_name,
-                    "{0}.xsd".format(protocol_name),
-                )
-                validate_template(protocol_template, xsd_file)
-                dom_protocol = etree.parse(protocol_template)
-                if dom_protocol.xpath("//{0}".format(protocol_name)):
-                    if ast.literal_eval(
-                        dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
-                    ):
-                        host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[
-                            0
-                        ]
-                        # -- > Are we running on testing config?
-                        if "testing.cfg" in args.config:
-                            if "127." not in host:
-                                if not args.force:
-                                    logger.error(
-                                        "To run conpot on a non local interface, please specify -f option"
-                                    )
-                                    sys.exit(1)
-                        port = ast.literal_eval(
-                            dom_protocol.xpath("//{0}/@port".format(protocol_name))[0]
+                schema = getattr(conpot.protocols.schemas, protocol_name)
+                protocol = template_parse.parse_toml_config(protocol_template)
+                template_validate.validate_toml_template(protocol, schema)
+                if protocol["tftp"]["enabled"]:
+                    # -- > Are we running on testing config?
+                    if "testing.cfg" in args.config:
+                        if "127." not in protocol["tftp"]["host"]:
+                            if not args.force:
+                                logger.error(
+                                    "To run conpot on a non local interface, please specify -f option"
+                                )
+                                sys.exit(1)
+                    server = server_class(
+                        protocol[protocol_name], root_template_directory, args
+                    )
+                    greenlet = spawn_startable_greenlet(server, protocol["tftp"]["host"], protocol["tftp"]["port"])
+                    greenlet.link_exception(on_unhandled_greenlet_exception)
+                    servers.append((server, greenlet))
+                    logger.info(
+                        "Found and enabled {} protocol.".format(
+                            protocol_name, server
                         )
-                        server = server_class(
-                            protocol_template, root_template_directory, args
-                        )
-                        greenlet = spawn_startable_greenlet(server, host, port)
-                        greenlet.link_exception(on_unhandled_greenlet_exception)
-                        servers.append((server, greenlet))
-                        logger.info(
-                            "Found and enabled {} protocol.".format(
-                                protocol_name, server
-                            )
-                        )
+                    )
                 else:
                     logger.info(
                         "{} available but disabled by configuration.".format(
@@ -432,7 +410,7 @@ def main():
                     )
                 )
 
-        log_worker = LogWorker(config, dom_base, session_manager, public_ip)
+        log_worker = LogWorker(config, template, session_manager, public_ip)
         greenlet = spawn_startable_greenlet(log_worker)
         greenlet.link_exception(on_unhandled_greenlet_exception)
         servers.append((log_worker, greenlet))
@@ -443,7 +421,7 @@ def main():
             xsd_file = os.path.join(
                 os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd"
             )
-            validate_template(template_proxy, xsd_file)
+            template_validate.validate_xml_template(template_proxy, xsd_file)
             dom_proxy = etree.parse(template_proxy)
             if dom_proxy.xpath("//proxies"):
                 if ast.literal_eval(dom_proxy.xpath("//proxies/@enabled")[0]):

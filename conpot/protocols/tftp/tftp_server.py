@@ -20,14 +20,16 @@
 
 import gevent
 import os
-from lxml import etree
-from conpot.protocols.tftp import tftp_handler
+import logging
+
+from tftpy import TftpException, TftpTimeout
 from gevent.server import DatagramServer
+
 import conpot.core as conpot_core
+from conpot.protocols.tftp import tftp_handler
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.networking import get_interface_ip
-from tftpy import TftpException, TftpTimeout
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +56,12 @@ class TftpServer(object):
         logger.debug("TFTP server initialized.")
 
     def _init_vfs(self, template):
-        dom = etree.parse(template)
-        self.root_path = dom.xpath("//tftp/tftp_root_path/text()")[0].lower()
-        if len(dom.xpath("//tftp/add_src/text()")) == 0:
+        self.root_path = template["tftp_root_path"].lower()
+        if len(template["add_src"]) == 0:
             self.add_src = None
         else:
-            self.add_src = dom.xpath("//tftp/add_src/text()")[0].lower()
-        self.data_fs_subdir = dom.xpath("//tftp/data_fs_subdir/text()")[0].lower()
+            self.add_src = template["add_src"].lower()
+        self.data_fs_subdir = template["data_fs_subdir"].lower()
         # Create a file system.
         self.vfs, self.data_fs = conpot_core.add_protocol(
             protocol_name="tftp",

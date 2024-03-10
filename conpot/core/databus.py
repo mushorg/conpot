@@ -23,7 +23,6 @@ import random
 
 import gevent
 import gevent.event
-from lxml import etree
 
 
 logger = logging.getLogger(__name__)
@@ -75,33 +74,22 @@ class Databus(object):
             self._observer_map[key] = []
         self._observer_map[key].append(callback)
 
-    def initialize(self, config_file):
+    def initialize(self, template):
         self.reset()
         assert self.initialized.isSet() is False
-        logger.debug("Initializing databus using %s.", config_file)
-        dom = etree.parse(config_file)
-        entries = dom.xpath("//core/databus/key_value_mappings/*")
-        for entry in entries:
-            key = entry.attrib["name"]
-            value = entry.xpath("./value/text()")[0].strip()
-            value_type = str(entry.xpath("./value/@type")[0])
+        logger.debug("Initializing databus")
+        for key, value in template["core"]["databus"]["key_value_mappings"].items():
             assert key not in self._data
-            logging.debug("Initializing %s with %s as a %s.", key, value, value_type)
-            if value_type == "value":
-                self.set_value(key, eval(value))
-            elif value_type == "function":
+            logging.debug("Initializing %s with %s", key, value)
+            if value.startswith("conpot"):
                 namespace, _classname = value.rsplit(".", 1)
-                params = entry.xpath("./value/@param")
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
-                if len(params) > 0:
-                    # eval param to list
-                    params = eval(params[0])
-                    self.set_value(key, _class(*(tuple(params))))
-                else:
-                    self.set_value(key, _class())
+                # No params supported
+                self.set_value(key, _class())
             else:
-                raise Exception("Unknown value type: {0}".format(value_type))
+                # TODO (lr): eval value
+                self.set_value(key, value)
         self.initialized.set()
 
     def reset(self):

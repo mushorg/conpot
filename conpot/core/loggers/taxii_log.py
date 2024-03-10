@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class TaxiiLogger(object):
-    def __init__(self, config, dom):
+    def __init__(self, config, template):
         self.host = config.get("taxii", "host")
         self.port = config.getint("taxii", "port")
         self.inbox_path = config.get("taxii", "inbox_path")
@@ -36,7 +36,7 @@ class TaxiiLogger(object):
 
         self.client = HttpClient()
         self.client.setProxy("noproxy")
-        self.stix_transformer = StixTransformer(config, dom)
+        self.stix_transformer = StixTransformer(config, template)
 
     def log(self, event):
         # converts from conpot log format to STIX compatible xml
