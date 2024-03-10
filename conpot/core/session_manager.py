@@ -55,6 +55,12 @@ class SessionManager:
             self._sessions.append(attack_session)
         return attack_session
 
+    def delete_session(self, id):
+        for i, session in enumerate(self._sessions):
+            if session.id == id:
+                del self._sessions[i]
+                break
+    
     def purge_sessions(self):
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()
