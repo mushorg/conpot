@@ -39,7 +39,6 @@ from conpot.core.log_worker import LogWorker
 from conpot.protocols.proxy.proxy import Proxy
 from conpot.utils import ext_ip
 from conpot.utils.greenlet import spawn_startable_greenlet
-from conpot.utils import mac_addr
 from conpot.utils.networking import fix_sslwrap
 
 logger = logging.getLogger()
@@ -365,8 +364,6 @@ def main():
     if config.getboolean("fetch_public_ip", "enabled"):
         public_ip = ext_ip.get_ext_ip(config)
 
-
-
     for protocol_name, server_class in protocols.name_mapping.items():
         protocol_template = os.path.join(
             root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
@@ -384,9 +381,7 @@ def main():
                 if ast.literal_eval(
                     dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
                 ):
-                    host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[
-                        0
-                    ]
+                    host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[0]
                     # -- > Are we running on testing config?
                     if "testing.cfg" in args.config:
                         if "127." not in host:
@@ -405,15 +400,11 @@ def main():
                     greenlet.link_exception(on_unhandled_greenlet_exception)
                     servers.append((server, greenlet))
                     logger.info(
-                        "Found and enabled {} protocol.".format(
-                            protocol_name, server
-                        )
+                        "Found and enabled {} protocol.".format(protocol_name, server)
                     )
             else:
                 logger.info(
-                    "{} available but disabled by configuration.".format(
-                        protocol_name
-                    )
+                    "{} available but disabled by configuration.".format(protocol_name)
                 )
         else:
             logger.debug(
@@ -430,9 +421,7 @@ def main():
     # TODO: Line up Proxy init with other protocols
     template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
     if os.path.isfile(template_proxy):
-        xsd_file = os.path.join(
-            os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd"
-        )
+        xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd")
         validate_template(template_proxy, xsd_file)
         dom_proxy = etree.parse(template_proxy)
         if dom_proxy.xpath("//proxies"):

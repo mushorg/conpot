@@ -1,7 +1,8 @@
 gevent>=1.0
-pysnmp
+pysnmp==4.4.12
 pysnmp-mibs
-pysmi
+pysmi==0.3.2
+pyasn1==0.4.8
 lxml
 requests
 sphinx
@@ -25,6 +26,6 @@ tftpy
 # some freezegun versions broken
 freezegun!=0.3.13
 pytest
-cryptography
+cryptography==3.4.8
 sphinx_rtd_theme
 psutil

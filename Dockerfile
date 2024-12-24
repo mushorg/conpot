@@ -15,11 +15,7 @@ WORKDIR /opt/conpot
 COPY . .
 
 # Install specific dependencies
-RUN pip3 install --no-cache-dir pysnmp==4.4.12 \
-    && pip3 install --no-cache-dir pysmi==0.3.2 \
-    && pip3 install --no-cache-dir pyasn1==0.4.8 \
-    && pip3 install --no-cache-dir cryptography==3.4.8 \
-    && pip3 install --no-cache-dir .
+RUN pip3 install --no-cache-dir .
 
 # Stage 2: Runtime stage
 FROM python:3.8-slim
