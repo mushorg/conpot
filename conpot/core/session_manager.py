@@ -60,7 +60,7 @@ class SessionManager:
             if session.id == id:
                 del self._sessions[i]
                 break
-    
+
     def purge_sessions(self):
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()
