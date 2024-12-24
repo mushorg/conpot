@@ -9,6 +9,3 @@ jobs:
     - uses: actions/checkout@v4
     - name: Run Black
       uses: psf/black@stable
-      with:
-        options: "--check"
-        src: "./conpot/*"
