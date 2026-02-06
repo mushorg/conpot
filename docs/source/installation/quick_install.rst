@@ -23,6 +23,15 @@ Build docker image from source
 
 Navigate to ``http://MY_IP_ADDRESS`` to confirm the setup.
 
+.. note::
+
+   The HTTP service exposed by Conpot is a honeypot endpoint and does not provide
+   a traditional web interface. Accessing it via a browser or tools like ``curl``
+   may result in connection resets or empty responses, which is expected behavior.
+
+   Successful setup should be verified by observing Conpot logs, confirming open
+   ports via tools like ``nmap``, or interacting with the service as an attacker.
+
 Build from source and run with docker-compose
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
