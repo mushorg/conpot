@@ -34,15 +34,10 @@ class TestIPMI(unittest.TestCase):
         teardown_test_server(self.ipmi_server, self.greenlet)
 
     def run_cmd(self, cmd):
-        # Newer ipmitool queries Get Channel Cipher Suites before RMCP+; Conpot does
-        # not implement that command. Suite 3 matches the auth/integrity/confidentiality
-        # algorithms advertised in the open-session response (see pyghmi ServerSession).
         _cmd = [
             "ipmitool",
             "-I",
             "lanplus",
-            "-C",
-            "3",
             "-H",
             self.ipmi_server.server.server_host,
             "-p",

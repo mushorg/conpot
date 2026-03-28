@@ -87,6 +87,21 @@ class FakeSession(Session):
         elif payload_type == 0 or payload_type == 1:
             # payload_type == 0; IPMI message
             # payload_type == 1; SOL(Serial Over Lan)
+            presession_v2 = (
+                payload_type == 0
+                and not (data[5] & 0b01000000)
+                and not (data[5] & 0b10000000)
+                and struct.unpack("<I", rawdata[6:10])[0] == 0
+                and self.k1 is None
+            )
+            if presession_v2:
+                psize = data[14] + (data[15] << 8)
+                ipmi_payload = data[16 : 16 + psize]
+                if len(ipmi_payload) < psize:
+                    self.server.close_server_session()
+                    return
+                self._ipmi15(list(ipmi_payload))
+                return
             if not (data[5] & 0b01000000):
                 # non-authenticated payload
                 self.server.close_server_session()

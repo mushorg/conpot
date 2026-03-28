@@ -180,6 +180,7 @@ class IpmiServer(object):
         bodydata = struct.unpack("B" * len(header[17:]), header[17:])
         header += chr_py3(self._checksum(*bodydata))
         self.session.stage += 1
+        self.session.ipmicallback = self.handle_client_request
         logger.info("Connection established with %s", sockaddr)
         self.session.send_data(header, sockaddr)
 
@@ -375,7 +376,36 @@ class IpmiServer(object):
         )[0]
 
     def handle_client_request(self, request):
-        if request["netfn"] == 6 and request["command"] == 0x3B:
+        if request["netfn"] == 6 and request["command"] == 0x54:
+            # Get Channel Cipher Suites — pre-session RMCP+ (ipmitool queries this
+            # when no -C is given). Suite 3 matches _got_rmcp_openrequest algorithms.
+            d = request["data"]
+            if len(d) < 3:
+                self.session._send_ipmi_net_payload(code=0xC7)
+                return
+            ch, payload_type, selector = d[0], d[1], d[2]
+            list_index = selector & 0x1F
+            by_suite = selector & 0x80
+            if payload_type != 0 or ch not in (0x00, 0x01, 0x0E):
+                self.session._send_ipmi_net_payload(code=0xCC)
+                logger.info(
+                    "IPMI Get Channel Cipher Suites rejected (channel/type) from %s",
+                    self.session.sockaddr,
+                )
+                return
+            if not by_suite:
+                self.session._send_ipmi_net_payload(code=0xC1)
+                return
+            if list_index == 0:
+                suite = [0xC0, 3, 1, 1, 1]
+                self.session._send_ipmi_net_payload(code=0, data=[ch] + suite)
+            else:
+                self.session._send_ipmi_net_payload(code=0, data=[ch])
+            logger.info(
+                "IPMI response sent (Get Channel Cipher Suites) to %s",
+                self.session.sockaddr,
+            )
+        elif request["netfn"] == 6 and request["command"] == 0x3B:
             # set session privilage level
             pendingpriv = request["data"][0]
             returncode = 0
