@@ -2,7 +2,7 @@
 
 ![Test Status](https://github.com/mushorg/conpot/workflows/Code%20tests/badge.svg)
 [![Docs](https://readthedocs.org/projects/conpot/badge/?version=latest)](https://conpot.readthedocs.io/en/latest/)
-[![Coverage Status](https://coveralls.io/repos/github/mushorg/conpot/badge.svg?branch=master)](https://coveralls.io/github/mushorg/conpot?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/mushorg/conpot/badge.svg?branch=main)](https://coveralls.io/github/mushorg/conpot?branch=main)
 [![Docker Build Status](https://img.shields.io/docker/build/honeynet/conpot.svg)](https://hub.docker.com/r/honeynet/conpot)
 
 ## About

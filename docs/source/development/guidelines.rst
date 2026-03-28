@@ -47,7 +47,7 @@ Recommended git workflow
 For contributors
 ~~~~~~~~~~~~~~~~
 
-0, You can do this step when you are on master, or feature_branch, anytime there are new commits in original project.
+0, You can do this step when you are on main, or feature_branch, anytime there are new commits in original project.
 
 Just one-time add of remote:
 
@@ -60,9 +60,9 @@ And rebase:
 ::
 
   git fetch mushorg
-  git rebase mushorg/master feature_branch
+  git rebase mushorg/main feature_branch
 
-This way, your feature_branch or master will be up-to-date.
+This way, your feature_branch or main will be up-to-date.
 
 1, For every feature, create new branch:
 
@@ -121,15 +121,15 @@ To avoid additional Merge commits, use cherry-pick:
 
 ::
 
-  git checkout master
+  git checkout main
   git remote add user https://github.com/user/conpot.git
   git fetch user
   (look at 'git log user/feature_branch')
   git cherry-pick commit_hash
-  git push origin master
+  git push origin main
   git remote rm user
 
-Comment on pull request that you added it to master, and close pull request.
+Comment on pull request that you added it to main, and close pull request.
 
 This approach is usefull for majority of pull requests (1-3 commits).
 
@@ -137,4 +137,4 @@ If you expect conflicts (a lot of commits in feature branch with a lot of change
 
 Revert will be easier too.
 
-Conflicts should not happen, if feature branch is rebased on current master.
+Conflicts should not happen, if feature branch is rebased on current main.
