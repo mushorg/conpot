@@ -19,6 +19,7 @@ import logging
 import time
 import random
 import os
+import re
 
 from datetime import datetime
 
@@ -177,14 +178,26 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         # - self.send_header('Date', self.date_time_string())
 
     def substitute_template_fields(self, payload):
-        # initialize parser with our payload
-        parser = TemplateParser(payload)
+        if type(payload) == bytes:
+            payload = payload.decode()
+        databus = conpot_core.get_databus()
+        pattern = r'<condata\s+source="([^"]+)"\s+key="([^"]+)"\s*/>'
 
-        # triggers the parser, just in case of open / incomplete tags..
-        parser.close()
+        def replacer(match):
+            source = match.group(1)
+            key = match.group(2)
+            if source == "databus":
+                result = databus.get_value(key)
+                return str(result) if result is not None else match.group(0)
+            elif source == "eval":
+                try:
+                    return str(eval(key))
+                except Exception as e:
+                    logger.exception(e)
+                    return match.group(0)
+            return match.group(0)
 
-        # retrieve and return (substituted) payload
-        return parser.payload
+        return re.sub(pattern, replacer, payload)
 
     def load_status(
         self,
