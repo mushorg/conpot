@@ -340,18 +340,15 @@ def main():
     else:
         temp_dir = os.path.join(conpot.__path__[0], "ConpotTempFS")
         logger.info(
-            "Can't find the temp directory. Conpot VFS would be kept at : {}".format(
+            "Temp directory not specified, will create at: {}".format(
                 temp_dir
             )
         )
         if not os.path.exists(temp_dir):
             os.mkdir(temp_dir)
     if fs_url == "default" or data_fs_url == "default":
-        if not args.force:
-            logger.error("Can't start conpot with default file system")
-            sys.exit(3)
-        else:
-            fs_url, data_fs_url = None, None
+        logger.warning("No file system configured, using default paths.")
+        fs_url, data_fs_url = None, None
     else:
         logger.info(
             "Serving {} as file system. File uploads will be kept at : {}".format(
@@ -385,11 +382,7 @@ def main():
                     # -- > Are we running on testing config?
                     if "testing.cfg" in args.config:
                         if "127." not in host:
-                            if not args.force:
-                                logger.error(
-                                    "To run conpot on a non local interface, please specify -f option"
-                                )
-                                sys.exit(1)
+                            logger.warning("Running on non-local interface: {}".format(host))
                     port = ast.literal_eval(
                         dom_protocol.xpath("//{0}/@port".format(protocol_name))[0]
                     )
