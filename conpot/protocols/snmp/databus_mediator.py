@@ -80,7 +80,13 @@ class DatabusMediator(object):
 
     def set_value(self, OID, value):
         # TODO: Access control. The profile shold indicate which OIDs are writable
-        self.databus.set_value(self.oid_map[OID], value)
+        if hasattr(value, "asOctets"):
+            raw = value.asOctets()
+            if isinstance(raw, bytes):
+                raw = raw.decode("utf-8", errors="replace")
+            self.databus.set_value(self.oid_map[OID], raw)
+        else:
+            self.databus.set_value(self.oid_map[OID], value)
 
     def update_evasion_table(self, client_ip):
         """updates dynamic evasion table"""

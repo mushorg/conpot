@@ -1,4 +1,3 @@
-import sys
 import logging
 import random
 
@@ -14,13 +13,20 @@ from conpot.utils.networking import get_interface_ip
 logger = logging.getLogger(__name__)
 
 
+def _tarpit_active(tarpit):
+    return bool(tarpit) and tarpit != "0;0"
+
+
 class conpot_extension(object):
     def _getStateInfo(self, snmpEngine, stateReference):
-        for _, v in list(snmpEngine.messageProcessingSubsystems.items()):
-            if stateReference in v._cache.__dict__["_Cache__stateReferenceIndex"]:
-                state_dict = v._cache.__dict__["_Cache__stateReferenceIndex"][
-                    stateReference
-                ][0]
+        state_dict = None
+        for _, v in list(snmpEngine.message_processing_subsystems.items()):
+            idx = v._cache.__dict__.get("_Cache__stateReferenceIndex", {})
+            if stateReference in idx:
+                state_dict = idx[stateReference][0]
+                break
+        if state_dict is None:
+            raise KeyError("stateReference not found in MP cache")
 
         addr = state_dict["transportAddress"]
 
@@ -55,25 +61,16 @@ class conpot_extension(object):
         )
 
     def do_tarpit(self, delay):
-        # sleeps the thread for $delay ( should be either 1 float to apply a static period of time to sleep,
-        # or 2 floats seperated by semicolon to sleep a randomized period of time determined by ( rand[x;y] )
-
         lbound, _, ubound = delay.partition(";")
 
         if not lbound or lbound is None:
-            # no lower boundary found. Assume zero latency
             pass
         elif not ubound or ubound is None:
-            # no upper boundary found. Assume static latency
             gevent.sleep(float(lbound))
         else:
-            # both boundaries found. Assume random latency between lbound and ubound
             gevent.sleep(random.uniform(float(lbound), float(ubound)))
 
     def check_evasive(self, state, threshold, addr, cmd):
-        # checks if current states are > thresholds and returns True if the request
-        # is considered to be a DoS request.
-
         state_individual, state_overall = state
         threshold_individual, _, threshold_overall = threshold.partition(";")
 
@@ -86,7 +83,6 @@ class conpot_extension(object):
                     state_individual,
                     threshold_individual,
                 )
-                # DoS threshold exceeded.
                 return True
 
         if int(threshold_overall) > 0:
@@ -97,10 +93,8 @@ class conpot_extension(object):
                     state_individual,
                     threshold_overall,
                 )
-                # DDoS threshold exceeded
                 return True
 
-        # This request will be answered
         return False
 
 
@@ -115,12 +109,9 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         cmdrsp.GetCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
 
-    def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        acFun, acCtx = acInfo
-        # rfc1905: 4.2.1.1
-        mgmtFun = self.snmpContext.getMibInstrum(contextName).readVars
-
-        varBinds = v2c.apiPDU.getVarBinds(PDU)
+    def handle_management_operation(self, snmpEngine, stateReference, contextName, PDU):
+        mib = self.snmpContext.get_mib_instrum(contextName)
+        var_binds = v2c.apiPDU.get_varbinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
@@ -129,33 +120,25 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         ):
             return None
 
-        rspVarBinds = None
+        ctx = dict(snmpEngine=snmpEngine, acFun=self.verify_access, cbCtx=self.cbCtx)
+        rsp_var_binds = None
         try:
-            # generate response
-            rspVarBinds = mgmtFun(v2c.apiPDU.getVarBinds(PDU), (acFun, acCtx))
-
-            # determine the correct response class and update the dynamic value table
-            reference_class = rspVarBinds[0][1].__class__.__name__
-            # reference_value = rspVarBinds[0][1]
-
+            rsp_var_binds = mib.read_variables(*var_binds, **ctx)
+            reference_class = rsp_var_binds[0][1].__class__.__name__
             response = self.databus_mediator.get_response(
-                reference_class, tuple(rspVarBinds[0][0])
+                reference_class, tuple(rsp_var_binds[0][0])
             )
             if response:
-                rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
-                rspVarBinds = rspModBinds
-
+                rsp_var_binds = [(tuple(rsp_var_binds[0][0]), response)]
         finally:
-            sock = snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, "Get", addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transport_dispatcher.socket
+            self.log(snmp_version, "Get", addr, var_binds, rsp_var_binds, sock)
 
-        # apply tarpit delay
-        if self.tarpit != 0:
+        if _tarpit_active(self.tarpit):
             self.do_tarpit(self.tarpit)
 
-        # send response
-        self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
-        self.releaseStateInformation(stateReference)
+        self.send_varbinds(snmpEngine, stateReference, 0, 0, rsp_var_binds)
+        self.release_state_information(stateReference)
 
 
 class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
@@ -169,13 +152,9 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         cmdrsp.NextCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
 
-    def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        acFun, acCtx = acInfo
-        # rfc1905: 4.2.2.1
-
-        mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
-        varBinds = v2c.apiPDU.getVarBinds(PDU)
-
+    def handle_management_operation(self, snmpEngine, stateReference, contextName, PDU):
+        mib = self.snmpContext.get_mib_instrum(contextName)
+        var_binds = list(v2c.apiPDU.get_varbinds(PDU))
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
@@ -184,40 +163,33 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         ):
             return None
 
-        rspVarBinds = None
+        ctx = dict(snmpEngine=snmpEngine, acFun=self.verify_access, cbCtx=self.cbCtx)
+        rsp_var_binds = None
         try:
-            while 1:
-                rspVarBinds = mgmtFun(varBinds, (acFun, acCtx))
-
-                # determine the correct response class and update the dynamic value table
-                reference_class = rspVarBinds[0][1].__class__.__name__
-                # reference_value = rspVarBinds[0][1]
-
+            while True:
+                rsp_var_binds = mib.read_next_variables(*var_binds, **ctx)
+                reference_class = rsp_var_binds[0][1].__class__.__name__
                 response = self.databus_mediator.get_response(
-                    reference_class, tuple(rspVarBinds[0][0])
+                    reference_class, tuple(rsp_var_binds[0][0])
                 )
                 if response:
-                    rspModBinds = [(tuple(rspVarBinds[0][0]), response)]
-                    rspVarBinds = rspModBinds
+                    rsp_var_binds = [(tuple(rsp_var_binds[0][0]), response)]
 
-                # apply tarpit delay
-                if self.tarpit != 0:
+                if _tarpit_active(self.tarpit):
                     self.do_tarpit(self.tarpit)
 
-                # send response
                 try:
-                    self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
-                except error.StatusInformation:
-                    idx = sys.exc_info()[1]["idx"]
-                    varBinds[idx] = (rspVarBinds[idx][0], varBinds[idx][1])
+                    self.send_varbinds(snmpEngine, stateReference, 0, 0, rsp_var_binds)
+                except error.StatusInformation as ex:
+                    idx = ex["idx"]
+                    var_binds[idx] = (rsp_var_binds[idx][0], var_binds[idx][1])
                 else:
                     break
-
         finally:
-            sock = snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, "GetNext", addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transport_dispatcher.socket
+            self.log(snmp_version, "GetNext", addr, var_binds, rsp_var_binds, sock)
 
-        self.releaseStateInformation(stateReference)
+        self.release_state_information(stateReference)
 
 
 class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
@@ -231,16 +203,15 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         cmdrsp.BulkCommandResponder.__init__(self, snmpEngine, snmpContext)
         conpot_extension.__init__(self)
 
-    def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        acFun, acCtx = acInfo
-        nonRepeaters = v2c.apiBulkPDU.getNonRepeaters(PDU)
-        if nonRepeaters < 0:
-            nonRepeaters = 0
-        maxRepetitions = v2c.apiBulkPDU.getMaxRepetitions(PDU)
-        if maxRepetitions < 0:
-            maxRepetitions = 0
+    def handle_management_operation(self, snmpEngine, stateReference, contextName, PDU):
+        non_repeaters = v2c.apiBulkPDU.get_non_repeaters(PDU)
+        if non_repeaters < 0:
+            non_repeaters = 0
+        max_repetitions = v2c.apiBulkPDU.get_max_repetitions(PDU)
+        if max_repetitions < 0:
+            max_repetitions = 0
 
-        reqVarBinds = v2c.apiPDU.getVarBinds(PDU)
+        req_var_binds = v2c.apiPDU.get_varbinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
@@ -248,43 +219,41 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
             evasion_state, self.threshold, addr, str(snmp_version) + " Bulk"
         ):
             return None
-        raise Exception("This class is not converted to new architecture")
+
+        N = min(int(non_repeaters), len(req_var_binds))
+        M = int(max_repetitions)
+        R = max(len(req_var_binds) - N, 0)
+
+        if R:
+            M = min(M, self.max_varbinds // R)
+
+        debug.logger & debug.FLAG_APP and debug.logger(
+            "handle_management_operation: N %d, M %d, R %d" % (N, M, R)
+        )
+
+        mgmt_fun = self.snmpContext.get_mib_instrum(contextName).read_next_variables
+        ctx = dict(snmpEngine=snmpEngine, acFun=self.verify_access, cbCtx=self.cbCtx)
+
+        rsp_var_binds = []
+        var_binds = []
         try:
-            N = min(int(nonRepeaters), len(reqVarBinds))
-            M = int(maxRepetitions)
-            R = max(len(reqVarBinds) - N, 0)
-
-            if R:
-                M = min(M, self.maxVarBinds / R)
-
-            debug.logger & debug.flagApp and debug.logger(
-                "handleMgmtOperation: N %d, M %d, R %d" % (N, M, R)
-            )
-
-            mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
-
             if N:
-                rspVarBinds = mgmtFun(reqVarBinds[:N], (acFun, acCtx))
-            else:
-                rspVarBinds = []
-
-            varBinds = reqVarBinds[-R:]
+                rsp_var_binds = mgmt_fun(*req_var_binds[:N], **ctx)
+            var_binds = list(req_var_binds[-R:])
             while M and R:
-                rspVarBinds.extend(mgmtFun(varBinds, (acFun, acCtx)))
-                varBinds = rspVarBinds[-R:]
-                M = M - 1
+                rsp_var_binds.extend(mgmt_fun(*var_binds, **ctx))
+                var_binds = rsp_var_binds[-R:]
+                M -= 1
         finally:
-            sock = snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, "Bulk", addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transport_dispatcher.socket
+            self.log(snmp_version, "Bulk", addr, var_binds, rsp_var_binds, sock)
 
-        # apply tarpit delay
-        if self.tarpit != 0:
+        if _tarpit_active(self.tarpit):
             self.do_tarpit(self.tarpit)
 
-        # send response
-        if len(rspVarBinds):
-            self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
-            self.releaseStateInformation(stateReference)
+        if len(rsp_var_binds):
+            self.send_varbinds(snmpEngine, stateReference, 0, 0, rsp_var_binds)
+            self.release_state_information(stateReference)
         else:
             raise pysnmp.smi.error.SmiError()
 
@@ -300,12 +269,9 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         conpot_extension.__init__(self)
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
-    def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        acFun, acCtx = acInfo
-
-        mgmtFun = self.snmpContext.getMibInstrum(contextName).writeVars
-
-        varBinds = v2c.apiPDU.getVarBinds(PDU)
+    def handle_management_operation(self, snmpEngine, stateReference, contextName, PDU):
+        mib = self.snmpContext.get_mib_instrum(contextName)
+        var_binds = v2c.apiPDU.get_varbinds(PDU)
         addr, snmp_version = self._getStateInfo(snmpEngine, stateReference)
 
         evasion_state = self.databus_mediator.update_evasion_table(addr)
@@ -314,30 +280,28 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         ):
             return None
 
-        # rfc1905: 4.2.5.1-13
-        rspVarBinds = None
-
-        # apply tarpit delay
-        if self.tarpit != 0:
+        rsp_var_binds = None
+        if _tarpit_active(self.tarpit):
             self.do_tarpit(self.tarpit)
 
+        ctx = dict(snmpEngine=snmpEngine, acFun=self.verify_access, cbCtx=self.cbCtx)
+        instrum_error = None
         try:
-            rspVarBinds = mgmtFun(v2c.apiPDU.getVarBinds(PDU), (acFun, acCtx))
-
-            # generate response
-            self.sendRsp(snmpEngine, stateReference, 0, 0, rspVarBinds)
-            self.releaseStateInformation(stateReference)
-
-            oid = tuple(rspVarBinds[0][0])
-            self.databus_mediator.set_value(oid, rspVarBinds[0][1])
-
-        except (
-            pysnmp.smi.error.NoSuchObjectError,
-            pysnmp.smi.error.NoSuchInstanceError,
-        ):
-            e = pysnmp.smi.error.NotWritableError()
-            e.update(sys.exc_info()[1])
-            raise e
+            try:
+                rsp_var_binds = mib.write_variables(*var_binds, **ctx)
+            except (
+                pysnmp.smi.error.NoSuchObjectError,
+                pysnmp.smi.error.NoSuchInstanceError,
+            ) as cause:
+                instrum_error = pysnmp.smi.error.NotWritableError()
+                instrum_error.update(cause)
+            else:
+                self.send_varbinds(snmpEngine, stateReference, 0, 0, rsp_var_binds)
+                oid = tuple(rsp_var_binds[0][0])
+                self.databus_mediator.set_value(oid, rsp_var_binds[0][1])
+            self.release_state_information(stateReference)
+            if instrum_error:
+                raise instrum_error
         finally:
-            sock = snmpEngine.transportDispatcher.socket
-            self.log(snmp_version, "Set", addr, varBinds, rspVarBinds, sock)
+            sock = snmpEngine.transport_dispatcher.socket
+            self.log(snmp_version, "Set", addr, var_binds, rsp_var_binds, sock)

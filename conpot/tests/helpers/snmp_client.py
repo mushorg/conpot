@@ -1,43 +1,46 @@
-# Command Responder (GET/GETNEXT)
-# Based on examples from http://pysnmp.sourceforge.net/
+# Command generator (GET/SET client) for tests — gevent UDP + SNMPv3 (matches server USM users).
 
-from pysnmp.entity import engine, config
-from pysnmp.carrier.asynsock.dgram import udp
+import gevent.socket
+
+from pysnmp.carrier.asyncio.dgram import udp
+from pysnmp.entity import config, engine
 from pysnmp.entity.rfc3413 import cmdgen
+
+from conpot.protocols.snmp.gevent_transport import GeventClientUdpTransport
 
 
 class SNMPClient(object):
     def __init__(self, host, port):
-        # Create SNMP engine instance
         self.snmpEngine = engine.SnmpEngine()
 
-        # user: usr-sha-aes, auth: SHA, priv AES
-        config.addV3User(
+        config.add_v3_user(
             self.snmpEngine,
             "usr-sha-aes128",
-            config.usmHMACSHAAuthProtocol,
+            config.USM_AUTH_HMAC96_SHA,
             "authkey1",
-            config.usmAesCfb128Protocol,
+            config.USM_PRIV_CFB128_AES,
             "privkey1",
         )
-        config.addTargetParams(
+        config.add_target_parameters(
             self.snmpEngine, "my-creds", "usr-sha-aes128", "authPriv"
         )
 
-        # Setup transport endpoint and bind it with security settings yielding
-        # a target name (choose one entry depending of the transport needed).
-
-        # UDP/IPv4
-        config.addSocketTransport(
-            self.snmpEngine, udp.domainName, udp.UdpSocketTransport().openClientMode()
+        udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
+        udp_sock.bind(("0.0.0.0", 0))
+        config.add_transport(
+            self.snmpEngine, udp.SNMP_UDP_DOMAIN, GeventClientUdpTransport(udp_sock)
         )
-        config.addTargetAddr(
-            self.snmpEngine, "my-router", udp.domainName, (host, port), "my-creds"
+        config.add_target_address(
+            self.snmpEngine,
+            "my-router",
+            udp.SNMP_UDP_DOMAIN,
+            (host, port),
+            "my-creds",
         )
 
-    # Error/response receiver
     def cbFun(
         self,
+        snmpEngine,
         sendRequestHandle,
         errorIndication,
         errorStatus,
@@ -64,34 +67,37 @@ class SNMPClient(object):
     def get_command(self, OID=((1, 3, 6, 1, 2, 1, 1, 1, 0), None), callback=None):
         if not callback:
             callback = self.cbFun
-            # Prepare and send a request message
-        cmdgen.GetCommandGenerator().sendReq(
+        cmdgen.GetCommandGenerator().send_varbinds(
             self.snmpEngine,
             "my-router",
+            None,
+            "",
             (OID,),
             callback,
         )
-        self.snmpEngine.transportDispatcher.runDispatcher()
-        # Run I/O dispatcher which would send pending queries and process responses
-        self.snmpEngine.transportDispatcher.runDispatcher()
+        self.snmpEngine.transport_dispatcher.run_dispatcher()
 
     def set_command(self, OID, callback=None):
         if not callback:
             callback = self.cbFun
-        cmdgen.SetCommandGenerator().sendReq(
+        cmdgen.SetCommandGenerator().send_varbinds(
             self.snmpEngine,
             "my-router",
+            None,
+            "",
             (OID,),
             callback,
         )
-        self.snmpEngine.transportDispatcher.runDispatcher()
+        self.snmpEngine.transport_dispatcher.run_dispatcher()
 
     def walk_command(self, OID, callback=None):
         if not callback:
             callback = self.cbFun
-        cmdgen.NextCommandGenerator().sendReq(
+        cmdgen.NextCommandGenerator().send_varbinds(
             self.snmpEngine,
             "my-router",
+            None,
+            "",
             (OID,),
             callback,
         )

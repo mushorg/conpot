@@ -24,10 +24,10 @@ dynamic = ["version"]
 dependencies = [
     "setuptools>=61,<82",
     "gevent>=1.0",
-    "pysnmp==4.4.12",
+    "pysnmp>=7.1.22,<8",
     "pysnmp-mibs",
-    "pysmi==0.3.2",
-    "pyasn1==0.4.8",
+    "pysmi>=1.6.1",
+    "pyasn1==0.6.3",
     "lxml",
     "requests",
     "sphinx",

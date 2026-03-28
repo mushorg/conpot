@@ -68,10 +68,11 @@ class TestSNMPServer(unittest.TestCase):
         oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString("TESTVALUE"))
         client.set_command(oid, callback=self.mock_callback)
         databus = conpot_core.get_databus()
-        self.assertEqual("TESTVALUE", databus.get_value("sysLocation")._value.decode())
+        self.assertEqual("TESTVALUE", databus.get_value("sysLocation"))
 
     def mock_callback(
         self,
+        snmpEngine,
         sendRequestHandle,
         errorIndication,
         errorStatus,
