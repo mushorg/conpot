@@ -3,7 +3,7 @@
 
 import logging
 
-from pysmi.reader import FileReader, FtpReader
+from pysmi.reader import FileReader, FtpReader, HttpReader
 from pysnmp.entity import config
 from pysnmp.entity.rfc3413 import context
 from pysnmp.carrier.asynsock.dgram import udp
@@ -58,6 +58,10 @@ class CommandResponder(object):
         mib_builder = self.snmpEngine.getMibBuilder()
         addMibCompiler(mib_builder, destination=compiled_mibs)
         mib_builder.getMibCompiler().addSources(FileReader(raw_mibs))
+        # Standard MIB ASN.1 (SNMPv2-SMI, …) for compiling custom MIBs; HTTPS when local/FTP lack it.
+        mib_builder.getMibCompiler().addSources(
+            HttpReader("mibs.pysnmp.com", 443, "/asn1/@mib@", ssl=True)
+        )
         mib_builder.getMibCompiler().addSources(
             FtpReader("ftp.cisco.com", "/pub/mibs/v2/@mib@", 80)
         )

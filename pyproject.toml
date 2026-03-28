@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conpot"
+description = "Conpot is an ICS honeypot with the goal to collect intelligence about the motives and methods of adversaries targeting industrial control systems"
+readme = "README.md"
+license = "GPL-2.0-only"
+authors = [{ name = "MushMush Foundation", email = "glastopf@public.honeynet.org" }]
+keywords = ["ICS", "SCADA", "honeypot"]
+classifiers = [
+    "Development Status :: 6 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python",
+    "Topic :: Security",
+]
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "setuptools>=61,<82",
+    "gevent>=1.0",
+    "pysnmp==4.4.12",
+    "pysnmp-mibs",
+    "pysmi==0.3.2",
+    "pyasn1==0.4.8",
+    "lxml",
+    "requests",
+    "sphinx",
+    "libtaxii>=1.1.0",
+    "crc16",
+    "natsort",
+    "scapy==2.4.5",
+    "hpfeeds3",
+    "modbus-tk",
+    "stix-validator",
+    "stix",
+    "cybox",
+    "bacpypes==0.17.0",
+    "pyghmi==1.4.1",
+    "mixbox",
+    "cpppo",
+    "fs==2.3.0",
+    "python-slugify",
+    "tftpy",
+    "freezegun!=0.3.13",
+    "cryptography==3.4.8",
+    "sphinx_rtd_theme",
+    "psutil",
+]
+
+[project.urls]
+Homepage = "http://conpot.org"
+
+[tool.setuptools]
+script-files = ["bin/conpot"]
+
+[tool.setuptools.dynamic]
+version = { attr = "conpot.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["conpot*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.rst"]
+conpot = ["conpot.cfg", "tests/data/*"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+]

@@ -14,6 +14,29 @@ Style
 -----
 * We obey to the `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_
 
+Python environment (uv)
+-----------------------
+
+Dependencies are declared in ``pyproject.toml`` and locked in ``uv.lock``. Install `uv <https://docs.astral.sh/uv/>`_, then from the repository root:
+
+::
+
+  uv sync --group dev
+
+That creates ``.venv`` and installs the project plus development tools (pytest, pytest-cov, etc.). Typical commands:
+
+::
+
+  uv run pytest
+  uv run conpot --template default -f
+  uv run black .
+
+The root ``Makefile`` exposes ``make install``, ``make test``, and ``make format`` around the same uv commands.
+
+When you add or change a dependency, update ``pyproject.toml``, run ``uv lock``, and commit ``uv.lock`` together with your change.
+
+Read the Docs builds use the root ``.readthedocs.yaml``: the ``install`` job runs ``uv sync --frozen --link-mode=copy`` into ``$READTHEDOCS_VIRTUALENV_PATH`` so published docs match the lockfile. Commit ``uv.lock`` whenever dependencies change or doc builds on Read the Docs will fail.
+
 Copyright
 ---------
 * If you are adding a file/code which is produced only by you, feel free to add the license information and a notice who holds the copyrights.

@@ -9,6 +9,9 @@ __pycache__/
 # C extensions
 *.so
 
+# uv / virtualenv
+.venv/
+
 # Packages
 *.egg
 *.egg-info

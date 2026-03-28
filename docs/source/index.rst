@@ -7,11 +7,10 @@ methods of adversaries targeting industrial control systems.
 Installation
 -------------
 
-Basics instruction on how to install Conpot:
+Basic instructions on how to install Conpot:
 
-There are two ways of multiple ways of installing conpot. If you are just tinkering around, it is recommended that you
-use the quick install method. On the other hand, if you are an advanced user, you should do host installation via `pip`.
-This is described as quick install.
+* **Docker** — fastest way to try Conpot without a local Python stack; see :doc:`installation/quick_install`.
+* **Host install** — run Conpot on your machine: install the release from PyPI with ``pip``, or clone the repository and use **uv** (recommended for development); see :doc:`installation/install`.
 
 .. toctree::
    :maxdepth: 2

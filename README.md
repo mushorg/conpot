@@ -13,5 +13,6 @@ Conpot is an ICS honeypot with the goal to collect intelligence about the motive
 
 The documentation can be found [here](https://conpot.readthedocs.io/). If you are just checking out conpot, we suggest that you go for [quick install](https://conpot.readthedocs.io/en/latest/installation/quick_install.html). 
 
-If you want to tinker around and write your own template, change ports etc. We suggest that you do host install.
-You can find instructions on how to install conpot [here](https://conpot.readthedocs.io/en/latest/installation/install.html) and the FAQ [here](https://conpot.readthedocs.io/en/latest/faq.html).
+If you want to tinker around and write your own template, change ports etc., use a [host install](https://conpot.readthedocs.io/en/latest/installation/install.html). From a git checkout, dependencies are managed with [uv](https://docs.astral.sh/uv/) (`uv sync --group dev`); details are in that guide.
+
+The FAQ is [here](https://conpot.readthedocs.io/en/latest/faq.html).

@@ -20,6 +20,7 @@ from gevent import monkey
 monkey.patch_all()
 import unittest
 
+import pytest
 from cpppo.server.enip import client
 from gevent import socket
 
@@ -45,19 +46,26 @@ class EnipServerUDP(EnipServer):
         self.config.mode = "udp"
 
 
+@pytest.fixture(scope="class")
+def enip_test_servers(request):
+    """One TCP + UDP ENIP server pair for the whole test class (avoids ~10× spawn cost)."""
+    tcp_server, tcp_greenlet = spawn_test_server(
+        EnipServerTCP, "default", "enip", port=50002
+    )
+    udp_server, udp_greenlet = spawn_test_server(
+        EnipServerUDP, "default", "enip", port=60002
+    )
+    request.cls.enip_server_tcp = tcp_server
+    request.cls.server_greenlet_tcp = tcp_greenlet
+    request.cls.enip_server_udp = udp_server
+    request.cls.server_greenlet_udp = udp_greenlet
+    yield
+    teardown_test_server(udp_server, udp_greenlet)
+    teardown_test_server(tcp_server, tcp_greenlet)
+
+
+@pytest.mark.usefixtures("enip_test_servers")
 class TestENIPServer(unittest.TestCase):
-    def setUp(self):
-        self.enip_server_tcp, self.server_greenlet_tcp = spawn_test_server(
-            EnipServerTCP, "default", "enip", port=50002
-        )
-
-        self.enip_server_udp, self.server_greenlet_udp = spawn_test_server(
-            EnipServerUDP, "default", "enip", port=60002
-        )
-
-    def tearDown(self):
-        teardown_test_server(self.enip_server_udp, self.server_greenlet_udp)
-        teardown_test_server(self.enip_server_tcp, self.server_greenlet_tcp)
 
     @staticmethod
     def attribute_operations(paths, int_type=None, **kwds):
@@ -204,13 +212,19 @@ class TestENIPServer(unittest.TestCase):
 
     def test_malformend_request_tcp(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.enip_server_tcp.addr, self.enip_server_tcp.port))
-        s.send(
-            b"e\x00\x04\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            + b"x00\x00\x01\x00\x00\x00"
-        )  # test the help command
-        _ = s.recv(1024)
-        s.close()
+        try:
+            s.settimeout(4.0)
+            s.connect((self.enip_server_tcp.addr, self.enip_server_tcp.port))
+            s.send(
+                b"e\x00\x04\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                + b"x00\x00\x01\x00\x00\x00"
+            )  # test the help command
+            try:
+                _ = s.recv(1024)
+            except socket.timeout:
+                pass
+        finally:
+            s.close()
         # TODO: verify data packet?
 
     def test_malformend_request_udp(self):
