@@ -32,7 +32,6 @@ import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
 import gevent
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -333,7 +332,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 if status != 503:
                     # we're handling another error here.
                     # generate a 503 response from configuration.
-                    (status, headers, trailers, payload, chunks) = self.load_status(
+                    status, headers, trailers, payload, chunks = self.load_status(
                         503,
                         requeststring,
                         self.headers,
@@ -497,7 +496,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             except:
                 status = 503
-                (status, headers, trailers, payload, chunks) = self.load_status(
+                status, headers, trailers, payload, chunks = self.load_status(
                     status, requeststring, self.headers, headers, configuration, docpath
                 )
 
@@ -565,7 +564,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
                 logger.info(message)
 
         # generate the appropriate status code, header and payload
-        (status, headers, trailers, payload, chunks) = self.load_status(
+        status, headers, trailers, payload, chunks = self.load_status(
             code,
             requeststring.partition("?")[0],
             self.headers,
@@ -626,7 +625,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         if self.server.disable_method_trace is True:
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, _, payload, _) = self.load_status(
+            status, headers, _, payload, _ = self.load_status(
                 status, self.path, self.headers, headers, configuration, docpath
             )
 
@@ -689,7 +688,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         if self.server.disable_method_head is True:
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, _, _, _) = self.load_status(
+            status, headers, _, _, _ = self.load_status(
                 status, self.path, self.headers, headers, configuration, docpath
             )
 
@@ -709,14 +708,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
             if entity_xml:
                 # A config item exists for this entity. Handle it..
-                (status, headers, _, _, _) = self.load_entity(
+                status, headers, _, _, _ = self.load_entity(
                     self.path, headers, configuration, docpath
                 )
 
             else:
                 # No config item could be found. Fall back to a standard 404..
                 status = 404
-                (status, headers, _, _, _) = self.load_status(
+                status, headers, _, _, _ = self.load_status(
                     status, self.path, self.headers, headers, configuration, docpath
                 )
 
@@ -762,7 +761,7 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
         if self.server.disable_method_options is True:
             # Method disabled by configuration. Fall back to 501.
             status = 501
-            (status, headers, _, payload, _) = self.load_status(
+            status, headers, _, payload, _ = self.load_status(
                 status, self.path, self.headers, headers, configuration, docpath
             )
 
@@ -846,14 +845,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, trailers, payload, chunks) = self.load_entity(
+            status, headers, trailers, payload, chunks = self.load_entity(
                 self.path, headers, configuration, docpath
             )
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, trailers, payload, chunks) = self.load_status(
+            status, headers, trailers, payload, chunks = self.load_status(
                 status, self.path, self.headers, headers, configuration, docpath, "GET"
             )
 
@@ -914,14 +913,14 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
 
         if entity_xml:
             # A config item exists for this entity. Handle it..
-            (status, headers, trailers, payload, chunks) = self.load_entity(
+            status, headers, trailers, payload, chunks = self.load_entity(
                 self.path, headers, configuration, docpath
             )
 
         else:
             # No config item could be found. Fall back to a standard 404..
             status = 404
-            (status, headers, trailers, payload, chunks) = self.load_status(
+            status, headers, trailers, payload, chunks = self.load_status(
                 status,
                 self.path,
                 self.headers,

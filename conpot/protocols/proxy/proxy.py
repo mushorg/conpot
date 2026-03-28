@@ -26,7 +26,6 @@ from gevent.server import StreamServer
 import abc
 import conpot.core as conpot_core
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -18,6 +18,7 @@
 """
 Test core features for Conpot's virtual file system
 """
+
 import conpot.core as conpot_core
 from conpot.core.filesystem import SubAbstractFS
 import unittest

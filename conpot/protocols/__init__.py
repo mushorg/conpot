@@ -28,7 +28,6 @@ from .s7comm.s7_server import S7Server
 from .snmp.snmp_server import SNMPServer
 from .tftp.tftp_server import TftpServer
 
-
 # Defines protocol directory names inside template directories
 name_mapping = {
     "bacnet": BacnetServer,

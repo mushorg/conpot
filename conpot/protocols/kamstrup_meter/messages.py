@@ -22,7 +22,6 @@ from conpot.utils.networking import chr_py3
 from . import kamstrup_constants
 import conpot.core as conpot_core
 
-
 logger = logging.getLogger(__name__)
 
 

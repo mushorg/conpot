@@ -25,7 +25,6 @@ import gevent
 import gevent.event
 from lxml import etree
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -20,7 +20,6 @@ import logging
 import gevent
 import conpot.core as conpot_core
 
-
 logger = logging.getLogger(__name__)
 
 

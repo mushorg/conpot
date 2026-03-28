@@ -116,7 +116,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
         conpot_extension.__init__(self)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        (acFun, acCtx) = acInfo
+        acFun, acCtx = acInfo
         # rfc1905: 4.2.1.1
         mgmtFun = self.snmpContext.getMibInstrum(contextName).readVars
 
@@ -170,7 +170,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
         conpot_extension.__init__(self)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        (acFun, acCtx) = acInfo
+        acFun, acCtx = acInfo
         # rfc1905: 4.2.2.1
 
         mgmtFun = self.snmpContext.getMibInstrum(contextName).readNextVars
@@ -232,7 +232,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
         conpot_extension.__init__(self)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        (acFun, acCtx) = acInfo
+        acFun, acCtx = acInfo
         nonRepeaters = v2c.apiBulkPDU.getNonRepeaters(PDU)
         if nonRepeaters < 0:
             nonRepeaters = 0
@@ -301,7 +301,7 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
         cmdrsp.SetCommandResponder.__init__(self, snmpEngine, snmpContext)
 
     def handleMgmtOperation(self, snmpEngine, stateReference, contextName, PDU, acInfo):
-        (acFun, acCtx) = acInfo
+        acFun, acCtx = acInfo
 
         mgmtFun = self.snmpContext.getMibInstrum(contextName).writeVars
 

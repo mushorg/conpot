@@ -162,7 +162,7 @@ class IpmiServer(object):
                     if channel != 0xE:
                         self.close_server_session()
                         return
-                    (clientaddr, clientlun) = struct.unpack("BB", data[17:19])
+                    clientaddr, clientlun = struct.unpack("BB", data[17:19])
                     level &= 0b1111
                     self.send_auth_cap(
                         myaddr, mylun, clientaddr, clientlun, session.sockaddr

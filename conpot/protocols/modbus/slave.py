@@ -53,7 +53,7 @@ class MBSlave(Slave):
         product_code = info_root.xpath("./ProductCode/text()")[0]
         major_minor_revision = info_root.xpath("./MajorMinorRevision/text()")[0]
 
-        (req_device_id, _) = struct.unpack(">BB", request_pdu[2:4])
+        req_device_id, _ = struct.unpack(">BB", request_pdu[2:4])
         device_info = {0: vendor_name, 1: product_code, 2: major_minor_revision}
 
         # MEI type
