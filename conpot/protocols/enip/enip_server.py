@@ -158,7 +158,7 @@ class EnipServer(object):
                 name=name,
                 enip_process=enip_process,
                 delay=delay,
-                **kwds
+                **kwds,
             )
         elif udp:
             self.handle_udp(

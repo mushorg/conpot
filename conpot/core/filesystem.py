@@ -439,7 +439,7 @@ class AbstractFS(WrapFS):
         encoding=None,  # type: Optional[Text]
         newline="",  # type: Text
         line_buffering=False,  # type: bool
-        **options  # type: Any
+        **options,  # type: Any
     ):
         _open_mode = Mode(mode)
         base.validate_open_mode(mode)
