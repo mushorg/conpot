@@ -15,11 +15,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python",
     "Topic :: Security",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dynamic = ["version"]
 dependencies = [
     "setuptools>=61,<82",
@@ -34,13 +34,14 @@ dependencies = [
     "libtaxii>=1.1.0",
     "crc16",
     "natsort",
-    "scapy==2.4.5",
+    "scapy>=2.6.0,<3",
     "hpfeeds3",
     "modbus-tk",
     "stix-validator",
     "stix",
     "cybox",
     "bacpypes==0.17.0",
+    "pyasyncore>=1.0.2",
     "pyghmi==1.4.1",
     "mixbox",
     "cpppo",

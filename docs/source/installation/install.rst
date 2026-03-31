@@ -1,7 +1,7 @@
 Installation on a host
 ========================
 
-This guide covers running Conpot directly on your machine (outside Docker). Conpot requires **Python 3.10 or newer** (see ``requires-python`` in ``pyproject.toml``).
+This guide covers running Conpot directly on your machine (outside Docker). Conpot requires **Python 3.12 or newer** (see ``requires-python`` in ``pyproject.toml``).
 
 System packages (Debian / Ubuntu)
 ---------------------------------
