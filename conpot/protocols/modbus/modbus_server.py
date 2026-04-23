@@ -134,10 +134,21 @@ class ModbusServer(modbus.Server):
                     session.add_event({"type": "CONNECTION_TERMINATED"})
                     break
                 _, _, length = struct.unpack(">HHH", request[:6])
+                previous_request = None
+                stall_counter = 0
+                #Implemented fix proposed by Kevalz95, Issue #564
+                #Adds stall counter to prevent infinite loop on malformed requests
                 while len(request) < (length + 6):
                     try:
+                        if previous_request and len(previous_request) == len(request):
+                            stall_counter += 1
+                            if stall_counter >= 1000:
+                                logger.info("Modbus client provided data {} but invalid.".format(session.id))
+                                session.add_event({"type": "CONNECTION_TERMINATED"})
+                                break
                         new_byte = sock.recv(1)
                         request += new_byte
+                        previous_request = request
                     except Exception:
                         break
                 query = modbus_tcp.TcpQuery()
