@@ -182,7 +182,9 @@ class IpmiServer(object):
                         myaddr, mylun, clientaddr, clientlun, session.sockaddr, data
                     )
 
-    def send_auth_cap(self, myaddr, mylun, clientaddr, clientlun, sockaddr, request=None):
+    def send_auth_cap(
+        self, myaddr, mylun, clientaddr, clientlun, sockaddr, request=None
+    ):
         header = b"\x06\x00\xff\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10"
 
         headerdata = (clientaddr, clientlun | (7 << 2))
@@ -197,7 +199,11 @@ class IpmiServer(object):
         logger.info("Connection established with %s", sockaddr)
         self._add_event(
             sockaddr,
-            {"type": "GET_CHANNEL_AUTH_CAPABILITIES", "request": request, "response": header},
+            {
+                "type": "GET_CHANNEL_AUTH_CAPABILITIES",
+                "request": request,
+                "response": header
+            },
         )
         self.session.send_data(header, sockaddr)
 
