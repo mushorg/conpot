@@ -202,7 +202,7 @@ class IpmiServer(object):
             {
                 "type": "GET_CHANNEL_AUTH_CAPABILITIES",
                 "request": request,
-                "response": header
+                "response": header,
             },
         )
         self.session.send_data(header, sockaddr)
