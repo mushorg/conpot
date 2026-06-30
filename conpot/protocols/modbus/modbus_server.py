@@ -140,19 +140,20 @@ class ModbusServer(modbus.Server):
                 # Adds stall counter to prevent infinite loop on malformed requests
                 while len(request) < (length + 6):
                     try:
-                        if previous_request and len(previous_request) == len(request):
-                            stall_counter += 1
-                            if stall_counter >= 1000:
-                                logger.info(
-                                    "Modbus client provided data {} but invalid.".format(
-                                        session.id
-                                    )
-                                )
-                                session.add_event({"type": "CONNECTION_TERMINATED"})
-                                break
+                        # Previous request now assigned before recv() called, length check performed after
+                        previous_request = request
                         new_byte = sock.recv(1)
                         request += new_byte
-                        previous_request = request
+                        if previous_request and len(previous_request) == len(request):
+                            stall_counter += 1
+                        if stall_counter >= 1000:
+                            logger.info(
+                                "Modbus client provided data {} but invalid.".format(
+                                    session.id
+                                )
+                            )
+                            session.add_event({"type": "CONNECTION_TERMINATED"})
+                            break
                     except Exception:
                         break
                 query = modbus_tcp.TcpQuery()
