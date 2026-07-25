@@ -27,7 +27,7 @@ dependencies = [
     "pysnmp>=7.1.22,<8",
     "pysnmp-mibs",
     "pysmi>=1.6.1",
-    "pyasn1==0.6.3",
+    "pyasn1==0.6.4",
     "lxml",
     "requests",
     "sphinx",
