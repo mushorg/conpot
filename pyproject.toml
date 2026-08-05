@@ -49,7 +49,7 @@ dependencies = [
     "python-slugify",
     "tftpy",
     "freezegun!=0.3.13",
-    "cryptography==48.0.1",
+    "cryptography==50.0.0",
     "sphinx_rtd_theme",
     "psutil",
 ]
