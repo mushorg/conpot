@@ -51,6 +51,9 @@ class FakeSession(Session):
         self.bmc_handlers = {}
         self.userid = userid
         self.password = password
+        # pyghmi >= 1.5 _initsession() calls _getmaxtimeout(), which needs this.
+        # Session.__init__ sets it; FakeSession does not call super().
+        self.maxtimeout = 3
         self._initsession()
         self.sockaddr = (bmc, port)
         self.server = None
