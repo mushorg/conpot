@@ -19,7 +19,9 @@ from gevent import monkey
 
 monkey.patch_all()
 
+import struct
 import unittest
+import gevent
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
@@ -192,3 +194,42 @@ class TestModbusServer(unittest.TestCase):
         data = s.recv(1024)
         s.close()
         self.assertTrue(b"SIMATIC" in data and b"Siemens" in data)
+
+    def test_oversized_length_is_rejected_without_reading_body(self):
+        """
+        Regression test for the DoS in issue #619.
+
+        A client that declares an oversized MBAP length and then half-closes
+        its write side (sends nothing more) must be dropped as soon as the
+        length is parsed. Before the fix, ModbusServer.handle() would enter
+        `while len(request) < (length + 6): request += sock.recv(1)` - once
+        the peer's write side is closed, recv(1) returns b'' *immediately*
+        on every call instead of raising, so `request` never grows and the
+        loop never terminates: a single such connection pins one CPU core
+        forever and, since Conpot runs every protocol as greenlets on one
+        shared event loop, starves every other protocol Conpot serves.
+
+        This is deliberately not a wall-clock timing assertion - the
+        underlying bug is a genuine infinite loop, not merely a slow one.
+        Note the gevent.Timeout below is best-effort, not a real safety net:
+        against the pre-fix code this test doesn't cleanly fail, it hangs
+        the whole process. A tight CPU-bound loop that never calls anything
+        which yields never gives gevent's hub a chance to run *any* other
+        callback, including the timer backing this very Timeout - confirmed
+        manually with a 15s wall-clock timeout (`timeout 15 python3 ...`)
+        that had to kill the process from the outside. If this test ever
+        hangs your test run instead of failing, that itself is the bug.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        length = 0xFFFF
+        # 7-byte MBAP header: transaction id, protocol id, length, unit id.
+        header = struct.pack(">HHHB", 0, 0, length, 0)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
