@@ -27,7 +27,7 @@ import conpot.core as conpot_core
 from conpot.protocols.ftp.ftp_server import FTPServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
-from conpot.utils.networking import sanitize_file_name
+from slugify import slugify
 import ftplib  # Use ftplib's client for more authentic testing
 
 
@@ -75,6 +75,19 @@ class TestFTPServer(unittest.TestCase):
             del self.client
         self.client = ftplib.FTP()
         self.client_connect()
+
+    def _remove_data_fs_upload(self, file_name):
+        """Remove data_fs copies of an uploaded file.
+
+        Upload names embed a second-precision timestamp from sanitize_file_name(),
+        so regenerating that name later is racy. Match on client address + slug.
+        """
+        host, port = self.client.sock.getsockname()[:2]
+        prefix = f"({host}, {port})-"
+        suffix = "-" + slugify(file_name)
+        for name in self.data_fs.listdir("/"):
+            if name.startswith(prefix) and name.endswith(suffix):
+                self.data_fs.remove(name)
 
     def test_auth(self):
         """Test for user, pass and quit commands."""
@@ -463,12 +476,7 @@ class TestFTPServer(unittest.TestCase):
             "ftp_testing_stor.txt", self.ftp_server.handler.config.vfs.listdir("/")
         )
         self.vfs.remove("ftp_testing_stor.txt")
-        _data_fs_file = sanitize_file_name(
-            "ftp_testing_stor.txt",
-            self.client.sock.getsockname()[0],
-            self.client.sock.getsockname()[1],
-        )
-        self.data_fs.remove(_data_fs_file)
+        self._remove_data_fs_upload("ftp_testing_stor.txt")
 
     def test_appe(self):
         self.client_init()
@@ -493,12 +501,7 @@ class TestFTPServer(unittest.TestCase):
             self.assertEqual(_file_contents, _data_1 + _data_2)
         finally:
             self.vfs.remove(_file_name)
-            _data_fs_file = sanitize_file_name(
-                _file_name,
-                self.client.sock.getsockname()[0],
-                self.client.sock.getsockname()[1],
-            )
-            self.data_fs.remove(_data_fs_file)
+            self._remove_data_fs_upload(_file_name)
 
     def test_abor(self):
         self.client_init()
