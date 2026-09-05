@@ -80,6 +80,7 @@ conpot = [
     "templates/**/*",
     "protocols/**/*.xsd",
     "tests/data/**/*",
+    "tests/data/**/.gitignore",
 ]
 
 [tool.setuptools.exclude-package-data]
