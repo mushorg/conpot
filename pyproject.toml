@@ -73,6 +73,11 @@ conpot = ["conpot.cfg", "tests/data/*"]
 
 [dependency-groups]
 dev = [
+    "black==26.5.1",
     "pytest",
     "pytest-cov",
 ]
+
+[tool.black]
+target-version = ["py312"]
+required-version = "26.5.1"

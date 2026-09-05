@@ -48,8 +48,7 @@ class SQLiteLogger(object):
 
     def _create_db(self):
         cursor = self.conn.cursor()
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS events
+        cursor.execute("""CREATE TABLE IF NOT EXISTS events
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session TEXT,
@@ -60,8 +59,7 @@ class SQLiteLogger(object):
                 response TEXT,
                 event_type TEXT,
                 event_json TEXT
-            )"""
-        )
+            )""")
         self.conn.commit()
 
     def _migrate_db(self):
