@@ -27,19 +27,18 @@ Raw data in JSON formatting.
 
 **How do I get the data?**
 
-There is a Python `client <https://github.com/mushorg/conpot/blob/main/bin/conpot_hpf_client>`_
-which uses the HPFeeds library. About 40 lines of code. From there it's
-quite easy to write the data to a database.
-You can find an explanation on how it works
+Subscribe to the shared HPFeeds channels with any HPFeeds client
+(for example the `hpfeeds <https://pypi.org/project/hpfeeds3/>`_ Python
+library) and write the JSON payloads to a database or other sink.
+You can find an explanation of HPFriends
 `here <http://heipei.github.io/2013/05/11/Using-hpfriends-the-social-data-sharing-platform/>`_.
 
 **What do I have to do?**
 
 If you want to have access to the Conpot data, you have to create a
 `HPFriends <http://hpfriends.honeycloud.net/>`_ account. As soon as you accept
-the share, you can create an authkey. You can modify the client with
-the auth keys credentials. The client should be self explaining. You
-can extend the client so it fits your needs (e.g. logging to a database).
+the share, you can create an authkey and use those credentials with your
+HPFeeds subscriber.
 
 **How do I test this?**
 

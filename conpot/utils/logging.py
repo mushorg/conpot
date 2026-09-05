@@ -15,25 +15,27 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import os
-import subprocess
-import unittest
+"""Process logging setup (console + file). Not attack-event sinks."""
+
+import logging
 
 
-class TestMakeDocs(unittest.TestCase):
-    def setUp(self):
-        pass
+def setup_logging(log_file, verbose):
+    if verbose:
+        log_level = logging.DEBUG
+    else:
+        log_level = logging.INFO
 
-    def tearDown(self):
-        pass
+    log_format = logging.Formatter("%(asctime)-15s %(message)s")
+    console_log = logging.StreamHandler()
+    console_log.setLevel(log_level)
+    console_log.setFormatter(log_format)
 
-    def test_make_docs(self):
-        cmd = "make -C docs/ html"
-        project_root = os.path.join(os.path.dirname(__file__), "..", "..")
+    file_log = logging.FileHandler(log_file)
+    file_log.setFormatter(log_format)
+    file_log.setLevel(log_level)
 
-        process = subprocess.Popen(
-            cmd.split(), cwd=project_root, stdout=subprocess.PIPE
-        )
-        output = process.communicate()[0].decode()
-
-        self.assertIn("Build finished. The HTML pages are in build/html.", output)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+    root_logger.addHandler(console_log)
+    root_logger.addHandler(file_log)
