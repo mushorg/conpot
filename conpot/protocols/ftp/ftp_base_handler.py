@@ -236,8 +236,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             )
         )
         self.session.add_event({"type": "NEW_CONNECTION"})
-        # send 200 + banner -- new client has connected!
-        self.respond(b"200 " + self.config.banner.encode())
+        # send 220 + banner -- new client has connected! (RFC 959 greeting code)
+        self.respond(b"220 " + self.config.banner.encode())
         #  Is there a delay in command response? < gevent.sleep(0.5) ?
         return socketserver.BaseRequestHandler.setup(self)
 
