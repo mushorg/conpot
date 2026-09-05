@@ -916,7 +916,7 @@ class FTPCommandChannel(FTPHandlerBase):
                             b"501 can't decode path (server filesystem encoding is %a)"
                             % sys.getfilesystemencoding()
                         )
-                    except (fs.errors.PermissionDenied, FSOperationNotPermitted):
+                    except fs.errors.PermissionDenied, FSOperationNotPermitted:
                         # TODO: log user as well.
                         logger.info(
                             "Client {} requested path: {} trying to access directory to which it has "
