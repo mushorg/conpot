@@ -19,6 +19,7 @@
 # Brno University of Technology, Faculty of Information Technology
 
 import socket
+import codecs
 from lxml import etree
 from gevent.server import DatagramServer
 from bacpypes.local.device import LocalDeviceObject
@@ -69,7 +70,7 @@ class BacnetServer(object):
         logger.info(
             "New Bacnet connection from %s:%d. (%s)", address[0], address[1], session.id
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
         # I'm not sure if gevent DatagramServer handles issues where the
         # received data is over the MTU -> fragmentation
         if data:
@@ -80,13 +81,16 @@ class BacnetServer(object):
                 apdu.decode(pdu)
             except DecodingError:
                 logger.warning("DecodingError - PDU: {}".format(pdu))
+                session.log_event(error="DecodingError")
                 return
             self.bacnet_app.indication(apdu, address, self.thisDevice)
             # send an appropriate response from BACnet app to the attacker
             self.bacnet_app.response(self.bacnet_app._response, address)
+            session.log_event(request=codecs.encode(data, "hex"))
         logger.info(
             "Bacnet client disconnected %s:%d. (%s)", address[0], address[1], session.id
         )
+        session.log_event(event_type="CONNECTION_LOST")
 
     def start(self, host, port):
         connection = (host, port)

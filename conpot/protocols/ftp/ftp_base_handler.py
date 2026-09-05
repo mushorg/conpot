@@ -235,7 +235,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 self.client_address[0], self.client_address[1], self.session.id
             )
         )
-        self.session.add_event({"type": "NEW_CONNECTION"})
+        self.session.log_event(event_type="NEW_CONNECTION")
         # send 220 + banner -- new client has connected! (RFC 959 greeting code)
         self.respond(b"220 " + self.config.banner.encode())
         #  Is there a delay in command response? < gevent.sleep(0.5) ?
@@ -291,7 +291,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.log_event(event_type="CONNECTION_LOST")
                 self.finish()
                 return
             socket_read, socket_write, _ = gevent.select.select(
@@ -338,7 +338,10 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, log_data, self.session.id
                     )
                 )
-                self.session.add_event(log_data)
+                self.session.log_event(
+                    request=log_data.get("request"),
+                    response=log_data.get("response"),
+                )
         except socket.error as se:
             if se.errno == errno.EWOULDBLOCK:
                 gevent.sleep(0.1)
@@ -348,7 +351,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id, se
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.log_event(event_type="CONNECTION_LOST")
                 self.finish()
 
     def respond(self, response):

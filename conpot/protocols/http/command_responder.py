@@ -21,8 +21,6 @@ import random
 import os
 import re
 
-from datetime import datetime
-
 from html.parser import HTMLParser
 from socketserver import ThreadingMixIn
 
@@ -46,16 +44,6 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             self.connection._sock.getsockname()[1],
         )
 
-        log_dict = {
-            "remote": addr,
-            "timestamp": datetime.utcnow(),
-            "data_type": "http",
-            "dst_port": self.server.server_port,
-            "data": {
-                0: {"request": "{0} {1}: {2}".format(version, request_type, request)}
-            },
-        }
-
         logger.info(
             "%s %s request from %s: %s. %s",
             version,
@@ -69,14 +57,9 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             logger.info(
                 "%s response to %s: %s. %s", version, addr, response, session.id
             )
-            log_dict["data"][0]["response"] = "{0} response: {1}".format(
-                version, response
-            )
             session.log_event(request=str(request), response=str(response))
         else:
             session.log_event(request=str(request))
-
-        # FIXME: Proper logging
 
     def get_entity_headers(self, rqfilename, headers, configuration):
         xml_headers = configuration.xpath(

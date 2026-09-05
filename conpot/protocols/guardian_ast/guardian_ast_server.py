@@ -55,7 +55,7 @@ class GuardianASTServer(object):
         logger.info(
             "New GuardianAST connection from %s:%d. (%s)", addr[0], addr[1], session.id
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
         current_time = datetime.datetime.utcnow()
         fill_start = self.fill_offset_time - datetime.timedelta(minutes=313)
         fill_stop = self.fill_offset_time - datetime.timedelta(minutes=303)
@@ -495,19 +495,17 @@ class GuardianASTServer(object):
                     )
                 if response:
                     sock.send(str_to_bytes(response))
-                session.add_event(
-                    {
-                        "type": "AST {0}".format(cmd),
-                        "request": request,
-                        "response": response,
-                    }
+                session.log_event(
+                    event_type="AST {0}".format(cmd),
+                    request=request,
+                    response=response,
                 )
             except Exception as e:
                 logger.exception(("Unknown Error: {}".format(str(e))))
         logger.info(
             "GuardianAST client disconnected %s:%d. (%s)", addr[0], addr[1], session.id
         )
-        session.add_event({"type": "CONNECTION_LOST"})
+        session.log_event(event_type="CONNECTION_LOST")
 
     def start(self, host, port):
         connection = (host, port)
