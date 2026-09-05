@@ -116,7 +116,7 @@ class TftpServer(object):
                 client_addr[0], client_addr[1]
             )
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
         logger.debug("Read %d bytes", len(buffer))
         context = tftp_handler.TFTPContextServer(
             client_addr[0], client_addr[1], self.timeout, self.root, None, None
@@ -124,13 +124,13 @@ class TftpServer(object):
         context.vfs, context.data_fs = self.vfs, self.data_fs
         if self.shutdown:
             logger.info("Shutting down now. Disconnecting {}".format(client_addr))
-            session.add_event({"type": "CONNECTION_TERMINATED"})
+            session.log_event(event_type="CONNECTION_TERMINATED")
         try:
             context.start(buffer)
             context.cycle()
         except TftpTimeout as err:
             logger.info("Timeout occurred %s: %s" % (context, str(err)))
-            session.add_event({"type": "CONNECTION_TIMEOUT"})
+            session.log_event(event_type="CONNECTION_TIMEOUT")
             context.retry_count += 1
             # TODO: We should accept retries from the user.
             if context.retry_count >= self.TIMEOUT_RETRIES:
@@ -148,7 +148,7 @@ class TftpServer(object):
                     context, str(err)
                 )
             )
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
         logger.info("TFTP: terminating connection: {}".format(context))
         session.set_ended()
         context.end()

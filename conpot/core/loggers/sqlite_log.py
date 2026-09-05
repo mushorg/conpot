@@ -16,11 +16,14 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
+import json
 import sqlite3
 import pwd
 import os
 import platform
 import grp
+
+from .helpers import json_default
 
 
 class SQLiteLogger(object):
@@ -41,6 +44,7 @@ class SQLiteLogger(object):
         self._chown_db(db_path)
         self.conn = sqlite3.connect(db_path)
         self._create_db()
+        self._migrate_db()
 
     def _create_db(self):
         cursor = self.conn.cursor()
@@ -52,19 +56,54 @@ class SQLiteLogger(object):
                 remote TEXT,
                 protocol TEXT,
                 request TEXT,
-                response TEXT
+                response TEXT,
+                event_type TEXT,
+                event_json TEXT
             )""")
+        self.conn.commit()
+
+    def _migrate_db(self):
+        cursor = self.conn.cursor()
+        cursor.execute("PRAGMA table_info(events)")
+        columns = {row[1] for row in cursor.fetchall()}
+        if "event_type" not in columns:
+            cursor.execute("ALTER TABLE events ADD COLUMN event_type TEXT")
+        if "event_json" not in columns:
+            cursor.execute("ALTER TABLE events ADD COLUMN event_json TEXT")
+        self.conn.commit()
 
     def log(self, event):
         cursor = self.conn.cursor()
+        session_id = event.get("session_id") or event.get("id")
+        protocol = event.get("protocol") or event.get("data_type")
+        src_ip = event.get("src_ip")
+        src_port = event.get("src_port")
+        if src_ip is None and "remote" in event:
+            src_ip, src_port = event["remote"][0], event["remote"][1]
+        remote = "('%s', %s)" % (src_ip, src_port)
+
+        request = event.get("request")
+        response = event.get("response")
+        if request is None and isinstance(event.get("data"), dict):
+            request = event["data"].get("request")
+        if response is None and isinstance(event.get("data"), dict):
+            response = event["data"].get("response")
+
+        event_type = event.get("event_type")
+        if event_type is None and isinstance(event.get("data"), dict):
+            event_type = event["data"].get("type")
+
         cursor.execute(
-            "INSERT INTO events(session, remote, protocol, request, response) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO events(session, remote, protocol, request, response, event_type, event_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
-                str(event["id"]),
-                str(event["remote"]),
-                event["data_type"],
-                str(event["data"].get("request")),
-                str(event["data"].get("response")),
+                str(session_id),
+                remote,
+                protocol,
+                str(request) if request is not None else None,
+                str(response) if response is not None else None,
+                event_type,
+                json.dumps(event, default=json_default),
             ),
         )
         self.conn.commit()

@@ -48,7 +48,7 @@ class KamstrupManagementServer(object):
             address[1],
             session.id,
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
 
         try:
             sock.send(
@@ -63,23 +63,21 @@ class KamstrupManagementServer(object):
                 data = sock.recv(1024)
                 if not data:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                     break
                 request = data.decode()
-                logdata = {"request": request}
                 response = self.command_responder.respond(request)
-                logdata["response"] = response
                 logger.info(
                     "Kamstrup management traffic from %s: %s (%s)",
                     address[0],
-                    logdata,
+                    {"request": request, "response": response},
                     session.id,
                 )
-                session.add_event(logdata)
+                session.log_event(request=request, response=response)
                 gevent.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                     break
                 # encode data before sending
                 reply = str_to_bytes(response)
@@ -87,7 +85,7 @@ class KamstrupManagementServer(object):
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
 
         sock.close()
 

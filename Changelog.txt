@@ -1,3 +1,8 @@
+Conpot (unreleased)
+    * Structured attack-event logging (schema_version 1) across JSON, SQLite, syslog, HPFriends, and TAXII sinks
+    * Attack events now include event_time distinct from session start; syslog receives attack JSON explicitly
+    * Breaking: HPFriends/JSON attack payloads use session_id/protocol/flat endpoints instead of id/data_type/remote tuples
+
 Conpot 0.5.2 (release 2018-08-06)
     * Improved Docker compatibility
     * Support for IEC104-1
