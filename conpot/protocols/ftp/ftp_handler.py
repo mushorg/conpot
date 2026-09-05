@@ -899,44 +899,48 @@ class FTPCommandChannel(FTPHandlerBase):
             if not self._command_channel_input_q.empty() and (
                 self.metrics.timeout() < self.config.timeout
             ):
-                # decoding should be done using utf-8
-                line = self._command_channel_input_q.get().decode()
-                # Remove any CR+LF if present
-                line = line[:-2] if line[-2:] == "\r\n" else line
-                if line:
-                    cmd = line.split(" ")[0].upper()
-                    arg = line[len(cmd) + 1 :]
-                    try:
-                        self._pre_process_cmd(line, cmd, arg)
-                    except UnicodeEncodeError:
-                        self.respond(
-                            b"501 can't decode path (server filesystem encoding is %a)"
-                            % sys.getfilesystemencoding()
-                        )
-                    except fs.errors.PermissionDenied, FSOperationNotPermitted:
-                        # TODO: log user as well.
-                        logger.info(
-                            "Client {} requested path: {} trying to access directory to which it has "
-                            "no access to.".format(self.client_address, line)
-                        )
-                        self.respond(b"500 Permission denied")
-                    except fs.errors.IllegalBackReference:
-                        # Trying to access the directory which the current user has no access to
-                        self.respond(
-                            b"550 %a points to a path which is outside the user's root directory."
-                            % line
-                        )
-                    except FTPPrivilegeException:
-                        self.respond(b"550 Not enough privileges.")
-                    except (fs.errors.FSError, FilesystemError) as fe:
-                        logger.info(
-                            "FTP client {} Unexpected error occurred : {}".format(
-                                self.client_address, fe
+                # Drain all complete framed commands. Clients may pipeline several
+                # commands into one TCP segment (e.g. PORT then LIST).
+                while not self._command_channel_input_q.empty():
+                    # decoding should be done using utf-8
+                    line = self._command_channel_input_q.get().decode()
+                    # Remove any CR+LF if present
+                    line = line[:-2] if line[-2:] == "\r\n" else line
+                    if line:
+                        cmd = line.split(" ")[0].upper()
+                        arg = line[len(cmd) + 1 :]
+                        try:
+                            self._pre_process_cmd(line, cmd, arg)
+                        except UnicodeEncodeError:
+                            self.respond(
+                                b"501 can't decode path (server filesystem encoding is %a)"
+                                % sys.getfilesystemencoding()
                             )
-                        )
-                        # TODO: what to respond here? For now just terminate the session
-                        self.disconnect_client = True
-                        self.session.add_event({"type": "CONNECTION_TERMINATED"})
+                        except fs.errors.PermissionDenied, FSOperationNotPermitted:
+                            # TODO: log user as well.
+                            logger.info(
+                                "Client {} requested path: {} trying to access directory to which it has "
+                                "no access to.".format(self.client_address, line)
+                            )
+                            self.respond(b"500 Permission denied")
+                        except fs.errors.IllegalBackReference:
+                            # Trying to access the directory which the current user has no access to
+                            self.respond(
+                                b"550 %a points to a path which is outside the user's root directory."
+                                % line
+                            )
+                        except FTPPrivilegeException:
+                            self.respond(b"550 Not enough privileges.")
+                        except (fs.errors.FSError, FilesystemError) as fe:
+                            logger.info(
+                                "FTP client {} Unexpected error occurred : {}".format(
+                                    self.client_address, fe
+                                )
+                            )
+                            # TODO: what to respond here? For now just terminate the session
+                            self.disconnect_client = True
+                            self.session.add_event({"type": "CONNECTION_TERMINATED"})
+                            break
             elif not (self.metrics.timeout() < self.config.timeout) and (
                 not self._data_channel
             ):
