@@ -101,7 +101,11 @@ def test_normalize_event_time_differs_from_session_time():
 def test_normalize_typed_request_response():
     event = normalize_event(
         _session_fields(),
-        {"type": "GET", "request": {"oid": "1.2"}, "response": {"oid": "1.2", "val": 1}},
+        {
+            "type": "GET",
+            "request": {"oid": "1.2"},
+            "response": {"oid": "1.2", "val": 1},
+        },
     )
 
     assert event["event_type"] == "GET"

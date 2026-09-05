@@ -97,9 +97,11 @@ class AttackSession(object):
             "schema_version": SCHEMA_VERSION,
             "session_id": str(self.id),
             "protocol": self.protocol,
-            "session_time": self.timestamp.isoformat()
-            if isinstance(self.timestamp, datetime)
-            else self.timestamp,
+            "session_time": (
+                self.timestamp.isoformat()
+                if isinstance(self.timestamp, datetime)
+                else self.timestamp
+            ),
             "src_ip": self.source_ip,
             "src_port": self.source_port,
             "dst_ip": self.destination_ip,

@@ -103,9 +103,7 @@ class StixTransformer(object):
                 else str(timestamp)
             )
 
-        incident = Incident(
-            id_="%s:%s-%s" % (CONPOT_NAMESPACE, "incident", session_id)
-        )
+        incident = Incident(id_="%s:%s-%s" % (CONPOT_NAMESPACE, "incident", session_id))
         initial_time = StixTime()
         initial_time.initial_compromise = event_time
         incident.time = initial_time
@@ -148,9 +146,7 @@ class StixTransformer(object):
         indicator = Indicator(title="Conpot Event")
         indicator.description = "Conpot network event"
         indicator.confidence = "High"
-        source_port = Port.from_dict(
-            {"port_value": src_port, "layer4_protocol": "tcp"}
-        )
+        source_port = Port.from_dict({"port_value": src_port, "layer4_protocol": "tcp"})
         dest_port = Port.from_dict(
             {
                 "port_value": self.protocol_to_port_mapping[protocol],
