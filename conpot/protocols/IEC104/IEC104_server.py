@@ -14,15 +14,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import errno
+import logging
+import socket
+import struct
+
+import conpot.core as conpot_core
+import gevent
+from gevent.server import StreamServer
+
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
 from conpot.protocols.IEC104.IEC104 import IEC104
-from .frames import struct, TESTFR_act, socket, errno
-import logging
-import conpot.core as conpot_core
-from gevent.server import StreamServer
-import gevent
 from .errors import Timeout_t3
-from conpot.core.protocol_wrapper import conpot_protocol
+from .frames import TESTFR_act
 
 logger = logging.getLogger(__name__)
 

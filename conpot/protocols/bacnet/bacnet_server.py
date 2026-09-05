@@ -18,21 +18,40 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-import socket
-import codecs
-from lxml import etree
-from gevent.server import DatagramServer
-from bacpypes.local.device import LocalDeviceObject
-from bacpypes.apdu import APDU
-from bacpypes.pdu import PDU
-from bacpypes.errors import DecodingError
-import conpot.core as conpot_core
-from conpot.protocols.bacnet.bacnet_app import BACnetApp
-from conpot.core.protocol_wrapper import conpot_protocol
-from conpot.utils.networking import get_interface_ip
 import logging
+import socket
+from copy import deepcopy
+
+from bacpypes import bvll
+from bacpypes.apdu import APDU
+from bacpypes.errors import DecodingError
+from bacpypes.local.device import LocalDeviceObject
+from bacpypes.npdu import NPDU
+from bacpypes.pdu import Address as PduAddress
+from bacpypes.pdu import PDU
+from gevent.server import DatagramServer
+from lxml import etree
+
+import conpot.core as conpot_core
+from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.protocols.bacnet.bacnet_app import BACnetApp
+from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
+
+
+def decode_bacnet_ip(data, address):
+    """Decode a BACnet/IP datagram (BVLC + NPDU + APDU) into an APDU."""
+    pdu = PDU(bytearray(data), source=PduAddress(address))
+    bvlpdu = bvll.BVLPDU()
+    bvlpdu.decode(pdu)
+    rpdu = bvll.bvl_pdu_types[bvlpdu.bvlciFunction]()
+    rpdu.decode(bvlpdu)
+    npdu = NPDU(user_data=rpdu.pduUserData)
+    npdu.decode(rpdu)
+    apdu = APDU()
+    apdu.decode(deepcopy(npdu))
+    return apdu
 
 
 @conpot_protocol
@@ -60,6 +79,18 @@ class BacnetServer(object):
         logger.info("Conpot Bacnet initialized using the %s template.", template)
 
     def handle(self, data, address):
+        # I'm not sure if gevent DatagramServer handles issues where the
+        # received data is over the MTU -> fragmentation
+        if not data or data[0] != 0x81:
+            # Ignore non-BACnet/IP traffic (empty UDP probes, unrelated scanners)
+            logger.debug(
+                "Ignoring non-BACnet/IP datagram from %s:%d (%d bytes)",
+                address[0],
+                address[1],
+                len(data) if data else 0,
+            )
+            return
+
         session = conpot_core.get_session(
             "bacnet",
             address[0],
@@ -71,22 +102,19 @@ class BacnetServer(object):
             "New Bacnet connection from %s:%d. (%s)", address[0], address[1], session.id
         )
         session.log_event(event_type="NEW_CONNECTION")
-        # I'm not sure if gevent DatagramServer handles issues where the
-        # received data is over the MTU -> fragmentation
-        if data:
-            pdu = PDU()
-            pdu.pduData = bytearray(data)
-            apdu = APDU()
-            try:
-                apdu.decode(pdu)
-            except DecodingError:
-                logger.warning("DecodingError - PDU: {}".format(pdu))
-                session.log_event(error="DecodingError")
-                return
-            self.bacnet_app.indication(apdu, address, self.thisDevice)
-            # send an appropriate response from BACnet app to the attacker
-            self.bacnet_app.response(self.bacnet_app._response, address)
-            session.log_event(request=codecs.encode(data, "hex"))
+        try:
+            apdu = decode_bacnet_ip(data, address)
+        except DecodingError:
+            logger.warning("DecodingError - BACnet/IP PDU: %s", data.hex())
+            session.log_event(error="DecodingError")
+            return
+        except Exception:
+            logger.exception("Failed to decode BACnet/IP datagram")
+            return
+        self.bacnet_app.indication(apdu, address, self.thisDevice)
+        # send an appropriate response from BACnet app to the attacker
+        self.bacnet_app.response(self.bacnet_app._response, address)
+        session.log_event(request=data.hex())
         logger.info(
             "Bacnet client disconnected %s:%d. (%s)", address[0], address[1], session.id
         )
@@ -97,6 +125,10 @@ class BacnetServer(object):
         self.server = DatagramServer(connection, self.handle)
         # start to init the socket
         self.server.start()
+        # Drop SO_REUSEADDR that gevent enables by default. Otherwise scanners
+        # (notably nmap bacnet-info) can also bind UDP/47808; on localhost that
+        # makes the scanner read its own probes as "responses".
+        self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
         self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.host = self.server.server_host
         self.port = self.server.server_port

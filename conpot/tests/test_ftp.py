@@ -132,6 +132,38 @@ class TestFTPServer(unittest.TestCase):
             self.client.sendcmd("noop"), "200 I successfully done nothin'."
         )
 
+    def test_command_channel_framing(self):
+        """Pipelined and split writes must be framed on CRLF before dispatch."""
+        from conpot.protocols.ftp.ftp_base_handler import FTPHandlerBase
+        import gevent.queue
+
+        handler = object.__new__(FTPHandlerBase)
+        handler.terminator = b"\r\n"
+        handler.buffer_limit = 2048
+        handler.client_address = ("127.0.0.1", 1234)
+        handler.disconnect_client = True
+        handler._cmd_channel_remainder = b""
+        handler._command_channel_input_q = gevent.queue.Queue()
+        handler.respond = lambda response: None
+
+        # Two commands in one write (the CI failure mode for PORT+LIST).
+        handler._enqueue_framed_commands(b"NOOP\r\nSYST\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"NOOP\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"SYST\r\n")
+        self.assertEqual(handler._cmd_channel_remainder, b"")
+
+        # Incomplete line waits for the terminator.
+        handler._enqueue_framed_commands(b"NO")
+        self.assertTrue(handler._command_channel_input_q.empty())
+        handler._enqueue_framed_commands(b"OP\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"NOOP\r\n")
+
+        # End-to-end: pipelined NOOPs over a live connection.
+        self.client_init()
+        self.client.sock.sendall(b"NOOP\r\nNOOP\r\n")
+        self.assertEqual(self.client.getresp(), "200 I successfully done nothin'.")
+        self.assertEqual(self.client.getresp(), "200 I successfully done nothin'.")
+
     def test_stru(self):
         self.client_init()
         self.assertEqual(

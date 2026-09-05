@@ -134,6 +134,19 @@ class ModbusServer(modbus.Server):
                     session.log_event(event_type="CONNECTION_TERMINATED")
                     break
                 _, _, length = struct.unpack(">HHH", request[:6])
+                # MBAP length covers unit id + PDU and must be at least 1.
+                # Scanners (e.g. nmap modbus-info) often send length 0; that
+                # fails modbus_tk's MBAP check and used to kill this greenlet.
+                if length < 1:
+                    logger.info(
+                        "Modbus client %s declared an invalid length %s, "
+                        "dropping connection. (%s)",
+                        address[0],
+                        length,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 # A conforming Modbus/TCP frame never needs more than 254
                 # bytes here (1-byte unit id + up to 253 bytes of PDU, the
                 # limit inherited from serial Modbus). An unauthenticated
@@ -161,13 +174,37 @@ class ModbusServer(modbus.Server):
                         request += new_bytes
                     except Exception:
                         break
+                # Peer closed or timed out before the declared body arrived.
+                # Do not hand a truncated frame to modbus_tk - parse_request
+                # raises ModbusInvalidMbapError and would crash the greenlet.
+                if len(request) < (length + 6):
+                    logger.info(
+                        "Modbus client %s sent incomplete request "
+                        "(got %s bytes, expected %s). (%s)",
+                        address[0],
+                        len(request),
+                        length + 6,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 query = modbus_tcp.TcpQuery()
 
                 # logdata is a dictionary containing request, slave_id,
                 # function_code and response
-                response, logdata = self._databank.handle_request(
-                    query, request, self.mode
-                )
+                try:
+                    response, logdata = self._databank.handle_request(
+                        query, request, self.mode
+                    )
+                except modbus_tcp.ModbusInvalidMbapError as e:
+                    logger.info(
+                        "Modbus client %s sent invalid MBAP: %s (%s)",
+                        address[0],
+                        e,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 logdata["request"] = codecs.encode(request, "hex")
                 session.log_event(
                     request=logdata.get("request"),

@@ -10,6 +10,7 @@ from modbus_tk.modbus import (
     ModbusInvalidRequestError,
 )
 from modbus_tk import defines
+from modbus_tk.modbus_tcp import ModbusInvalidMbapError
 
 from conpot.protocols.modbus.slave import MBSlave
 import logging
@@ -110,9 +111,17 @@ class SlaveBase(Databank):
             # return a server error response
             r = struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
-        except ModbusInvalidRequestError as e:
+        except (ModbusInvalidRequestError, ModbusInvalidMbapError) as e:
             logger.error(e)
-            # TODO: return something here?
+            return (
+                None,
+                {
+                    "request": codecs.encode(request, "hex"),
+                    "slave_id": slave_id,
+                    "function_code": function_code,
+                    "response": b"",
+                },
+            )
 
         if slave:
             function_code = slave.function_code

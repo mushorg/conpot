@@ -15,8 +15,24 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from scapy.all import *
+import struct
 from datetime import datetime
+
+from scapy.fields import (
+    BitField,
+    ByteField,
+    Field,
+    LEIntField,
+    LEShortField,
+    LESignedIntField,
+    PacketField,
+    ShortField,
+    X3BytesField,
+    XBitField,
+    XByteField,
+    XLE3BytesField,
+)
+from scapy.packet import NoPayload, Packet, Padding, bind_layers
 
 
 # Structure of control field formats
@@ -247,7 +263,7 @@ class CP16Time(Packet):
 
 class IOA(Packet):
     name = "IOA"
-    fields_desc = [LEX3BytesField("IOA", 0x010000)]
+    fields_desc = [XLE3BytesField("IOA", 0x010000)]
 
 
 class QOS(Packet):
@@ -853,23 +869,23 @@ class asdu_infobj_64(Packet):
 
 class asdu_infobj_100(Packet):
     name = "C_IC_NA_1"
-    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
+    fields_desc = [XLE3BytesField("IOA", 0x0), ByteField("QOI", 0x14)]
 
 
 class asdu_infobj_101(Packet):
     name = "C_CI_NA_1"
-    fields_desc = [LEX3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
+    fields_desc = [XLE3BytesField("IOA", 0x0), ByteField("QCC", 0x05)]
 
 
 class asdu_infobj_102(Packet):
     name = "C_RD_NA_1"
-    fields_desc = [LEX3BytesField("IOA", 0x0)]
+    fields_desc = [XLE3BytesField("IOA", 0x0)]
 
 
 class asdu_infobj_103(Packet):
     name = "C_CS_NA_1"
     fields_desc = [
-        LEX3BytesField("IOA", 0x0),
+        XLE3BytesField("IOA", 0x0),
         PacketField("CP56Time", CP56Time(), CP56Time),
     ]
 

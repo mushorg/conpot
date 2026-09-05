@@ -107,6 +107,42 @@ class EnipServer(object):
         logger.debug("ENIP server serial number: " + self.config.serial_number)
         logger.debug("ENIP server product name: " + self.config.product_name)
 
+    def _apply_device_info(self, identity):
+        """Overwrite CIP Identity attributes with values from the template."""
+        cfg = self.config
+        identity.attribute["1"] = device.Attribute(
+            "Vendor Number", device.INT, default=cfg.vendor_id
+        )
+        identity.attribute["2"] = device.Attribute(
+            "Device Type", device.INT, default=cfg.device_type
+        )
+        identity.attribute["3"] = device.Attribute(
+            "Product Code Number", device.INT, default=cfg.product_code
+        )
+        identity.attribute["4"] = device.Attribute(
+            "Product Revision", device.INT, default=cfg.product_rev
+        )
+        identity.attribute["6"] = device.Attribute(
+            "Serial Number", device.UDINT, default=int(cfg.serial_number)
+        )
+        identity.attribute["7"] = device.Attribute(
+            "Product Name", device.SSTRING, default=cfg.product_name
+        )
+
+    def _install_device_identity(self):
+        """Ensure CIP Identity instance 1 reflects template device_info.
+
+        cpppo's logix.setup() creates a default Rockwell Identity when none
+        exists. We install (or update) instance 1 before serving so List
+        Identity / Get Attribute responses use the template values. Updating
+        an existing instance also covers the shared global Object registry
+        when multiple ENIP servers run in one process.
+        """
+        identity = device.lookup(0x01, 1)
+        if identity is None:
+            identity = device.Identity(instance_id=1)
+        self._apply_device_info(identity)
+
     def stats_for(self, peer):
         if peer is None:
             return None, None
@@ -597,6 +633,8 @@ class EnipServer(object):
             dict.__setitem__(self.tags, tag_name, tag_entry)
 
     def start(self, host, port):
+        self._install_device_identity()
+
         srv_ctl = cpppo.dotdict()
         srv_ctl.control = cpppo.apidict(timeout=self.config.timeout)
         srv_ctl.control["done"] = False
@@ -605,7 +643,8 @@ class EnipServer(object):
 
         options = cpppo.dotdict()
         options.setdefault("enip_process", logix.process)
-        kwargs = dict(options, tags=self.tags, server=srv_ctl)
+        # identity_class=None: Identity was installed above from the template
+        kwargs = dict(options, tags=self.tags, server=srv_ctl, identity_class=None)
 
         tcp_mode = True if self.config.mode == "tcp" else False
         udp_mode = True if self.config.mode == "udp" else False

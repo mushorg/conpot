@@ -185,6 +185,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self._command_channel_output_q = gevent.queue.Queue()
         self._data_channel_output_q = gevent.queue.Queue()
         self._data_channel_input_q = gevent.queue.Queue()
+        # Incomplete command-channel bytes waiting for a CRLF terminator.
+        self._cmd_channel_remainder = b""
         self.ftp_greenlets = None  # Keep track of all greenlets
         socketserver.BaseRequestHandler.__init__(
             self, request=request, client_address=client_address, server=server
@@ -281,6 +283,39 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     # -- FTP Command Channel ------------
 
+    def _enqueue_framed_commands(self, data):
+        """
+        Split raw command-channel bytes on CRLF and enqueue one complete line at a
+        time. Partial lines stay in ``_cmd_channel_remainder`` until a terminator
+        arrives. Clients often pipeline commands (e.g. PORT + LIST) into one TCP
+        segment; treating that as a single command breaks active-mode transfers.
+        """
+        self._cmd_channel_remainder += data
+        while self.terminator in self._cmd_channel_remainder:
+            line, self._cmd_channel_remainder = self._cmd_channel_remainder.split(
+                self.terminator, 1
+            )
+            if len(line) > self.buffer_limit:
+                # Flush buffer if a single command gets too long (possible DOS).
+                # RFC-959 specifies that a 500 response should be given in such cases.
+                logger.info(
+                    "FTP command input exceeded buffer from client {}".format(
+                        self.client_address
+                    )
+                )
+                self.respond(b"500 Command too long.")
+                self._cmd_channel_remainder = b""
+                return
+            self._command_channel_input_q.put(line + self.terminator)
+        if len(self._cmd_channel_remainder) > self.buffer_limit:
+            logger.info(
+                "FTP command input exceeded buffer from client {}".format(
+                    self.client_address
+                )
+            )
+            self.respond(b"500 Command too long.")
+            self._cmd_channel_remainder = b""
+
     def handle_cmd_channel(self):
         """Read data from the socket and add it to the _command_channel_input_q for processing"""
         log_data = dict()
@@ -300,22 +335,12 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             # make sure the socket is ready to read - we would read from the command channel.
             if self.client_sock in socket_read:
                 data = self.client_sock.recv(self.buffer_limit)
-                # put the data in the _input_q for processing
+                # Frame on CRLF before enqueue so pipelined commands stay separate.
                 if data and data != b"":
                     log_data["request"] = data
-                    if self._command_channel_input_q.qsize() > self.buffer_limit:
-                        # Flush buffer if it gets too long (possible DOS condition). RFC-959 specifies that
-                        # 500 response should be given in such cases.
-                        logger.info(
-                            "FTP command input exceeded buffer from client {}".format(
-                                self.client_address
-                            )
-                        )
-                        self.respond(b"500 Command too long.")
-                    else:
-                        self.metrics.command_chanel_bytes_recv += len(data)
-                        self.metrics.last_active = time.time()
-                        self._command_channel_input_q.put(data)
+                    self.metrics.command_chanel_bytes_recv += len(data)
+                    self.metrics.last_active = time.time()
+                    self._enqueue_framed_commands(data)
             # make sure the socket is ready to write
             elif self.client_sock in socket_write and (
                 not self._command_channel_output_q.empty()

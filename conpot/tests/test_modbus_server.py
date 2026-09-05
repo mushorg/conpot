@@ -232,3 +232,41 @@ class TestModbusServer(unittest.TestCase):
         s.close()
 
         self.assertEqual(data, b"")
+
+    def test_zero_length_mbap_is_rejected(self):
+        """
+        nmap modbus probes often send an MBAP header with length 0.
+        That must close the connection cleanly instead of raising
+        ModbusInvalidMbapError and killing the handler greenlet.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # 7-byte MBAP: tid, pid, length=0, unit id
+        header = struct.pack(">HHHB", 0, 0, 0, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
+
+    def test_incomplete_request_is_rejected(self):
+        """
+        A client that declares a valid length then half-closes before the
+        body arrives must be dropped without crashing the greenlet.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # length=5 means 5 bytes after the 6-byte prefix (unit id + 4 PDU),
+        # but we only send the 7-byte header then close the write side.
+        header = struct.pack(">HHHB", 0, 0, 5, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
