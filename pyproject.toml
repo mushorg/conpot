@@ -45,7 +45,9 @@ dependencies = [
     "pyghmi==1.4.1",
     "mixbox",
     "cpppo",
-    "fs==2.3.0",
+    # Official fs (pyfilesystem2) last release still imports removed pkg_resources
+    # under setuptools>=82; use community fork with that dependency dropped.
+    "fs @ git+https://github.com/ihaveamac/pyfilesystem2.git@266dff7984b66425d38cbd6cf7c5f18a8a98d369",
     "python-slugify",
     "tftpy",
     "freezegun!=0.3.13",
