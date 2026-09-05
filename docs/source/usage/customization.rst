@@ -50,103 +50,86 @@ size. Holding registers don't have any initial value.
 SNMP
 ~~~~
 
-In the ``<snmp />`` section you define a management information base (MIB). MIBs consist of a ``<symbol>`` with a name
-attribute, and its ``<value>``.
+In the ``<snmp />`` section you define a management information base (MIB). Each ``<symbol>`` has a name
+attribute and a ``<value>`` child. The text of ``<value>`` is a **databus key**, not a literal payload.
+Conpot resolves that key from the template's ``<databus>`` / ``<key_value_mappings>`` section at startup.
+If the key is missing, SNMP fails to start with an ``AssertionError``.
+
+Define the payload on the databus first (in ``template.xml``):
+
+.. code-block:: xml
+
+    <key name="SystemDescription">
+        <value type="value">"Siemens, SIMATIC, S7-200"</value>
+    </key>
+
+Then reference the key from ``snmp/snmp.xml``:
 
 .. code-block:: xml
 
     <symbol name="sysDescr">
-        <value>Siemens, SIMATIC, S7-200</value>
+        <!-- Value is key in databus -->
+        <value>SystemDescription</value>
     </symbol>
 
-In the following example we will show how to include other MIBs. As an example we will add the ifNumber symbol from
-the IF-MIB.
-First we have to download the IF-MIB and also the IANAifType-MIB since IF-MIB depends on this::
+To include other MIBs, place the ASN.1 sources under ``templates/<template>/snmp/mibs/``.
+PySNMP compiles them on demand (standard MIB dependencies can also be fetched remotely).
+Optionally set a cache directory with ``--mibcache``.
 
-    wget http://www.iana.org/assignments/ianaiftype-mib/ianaiftype-mib
-    wget ftp://ftp.cisco.com/pub/mibs/v2/IF-MIB.my
+As an example, add ``ifNumber`` from IF-MIB. First define the databus key:
 
-Conpot will compile the MIB files automatically, but unless the MIB files are places in the current work directory, you
-need to provide a path to the files using the '-a' parameter (The path will be searched recursively for MIB files).::
+.. code-block:: xml
 
-    sudo conpot -t my_custom_template.xml -a /opt/mymibs
+    <key name="ifNumber">
+        <value type="value">2</value>
+    </key>
 
-Finally add your custom snmp configuration to the template:
+Then wire it in the SNMP template:
 
 .. code-block:: xml
 
             <mib name="IF-MIB">
                 <symbol name="ifNumber">
-                    <value>2</value>
+                    <value>ifNumber</value>
                 </symbol>
             </mib>
 
-The value of the ifNumber symbol (2) implies that there is more than one interface - therefore there might be related
-symbols that need identifiers to initialize several instances of a single symbol. To apply an instance id, add the
-"instance" attribute to the symbol. Example:
+Related symbols that need several instances of a single OID use the ``instance`` attribute.
+Each instance still points at a databus key:
 
 .. code-block:: xml
 
             <mib name="IF-MIB">
                 <symbol name="ifDescr" instance="1">
-                    <value>This is the first interface</value>
+                    <value>ifDescr1</value>
                 </symbol>
 
                 <symbol name="ifDescr" instance="2">
-                    <value>This is the second interface</value>
+                    <value>ifDescr2</value>
                 </symbol>
             </mib>
 
-If not specified, the default instance (0) is being assumed.
+If ``instance`` is omitted, the default instance ``(0,)`` is assumed.
 
-Several symbols feature dynamic values. Conpot can be instructed to deliver dynamic content by adding the engine
-definition to the template. Example:
+Dynamic values also come from the databus. Use ``type="function"`` to point at a Python class
+(or other callable) instead of a static value. The default template uses this for sysUpTime:
+
+.. code-block:: xml
+
+    <key name="Uptime">
+        <value type="function">conpot.emulators.misc.uptime.Uptime</value>
+    </key>
 
 .. code-block:: xml
 
             <mib name="SNMPv2-MIB">
                 <symbol name="sysUpTime">
-                    <value>0</value>
-                    <engine type="sysuptime"></engine>
+                    <value>Uptime</value>
                 </symbol>
             </mib>
 
-The example above always responds with the time in milliseconds since conpot was initialized.
-
-Currently, the following engine types are implemented:
-
-* increment
-    Increments the value each time it is requested. Default incrementor: 1, resetting to initial value at 2147483647.
-    Modified example:    <engine type="increment">1:100</engine>    ( => increment by 1, reset at 100 )
-
-* decrement
-    Decrements the value each time it is requested. Default decrementor: 1, resetting to initial value at -2147483648.
-    Modified example:    <engine type="decrement">1:0</engine>    ( => decrement by 1, reset at 0 )
-
-* randominc
-    Randomly increments the value each time it is requested. Default incrementor range: 1-65535,
-    resetting to initial value at 2147418112.
-    Modified example:    <engine type="randominc">1:100:999</engine>    ( => increment by rand(1,100), reset at 999 )
-
-* randomdec
-    Randomly decrements the value each time it is requested. Default decrementor range: 1-65535,
-    resetting to initial value at -2147418113.
-    Modified example:    <engine type="randomdec">1:100:-999</engine>    ( => increment by rand(1,100), reset at -999 )
-
-* randomint
-    Randomly assigns an integer. Default range: 1-65535.
-    Modified example:    <engine type="randomint">1:100</engine>    ( => assign a random integer between 1 and 100 )
-
-* sysuptime
-    Assigns the current uptime of the conpot process measured in milliseconds.
-    Modified example:    <engine type="sysuptime"></engine>    ( => additional value will be used as a head-start )
-
-* evaluate
-    Assigns the result of value evaluated as python code ( eval ).
-    Modified example:    <engine type="evaluate">random.randrange(0,100,10)</engine>    ( => assign a random int between 0 and 100 in steps of 10 )
-
-* static
-    Do not assign any value. This is default of no <engine> field is supplied and will always deliver the initial value.
+``Uptime`` returns seconds since Conpot started (or since an optional constructor start time).
+For other dynamic behaviour, add your own emulator class and register it the same way on the databus.
 
 The SNMP interface can be configured to adjust its behaviour by adding the corresponding configuration directives to
 the ``config`` area inside the ``snmp`` block:
