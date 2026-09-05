@@ -16,6 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from lxml import etree
+import logging
+
 from conpot.protocols.IEC104.frames import *
 import conpot.core as conpot_core
 from conpot.protocols.IEC104.register import IEC104Register
