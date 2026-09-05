@@ -55,6 +55,17 @@ class TestGuardianAST(unittest.TestCase):
             data[:8] + data[24:156], DATA["I20100"][:8] + DATA["I20100"][24:156]
         )
 
+    def test_I20100_literal_caret_A(self):
+        # telnet/ncat users often type the two characters "^A" instead of SOH
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
+        s.send(b"^AI20100\r\n")
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(
+            data[:8] + data[24:156], DATA["I20100"][:8] + DATA["I20100"][24:156]
+        )
+
     def test_I20200(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
