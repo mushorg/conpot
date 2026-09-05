@@ -502,9 +502,7 @@ class AbstractFS(WrapFS):
         """
         src = self.norm_path(src_path).rstrip("/") or "/"
         dst = self.norm_path(dst_path).rstrip("/") or "/"
-        src_entries = {
-            key: self._cache[key] for key in self._cache_paths_under(src)
-        }
+        src_entries = {key: self._cache[key] for key in self._cache_paths_under(src)}
         for old_path, old_info in src_entries.items():
             if src == "/":
                 new_path = dst if old_path == "/" else dst.rstrip("/") + old_path
