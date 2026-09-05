@@ -261,7 +261,7 @@ class AbstractFS(WrapFS):
             finally:
                 try:
                     assert self._cache[path]
-                except (AssertionError, KeyError):
+                except AssertionError, KeyError:
                     # This is the first time we have seen this file. Let us create this entry.
                     logger.debug("Creating cache for file/directory : {}".format(path))
                     self._cache[path] = self._wrap_fs.getinfo(
@@ -303,7 +303,7 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["details"]["metadata_changed"] = (
                                     fs.time.datetime_to_epoch(datetime.now())
                                 )
-                        except (TypeError, AssertionError, KeyError):
+                        except TypeError, AssertionError, KeyError:
                             raise
                     if "group" in access or "gid" in access:
                         try:
@@ -332,7 +332,7 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["details"]["metadata_changed"] = (
                                     fs.time.datetime_to_epoch(datetime.now())
                                 )
-                        except (TypeError, AssertionError, KeyError):
+                        except TypeError, AssertionError, KeyError:
                             raise
         else:
             raise FilesystemError("lstat is not currently supported!")
@@ -464,7 +464,7 @@ class AbstractFS(WrapFS):
             copy_files(file, dst_file)
         self.setinfo(path, {})
 
-    def move(self, src_path, dst_path, overwrite=False):
+    def move(self, src_path, dst_path, overwrite=False, preserve_time=False):
         if self.getinfo(src_path).is_dir:
             raise fs.errors.FileExpected(src_path)
         with self.openbin(src_path, "rb") as read_file:
@@ -474,7 +474,7 @@ class AbstractFS(WrapFS):
         self.setinfo(dst_path, {})
         self.remove(src_path)
 
-    def copy(self, src_path, dst_path, overwrite=False):
+    def copy(self, src_path, dst_path, overwrite=False, preserve_time=False):
         if self.getinfo(src_path).is_dir:
             raise fs.errors.FileExpected(src_path)
         with self.openbin(src_path, "rb") as read_file:
@@ -482,6 +482,55 @@ class AbstractFS(WrapFS):
                 copy_files(read_file, dst_file)
         self.setinfo(src_path, {})
         self.setinfo(dst_path, {})
+
+    def _cache_paths_under(self, path):
+        """Return cache keys for ``path`` and all nested children."""
+        root = self.norm_path(path).rstrip("/") or "/"
+        if root == "/":
+            return list(self._cache.keys())
+        prefix = root + "/"
+        return [
+            key for key in self._cache.keys() if key == root or key.startswith(prefix)
+        ]
+
+    def _sync_cache_after_dir_copy(self, src_path, dst_path, *, remove_src=False):
+        """
+        Keep Conpot's metadata cache aligned after WrapFS dir copy/move.
+
+        fs>=2.4 WrapFS.movedir/copydir delegate to the wrapped OSFS and bypass
+        AbstractFS setters, so access metadata must be remapped here.
+        """
+        src = self.norm_path(src_path).rstrip("/") or "/"
+        dst = self.norm_path(dst_path).rstrip("/") or "/"
+        src_entries = {key: self._cache[key] for key in self._cache_paths_under(src)}
+        for old_path, old_info in src_entries.items():
+            if src == "/":
+                new_path = dst if old_path == "/" else dst.rstrip("/") + old_path
+            else:
+                new_path = dst + old_path[len(src) :]
+            self.setinfo(new_path, {})
+            if new_path in self._cache and hasattr(old_info, "raw"):
+                self._cache[new_path].raw["access"] = dict(
+                    old_info.raw.get("access", {})
+                )
+            if remove_src:
+                self._cache.pop(old_path, None)
+
+    def movedir(self, src_path, dst_path, create=False, preserve_time=False):
+        src = self.norm_path(src_path)
+        dst = self.norm_path(dst_path)
+        super(AbstractFS, self).movedir(
+            src, dst, create=create, preserve_time=preserve_time
+        )
+        self._sync_cache_after_dir_copy(src, dst, remove_src=True)
+
+    def copydir(self, src_path, dst_path, create=False, preserve_time=False):
+        src = self.norm_path(src_path)
+        dst = self.norm_path(dst_path)
+        super(AbstractFS, self).copydir(
+            src, dst, create=create, preserve_time=preserve_time
+        )
+        self._sync_cache_after_dir_copy(src, dst, remove_src=False)
 
     # -----------------------------------------------------------
     # Custom "getter" methods overwriting behaviour FS library methods
@@ -751,7 +800,7 @@ class AbstractFS(WrapFS):
             # So file is '/test.png'
             try:
                 st = self.stat(file)
-            except (fs.errors.FSError, FilesystemError):
+            except fs.errors.FSError, FilesystemError:
                 raise
             permission = filemode(Permissions.create(st["st_mode"]).mode)
             if self.isdir(file):

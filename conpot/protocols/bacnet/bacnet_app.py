@@ -327,7 +327,7 @@ class BACnetApp(BIPSimpleApplication):
             try:
                 request = apdu_service()
                 request.decode(apdu)
-            except (AttributeError, RuntimeError):
+            except AttributeError, RuntimeError:
                 logger.exception("Bacnet indication: Invalid service.")
                 self._response = None
                 return

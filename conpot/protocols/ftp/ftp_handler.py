@@ -216,7 +216,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(m_time.encode())
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             # It could happen if file's last modification time
             # happens to be too old (prior to year 1900)
             self.respond(b"550 Can't determine file's last modification time.")
@@ -334,7 +334,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.config.vfs.settimes(_dir, datetime.now(), datetime.now())
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (FilesystemError, fs.errors.FSError, FTPPrivilegeException):
+        except FilesystemError, fs.errors.FSError, FTPPrivilegeException:
             self.respond(b"550 Create directory operation failed.")
 
     def do_RMD(self, path):
@@ -352,7 +352,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(b"250 Directory removed.")
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             self.respond(b"550 Remove directory operation failed.")
 
     def do_CWD(self, path):
@@ -374,7 +374,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.respond(_cwd.encode())
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             self.respond(b"550 Failed to change directory.")
 
     def do_CDUP(self, arg):
@@ -397,7 +397,7 @@ class FTPCommandChannel(FTPHandlerBase):
                     self.respond(b"250 File removed.")
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             self.respond(b"550 Failed to delete file.")
 
     def do_RNFR(self, path):
@@ -454,7 +454,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(b"250 Renaming ok.")
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except ValueError, fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             self.respond(b"550 File rename operation failed.")
 
     def do_SITE_CHMOD(self, path, mode):
@@ -473,9 +473,9 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(b"200 SITE CHMOD successful.")
         except FSOperationNotPermitted:
             self.respond(b"500 Operation not permitted.")
-        except (AssertionError, ValueError):
+        except AssertionError, ValueError:
             self.respond(b"501 Invalid SITE CHMOD format.")
-        except (fs.errors.FSError, FilesystemError, FTPPrivilegeException):
+        except fs.errors.FSError, FilesystemError, FTPPrivilegeException:
             self.respond(b"550 SITE CHMOD command failed.")
 
     # -----------------------------------------------------------------------
@@ -557,7 +557,7 @@ class FTPCommandChannel(FTPHandlerBase):
             logger.info(
                 "FTP: configured data channel for client {}".format(self.client_address)
             )
-        except (ValueError, OverflowError):
+        except ValueError, OverflowError:
             self.respond("501 Invalid PORT format.")
         except socket.error as se:
             if self._data_channel:
@@ -723,7 +723,7 @@ class FTPCommandChannel(FTPHandlerBase):
             else:
                 self.respond("350 Restarting at position {}.".format(marker))
                 self._restart_position = marker
-        except (ValueError, OverflowError):
+        except ValueError, OverflowError:
             self.respond(b"501 Invalid parameter.")
 
     def do_APPE(self, file):
@@ -884,7 +884,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 method = getattr(self, "do_" + cmd.replace(" ", "_"))
                 self._last_command = cmd
                 method(*args, **kwargs)
-            except (fs.errors.FSError, FilesystemError):
+            except fs.errors.FSError, FilesystemError:
                 raise
 
     # - main command processor
@@ -913,7 +913,7 @@ class FTPCommandChannel(FTPHandlerBase):
                             b"501 can't decode path (server filesystem encoding is %a)"
                             % sys.getfilesystemencoding()
                         )
-                    except (fs.errors.PermissionDenied, FSOperationNotPermitted):
+                    except fs.errors.PermissionDenied, FSOperationNotPermitted:
                         # TODO: log user as well.
                         logger.info(
                             "Client {} requested path: {} trying to access directory to which it has "

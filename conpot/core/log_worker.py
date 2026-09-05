@@ -47,7 +47,7 @@ class LogWorker(object):
         self.taxii_logger = None
         try:
             self.sensorid = config.get("common", "sensorid")
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except configparser.NoSectionError, configparser.NoOptionError:
             self.sensorid = "default"
 
         if config.getboolean("sqlite", "enabled"):
@@ -89,7 +89,7 @@ class LogWorker(object):
         sessions = self.session_manager._sessions
         try:
             session_timeout = self.config.get("session", "timeout")
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except configparser.NoSectionError, configparser.NoOptionError:
             session_timeout = 5
         for session in sessions:
             if len(session.data) > 0:

@@ -465,7 +465,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                         self._data_sock.sendfile(file_, 0)
                                     _size = self.config.vfs.getsize(file_name)
                                     self.metrics.data_channel_bytes_send += _size
-                                except (fs.errors.FSError, FilesystemError):
+                                except fs.errors.FSError, FilesystemError:
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
                             logger.debug(
@@ -649,7 +649,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     self._uid = self.config.get_uid(self.username)
                     return True
                 return False
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return False
 
     # -- Actual FTP Handler -----------

@@ -1,9 +1,10 @@
 # Stage 1: Build stage
-FROM python:3.12 AS conpot-builder
+FROM python:3.14 AS conpot-builder
 
 # Install required dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    git \
     libffi-dev \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
@@ -19,7 +20,7 @@ RUN pip3 install --no-cache-dir uv \
     && uv pip install --system --no-cache .
 
 # Stage 2: Runtime stage
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
@@ -32,14 +33,14 @@ RUN adduser --disabled-password --gecos "" conpot
 
 # Create required directories and set permissions
 RUN mkdir -p /var/log/conpot \
-    && mkdir -p /usr/local/lib/python3.12/site-packages/conpot/tests/data/data_temp_fs/ftp \
-    && mkdir -p /usr/local/lib/python3.12/site-packages/conpot/tests/data/data_temp_fs/tftp \
+    && mkdir -p /usr/local/lib/python3.14/site-packages/conpot/tests/data/data_temp_fs/ftp \
+    && mkdir -p /usr/local/lib/python3.14/site-packages/conpot/tests/data/data_temp_fs/tftp \
     && chown -R conpot:conpot /var/log/conpot \
-    && chown -R conpot:conpot /usr/local/lib/python3.12/site-packages/conpot/tests/data
+    && chown -R conpot:conpot /usr/local/lib/python3.14/site-packages/conpot/tests/data
 
 # Set working directory and copy dependencies from build stage
 WORKDIR /home/conpot
-COPY --from=conpot-builder /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
+COPY --from=conpot-builder /usr/local/lib/python3.14/ /usr/local/lib/python3.14/
 COPY --from=conpot-builder /usr/local/bin/ /usr/local/bin/
 
 # Set permissions for non-root user
