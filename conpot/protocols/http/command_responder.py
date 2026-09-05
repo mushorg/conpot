@@ -72,9 +72,9 @@ class HTTPServer(http.server.BaseHTTPRequestHandler):
             log_dict["data"][0]["response"] = "{0} response: {1}".format(
                 version, response
             )
-            session.add_event({"request": str(request), "response": str(response)})
+            session.log_event(request=str(request), response=str(response))
         else:
-            session.add_event({"request": str(request)})
+            session.log_event(request=str(request))
 
         # FIXME: Proper logging
 
