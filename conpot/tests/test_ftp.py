@@ -92,7 +92,7 @@ class TestFTPServer(unittest.TestCase):
     def test_auth(self):
         """Test for user, pass and quit commands."""
         # test with anonymous
-        self.assertEqual(self.client_connect(), "200 FTP server ready.")
+        self.assertEqual(self.client_connect(), "220 FTP server ready.")
         self.assertIn("Technodrome - Mouser Factory.", self.client.login())
         self.client_refresh()
         # test with registered user nobody:nobody
