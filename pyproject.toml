@@ -15,11 +15,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python",
     "Topic :: Security",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dynamic = ["version"]
 dependencies = [
     "setuptools>=83.0.0,<84",
@@ -32,6 +32,7 @@ dependencies = [
     "requests",
     "sphinx",
     "libtaxii>=1.1.0",
+    "legacy-cgi; python_version >= '3.13'",
     "crc16",
     "natsort",
     "scapy>=2.6.0,<3",
