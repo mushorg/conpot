@@ -70,9 +70,16 @@ version = { attr = "conpot.__version__" }
 where = ["."]
 include = ["conpot*"]
 
+# Non-Python assets formerly pulled in via MANIFEST.in.
 [tool.setuptools.package-data]
-"*" = ["*.txt", "*.rst"]
-conpot = ["conpot.cfg", "tests/data/*"]
+conpot = [
+    "data.tar",
+    "template.xsd",
+    "testing.cfg",
+    "templates/**/*",
+    "protocols/**/*.xsd",
+    "tests/data/**/*",
+]
 
 [dependency-groups]
 dev = [

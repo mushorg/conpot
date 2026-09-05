@@ -29,13 +29,29 @@ from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
 # In lieu of creating dedicated test templates we modify
-# EnipServer config through inheritance
+# EnipServer config through inheritance.
+# Values intentionally differ from cpppo's built-in Identity defaults so
+# list_identity tests prove template device_info is wired through.
+_TEST_PRODUCT_NAME = "ConpotTestENIP"
+_TEST_PRODUCT_CODE = 70
+_TEST_VENDOR_ID = 68
+_TEST_DEVICE_TYPE = 31
+_TEST_SERIAL_NUMBER = "720834"
+_TEST_PRODUCT_REV = 0x1001
+
+
 class EnipServerTCP(EnipServer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.addr = "127.0.0.1"
         self.port = 50002
         self.config.mode = "tcp"
+        self.config.product_name = _TEST_PRODUCT_NAME
+        self.config.product_code = _TEST_PRODUCT_CODE
+        self.config.vendor_id = _TEST_VENDOR_ID
+        self.config.device_type = _TEST_DEVICE_TYPE
+        self.config.serial_number = _TEST_SERIAL_NUMBER
+        self.config.product_rev = _TEST_PRODUCT_REV
 
 
 class EnipServerUDP(EnipServer):
@@ -44,6 +60,12 @@ class EnipServerUDP(EnipServer):
         self.addr = "127.0.0.1"
         self.port = 60002
         self.config.mode = "udp"
+        self.config.product_name = _TEST_PRODUCT_NAME
+        self.config.product_code = _TEST_PRODUCT_CODE
+        self.config.vendor_id = _TEST_VENDOR_ID
+        self.config.device_type = _TEST_DEVICE_TYPE
+        self.config.serial_number = _TEST_SERIAL_NUMBER
+        self.config.product_rev = _TEST_PRODUCT_REV
 
 
 @pytest.fixture(scope="class")
@@ -157,10 +179,13 @@ class TestENIPServer(unittest.TestCase):
             connection.shutdown()
             response = self.await_cpf_response(connection, "list_identity")
 
-            expected = self.enip_server_tcp.config.product_name
-            self.assertEqual(
-                expected, response["item"][0]["identity_object"]["product_name"]
-            )
+            identity = response["item"][0]["identity_object"]
+            self.assertEqual(_TEST_PRODUCT_NAME, identity["product_name"])
+            self.assertEqual(_TEST_PRODUCT_CODE, identity["product_code"])
+            self.assertEqual(_TEST_VENDOR_ID, identity["vendor_id"])
+            self.assertEqual(_TEST_DEVICE_TYPE, identity["device_type"])
+            self.assertEqual(int(_TEST_SERIAL_NUMBER), identity["serial_number"])
+            self.assertEqual(_TEST_PRODUCT_REV, identity["product_revision"])
 
     def test_list_identity_udp(self):
         with client.connector(
@@ -173,10 +198,13 @@ class TestENIPServer(unittest.TestCase):
             connection.list_identity()
             response = self.await_cpf_response(connection, "list_identity")
 
-            expected = self.enip_server_tcp.config.product_name
-            self.assertEqual(
-                expected, response["item"][0]["identity_object"]["product_name"]
-            )
+            identity = response["item"][0]["identity_object"]
+            self.assertEqual(_TEST_PRODUCT_NAME, identity["product_name"])
+            self.assertEqual(_TEST_PRODUCT_CODE, identity["product_code"])
+            self.assertEqual(_TEST_VENDOR_ID, identity["vendor_id"])
+            self.assertEqual(_TEST_DEVICE_TYPE, identity["device_type"])
+            self.assertEqual(int(_TEST_SERIAL_NUMBER), identity["serial_number"])
+            self.assertEqual(_TEST_PRODUCT_REV, identity["product_revision"])
 
     def test_list_interfaces_tcp(self):
         with client.connector(
