@@ -29,7 +29,7 @@ def _verify_address(addr):
     try:
         socket.inet_aton(addr)
         return True
-    except (socket.error, UnicodeEncodeError, TypeError):
+    except socket.error, UnicodeEncodeError, TypeError:
         return False
 
 
@@ -47,7 +47,7 @@ def _fetch_data(urls):
                     return data
             else:
                 raise ConnectionError
-        except (Timeout, ConnectionError):
+        except Timeout, ConnectionError:
             logger.warning("Could not fetch public ip from %s", url)
     return None
 

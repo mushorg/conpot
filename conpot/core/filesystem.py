@@ -261,7 +261,7 @@ class AbstractFS(WrapFS):
             finally:
                 try:
                     assert self._cache[path]
-                except (AssertionError, KeyError):
+                except AssertionError, KeyError:
                     # This is the first time we have seen this file. Let us create this entry.
                     logger.debug("Creating cache for file/directory : {}".format(path))
                     self._cache[path] = self._wrap_fs.getinfo(
@@ -303,7 +303,7 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["details"]["metadata_changed"] = (
                                     fs.time.datetime_to_epoch(datetime.now())
                                 )
-                        except (TypeError, AssertionError, KeyError):
+                        except TypeError, AssertionError, KeyError:
                             raise
                     if "group" in access or "gid" in access:
                         try:
@@ -332,7 +332,7 @@ class AbstractFS(WrapFS):
                                 self._cache[path].raw["details"]["metadata_changed"] = (
                                     fs.time.datetime_to_epoch(datetime.now())
                                 )
-                        except (TypeError, AssertionError, KeyError):
+                        except TypeError, AssertionError, KeyError:
                             raise
         else:
             raise FilesystemError("lstat is not currently supported!")
@@ -800,7 +800,7 @@ class AbstractFS(WrapFS):
             # So file is '/test.png'
             try:
                 st = self.stat(file)
-            except (fs.errors.FSError, FilesystemError):
+            except fs.errors.FSError, FilesystemError:
                 raise
             permission = filemode(Permissions.create(st["st_mode"]).mode)
             if self.isdir(file):

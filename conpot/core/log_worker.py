@@ -86,7 +86,7 @@ class LogWorker(object):
         sessions = self.session_manager._sessions
         try:
             session_timeout = self.config.get("session", "timeout")
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except configparser.NoSectionError, configparser.NoOptionError:
             session_timeout = 5
         for session in sessions:
             if len(session.data) > 0:

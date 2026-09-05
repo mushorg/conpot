@@ -425,7 +425,7 @@ def GetIdentity(ip, port, src_tsap, dst_tsap):
                 try:
                     packers_keys = [i for i in list(packers.keys()) if n in i]
                     formated_item = packers[packers_keys[0]](item).strip("\x00")
-                except (struct.error, IndexError):
+                except struct.error, IndexError:
                     formated_item = StripUnprintable(item).strip("\x00")
 
                 res.append("%s;%s;%s" % (szl_id, n, formated_item))
