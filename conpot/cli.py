@@ -286,7 +286,4 @@ def main():
 
 
 if __name__ == "__main__":
-    from conpot.utils.networking import fix_sslwrap
-
-    fix_sslwrap()
     main()

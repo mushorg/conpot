@@ -21,9 +21,7 @@ from gevent import monkey
 
 monkey.patch_all()
 
-from conpot.utils.networking import fix_sslwrap
 from conpot.cli import main
 
 if __name__ == "__main__":
-    fix_sslwrap()
     main()
