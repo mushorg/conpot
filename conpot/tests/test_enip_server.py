@@ -27,7 +27,6 @@ from gevent import socket
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
-
 # In lieu of creating dedicated test templates we modify
 # EnipServer config through inheritance.
 # Values intentionally differ from cpppo's built-in Identity defaults so
