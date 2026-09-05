@@ -66,7 +66,7 @@ def teardown_test_server(server, greenlet):
     greenlet.get()
 
 
-# this is really a test helper but start_protocol.py wants to use it too
+# this is really a test helper but tools/start_protocol.py wants to use it too
 def init_test_server_by_name(name, port=0):
     server_class = protocols.name_mapping[name]
 
