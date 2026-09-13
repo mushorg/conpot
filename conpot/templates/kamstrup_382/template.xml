@@ -4,7 +4,7 @@
         <entity name="unit">382</entity>
         <entity name="vendor">Kamstrup</entity>
         <entity name="description">Register clone of an existing Kamstrup 382 smart meter</entity>
-        <entity name="protocols">Kamstrup</entity>
+        <entity name="protocols">kamstrup_management, kamstrup_meter</entity>
         <entity name="creator">Johnny Vestergaard</entity>
     </template>
     <databus>

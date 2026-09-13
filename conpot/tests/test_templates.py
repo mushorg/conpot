@@ -21,7 +21,9 @@ import tempfile
 import pytest
 
 import conpot
+from conpot import protocols
 from conpot.core.templates import (
+    discover_template_protocols,
     format_template_list,
     get_template_metadata,
     list_available_templates,
@@ -74,9 +76,25 @@ def test_list_available_includes_default():
     names = [name for name, _ in templates]
     assert "default" in names
     default_meta = dict(templates)["default"]
-    assert default_meta["vendor"] == "Siemens"
-    assert default_meta["unit"] == "S7-200"
-    assert "HTTP" in default_meta["protocols"]
+    assert default_meta["vendor"] == "Conpot"
+    assert default_meta["unit"] == "multi-protocol sample"
+    assert "Sample profile" in default_meta["description"]
+    for protocol in ("bacnet", "enip", "ftp", "http", "tftp"):
+        assert protocol in default_meta["protocols"]
+
+
+def test_default_protocols_match_filesystem():
+    default_dir = os.path.join(package_directory, "templates", "default")
+    known = set(protocols.name_mapping) | {"proxy"}
+    expected = sorted(
+        name
+        for name in os.listdir(default_dir)
+        if name in known
+        and os.path.isfile(os.path.join(default_dir, name, "{0}.xml".format(name)))
+    )
+    assert discover_template_protocols(default_dir) == ", ".join(expected)
+    meta = get_template_metadata(os.path.join(default_dir, "template.xml"))
+    assert meta["protocols"] == ", ".join(expected)
 
 
 def test_get_template_metadata():
@@ -94,15 +112,15 @@ def test_format_template_list():
             (
                 "default",
                 {
-                    "unit": "S7-200",
-                    "vendor": "Siemens",
+                    "unit": "multi-protocol sample",
+                    "vendor": "Conpot",
                     "description": "desc",
-                    "protocols": "HTTP",
+                    "protocols": "http",
                     "creator": "team",
                 },
             )
         ]
     )
     assert "--template default" in text
-    assert "Siemens - S7-200" in text
+    assert "Conpot - multi-protocol sample" in text
     assert "Created by:  team" in text
