@@ -36,11 +36,33 @@ def validate_template(xml_file, xsd_file):
         sys.exit(1)
 
 
+def discover_template_protocols(template_dir):
+    """Return comma-separated protocol names present under a template directory.
+
+    Only includes subdirectories that have a matching ``<name>/<name>.xml`` and
+    are registered in ``protocols.name_mapping`` (plus ``proxy``).
+    """
+    from conpot import protocols
+
+    if not os.path.isdir(template_dir):
+        return "N/A"
+
+    known = set(protocols.name_mapping) | {"proxy"}
+    found = sorted(
+        name
+        for name in os.listdir(template_dir)
+        if name in known
+        and os.path.isfile(os.path.join(template_dir, name, "{0}.xml".format(name)))
+    )
+    return ", ".join(found) if found else "N/A"
+
+
 def get_template_metadata(template_xml):
     """Parse core template metadata from a template.xml path.
 
     Returns a dict with keys unit, vendor, description, protocols, creator.
-    Missing fields default to "N/A".
+    Missing fields default to "N/A". Protocols are derived from the template
+    filesystem (not the XML ``protocols`` entity) to avoid drift.
     """
     metadata = {
         "unit": "N/A",
@@ -51,14 +73,13 @@ def get_template_metadata(template_xml):
     }
     dom_template = etree.parse(template_xml)
     template_details = dom_template.xpath("//core/template/*")
-    if not template_details:
-        return metadata
+    if template_details:
+        for entity in template_details:
+            name = entity.attrib.get("name")
+            if name in metadata:
+                metadata[name] = entity.text
 
-    for entity in template_details:
-        name = entity.attrib.get("name")
-        if name in metadata:
-            metadata[name] = entity.text
-
+    metadata["protocols"] = discover_template_protocols(os.path.dirname(template_xml))
     return metadata
 
 

@@ -22,7 +22,7 @@
         <entity name="unit">S7-300</entity>
         <entity name="vendor">Siemens</entity>
         <entity name="description">Creates a simple device for SNMP</entity>
-        <entity name="protocols">IEC104, SNMP</entity>
+        <entity name="protocols">snmp</entity>
         <entity name="creator">Patrick Reichenberger</entity>
     </template>
     <databus>
