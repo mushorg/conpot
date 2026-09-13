@@ -35,7 +35,7 @@ class TestKamstrup(unittest.TestCase):
         self.dir_name = os.path.dirname(conpot.__file__)
         self.request_parser = KamstrupRequestParser()
         self.command_responder = CommandResponder(
-            self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml"
+            self.dir_name + "/templates/kamstrup_382/kamstrup_meter.xml"
         )
 
         self.kamstrup_management_server, self.server_greenlet = spawn_test_server(
