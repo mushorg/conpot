@@ -24,7 +24,6 @@ from gevent.ssl import wrap_socket
 import conpot
 from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
 from conpot.protocols.proxy.proxy import Proxy
-from conpot.utils.networking import fix_sslwrap
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
@@ -49,7 +48,6 @@ class TestProxy(unittest.TestCase):
         mock_service.stop(1)
 
     def test_ssl_proxy(self):
-        fix_sslwrap()
         self.test_input = "Hiya, this is a test".encode("utf-8")
         keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
         certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
@@ -110,7 +108,6 @@ class TestProxy(unittest.TestCase):
         mock_service.stop(1)
 
     def test_ssl_proxy_with_decoder(self):
-        fix_sslwrap()
         self.test_input = "Hiya, this is a test".encode("utf-8")
         keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
         certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")

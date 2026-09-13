@@ -10,7 +10,8 @@ Human docs: [README.md](README.md), [conpot.readthedocs.io](https://conpot.readt
 - `conpot/protocols/` — one directory per protocol (+ XSD); registry in `conpot/protocols/__init__.py` (`name_mapping`)
 - `conpot/templates/` — deployment profiles (`template.xml` + per-protocol XML)
 - `conpot/tests/` — pytest suite; helpers in `conpot/utils/greenlet.py`
-- `bin/conpot` — entrypoint (`monkey.patch_all()`)
+- `conpot/cli.py` — entrypoint (`monkey.patch_all()`); also `python -m conpot`
+- `tools/` — standalone helpers (`start_protocol.py`, `conpot_cloner`, `kamstrup_prober.py`)
 - `docs/` — Sphinx; concepts under `docs/source/concepts/`
 - `Makefile`, `pyproject.toml`, `uv.lock` — install / test / format
 

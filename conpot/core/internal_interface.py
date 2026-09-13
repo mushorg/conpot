@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2015 MushMush Foundation
 #
 # Rewritten by Abhinav Saxena <xandfury@gmail.com>
 #

@@ -60,8 +60,10 @@ dependencies = [
 [project.urls]
 Homepage = "http://conpot.org"
 
+[project.scripts]
+conpot = "conpot.cli:main"
+
 [tool.setuptools]
-script-files = ["bin/conpot"]
 include-package-data = false
 
 [tool.setuptools.dynamic]
@@ -96,3 +98,13 @@ dev = [
 [tool.black]
 target-version = ["py314"]
 required-version = "26.5.1"
+
+[tool.coverage.report]
+omit = ["*/tests/*"]
+exclude_lines = [
+    "pragma: no cover",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+ignore_errors = true

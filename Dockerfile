@@ -52,5 +52,5 @@ ENV PATH=$PATH:/home/conpot/.local/bin
 ENV USER=conpot
 
 # Set the default command
-ENTRYPOINT ["conpot"]
+ENTRYPOINT ["python", "-m", "conpot"]
 CMD ["--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp"]
