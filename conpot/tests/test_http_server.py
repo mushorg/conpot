@@ -83,7 +83,7 @@ class TestHTTPServer(unittest.TestCase):
         """
         # retrieve configuration from xml
         dir_name = os.path.dirname(conpot.__file__)
-        dom = etree.parse(dir_name + "/templates/default/http/http.xml")
+        dom = etree.parse(dir_name + "/templates/default/http.xml")
 
         # check for proper tarpit support
         tarpit = dom.xpath(

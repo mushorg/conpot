@@ -43,9 +43,7 @@ class FakeServer:
 
 
 def _write_protocol_xml(root, name, enabled, host="127.0.0.1", port=15020):
-    proto_dir = os.path.join(root, name)
-    os.makedirs(proto_dir)
-    path = os.path.join(proto_dir, "{}.xml".format(name))
+    path = os.path.join(root, "{}.xml".format(name))
     with open(path, "w") as fh:
         fh.write(
             '<{name} enabled="{enabled}" host="{host}" port="{port}"/>\n'.format(
@@ -124,9 +122,7 @@ def test_start_protocols_missing_template_skips():
 
 def test_start_proxy_disabled():
     with tempfile.TemporaryDirectory() as tmp:
-        proxy_dir = os.path.join(tmp, "proxy")
-        os.makedirs(proxy_dir)
-        with open(os.path.join(proxy_dir, "proxy.xml"), "w") as fh:
+        with open(os.path.join(tmp, "proxy.xml"), "w") as fh:
             fh.write('<proxies enabled="False"/>\n')
 
         with (
@@ -141,9 +137,7 @@ def test_start_proxy_disabled():
 
 def test_start_proxy_enabled():
     with tempfile.TemporaryDirectory() as tmp:
-        proxy_dir = os.path.join(tmp, "proxy")
-        os.makedirs(proxy_dir)
-        with open(os.path.join(proxy_dir, "proxy.xml"), "w") as fh:
+        with open(os.path.join(tmp, "proxy.xml"), "w") as fh:
             fh.write("""
                 <proxies enabled="True">
                     <proxy name="test" host="127.0.0.1" port="9999">

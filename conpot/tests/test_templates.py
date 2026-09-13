@@ -88,9 +88,8 @@ def test_default_protocols_match_filesystem():
     known = set(protocols.name_mapping) | {"proxy"}
     expected = sorted(
         name
-        for name in os.listdir(default_dir)
-        if name in known
-        and os.path.isfile(os.path.join(default_dir, name, "{0}.xml".format(name)))
+        for name in known
+        if os.path.isfile(os.path.join(default_dir, "{0}.xml".format(name)))
     )
     assert discover_template_protocols(default_dir) == ", ".join(expected)
     meta = get_template_metadata(os.path.join(default_dir, "template.xml"))

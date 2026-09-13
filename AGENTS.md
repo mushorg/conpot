@@ -34,7 +34,7 @@ uv run conpot --template default -f
 - **gevent**, not asyncio. Use `gevent.server` / greenlets; patch with `monkey.patch_all()` in entrypoints and tests.
 - Protocol servers use `@conpot_protocol` from `conpot.core.protocol_wrapper`. Typical shape: `__init__(template, template_directory, args)`, `handle(sock, addr)`, `start(host, port)`, `stop()`.
 - Record attacker activity via `conpot.core.get_session(...)` then `session.add_event(...)`.
-- Templates: `templates/<name>/template.xml` (databus + metadata) plus `templates/<name>/<protocol>/<protocol>.xml`, validated against XSDs at startup. Prefer databus for shared state.
+- Templates: `templates/<name>/template.xml` (databus + metadata) plus `templates/<name>/<protocol>.xml`, validated against XSDs at startup. Keep per-protocol subdirs only for auxiliary files (e.g. `http/htdocs`). Prefer databus for shared state.
 - Style: PEP8, 4 spaces, no one-line conditionals. Run Black before claiming work done.
 - Match neighboring protocol and test style when editing.
 

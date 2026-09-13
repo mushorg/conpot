@@ -13,8 +13,9 @@ Databus identity strings in this profile still use Siemens-flavored values (for 
 ``Siemens, SIMATIC, S7-200``) for deception realism. Those fingerprints are independent of
 the operator-facing template catalog description.
 
-While most of the configuration takes place within the XML profile, some parts are kept in seperate folders within the
-templates directory to avoid clutter.
+While most of the configuration takes place within the XML profile, protocols that need
+auxiliary files (for example HTTP ``htdocs`` / ``statuscodes``, or SNMP MIB sources) keep
+those in a subdirectory next to the protocol XML.
 
 
 Modbus
@@ -66,7 +67,7 @@ Define the payload on the databus first (in ``template.xml``):
         <value type="value">"Siemens, SIMATIC, S7-200"</value>
     </key>
 
-Then reference the key from ``snmp/snmp.xml``:
+Then reference the key from ``snmp.xml``:
 
 .. code-block:: xml
 

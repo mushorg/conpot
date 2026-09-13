@@ -39,8 +39,9 @@ def validate_template(xml_file, xsd_file):
 def discover_template_protocols(template_dir):
     """Return comma-separated protocol names present under a template directory.
 
-    Only includes subdirectories that have a matching ``<name>/<name>.xml`` and
-    are registered in ``protocols.name_mapping`` (plus ``proxy``).
+    Only includes top-level ``<name>.xml`` files that are registered in
+    ``protocols.name_mapping`` (plus ``proxy``). Auxiliary protocol directories
+    (e.g. ``http/htdocs``) may still exist alongside the XML.
     """
     from conpot import protocols
 
@@ -50,9 +51,8 @@ def discover_template_protocols(template_dir):
     known = set(protocols.name_mapping) | {"proxy"}
     found = sorted(
         name
-        for name in os.listdir(template_dir)
-        if name in known
-        and os.path.isfile(os.path.join(template_dir, name, "{0}.xml".format(name)))
+        for name in known
+        if os.path.isfile(os.path.join(template_dir, "{0}.xml".format(name)))
     )
     return ", ".join(found) if found else "N/A"
 

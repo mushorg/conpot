@@ -47,7 +47,7 @@ def spawn_test_server(server_class, template, protocol, args=None, port=0):
 
     template_dir = f"{conpot_dir}/templates/{template}"
     template_xml = f"{template_dir}/template.xml"
-    protocol_xml = f"{template_dir}/{protocol}/{protocol}.xml"
+    protocol_xml = f"{template_dir}/{protocol}.xml"
 
     core.get_databus().initialize(template_xml)
 

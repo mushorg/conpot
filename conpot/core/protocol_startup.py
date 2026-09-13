@@ -50,7 +50,7 @@ def start_protocols(root_template_directory, package_directory, args):
 
     for protocol_name, server_class in protocols.name_mapping.items():
         protocol_template = os.path.join(
-            root_template_directory, protocol_name, "{0}.xml".format(protocol_name)
+            root_template_directory, "{0}.xml".format(protocol_name)
         )
         if os.path.isfile(protocol_template):
             xsd_file = os.path.join(
@@ -111,7 +111,7 @@ def start_proxy(root_template_directory):
     Returns a list of (proxy_instance, greenlet) tuples.
     """
     servers = []
-    template_proxy = os.path.join(root_template_directory, "proxy", "proxy.xml")
+    template_proxy = os.path.join(root_template_directory, "proxy.xml")
     if os.path.isfile(template_proxy):
         xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd")
         validate_template(template_proxy, xsd_file)
