@@ -2,7 +2,6 @@
 
 ![Test Status](https://github.com/mushorg/conpot/workflows/Code%20tests/badge.svg)
 [![Docs](https://readthedocs.org/projects/conpot/badge/?version=latest)](https://conpot.readthedocs.io/en/latest/)
-[![Docker Build Status](https://img.shields.io/docker/build/honeynet/conpot.svg)](https://hub.docker.com/r/honeynet/conpot)
 
 ## About
 
