@@ -64,7 +64,7 @@ class KamstrupServer(object):
             address[1],
             session.id,
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
 
         self.server_active = True
 
@@ -75,7 +75,7 @@ class KamstrupServer(object):
 
                 if not raw_request:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                     break
 
                 for x in raw_request:
@@ -84,35 +84,33 @@ class KamstrupServer(object):
                 while True:
                     request = parser.get_request()
                     if not request:
-                        session.add_event({"type": "CONNECTION_LOST"})
+                        session.log_event(event_type="CONNECTION_LOST")
                         break
                     else:
-                        logdata = {
-                            "request": binascii.hexlify(
-                                bytearray(request.message_bytes)
-                            )
-                        }
+                        request_hex = binascii.hexlify(bytearray(request.message_bytes))
                         response = self.command_responder.respond(request)
                         # real Kamstrup meters has delay in this interval
                         gevent.sleep(random.uniform(0.24, 0.34))
                         if response:
                             serialized_response = response.serialize()
-                            logdata["response"] = binascii.hexlify(serialized_response)
+                            response_hex = binascii.hexlify(serialized_response)
                             logger.info(
                                 "Kamstrup traffic from %s: %s (%s)",
                                 address[0],
-                                logdata,
+                                {"request": request_hex, "response": response_hex},
                                 session.id,
                             )
                             sock.send(serialized_response)
-                            session.add_event(logdata)
+                            session.log_event(
+                                request=request_hex, response=response_hex
+                            )
                         else:
-                            session.add_event(logdata)
+                            session.log_event(request=request_hex)
                             break
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
 
         sock.close()
 

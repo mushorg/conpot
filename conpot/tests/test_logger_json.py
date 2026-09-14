@@ -16,13 +16,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from os import path
-from datetime import datetime
 
 import unittest
 import tempfile
 import shutil
 import json
 
+from conpot.core.loggers.event import SCHEMA_VERSION
 from conpot.core.loggers.json_log import JsonLogger
 
 
@@ -38,36 +38,46 @@ class TestJsonLogger(unittest.TestCase):
         sensorid = "default"
         public_ip = "0.0.0.0"
         dst_port = 502
-        timestamp = datetime.now()
-        event_id = 1337
+        event_id = "1337"
         src_ip = "127.0.0.1"
-        src_port = "2048"
-        data_type = "unittest"
+        src_port = 2048
+        protocol = "unittest"
         request = "ping"
         response = "pong"
 
-        json_logger = JsonLogger(filename, sensorid, public_ip)
-        json_logger.log(
-            {
-                "timestamp": timestamp,
-                "id": event_id,
-                "remote": (src_ip, src_port),
-                "local": (public_ip, dst_port),
-                "data_type": data_type,
-                "data": {"request": request, "response": response},
-            }
-        )
+        event = {
+            "schema_version": SCHEMA_VERSION,
+            "sensorid": sensorid,
+            "session_id": event_id,
+            "protocol": protocol,
+            "session_time": "2000-01-01T00:00:00+00:00",
+            "event_time": "2000-01-01T00:00:01+00:00",
+            "src_ip": src_ip,
+            "src_port": src_port,
+            "dst_ip": public_ip,
+            "dst_port": dst_port,
+            "public_ip": public_ip,
+            "event_type": None,
+            "request": request,
+            "response": response,
+            "error": None,
+            "data": {"extra": True},
+        }
+
+        json_logger = JsonLogger(filename)
+        json_logger.log(event)
 
         with open(filename, "r") as logfile:
             e = json.load(logfile)
-            self.assertEqual(e["timestamp"], timestamp.isoformat())
+            self.assertEqual(e["schema_version"], SCHEMA_VERSION)
             self.assertEqual(e["sensorid"], sensorid)
-            self.assertEqual(e["id"], event_id)
+            self.assertEqual(e["session_id"], event_id)
             self.assertEqual(e["src_ip"], src_ip)
             self.assertEqual(e["src_port"], src_port)
             self.assertEqual(e["dst_ip"], public_ip)
             self.assertEqual(e["dst_port"], dst_port)
-            self.assertEqual(e["data_type"], data_type)
+            self.assertEqual(e["protocol"], protocol)
             self.assertEqual(e["request"], request)
             self.assertEqual(e["response"], response)
             self.assertEqual(e["event_type"], None)
+            self.assertEqual(e["data"], {"extra": True})

@@ -56,9 +56,7 @@ class conpot_extension(object):
             logger.info("%s response to %s: %s %s", event_type, addr, res_oid, res_val)
             response = {"oid": str(res_oid), "val": str(res_val)}
 
-        session.add_event(
-            {"type": event_type, "request": request, "response": response}
-        )
+        session.log_event(event_type=event_type, request=request, response=response)
 
     def do_tarpit(self, delay):
         lbound, _, ubound = delay.partition(";")

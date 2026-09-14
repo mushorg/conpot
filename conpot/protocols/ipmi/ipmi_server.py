@@ -57,6 +57,7 @@ class IpmiServer(object):
         )
         self.server = None
         self.session = None
+        self.attack_sessions = {}
         self.bmc = self._configure_users(dom)
         logger.info("Conpot IPMI initialized using %s template", template)
 
@@ -92,24 +93,35 @@ class IpmiServer(object):
         csum &= 0xFF
         return csum
 
-    def _add_event(self, address, event_data):
-        session = conpot_core.get_session(
-            "ipmi",
-            address[0],
-            address[1],
-            self.sock.getsockname()[0],
-            self.port,
+    def _get_attack_session(self, address):
+        key = address[0]
+        attack_session = self.attack_sessions.get(key)
+        if attack_session is None:
+            attack_session = conpot_core.get_session(
+                "ipmi",
+                address[0],
+                address[1],
+                self.sock.getsockname()[0],
+                self.port,
+            )
+            self.attack_sessions[key] = attack_session
+        return attack_session
+
+    def _log_event(self, address, event_type=None, request=None, response=None):
+        attack_session = self._get_attack_session(address)
+        attack_session.log_event(
+            event_type=event_type, request=request, response=response
         )
-        session.add_event(event_data)
 
     def handle(self, data, address):
         # make sure self.session exists
         if not address[0] in self.sessions.keys() or not hasattr(self, "session"):
             # new session for new source
             logger.info("New IPMI traffic from %s", address)
-            self._add_event(
+            self._log_event(
                 address,
-                {"type": "NEW_CONNECTION", "request": data, "response": None},
+                event_type="NEW_CONNECTION",
+                request=data,
             )
             self.session = FakeSession(address[0], "", "", address[1])
             self.session.server = self
@@ -198,24 +210,20 @@ class IpmiServer(object):
         self.session.stage += 1
         self.session.ipmicallback = self.handle_client_request
         logger.info("Connection established with %s", sockaddr)
-        self._add_event(
+        self._log_event(
             sockaddr,
-            {
-                "type": "GET_CHANNEL_AUTH_CAPABILITIES",
-                "request": request,
-                "response": header,
-            },
+            event_type="GET_CHANNEL_AUTH_CAPABILITIES",
+            request=request,
+            response=header,
         )
         self.session.send_data(header, sockaddr)
 
     def close_server_session(self):
         logger.info("IPMI Session closed %s", self.session.sockaddr[0])
         # cleanup session
-        self._add_event(
-            self.session.sockaddr,
-            {"type": "CONNECTION_LOST", "request": None, "response": None},
-        )
+        self._log_event(self.session.sockaddr, event_type="CONNECTION_LOST")
         del self.sessions[self.session.sockaddr[0]]
+        self.attack_sessions.pop(self.session.sockaddr[0], None)
         del self.session
 
     def _got_request(self, data, address, session):

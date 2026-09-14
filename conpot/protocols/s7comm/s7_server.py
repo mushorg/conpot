@@ -81,20 +81,20 @@ class S7Server(object):
                 address[0], address[1], session.id
             )
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
 
         try:
             while True:
                 data = sock.recv(4, socket.MSG_WAITALL)
                 if len(data) == 0:
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                     break
 
                 _, _, length = unpack("!BBH", data[:4])
                 # check for length
                 if length <= 4:
                     logger.info("S7 error: Invalid length")
-                    session.add_event({"error": "S7 error: Invalid length"})
+                    session.log_event(error="S7 error: Invalid length")
                     break
                 data += sock.recv(length - 4, socket.MSG_WAITALL)
 
@@ -134,11 +134,9 @@ class S7Server(object):
                     tpkt_resp_packet = TPKT(3, cotp_resp_base_packet).pack()
                     sock.send(tpkt_resp_packet)
 
-                    session.add_event(
-                        {
-                            "request": codecs.encode(data, "hex"),
-                            "response": codecs.encode(tpkt_resp_packet, "hex"),
-                        }
+                    session.log_event(
+                        request=codecs.encode(data, "hex"),
+                        response=codecs.encode(tpkt_resp_packet, "hex"),
                     )
 
                     data = sock.recv(1024)
@@ -187,13 +185,9 @@ class S7Server(object):
                                 ).pack()
                                 sock.send(tpkt_resp_packet)
 
-                                session.add_event(
-                                    {
-                                        "request": codecs.encode(data, "hex"),
-                                        "response": codecs.encode(
-                                            tpkt_resp_packet, "hex"
-                                        ),
-                                    }
+                                session.log_event(
+                                    request=codecs.encode(data, "hex"),
+                                    response=codecs.encode(tpkt_resp_packet, "hex"),
                                 )
 
                                 # handshake done, give some more data.
@@ -240,13 +234,11 @@ class S7Server(object):
                                         ).pack()
                                         sock.send(tpkt_resp_packet)
 
-                                        session.add_event(
-                                            {
-                                                "request": codecs.encode(data, "hex"),
-                                                "response": codecs.encode(
-                                                    tpkt_resp_packet, "hex"
-                                                ),
-                                            }
+                                        session.log_event(
+                                            request=codecs.encode(data, "hex"),
+                                            response=codecs.encode(
+                                                tpkt_resp_packet, "hex"
+                                            ),
                                         )
 
                                     data = sock.recv(1024)
@@ -256,12 +248,10 @@ class S7Server(object):
                                 cotp_base_packet.tpdu_type
                             )
                         )
-                        session.add_event(
-                            {
-                                "error": "Received unknown COTP TPDU after handshake: {0}".format(
-                                    cotp_base_packet.tpdu_type
-                                )
-                            }
+                        session.log_event(
+                            error="Received unknown COTP TPDU after handshake: {0}".format(
+                                cotp_base_packet.tpdu_type
+                            )
                         )
                 else:
                     logger.info(
@@ -269,21 +259,19 @@ class S7Server(object):
                             cotp_base_packet.tpdu_type
                         )
                     )
-                    session.add_event(
-                        {
-                            "error": "Received unknown COTP TPDU before handshake: {0}".format(
-                                cotp_base_packet.tpdu_type
-                            )
-                        }
+                    session.log_event(
+                        error="Received unknown COTP TPDU before handshake: {0}".format(
+                            cotp_base_packet.tpdu_type
+                        )
                     )
 
         except socket.timeout:
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
             logger.debug(
                 "Socket timeout, remote: {0}. ({1})".format(address[0], session.id)
             )
         except socket.error:
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
             logger.debug(
                 "Connection reset by peer, remote: {0}. ({1})".format(
                     address[0], session.id

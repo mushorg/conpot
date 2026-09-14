@@ -19,7 +19,7 @@ import json
 import logging
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import configparser
 from gevent.queue import Empty
@@ -45,14 +45,17 @@ class LogWorker(object):
         self.syslog_client = None
         self.public_ip = public_ip
         self.taxii_logger = None
+        try:
+            self.sensorid = config.get("common", "sensorid")
+        except configparser.NoSectionError, configparser.NoOptionError:
+            self.sensorid = "default"
 
         if config.getboolean("sqlite", "enabled"):
             self.sqlite_logger = SQLiteLogger()
 
         if config.getboolean("json", "enabled"):
             filename = config.get("json", "filename")
-            sensorid = config.get("common", "sensorid")
-            self.json_logger = JsonLogger(filename, sensorid, public_ip)
+            self.json_logger = JsonLogger(filename)
 
         if config.getboolean("hpfriends", "enabled"):
             host = config.get("hpfriends", "host")
@@ -93,8 +96,8 @@ class LogWorker(object):
                 sec_last_event = max(session.data) / 1000
             else:
                 sec_last_event = 0
-            sec_session_start = time.mktime(session.timestamp.timetuple())
-            sec_now = time.mktime(datetime.utcnow().timetuple())
+            sec_session_start = session.timestamp.timestamp()
+            sec_now = datetime.now(timezone.utc).timestamp()
             if (sec_now - (sec_session_start + sec_last_event)) >= float(
                 session_timeout
             ):
@@ -111,6 +114,7 @@ class LogWorker(object):
             except Empty:
                 self._process_sessions()
             else:
+                event["sensorid"] = self.sensorid
                 if self.public_ip:
                     event["public_ip"] = self.public_ip
 

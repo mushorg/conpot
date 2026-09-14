@@ -113,7 +113,7 @@ class FTPCommandChannel(FTPHandlerBase):
 
     def do_QUIT(self, arg):
         self.respond(b"221 Bye.")
-        self.session.add_event({"type": "CONNECTION_TERMINATED"})
+        self.session.log_event(event_type="CONNECTION_TERMINATED")
         self.disconnect_client = True
 
     def do_SITE_HELP(self, line):
@@ -878,7 +878,7 @@ class FTPCommandChannel(FTPHandlerBase):
         if self.invalid_login_attempt >= self.max_login_attempts:
             self.respond(b"421 Too many connections. Service temporarily unavailable.")
             self.disconnect_client = True
-            self.session.add_event({"type": "CONNECTION_TERMINATED"})
+            self.session.log_event(event_type="CONNECTION_TERMINATED")
         else:
             try:
                 method = getattr(self, "do_" + cmd.replace(" ", "_"))
@@ -909,38 +909,38 @@ class FTPCommandChannel(FTPHandlerBase):
                     if line:
                         cmd = line.split(" ")[0].upper()
                         arg = line[len(cmd) + 1 :]
-                        try:
-                            self._pre_process_cmd(line, cmd, arg)
-                        except UnicodeEncodeError:
-                            self.respond(
-                                b"501 can't decode path (server filesystem encoding is %a)"
-                                % sys.getfilesystemencoding()
+                    try:
+                        self._pre_process_cmd(line, cmd, arg)
+                    except UnicodeEncodeError:
+                        self.respond(
+                            b"501 can't decode path (server filesystem encoding is %a)"
+                            % sys.getfilesystemencoding()
+                        )
+                    except fs.errors.PermissionDenied, FSOperationNotPermitted:
+                        # TODO: log user as well.
+                        logger.info(
+                            "Client {} requested path: {} trying to access directory to which it has "
+                            "no access to.".format(self.client_address, line)
+                        )
+                        self.respond(b"500 Permission denied")
+                    except fs.errors.IllegalBackReference:
+                        # Trying to access the directory which the current user has no access to
+                        self.respond(
+                            b"550 %a points to a path which is outside the user's root directory."
+                            % line
+                        )
+                    except FTPPrivilegeException:
+                        self.respond(b"550 Not enough privileges.")
+                    except (fs.errors.FSError, FilesystemError) as fe:
+                        logger.info(
+                            "FTP client {} Unexpected error occurred : {}".format(
+                                self.client_address, fe
                             )
-                        except fs.errors.PermissionDenied, FSOperationNotPermitted:
-                            # TODO: log user as well.
-                            logger.info(
-                                "Client {} requested path: {} trying to access directory to which it has "
-                                "no access to.".format(self.client_address, line)
-                            )
-                            self.respond(b"500 Permission denied")
-                        except fs.errors.IllegalBackReference:
-                            # Trying to access the directory which the current user has no access to
-                            self.respond(
-                                b"550 %a points to a path which is outside the user's root directory."
-                                % line
-                            )
-                        except FTPPrivilegeException:
-                            self.respond(b"550 Not enough privileges.")
-                        except (fs.errors.FSError, FilesystemError) as fe:
-                            logger.info(
-                                "FTP client {} Unexpected error occurred : {}".format(
-                                    self.client_address, fe
-                                )
-                            )
-                            # TODO: what to respond here? For now just terminate the session
-                            self.disconnect_client = True
-                            self.session.add_event({"type": "CONNECTION_TERMINATED"})
-                            break
+                        )
+                        # TODO: what to respond here? For now just terminate the session
+                        self.disconnect_client = True
+                        self.session.log_event(event_type="CONNECTION_TERMINATED")
+                        break
             elif not (self.metrics.timeout() < self.config.timeout) and (
                 not self._data_channel
             ):
@@ -949,7 +949,7 @@ class FTPCommandChannel(FTPHandlerBase):
                         self.client_address, self.session.id
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_TIMEOUT"})
+                self.session.log_event(event_type="CONNECTION_TIMEOUT")
                 self.respond(b"421 Timeout.")
                 self.disconnect_client = True
             else:

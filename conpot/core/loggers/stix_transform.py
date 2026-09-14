@@ -87,11 +87,25 @@ class StixTransformer(object):
             "Describes one or more honeypot incidents",
         )
 
-        incident = Incident(
-            id_="%s:%s-%s" % (CONPOT_NAMESPACE, "incident", event["session_id"])
-        )
+        session_id = event.get("session_id") or event.get("id")
+        protocol = event.get("protocol") or event.get("data_type")
+        src_ip = event.get("src_ip")
+        src_port = event.get("src_port")
+        if src_ip is None and "remote" in event:
+            src_ip, src_port = event["remote"][0], event["remote"][1]
+
+        event_time = event.get("event_time") or event.get("session_time")
+        if event_time is None and "timestamp" in event:
+            timestamp = event["timestamp"]
+            event_time = (
+                timestamp.isoformat()
+                if hasattr(timestamp, "isoformat")
+                else str(timestamp)
+            )
+
+        incident = Incident(id_="%s:%s-%s" % (CONPOT_NAMESPACE, "incident", session_id))
         initial_time = StixTime()
-        initial_time.initial_compromise = event["timestamp"].isoformat()
+        initial_time.initial_compromise = event_time
         incident.time = initial_time
         incident.title = "Conpot Event"
         incident.short_description = "Traffic to Conpot ICS honeypot"
@@ -132,20 +146,18 @@ class StixTransformer(object):
         indicator = Indicator(title="Conpot Event")
         indicator.description = "Conpot network event"
         indicator.confidence = "High"
-        source_port = Port.from_dict(
-            {"port_value": event["remote"][1], "layer4_protocol": "tcp"}
-        )
+        source_port = Port.from_dict({"port_value": src_port, "layer4_protocol": "tcp"})
         dest_port = Port.from_dict(
             {
-                "port_value": self.protocol_to_port_mapping[event["data_type"]],
+                "port_value": self.protocol_to_port_mapping[protocol],
                 "layer4_protocol": "tcp",
             }
         )
         source_ip = Address.from_dict(
-            {"address_value": event["remote"][0], "category": Address.CAT_IPV4}
+            {"address_value": src_ip, "category": Address.CAT_IPV4}
         )
         dest_ip = Address.from_dict(
-            {"address_value": event["public_ip"], "category": Address.CAT_IPV4}
+            {"address_value": event.get("public_ip"), "category": Address.CAT_IPV4}
         )
         source_address = SocketAddress.from_dict(
             {"ip_address": source_ip.to_dict(), "port": source_port.to_dict()}
@@ -159,15 +171,33 @@ class StixTransformer(object):
                 "destination_socket_address": dest_address.to_dict(),
                 "layer3_protocol": "IPv4",
                 "layer4_protocol": "TCP",
-                "layer7_protocol": event["data_type"],
+                "layer7_protocol": protocol,
                 "source_tcp_state": "ESTABLISHED",
                 "destination_tcp_state": "ESTABLISHED",
             }
         )
         indicator.add_observable(Observable(network_connection))
 
+        artifact_payload = {
+            "event_type": event.get("event_type"),
+            "request": event.get("request"),
+            "response": event.get("response"),
+            "error": event.get("error"),
+            "data": event.get("data", {}),
+        }
+        if (
+            artifact_payload["event_type"] is None
+            and artifact_payload["request"] is None
+            and artifact_payload["response"] is None
+            and artifact_payload["error"] is None
+            and not artifact_payload["data"]
+            and "data" in event
+        ):
+            # Legacy events stored the full payload under data only.
+            artifact_payload = event["data"]
+
         artifact = Artifact()
-        artifact.data = json.dumps(event["data"])
+        artifact.data = json.dumps(artifact_payload)
         artifact.packaging.append(ZlibCompression())
         artifact.packaging.append(Base64Encoding())
         indicator.add_observable(Observable(artifact))
