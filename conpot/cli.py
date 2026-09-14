@@ -28,7 +28,6 @@ import sys
 from configparser import ConfigParser, NoSectionError, NoOptionError
 
 import gevent
-from lxml import etree
 
 import conpot
 import conpot.core as conpot_core
@@ -36,8 +35,8 @@ from conpot.core.protocol_startup import start_services
 from conpot.core.templates import (
     format_template_list,
     list_available_templates,
+    load_base_template,
     resolve_template_directory,
-    validate_template,
 )
 from conpot.utils import ext_ip
 from conpot.utils.logging import setup_logging
@@ -224,18 +223,16 @@ def main():
     logger.info("Starting Conpot using template: {}".format(root_template_directory))
     logger.info("Starting Conpot using configuration found in: {}".format(args.config))
 
-    template_base = os.path.join(root_template_directory, "template.xml")
-    if os.path.isfile(template_base):
-        validate_template(
-            template_base, os.path.join(package_directory, "template.xsd")
-        )
-        dom_base = etree.parse(template_base)
-    else:
-        logger.error("Could not access template configuration")
-        sys.exit(1)
+    template, template_base = load_base_template(
+        root_template_directory, package_directory
+    )
 
     session_manager = conpot_core.get_sessionManager()
-    conpot_core.get_databus().initialize(template_base)
+    # TOML dicts initialize the databus directly; XML still uses the file path.
+    if isinstance(template, dict):
+        conpot_core.get_databus().initialize(template)
+    else:
+        conpot_core.get_databus().initialize(template_base)
 
     # initialize the virtual file system
     fs_url = config.get("virtual_file_system", "fs_url")
@@ -267,7 +264,7 @@ def main():
         package_directory,
         config,
         args,
-        dom_base,
+        template,
         session_manager,
         public_ip,
     )
