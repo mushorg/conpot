@@ -14,7 +14,7 @@ install:
 
 .PHONY: test
 test:
-	uv run pytest --junitxml=junit/test-results.xml --cov=conpot --cov-report=xml --cov-report=html
+	uv run pytest --junitxml=junit/test-results.xml
 
 .PHONY: lint
 lint:

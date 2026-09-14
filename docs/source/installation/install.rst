@@ -68,7 +68,7 @@ If you prefer not to install uv, you can build from a git clone using a PEP 517â
     $ source conpot-env/bin/activate
     $ pip install ./path/to/conpot
 
-Optional test dependencies (pytest, pytest-cov) are listed in the ``dev`` dependency group in ``pyproject.toml``; with uv, use ``uv sync --group dev``. With pip alone, install those packages manually if you need them.
+Optional test dependencies (pytest) are listed in the ``dev`` dependency group in ``pyproject.toml``; with uv, use ``uv sync --group dev``. With pip alone, install those packages manually if you need them.
 
 Classic virtualenv workflow
 ---------------------------

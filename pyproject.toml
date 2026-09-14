@@ -92,19 +92,8 @@ conpot = ["**/__pycache__/*", "**/*.py", "**/*.pyc", "ConpotTempFS/**"]
 dev = [
     "black==26.5.1",
     "pytest",
-    "pytest-cov",
 ]
 
 [tool.black]
 target-version = ["py314"]
 required-version = "26.5.1"
-
-[tool.coverage.report]
-omit = ["*/tests/*"]
-exclude_lines = [
-    "pragma: no cover",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-]
-ignore_errors = true

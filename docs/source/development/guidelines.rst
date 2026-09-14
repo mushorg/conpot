@@ -23,7 +23,7 @@ Dependencies are declared in ``pyproject.toml`` and locked in ``uv.lock``. Insta
 
   uv sync --group dev
 
-That creates ``.venv`` and installs the project plus development tools (pytest, pytest-cov, etc.). Typical commands:
+That creates ``.venv`` and installs the project plus development tools (pytest, etc.). Typical commands:
 
 ::
 
