@@ -38,6 +38,16 @@ uv run conpot --template default -f
 - Style: PEP8, 4 spaces, no one-line conditionals. Run Black before claiming work done.
 - Match neighboring protocol and test style when editing.
 
+## Connection handling (TCP protocol servers)
+
+Scanners (nmap `-A`, banner grabs, etc.) often open a socket and idle or die without a clean FIN. A `recv()` with no timeout parks the greenlet forever; the session never logs `CONNECTION_LOST` and looks like a one-shot alert until restart (see issue #441 / Guardian AST).
+
+- Set `self.timeout` (typically `5`) in `__init__` and call `sock.settimeout(self.timeout)` at the start of `handle` — same pattern as S7, Modbus, IEC104, Guardian AST.
+- Catch `socket.timeout` (and usually `socket.error`) explicitly; break out of the read loop. Do **not** swallow timeouts in a bare `except Exception` that continues the loop.
+- Always finish the session: log disconnect, `session.add_event({"type": "CONNECTION_LOST"})`, and `sock.close()` (prefer `try`/`finally` so cleanup runs on timeout, peer reset, or normal close).
+- Bound every read path: incomplete frames, declared lengths, and “read until delimiter” loops must not wait without a timeout (unauthenticated clients can stall the shared gevent loop).
+- Prefer `StreamServer`’s per-connection greenlets; do not introduce a single-connection bottleneck.
+
 ## Testing
 
 Prefer `spawn_test_server` / `teardown_test_server` from `conpot.utils.greenlet` (loads template + protocol XML, binds `127.0.0.1`).
