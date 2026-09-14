@@ -79,14 +79,14 @@ class SlaveBase(Databank):
             logger.debug("Working mode: %s" % mode)
 
             if mode == "tcp":
-                if slave_id == 0 or slave_id == 255:
+                # Serve any template-configured internal slave by unit id
+                # (issue #353). UID 255 remains the conventional Modbus/TCP
+                # "this device" address; other IDs map 1:1 to <slave id="...">.
+                if 0 <= slave_id <= 255:
                     slave = self.get_slave(slave_id)
                     response_pdu = slave.handle_request(request_pdu)
                     response = query.build_response(response_pdu)
                 else:
-                    # TODO:
-                    # Shall we return SLAVE DEVICE FAILURE, or ILLEGAL ACCESS?
-                    # Would it be better to make this configurable?
                     r = struct.pack(
                         ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
                     )
@@ -115,8 +115,6 @@ class SlaveBase(Databank):
                     # make the full response
                     response = query.build_response(response_pdu)
                 else:
-                    # TODO:
-                    # Same here. Return SLAVE DEVICE FAILURE or ILLEGAL ACCESS?
                     r = struct.pack(
                         ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
                     )

@@ -46,9 +46,10 @@ class TestModbusServer(unittest.TestCase):
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port
 
-        # We have to use different slave IDs under different modes. In tcp mode,
-        # only 255 and 0 make sense. However, modbus_tcp.TcpMaster explicitly
-        # ignores slave ID 0. Therefore we can only use 255 in tcp mode.
+        # We have to use different slave IDs under different modes. In tcp mode
+        # any configured internal unit id works (including 255). In serial mode
+        # the default template is exercised via slave id 1. modbus_tcp.TcpMaster
+        # ignores slave ID 0, so tcp-mode tests that need a single id use 255.
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
@@ -162,18 +163,21 @@ class TestModbusServer(unittest.TestCase):
         self.assertEqual("127.0.0.1", modbus_log_item["remote"][0])
         self.assertEqual("modbus", modbus_log_item["data_type"])
 
-        req = (
-            "000100000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
+        req_suffix = (
+            "000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
         ).encode()
-        # testing the actual modbus data
-        modbus_expected_payload = {
-            "function_code": 1,
-            "slave_id": self.target_slave_id,
-            "request": req,
-            "response": b"0110ffffffffffffffffffffffffffffffff",
-        }
-
-        self.assertDictEqual(modbus_expected_payload, modbus_log_item["data"])
+        # testing the actual modbus data (transaction id is process-global in
+        # modbus_tk.TcpQuery, so do not assert a fixed MBAP tid)
+        self.assertEqual(1, modbus_log_item["data"]["function_code"])
+        self.assertEqual(self.target_slave_id, modbus_log_item["data"]["slave_id"])
+        self.assertTrue(
+            modbus_log_item["data"]["request"].endswith(req_suffix),
+            modbus_log_item["data"]["request"],
+        )
+        self.assertEqual(
+            b"0110ffffffffffffffffffffffffffffffff",
+            modbus_log_item["data"]["response"],
+        )
 
     def test_report_slave_id(self):
         """

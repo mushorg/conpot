@@ -23,7 +23,16 @@ Modbus
 
 The ``<device_info />`` section allows to define the device info returned to a Modbus 43 function call.
 
-The ``<slave />`` section allows you to define the slaves. Every slave definition is separated into ``<blocks />``.
+The ``<slave />`` section defines **internal** Modbus slaves. Each slave is a databus-backed
+memory map (``<blocks />``) addressed by its ``id`` (Modbus unit id). Conpot never forwards
+requests to an external PLC; every unit id you configure is served from the template.
+
+``mode`` selects addressing semantics:
+
+* ``tcp`` — any configured unit id (including ``255``, the usual Modbus/TCP “this device”
+  address) is served from the matching internal slave.
+* ``serial`` — unit id ``0`` is treated as a serial-line broadcast (no response); ids
+  ``1``–``247`` address internal slaves.
 
 An binary output block has the type ``COILS``, binary input blocks ``DISCRETE_INPUTS``. You define the starting address
 and size. ``ANALOG_INPUTS`` hold data in byte size.
@@ -50,6 +59,29 @@ you can easily fill it with random values.
 
 ``HOLDING_REGISTERS`` can be considered as temporary data storage. You define them with the starting address and their
 size. Holding registers don't have any initial value.
+
+Example with several internal slaves (each ``id`` is a distinct unit id):
+
+.. code-block:: xml
+
+    <mode>tcp</mode>
+    <slaves>
+        <slave id="1">
+            <blocks>
+                <!-- coils / registers for unit id 1 -->
+            </blocks>
+        </slave>
+        <slave id="2">
+            <blocks>
+                <!-- independent memory map for unit id 2 -->
+            </blocks>
+        </slave>
+        <slave id="255">
+            <blocks>
+                <!-- conventional Modbus/TCP “this device” unit id -->
+            </blocks>
+        </slave>
+    </slaves>
 
 SNMP
 ~~~~
