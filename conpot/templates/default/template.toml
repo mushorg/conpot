@@ -2,7 +2,17 @@
 unit = "multi-protocol sample"
 vendor = "Conpot"
 description = "Sample profile enabling most Conpot protocols (Siemens-flavored identity strings for deception)"
-protocols = ["bacnet", "enip", "ftp", "http", "ipmi", "modbus", "s7comm", "snmp", "tftp"]
+protocols = [
+    "bacnet",
+    "enip",
+    "ftp",
+    "http",
+    "ipmi",
+    "modbus",
+    "s7comm",
+    "snmp",
+    "tftp",
+]
 creator = "the conpot team"
 
 # Databus keys: plain scalars are stored as-is.
