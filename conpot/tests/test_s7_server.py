@@ -18,7 +18,10 @@
 from gevent import monkey
 
 monkey.patch_all()
+import socket
 import unittest
+from struct import pack
+
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -35,6 +38,11 @@ class TestS7Server(unittest.TestCase):
 
     def tearDown(self):
         teardown_test_server(self.s7_instance, self.greenlet)
+
+    def _connect(self, src_tsap=0x100, dst_tsap=0x102):
+        con = s7comm_client.s7(self.server_host, self.server_port, src_tsap, dst_tsap)
+        con.Connect()
+        return con
 
     def test_s7(self):
         """
@@ -85,3 +93,35 @@ class TestS7Server(unittest.TestCase):
             except AssertionError:
                 print((sec, item, val))
                 raise
+
+    def test_unknown_szl_does_not_crash(self):
+        """Unknown SZL IDs must not raise TypeError on len(int) (issue #507)."""
+        sock = socket.socket()
+        sock.settimeout(2)
+        sock.connect((self.server_host, self.server_port))
+        # COTP CR + S7 negotiate + SZL read for unsupported ID 0x9999
+        sock.sendall(bytes.fromhex("0300001611e00000000600c1020100c2020102c0010a"))
+        self.assertTrue(sock.recv(1024))
+        sock.sendall(
+            bytes.fromhex("0300001902f08032010000ccc100080000f0000001000103c0")
+        )
+        self.assertTrue(sock.recv(1024))
+        sock.sendall(
+            bytes.fromhex(
+                "0300002102f080320700001200000800080001120411440100ff09000499990000"
+            )
+        )
+        reply = sock.recv(1024)
+        sock.close()
+        # Server must answer (previously crashed while packing int data).
+        self.assertTrue(reply)
+
+    def test_szl_module_identification_hardware_firmware(self):
+        """SZL 0x0011 indexes 6/7 must pack version words without struct.error."""
+        con = self._connect()
+        for index in (6, 7):
+            data = con.Function(0x04, 0x04, 0x01, pack("!HH", 0x0011, index))
+            self.assertGreaterEqual(len(data), 8)
+            # Wire format carries ASCII 'V''3' in the version word (0x5633).
+            self.assertIn(b"V3", data)
+        con.s.close()
