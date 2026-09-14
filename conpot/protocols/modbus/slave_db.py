@@ -56,8 +56,25 @@ class SlaveBase(Databank):
         try:
             # extract the pdu and the slave id
             slave_id, request_pdu = query.parse_request(request)
-            if len(request_pdu) > 0:
-                (func_code,) = struct.unpack(">B", request_pdu[:1])
+
+            # No function code → cannot build an exception response. Discard
+            # like a real server (issue #511).
+            if not request_pdu:
+                logger.info(
+                    "Discarding Modbus request with empty PDU (slave_id=%s)",
+                    slave_id,
+                )
+                return (
+                    None,
+                    {
+                        "request": codecs.encode(request, "hex"),
+                        "slave_id": slave_id,
+                        "function_code": None,
+                        "response": b"",
+                    },
+                )
+
+            (func_code,) = struct.unpack(">B", request_pdu[:1])
 
             logger.debug("Working mode: %s" % mode)
 

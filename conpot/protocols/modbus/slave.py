@@ -86,6 +86,12 @@ class MBSlave(Slave):
 
         with self._data_lock:  # thread-safe
             try:
+                # Empty PDU is a framing error: there is no function code to
+                # echo in an exception response. Real servers discard silently
+                # (see Modbus Messaging on TCP/IP / serial line guides).
+                if not request_pdu:
+                    raise ModbusInvalidRequestError("Request PDU is empty")
+
                 # get the function code
                 (self.function_code,) = struct.unpack(">B", request_pdu[:1])
 

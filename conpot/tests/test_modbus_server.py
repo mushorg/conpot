@@ -253,6 +253,57 @@ class TestModbusServer(unittest.TestCase):
 
         self.assertEqual(data, b"")
 
+    def test_empty_pdu_is_discarded(self):
+        """
+        Regression test for issue #511.
+
+        MBAP length 1 is unit id only (empty PDU). Real Modbus servers send
+        no exception response for framing errors; Conpot must discard without
+        crashing the handler greenlet on struct.unpack of the missing FC.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # length=1: only unit id follows, no function code
+        header = struct.pack(">HHHB", 0, 0, 1, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
+
+        # Handler must still accept a valid request on a new connection.
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
+        with gevent.Timeout(2.0, TimeoutError("server did not answer valid request")):
+            data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
+
+    def test_empty_pdu_databank_discards_without_response(self):
+        """
+        Databank must return no response for an empty PDU (serial broadcast
+        was the original #511 crash path) instead of unpacking a missing FC.
+        """
+        query = modbus_tcp.TcpQuery()
+        # length=1, unit id 0 → empty PDU; serial mode would broadcast.
+        request = struct.pack(">HHHB", 0, 0, 1, 0)
+        response, logdata = self.modbus._databank.handle_request(
+            query, request, "serial"
+        )
+        self.assertIsNone(response)
+        self.assertEqual(logdata["slave_id"], 0)
+        self.assertIsNone(logdata["function_code"])
+        self.assertEqual(logdata["response"], b"")
+
+        with self.assertRaises(modbus_tcp.ModbusInvalidRequestError):
+            self.modbus._databank.get_slave(self.target_slave_id).handle_request(
+                b"", broadcast=True
+            )
+
     def test_incomplete_request_is_rejected(self):
         """
         A client that declares a valid length then half-closes before the

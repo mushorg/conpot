@@ -134,10 +134,12 @@ class ModbusServer(modbus.Server):
                     session.add_event({"type": "CONNECTION_TERMINATED"})
                     break
                 _, _, length = struct.unpack(">HHH", request[:6])
-                # MBAP length covers unit id + PDU and must be at least 1.
-                # Scanners (e.g. nmap modbus-info) often send length 0; that
-                # fails modbus_tk's MBAP check and used to kill this greenlet.
-                if length < 1:
+                # MBAP length covers unit id + PDU. Legal minimum is 2
+                # (unit id + function code). Length 0/1 are reserved/malformed;
+                # scanners (e.g. nmap modbus-info) often send length 0, and
+                # length 1 yields an empty PDU that used to crash the greenlet
+                # (issue #511).
+                if length < 2:
                     logger.info(
                         "Modbus client %s declared an invalid length %s, "
                         "dropping connection. (%s)",
