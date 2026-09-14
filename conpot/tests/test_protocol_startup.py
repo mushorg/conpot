@@ -194,12 +194,14 @@ def test_start_log_worker():
         ),
     ):
         worker, greenlet = protocol_startup.start_log_worker(
-            "config", "dom", "session", "1.2.3.4"
+            "config", "dom", "session", "1.2.3.4", template_directory="/tmpl"
         )
 
     assert worker is fake_worker
     assert greenlet is fake_greenlet
-    lw_cls.assert_called_once_with("config", "dom", "session", "1.2.3.4")
+    lw_cls.assert_called_once_with(
+        "config", "dom", "session", "1.2.3.4", template_directory="/tmpl"
+    )
 
 
 def test_start_services_combines_all():

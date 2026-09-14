@@ -69,6 +69,37 @@ def discover_template_protocols(template_dir):
     return ", ".join(found) if found else "N/A"
 
 
+def discover_protocol_ports(template_dir, protocol_names):
+    """Read listen ports for ``protocol_names`` from TOML/XML protocol templates.
+
+    Returns a dict of protocol name to int port for entries that could be resolved.
+    TOML is preferred when both formats exist. Missing or unreadable files are skipped.
+    """
+    import ast
+
+    ports = {}
+    if not os.path.isdir(template_dir):
+        return ports
+
+    for name in protocol_names:
+        toml_path = os.path.join(template_dir, "{0}.toml".format(name))
+        xml_path = os.path.join(template_dir, "{0}.xml".format(name))
+        try:
+            if os.path.isfile(toml_path):
+                cfg = template_parse.parse_toml_config(toml_path)
+                port = cfg.get(name, {}).get("port")
+                if port is not None:
+                    ports[name] = int(port)
+            elif os.path.isfile(xml_path):
+                dom = etree.parse(xml_path)
+                attrs = dom.xpath("//{0}/@port".format(name))
+                if attrs:
+                    ports[name] = int(ast.literal_eval(attrs[0]))
+        except (OSError, ValueError, TypeError, etree.XMLSyntaxError) as exc:
+            logger.debug("Could not resolve port for %s: %s", name, exc)
+    return ports
+
+
 def get_template_metadata(template_path):
     """Parse core template metadata from a template.xml or template.toml path.
 

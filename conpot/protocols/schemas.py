@@ -1,6 +1,5 @@
-from schema import Schema, And
+from schema import Schema
 
-bacnet = Schema({})
 tftp = Schema(
     {
         "tftp": {

@@ -1,14 +1,4 @@
 from schema import Schema, And
-from lxml import etree
-
-
-def validate_xml_template(xml_file, xsd_file):
-    xml_schema = etree.parse(xsd_file)
-    xsd = etree.XMLSchema(xml_schema)
-    xml = etree.parse(xml_file)
-    if not xsd.validate(xml):
-        raise ValueError(xsd.error_log)
-
 
 base_schema = Schema(
     {

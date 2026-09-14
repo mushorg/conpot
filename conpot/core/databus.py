@@ -89,14 +89,22 @@ class Databus(object):
         for key, value in template["core"]["databus"]["key_value_mappings"].items():
             assert key not in self._data
             logger.debug("Initializing %s with %s", key, value)
-            if isinstance(value, str) and value.startswith("conpot"):
-                namespace, _classname = value.rsplit(".", 1)
-                module = __import__(namespace, fromlist=[_classname])
-                _class = getattr(module, _classname)
-                # No params supported in TOML path yet
-                self.set_value(key, _class())
-            elif isinstance(value, str) and value.lstrip().startswith("["):
-                self.set_value(key, eval(value))
+            if isinstance(value, dict):
+                if "function" in value:
+                    namespace, _classname = value["function"].rsplit(".", 1)
+                    module = __import__(namespace, fromlist=[_classname])
+                    _class = getattr(module, _classname)
+                    params = value.get("params")
+                    if params is not None:
+                        self.set_value(key, _class(*(tuple(params))))
+                    else:
+                        self.set_value(key, _class())
+                elif "value" in value:
+                    self.set_value(key, eval(value["value"]))
+                else:
+                    raise Exception(
+                        "Unknown databus mapping for {0}: {1}".format(key, value)
+                    )
             else:
                 self.set_value(key, value)
 

@@ -35,7 +35,9 @@ logger = logging.getLogger(__name__)
 
 
 class LogWorker(object):
-    def __init__(self, config, template, session_manager, public_ip):
+    def __init__(
+        self, config, template, session_manager, public_ip, template_directory=None
+    ):
         self.config = config
         self.log_queue = session_manager.log_queue
         self.session_manager = session_manager
@@ -78,7 +80,9 @@ class LogWorker(object):
 
         if config.getboolean("taxii", "enabled"):
             # TODO: support for certificates
-            self.taxii_logger = TaxiiLogger(config, template)
+            self.taxii_logger = TaxiiLogger(
+                config, template, template_directory=template_directory
+            )
 
         self.enabled = True
 

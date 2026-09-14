@@ -48,13 +48,20 @@ CONPOT_NAMESPACE_URL = "http://mushmush.org/conpot"
 
 
 class StixTransformer(object):
-    def __init__(self, config, template):
+    def __init__(self, config, template, template_directory=None):
         self.protocol_to_port_mapping = dict(
             modbus=502,
             snmp=161,
             http=80,
             s7comm=102,
         )
+        if template_directory:
+            from conpot.core.templates import discover_protocol_ports
+
+            discovered = discover_protocol_ports(
+                template_directory, list(self.protocol_to_port_mapping.keys())
+            )
+            self.protocol_to_port_mapping.update(discovered)
         conpot_namespace = Namespace(CONPOT_NAMESPACE_URL, CONPOT_NAMESPACE, "")
         idgen.set_id_namespace(conpot_namespace)
 

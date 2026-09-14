@@ -159,9 +159,17 @@ def start_protocols(root_template_directory, package_directory, args):
     return servers
 
 
-def start_log_worker(config, template, session_manager, public_ip):
+def start_log_worker(
+    config, template, session_manager, public_ip, template_directory=None
+):
     """Spawn LogWorker greenlet. Returns (log_worker, greenlet)."""
-    log_worker = LogWorker(config, template, session_manager, public_ip)
+    log_worker = LogWorker(
+        config,
+        template,
+        session_manager,
+        public_ip,
+        template_directory=template_directory,
+    )
     greenlet = spawn_startable_greenlet(log_worker)
     greenlet.link_exception(on_unhandled_greenlet_exception)
     return log_worker, greenlet
@@ -241,7 +249,11 @@ def start_services(
     """Start protocols, LogWorker, and proxy. Returns list of (server, greenlet)."""
     servers = start_protocols(root_template_directory, package_directory, args)
     log_worker, greenlet = start_log_worker(
-        config, template, session_manager, public_ip
+        config,
+        template,
+        session_manager,
+        public_ip,
+        template_directory=root_template_directory,
     )
     servers.append((log_worker, greenlet))
     servers.extend(start_proxy(root_template_directory))

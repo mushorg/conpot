@@ -93,15 +93,18 @@ def test_default_protocols_match_filesystem():
         or os.path.isfile(os.path.join(default_dir, "{0}.toml".format(name)))
     )
     assert discover_template_protocols(default_dir) == ", ".join(expected)
-    meta = get_template_metadata(os.path.join(default_dir, "template.xml"))
+    template_base = os.path.join(default_dir, "template.toml")
+    if not os.path.isfile(template_base):
+        template_base = os.path.join(default_dir, "template.xml")
+    meta = get_template_metadata(template_base)
     assert meta["protocols"] == ", ".join(expected)
 
 
 def test_get_template_metadata():
-    template_xml = os.path.join(
-        package_directory, "templates", "default", "template.xml"
+    template_toml = os.path.join(
+        package_directory, "templates", "default", "template.toml"
     )
-    meta = get_template_metadata(template_xml)
+    meta = get_template_metadata(template_toml)
     assert meta["creator"] == "the conpot team"
     assert meta["description"]
 
