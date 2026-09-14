@@ -35,11 +35,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def cleanse_byte_string(packet):
-    new_packet = packet.decode("latin-1").replace("b", "")
-    return new_packet.encode("latin-1")
-
-
 @conpot_protocol
 class S7Server(object):
     def __init__(self, template, template_directory, args):
@@ -98,7 +93,7 @@ class S7Server(object):
                     break
                 data += sock.recv(length - 4, socket.MSG_WAITALL)
 
-                tpkt_packet = TPKT().parse(cleanse_byte_string(data))
+                tpkt_packet = TPKT().parse(data)
                 cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
                 if cotp_base_packet.tpdu_type == 0xE0:
                     # connection request
