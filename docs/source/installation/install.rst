@@ -12,7 +12,13 @@ Install build dependencies for lxml, gevent, and cryptography:
 
     $ sudo apt-get install gcc libxslt1-dev python3-dev libevent-dev libffi-dev libssl-dev
 
-Other distributions need the equivalent development headers and a compiler.
+To run the full test suite you also need ``ipmitool`` (used by the IPMI tests; not required at runtime):
+
+::
+
+    $ sudo apt-get install ipmitool
+
+Other distributions need the equivalent development headers, a compiler, and ``ipmitool`` for tests.
 
 Install uv (recommended for development)
 ------------------------------------------
@@ -36,13 +42,13 @@ Run Conpot:
 
     $ uv run conpot --template default -f
 
-Run tests:
+Run tests (after installing ``ipmitool`` as above):
 
 ::
 
     $ uv run pytest
 
-The project ``Makefile`` targets ``install``, ``test``, and ``format`` call uv the same way.
+Or ``make test``. The project ``Makefile`` targets ``install``, ``test``, and ``format`` call uv the same way. See :doc:`../development/guidelines` for more contributor notes.
 
 Updating dependencies (maintainers and contributors): edit ``pyproject.toml``, run ``uv lock``, and commit the updated ``uv.lock`` so CI stays reproducible.
 

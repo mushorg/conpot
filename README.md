@@ -15,3 +15,17 @@ The documentation can be found [here](https://conpot.readthedocs.io/). If you ar
 If you want to tinker around and write your own template, change ports etc., use a [host install](https://conpot.readthedocs.io/en/latest/installation/install.html). From a git checkout, dependencies are managed with [uv](https://docs.astral.sh/uv/) (`uv sync --group dev`); details are in that guide.
 
 The FAQ is [here](https://conpot.readthedocs.io/en/latest/faq.html).
+
+## Development / tests
+
+Install [uv](https://docs.astral.sh/uv/), then from a git checkout:
+
+```bash
+# Debian/Ubuntu: build deps + ipmitool (IPMI tests only; not needed at runtime)
+sudo apt-get install gcc libxslt1-dev python3-dev libevent-dev libffi-dev libssl-dev ipmitool
+
+uv sync --group dev
+uv run pytest   # or: make test
+```
+
+More detail: [host install](https://conpot.readthedocs.io/en/latest/installation/install.html) and [development guidelines](https://conpot.readthedocs.io/en/latest/development/guidelines.html).
