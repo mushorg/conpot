@@ -23,7 +23,7 @@ import random
 
 import gevent
 import gevent.event
-
+from lxml import etree
 
 logger = logging.getLogger(__name__)
 
@@ -75,22 +75,56 @@ class Databus(object):
         self._observer_map[key].append(callback)
 
     def initialize(self, template):
+        """Initialize from a TOML template dict or a legacy template.xml path."""
         self.reset()
         assert self.initialized.isSet() is False
-        logger.debug("Initializing databus")
+        if isinstance(template, str):
+            self._initialize_from_xml(template)
+        else:
+            self._initialize_from_toml(template)
+        self.initialized.set()
+
+    def _initialize_from_toml(self, template):
+        logger.debug("Initializing databus from TOML template")
         for key, value in template["core"]["databus"]["key_value_mappings"].items():
             assert key not in self._data
-            logging.debug("Initializing %s with %s", key, value)
-            if value.startswith("conpot"):
+            logger.debug("Initializing %s with %s", key, value)
+            if isinstance(value, str) and value.startswith("conpot"):
                 namespace, _classname = value.rsplit(".", 1)
                 module = __import__(namespace, fromlist=[_classname])
                 _class = getattr(module, _classname)
-                # No params supported
+                # No params supported in TOML path yet
                 self.set_value(key, _class())
+            elif isinstance(value, str) and value.lstrip().startswith("["):
+                self.set_value(key, eval(value))
             else:
-                # TODO (lr): eval value
                 self.set_value(key, value)
-        self.initialized.set()
+
+    def _initialize_from_xml(self, config_file):
+        logger.debug("Initializing databus using %s.", config_file)
+        dom = etree.parse(config_file)
+        entries = dom.xpath("//core/databus/key_value_mappings/*")
+        for entry in entries:
+            key = entry.attrib["name"]
+            value = entry.xpath("./value/text()")[0].strip()
+            value_type = str(entry.xpath("./value/@type")[0])
+            assert key not in self._data
+            logger.debug("Initializing %s with %s as a %s.", key, value, value_type)
+            if value_type == "value":
+                self.set_value(key, eval(value))
+            elif value_type == "function":
+                namespace, _classname = value.rsplit(".", 1)
+                params = entry.xpath("./value/@param")
+                module = __import__(namespace, fromlist=[_classname])
+                _class = getattr(module, _classname)
+                if len(params) > 0:
+                    # eval param to list
+                    params = eval(params[0])
+                    self.set_value(key, _class(*(tuple(params))))
+                else:
+                    self.set_value(key, _class())
+            else:
+                raise Exception("Unknown value type: {0}".format(value_type))
 
     def reset(self):
         logger.debug("Resetting databus.")

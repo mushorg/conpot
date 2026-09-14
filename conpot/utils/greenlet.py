@@ -46,14 +46,29 @@ def spawn_test_server(server_class, template, protocol, args=None, port=0):
     conpot_dir = os.path.dirname(conpot.__file__)
 
     template_dir = f"{conpot_dir}/templates/{template}"
+    template_toml = f"{template_dir}/template.toml"
     template_xml = f"{template_dir}/template.xml"
-    protocol_xml = f"{template_dir}/{protocol}/{protocol}.xml"
+    protocol_toml = f"{template_dir}/{protocol}.toml"
+    protocol_xml = f"{template_dir}/{protocol}.xml"
 
-    core.get_databus().initialize(template_xml)
+    if os.path.isfile(template_toml):
+        from conpot.templates.parse import parse_toml_config
 
-    server = server_class(
-        template=protocol_xml, template_directory=template_dir, args=args
-    )
+        core.get_databus().initialize(parse_toml_config(template_toml))
+    else:
+        core.get_databus().initialize(template_xml)
+
+    if os.path.isfile(protocol_toml):
+        from conpot.templates.parse import parse_toml_config
+
+        protocol_cfg = parse_toml_config(protocol_toml)[protocol]
+        server = server_class(
+            template=protocol_cfg, template_directory=template_dir, args=args
+        )
+    else:
+        server = server_class(
+            template=protocol_xml, template_directory=template_dir, args=args
+        )
 
     greenlet = spawn_startable_greenlet(server, "127.0.0.1", port)
     greenlet.scheduled_once.wait()
@@ -66,7 +81,7 @@ def teardown_test_server(server, greenlet):
     greenlet.get()
 
 
-# this is really a test helper but start_protocol.py wants to use it too
+# this is really a test helper but tools/start_protocol.py wants to use it too
 def init_test_server_by_name(name, port=0):
     server_class = protocols.name_mapping[name]
 

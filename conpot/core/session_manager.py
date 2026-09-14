@@ -55,6 +55,17 @@ class SessionManager:
             self._sessions.append(attack_session)
         return attack_session
 
+    def delete_session(self, id):
+        for i, session in enumerate(self._sessions):
+            if session.id == id:
+                del self._sessions[i]
+                break
+
     def purge_sessions(self):
+        # Drop session objects so the next get_session() creates a fresh
+        # AttackSession bound to the new queue. Replacing only log_queue left
+        # stale sessions writing into the discarded queue (and tests that
+        # read sessionManager.log_queue then saw nothing).
+        self._sessions = []
         # there is no native purge/clear mechanism for gevent queues, so...
         self.log_queue = Queue()

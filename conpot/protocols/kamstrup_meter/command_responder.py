@@ -22,7 +22,6 @@ from lxml import etree
 
 from .register import KamstrupRegister
 
-
 logger = logging.getLogger(__name__)
 
 

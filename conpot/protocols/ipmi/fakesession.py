@@ -28,7 +28,7 @@ from pyghmi.ipmi.private.session import Session
 import random
 import hmac
 import hashlib
-from Crypto.Cipher import AES
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,9 @@ class FakeSession(Session):
         self.bmc_handlers = {}
         self.userid = userid
         self.password = password
+        # pyghmi >= 1.5 _initsession() calls _getmaxtimeout(), which needs this.
+        # Session.__init__ sets it; FakeSession does not call super().
+        self.maxtimeout = 3
         self._initsession()
         self.sockaddr = (bmc, port)
         self.server = None
@@ -87,6 +90,21 @@ class FakeSession(Session):
         elif payload_type == 0 or payload_type == 1:
             # payload_type == 0; IPMI message
             # payload_type == 1; SOL(Serial Over Lan)
+            presession_v2 = (
+                payload_type == 0
+                and not (data[5] & 0b01000000)
+                and not (data[5] & 0b10000000)
+                and struct.unpack("<I", rawdata[6:10])[0] == 0
+                and self.k1 is None
+            )
+            if presession_v2:
+                psize = data[14] + (data[15] << 8)
+                ipmi_payload = data[16 : 16 + psize]
+                if len(ipmi_payload) < psize:
+                    self.server.close_server_session()
+                    return
+                self._ipmi15(list(ipmi_payload))
+                return
             if not (data[5] & 0b01000000):
                 # non-authenticated payload
                 self.server.close_server_session()
@@ -122,9 +140,13 @@ class FakeSession(Session):
             payload = data[16 : 16 + psize]
             if encryption_bit:
                 iv = rawdata[16:32]
-                decrypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                decrypted = decrypter.decrypt(
-                    struct.pack("%dB" % len(payload[16:]), *payload[16:])
+                cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
+                decryptor = cipher.decryptor()
+                decrypted = (
+                    decryptor.update(
+                        struct.pack("%dB" % len(payload[16:]), *payload[16:])
+                    )
+                    + decryptor.finalize()
                 )
                 payload = struct.unpack("%dB" % len(decrypted), decrypted)
                 padsize = payload[-1] + 1
@@ -315,9 +337,13 @@ class FakeSession(Session):
                 iv = os.urandom(16)
                 message += list(struct.unpack("16B", iv))
                 payloadtocrypt = self._aespad(payload)
-                crypter = AES.new(self.aeskey, AES.MODE_CBC, iv)
-                crypted = crypter.encrypt(
-                    struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)
+                cipher = Cipher(algorithms.AES(self.aeskey), modes.CBC(iv))
+                encryptor = cipher.encryptor()
+                crypted = (
+                    encryptor.update(
+                        struct.pack("%dB" % len(payloadtocrypt), *payloadtocrypt)
+                    )
+                    + encryptor.finalize()
                 )
                 crypted = list(struct.unpack("%dB" % len(crypted), crypted))
                 message += crypted

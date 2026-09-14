@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -83,7 +83,7 @@ class TestHTTPServer(unittest.TestCase):
         """
         # retrieve configuration from xml
         dir_name = os.path.dirname(conpot.__file__)
-        dom = etree.parse(dir_name + "/templates/default/http/http.xml")
+        dom = etree.parse(dir_name + "/templates/default/http.xml")
 
         # check for proper tarpit support
         tarpit = dom.xpath(

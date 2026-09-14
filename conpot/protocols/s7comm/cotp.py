@@ -43,7 +43,6 @@ class COTP(object):
             )
 
     def parse(self, packet):
-
         try:
             header = unpack("!BBB", packet[:3])
         except struct.error:
@@ -87,8 +86,24 @@ class COTPConnectionPacket:
         #          ---------------------------------------
         #           "n" Block repeats until end of packet
 
-    def dissect(self, packet):
+    @staticmethod
+    def _decode_tsap(data):
+        # ISO 8073 TSAPs are opaque; classic S7 uses 1-2 byte numeric IDs.
+        if len(data) == 1:
+            return data[0]
+        if len(data) == 2:
+            return unpack("!H", data)[0]
+        return data
 
+    @staticmethod
+    def _pack_tsap_param(code, value):
+        if isinstance(value, (bytes, bytearray)):
+            data = bytes(value)
+            return pack("!BB", code, len(data)) + data
+        # Preserve historical 2-byte encoding for numeric TSAPs.
+        return pack("!BBH", code, 2, value)
+
+    def dissect(self, packet):
         # dissect fixed header
         try:
             fixed_header = unpack("!HHB", packet[:5])
@@ -99,34 +114,32 @@ class COTPConnectionPacket:
         self.src_ref = fixed_header[1]
         self.opt_field = fixed_header[2]
 
-        # dissect variable header
+        # dissect variable header — param lengths are not limited to 1/2 bytes
+        # (issue #452: tools such as S7-1200 PLC Control send longer TSAPs).
         chunk = packet[5:]
         while len(chunk) > 0:
-            chunk_param_header = unpack("!BB", chunk[:2])
-            chunk_param_code = int(chunk_param_header[0])
-            chunk_param_length = chunk_param_header[1]
-
-            if chunk_param_length == 1:
-                param_unpack_structure = "!B"
-            elif chunk_param_length == 2:
-                param_unpack_structure = "!H"
-            else:
+            if len(chunk) < 2:
                 raise ParseException("s7comm", "malformed variable header structure")
 
-            chunk_param_data = unpack(
-                param_unpack_structure, chunk[2 : 2 + chunk_param_length]
-            )
+            chunk_param_code = chunk[0]
+            chunk_param_length = chunk[1]
+            if len(chunk) < 2 + chunk_param_length:
+                raise ParseException("s7comm", "malformed variable header structure")
+
+            chunk_param_data = chunk[2 : 2 + chunk_param_length]
 
             if chunk_param_code == 0xC1:
-                self.src_tsap = chunk_param_data[0]
+                self.src_tsap = self._decode_tsap(chunk_param_data)
             elif chunk_param_code == 0xC2:
-                self.dst_tsap = chunk_param_data[0]
+                self.dst_tsap = self._decode_tsap(chunk_param_data)
             elif chunk_param_code == 0xC0:
+                if chunk_param_length < 1:
+                    raise ParseException(
+                        "s7comm", "malformed variable header structure"
+                    )
                 self.tpdu_size = chunk_param_data[0]
-            else:
-                raise ParseException("s7comm", "unknown parameter code")
+            # Unknown ISO 8073 options: skip so the honeypot stays resilient.
 
-            # remove this part of the chunk
             chunk = chunk[2 + chunk_param_length :]
 
         return self
@@ -136,26 +149,13 @@ class COTP_ConnectionConfirm(COTPConnectionPacket):
     def __init__(
         self, dst_ref=0, src_ref=0, opt_field=0, src_tsap=0, dst_tsap=0, tpdu_size=0
     ):
-        self.dst_ref = dst_ref
-        self.src_ref = src_ref
-        self.opt_field = opt_field
-        self.src_tsap = src_tsap
-        self.dst_tsap = dst_tsap
-        self.tpdu_size = tpdu_size
-        super().__init__()
+        super().__init__(dst_ref, src_ref, opt_field, src_tsap, dst_tsap, tpdu_size)
 
     def assemble(self):
-        return pack(
-            "!HHBBBHBBH",
-            self.dst_ref,
-            self.src_ref,
-            self.opt_field,
-            0xC1,  # param code:   src-tsap
-            0x02,  # param length: 2 bytes
-            self.src_tsap,
-            0xC2,  # param code:   dst-tsap
-            0x02,  # param length: 2 bytes
-            self.dst_tsap,
+        return (
+            pack("!HHB", self.dst_ref, self.src_ref, self.opt_field)
+            + self._pack_tsap_param(0xC1, self.src_tsap)
+            + self._pack_tsap_param(0xC2, self.dst_tsap)
         )
 
 
@@ -163,27 +163,12 @@ class COTP_ConnectionRequest(COTPConnectionPacket):
     def __init__(
         self, dst_ref=0, src_ref=0, opt_field=0, src_tsap=0, dst_tsap=0, tpdu_size=0
     ):
-        self.dst_ref = dst_ref
-        self.src_ref = src_ref
-        self.opt_field = opt_field
-        self.src_tsap = src_tsap
-        self.dst_tsap = dst_tsap
-        self.tpdu_size = tpdu_size
-        super().__init__()
+        super().__init__(dst_ref, src_ref, opt_field, src_tsap, dst_tsap, tpdu_size)
 
     def assemble(self):
-        return pack(
-            "!HHBBBHBBHBBB",
-            self.dst_ref,
-            self.src_ref,
-            self.opt_field,
-            0xC1,  # param code:   src-tsap
-            0x02,  # param length: 2 bytes
-            self.src_tsap,
-            0xC2,  # param code:   dst-tsap
-            0x02,  # param length: 2 bytes
-            self.dst_tsap,
-            0xC0,  # param code:   tpdu-size
-            0x01,  # param length: 1 byte
-            self.tpdu_size,
+        return (
+            pack("!HHB", self.dst_ref, self.src_ref, self.opt_field)
+            + self._pack_tsap_param(0xC1, self.src_tsap)
+            + self._pack_tsap_param(0xC2, self.dst_tsap)
+            + pack("!BBB", 0xC0, 1, self.tpdu_size)
         )

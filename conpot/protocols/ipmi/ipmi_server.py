@@ -92,11 +92,25 @@ class IpmiServer(object):
         csum &= 0xFF
         return csum
 
+    def _add_event(self, address, event_data):
+        session = conpot_core.get_session(
+            "ipmi",
+            address[0],
+            address[1],
+            self.sock.getsockname()[0],
+            self.port,
+        )
+        session.add_event(event_data)
+
     def handle(self, data, address):
         # make sure self.session exists
         if not address[0] in self.sessions.keys() or not hasattr(self, "session"):
             # new session for new source
             logger.info("New IPMI traffic from %s", address)
+            self._add_event(
+                address,
+                {"type": "NEW_CONNECTION", "request": data, "response": None},
+            )
             self.session = FakeSession(address[0], "", "", address[1])
             self.session.server = self
             self.uuid = uuid.uuid4()
@@ -162,13 +176,15 @@ class IpmiServer(object):
                     if channel != 0xE:
                         self.close_server_session()
                         return
-                    (clientaddr, clientlun) = struct.unpack("BB", data[17:19])
+                    clientaddr, clientlun = struct.unpack("BB", data[17:19])
                     level &= 0b1111
                     self.send_auth_cap(
-                        myaddr, mylun, clientaddr, clientlun, session.sockaddr
+                        myaddr, mylun, clientaddr, clientlun, session.sockaddr, data
                     )
 
-    def send_auth_cap(self, myaddr, mylun, clientaddr, clientlun, sockaddr):
+    def send_auth_cap(
+        self, myaddr, mylun, clientaddr, clientlun, sockaddr, request=None
+    ):
         header = b"\x06\x00\xff\x07\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10"
 
         headerdata = (clientaddr, clientlun | (7 << 2))
@@ -180,12 +196,25 @@ class IpmiServer(object):
         bodydata = struct.unpack("B" * len(header[17:]), header[17:])
         header += chr_py3(self._checksum(*bodydata))
         self.session.stage += 1
+        self.session.ipmicallback = self.handle_client_request
         logger.info("Connection established with %s", sockaddr)
+        self._add_event(
+            sockaddr,
+            {
+                "type": "GET_CHANNEL_AUTH_CAPABILITIES",
+                "request": request,
+                "response": header,
+            },
+        )
         self.session.send_data(header, sockaddr)
 
     def close_server_session(self):
         logger.info("IPMI Session closed %s", self.session.sockaddr[0])
         # cleanup session
+        self._add_event(
+            self.session.sockaddr,
+            {"type": "CONNECTION_LOST", "request": None, "response": None},
+        )
         del self.sessions[self.session.sockaddr[0]]
         del self.session
 
@@ -375,7 +404,36 @@ class IpmiServer(object):
         )[0]
 
     def handle_client_request(self, request):
-        if request["netfn"] == 6 and request["command"] == 0x3B:
+        if request["netfn"] == 6 and request["command"] == 0x54:
+            # Get Channel Cipher Suites — pre-session RMCP+ (ipmitool queries this
+            # when no -C is given). Suite 3 matches _got_rmcp_openrequest algorithms.
+            d = request["data"]
+            if len(d) < 3:
+                self.session._send_ipmi_net_payload(code=0xC7)
+                return
+            ch, payload_type, selector = d[0], d[1], d[2]
+            list_index = selector & 0x1F
+            by_suite = selector & 0x80
+            if payload_type != 0 or ch not in (0x00, 0x01, 0x0E):
+                self.session._send_ipmi_net_payload(code=0xCC)
+                logger.info(
+                    "IPMI Get Channel Cipher Suites rejected (channel/type) from %s",
+                    self.session.sockaddr,
+                )
+                return
+            if not by_suite:
+                self.session._send_ipmi_net_payload(code=0xC1)
+                return
+            if list_index == 0:
+                suite = [0xC0, 3, 1, 1, 1]
+                self.session._send_ipmi_net_payload(code=0, data=[ch] + suite)
+            else:
+                self.session._send_ipmi_net_payload(code=0, data=[ch])
+            logger.info(
+                "IPMI response sent (Get Channel Cipher Suites) to %s",
+                self.session.sockaddr,
+            )
+        elif request["netfn"] == 6 and request["command"] == 0x3B:
             # set session privilage level
             pendingpriv = request["data"][0]
             returncode = 0

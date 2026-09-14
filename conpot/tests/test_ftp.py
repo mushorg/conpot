@@ -27,12 +27,11 @@ import conpot.core as conpot_core
 from conpot.protocols.ftp.ftp_server import FTPServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
-from conpot.utils.networking import sanitize_file_name
+from slugify import slugify
 import ftplib  # Use ftplib's client for more authentic testing
 
 
 class TestFTPServer(unittest.TestCase):
-
     """
     All tests are executed in a similar way. We run a valid/invalid FTP request/command and check for valid
     response. Testing is done by sending/receiving files in data channel related commands.
@@ -77,10 +76,23 @@ class TestFTPServer(unittest.TestCase):
         self.client = ftplib.FTP()
         self.client_connect()
 
+    def _remove_data_fs_upload(self, file_name):
+        """Remove data_fs copies of an uploaded file.
+
+        Upload names embed a second-precision timestamp from sanitize_file_name(),
+        so regenerating that name later is racy. Match on client address + slug.
+        """
+        host, port = self.client.sock.getsockname()[:2]
+        prefix = f"({host}, {port})-"
+        suffix = "-" + slugify(file_name)
+        for name in self.data_fs.listdir("/"):
+            if name.startswith(prefix) and name.endswith(suffix):
+                self.data_fs.remove(name)
+
     def test_auth(self):
         """Test for user, pass and quit commands."""
         # test with anonymous
-        self.assertEqual(self.client_connect(), "200 FTP server ready.")
+        self.assertEqual(self.client_connect(), "220 FTP server ready.")
         self.assertIn("Technodrome - Mouser Factory.", self.client.login())
         self.client_refresh()
         # test with registered user nobody:nobody
@@ -119,6 +131,38 @@ class TestFTPServer(unittest.TestCase):
         self.assertEqual(
             self.client.sendcmd("noop"), "200 I successfully done nothin'."
         )
+
+    def test_command_channel_framing(self):
+        """Pipelined and split writes must be framed on CRLF before dispatch."""
+        from conpot.protocols.ftp.ftp_base_handler import FTPHandlerBase
+        import gevent.queue
+
+        handler = object.__new__(FTPHandlerBase)
+        handler.terminator = b"\r\n"
+        handler.buffer_limit = 2048
+        handler.client_address = ("127.0.0.1", 1234)
+        handler.disconnect_client = True
+        handler._cmd_channel_remainder = b""
+        handler._command_channel_input_q = gevent.queue.Queue()
+        handler.respond = lambda response: None
+
+        # Two commands in one write (the CI failure mode for PORT+LIST).
+        handler._enqueue_framed_commands(b"NOOP\r\nSYST\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"NOOP\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"SYST\r\n")
+        self.assertEqual(handler._cmd_channel_remainder, b"")
+
+        # Incomplete line waits for the terminator.
+        handler._enqueue_framed_commands(b"NO")
+        self.assertTrue(handler._command_channel_input_q.empty())
+        handler._enqueue_framed_commands(b"OP\r\n")
+        self.assertEqual(handler._command_channel_input_q.get(), b"NOOP\r\n")
+
+        # End-to-end: pipelined NOOPs over a live connection.
+        self.client_init()
+        self.client.sock.sendall(b"NOOP\r\nNOOP\r\n")
+        self.assertEqual(self.client.getresp(), "200 I successfully done nothin'.")
+        self.assertEqual(self.client.getresp(), "200 I successfully done nothin'.")
 
     def test_stru(self):
         self.client_init()
@@ -464,12 +508,7 @@ class TestFTPServer(unittest.TestCase):
             "ftp_testing_stor.txt", self.ftp_server.handler.config.vfs.listdir("/")
         )
         self.vfs.remove("ftp_testing_stor.txt")
-        _data_fs_file = sanitize_file_name(
-            "ftp_testing_stor.txt",
-            self.client.sock.getsockname()[0],
-            self.client.sock.getsockname()[1],
-        )
-        self.data_fs.remove(_data_fs_file)
+        self._remove_data_fs_upload("ftp_testing_stor.txt")
 
     def test_appe(self):
         self.client_init()
@@ -494,12 +533,7 @@ class TestFTPServer(unittest.TestCase):
             self.assertEqual(_file_contents, _data_1 + _data_2)
         finally:
             self.vfs.remove(_file_name)
-            _data_fs_file = sanitize_file_name(
-                _file_name,
-                self.client.sock.getsockname()[0],
-                self.client.sock.getsockname()[1],
-            )
-            self.data_fs.remove(_data_fs_file)
+            self._remove_data_fs_upload(_file_name)
 
     def test_abor(self):
         self.client_init()

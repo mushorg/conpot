@@ -1,0 +1,11 @@
+SNMPv2-SMI DEFINITIONS ::= BEGIN
+
+org            OBJECT IDENTIFIER ::= { iso 3 }
+dod            OBJECT IDENTIFIER ::= { org 6 }
+internet       OBJECT IDENTIFIER ::= { dod 1 }
+mgmt           OBJECT IDENTIFIER ::= { internet 2 }
+mib-2          OBJECT IDENTIFIER ::= { mgmt 1 }
+
+Integer32 ::= INTEGER (-2147483648..2147483647)
+
+END

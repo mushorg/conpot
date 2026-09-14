@@ -120,7 +120,6 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
     _ac_out_buffer_size = 4096  # outgoing data buffer size (defaults 4096)
 
     def __init__(self, request, client_address, server):
-
         # ------------------------ Environment -------------------------
         self.client_sock = request._sock
         # only commands that are enabled should work! This is configured in the FTPConfig class.
@@ -186,6 +185,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self._command_channel_output_q = gevent.queue.Queue()
         self._data_channel_output_q = gevent.queue.Queue()
         self._data_channel_input_q = gevent.queue.Queue()
+        # Incomplete command-channel bytes waiting for a CRLF terminator.
+        self._cmd_channel_remainder = b""
         self.ftp_greenlets = None  # Keep track of all greenlets
         socketserver.BaseRequestHandler.__init__(
             self, request=request, client_address=client_address, server=server
@@ -237,8 +238,8 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             )
         )
         self.session.add_event({"type": "NEW_CONNECTION"})
-        # send 200 + banner -- new client has connected!
-        self.respond(b"200 " + self.config.banner.encode())
+        # send 220 + banner -- new client has connected! (RFC 959 greeting code)
+        self.respond(b"220 " + self.config.banner.encode())
         #  Is there a delay in command response? < gevent.sleep(0.5) ?
         return socketserver.BaseRequestHandler.setup(self)
 
@@ -282,6 +283,39 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     # -- FTP Command Channel ------------
 
+    def _enqueue_framed_commands(self, data):
+        """
+        Split raw command-channel bytes on CRLF and enqueue one complete line at a
+        time. Partial lines stay in ``_cmd_channel_remainder`` until a terminator
+        arrives. Clients often pipeline commands (e.g. PORT + LIST) into one TCP
+        segment; treating that as a single command breaks active-mode transfers.
+        """
+        self._cmd_channel_remainder += data
+        while self.terminator in self._cmd_channel_remainder:
+            line, self._cmd_channel_remainder = self._cmd_channel_remainder.split(
+                self.terminator, 1
+            )
+            if len(line) > self.buffer_limit:
+                # Flush buffer if a single command gets too long (possible DOS).
+                # RFC-959 specifies that a 500 response should be given in such cases.
+                logger.info(
+                    "FTP command input exceeded buffer from client {}".format(
+                        self.client_address
+                    )
+                )
+                self.respond(b"500 Command too long.")
+                self._cmd_channel_remainder = b""
+                return
+            self._command_channel_input_q.put(line + self.terminator)
+        if len(self._cmd_channel_remainder) > self.buffer_limit:
+            logger.info(
+                "FTP command input exceeded buffer from client {}".format(
+                    self.client_address
+                )
+            )
+            self.respond(b"500 Command too long.")
+            self._cmd_channel_remainder = b""
+
     def handle_cmd_channel(self):
         """Read data from the socket and add it to the _command_channel_input_q for processing"""
         log_data = dict()
@@ -301,22 +335,12 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
             # make sure the socket is ready to read - we would read from the command channel.
             if self.client_sock in socket_read:
                 data = self.client_sock.recv(self.buffer_limit)
-                # put the data in the _input_q for processing
+                # Frame on CRLF before enqueue so pipelined commands stay separate.
                 if data and data != b"":
                     log_data["request"] = data
-                    if self._command_channel_input_q.qsize() > self.buffer_limit:
-                        # Flush buffer if it gets too long (possible DOS condition). RFC-959 specifies that
-                        # 500 response should be given in such cases.
-                        logger.info(
-                            "FTP command input exceeded buffer from client {}".format(
-                                self.client_address
-                            )
-                        )
-                        self.respond(b"500 Command too long.")
-                    else:
-                        self.metrics.command_chanel_bytes_recv += len(data)
-                        self.metrics.last_active = time.time()
-                        self._command_channel_input_q.put(data)
+                    self.metrics.command_chanel_bytes_recv += len(data)
+                    self.metrics.last_active = time.time()
+                    self._enqueue_framed_commands(data)
             # make sure the socket is ready to write
             elif self.client_sock in socket_write and (
                 not self._command_channel_output_q.empty()
@@ -466,7 +490,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                         self._data_sock.sendfile(file_, 0)
                                     _size = self.config.vfs.getsize(file_name)
                                     self.metrics.data_channel_bytes_send += _size
-                                except (fs.errors.FSError, FilesystemError):
+                                except fs.errors.FSError, FilesystemError:
                                     raise
                         if self._data_channel_output_q.qsize() == 0:
                             logger.debug(
@@ -650,7 +674,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     self._uid = self.config.get_uid(self.username)
                     return True
                 return False
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return False
 
     # -- Actual FTP Handler -----------

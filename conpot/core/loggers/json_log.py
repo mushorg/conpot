@@ -27,7 +27,6 @@ class JsonLogger(object):
         self.public_ip = public_ip
 
     def log(self, event):
-
         if self.public_ip is not None:
             dst_ip = self.public_ip
         else:

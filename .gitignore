@@ -9,6 +9,9 @@ __pycache__/
 # C extensions
 *.so
 
+# uv / virtualenv
+.venv/
+
 # Packages
 *.egg
 *.egg-info
@@ -32,6 +35,7 @@ pip-log.txt
 .tox
 .coverage.*
 nosetests.xml
+coverage.xml
 
 # Translations
 *.mo

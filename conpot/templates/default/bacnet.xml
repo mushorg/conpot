@@ -7,6 +7,10 @@
         <max_apdu_length_accepted>1024</max_apdu_length_accepted>
         <segmentation_supported>segmentedBoth</segmentation_supported>
         <model_name>VAV-DD Controller</model_name>
+        <firmware_revision>1.0.0</firmware_revision>
+        <application_software_version>1.0.0</application_software_version>
+        <description>VAV Dual Duct Controller</description>
+        <location>Building 1</location>
         <protocol_version>1</protocol_version>
     </device_info>
     <object_list>

@@ -1,4 +1,4 @@
-# Copyright (C) 2014 Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2014 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -86,7 +86,7 @@ class LogWorker(object):
         sessions = self.session_manager._sessions
         try:
             session_timeout = self.config.get("session", "timeout")
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except configparser.NoSectionError, configparser.NoOptionError:
             session_timeout = 5
         for session in sessions:
             if len(session.data) > 0:

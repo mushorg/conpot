@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=83.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conpot"
+description = "Conpot is an ICS honeypot with the goal to collect intelligence about the motives and methods of adversaries targeting industrial control systems"
+readme = "README.md"
+license = "GPL-2.0-only"
+authors = [{ name = "MushMush Foundation", email = "glastopf@public.honeynet.org" }]
+keywords = ["ICS", "SCADA", "honeypot"]
+classifiers = [
+    "Development Status :: 6 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python",
+    "Topic :: Security",
+]
+requires-python = ">=3.14"
+dynamic = ["version"]
+dependencies = [
+    "setuptools>=83.0.0,<84",
+    "gevent>=1.0",
+    "pysnmp>=7.1.22,<8",
+    "pysnmp-mibs",
+    "pysmi>=1.6.1",
+    "pyasn1==0.6.4",
+    "lxml",
+    "schema",
+    "requests",
+    "sphinx",
+    "libtaxii>=1.1.0",
+    "legacy-cgi; python_version >= '3.13'",
+    "crc16",
+    "natsort",
+    "scapy>=2.6.0,<3",
+    "hpfeeds3",
+    "modbus-tk",
+    "stix-validator",
+    "stix",
+    "cybox",
+    "bacpypes==0.17.0",
+    "pyasyncore>=1.0.2",
+    "pyghmi==1.4.1",
+    "mixbox",
+    "cpppo",
+    # Official fs (pyfilesystem2) last release still imports removed pkg_resources
+    # under setuptools>=82; use community fork with that dependency dropped.
+    "fs @ git+https://github.com/ihaveamac/pyfilesystem2.git@266dff7984b66425d38cbd6cf7c5f18a8a98d369",
+    "python-slugify",
+    "tftpy",
+    "freezegun!=0.3.13",
+    "cryptography==50.0.0",
+    "sphinx_rtd_theme",
+    "psutil",
+]
+
+[project.urls]
+Homepage = "http://conpot.org"
+
+[project.scripts]
+conpot = "conpot.cli:main"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = { attr = "conpot.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["conpot*"]
+
+# Non-Python assets formerly pulled in via MANIFEST.in.
+[tool.setuptools.package-data]
+conpot = [
+    "data.tar",
+    "template.xsd",
+    "testing.cfg",
+    "templates/**/*",
+    "protocols/**/*.xsd",
+    "tests/data/**/*",
+    "tests/data/**/.gitignore",
+]
+
+[tool.setuptools.exclude-package-data]
+conpot = ["**/__pycache__/*", "**/*.py", "**/*.pyc", "ConpotTempFS/**"]
+
+[dependency-groups]
+dev = [
+    "black==26.5.1",
+    "pytest",
+]
+
+[tool.black]
+target-version = ["py314"]
+required-version = "26.5.1"

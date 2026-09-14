@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 
 class MBSlave(Slave):
-
     """
     Customized Modbus slave representation extending modbus_tk.modbus.Slave
     """
@@ -54,7 +53,7 @@ class MBSlave(Slave):
         product_code = info_root.xpath("./ProductCode/text()")[0]
         major_minor_revision = info_root.xpath("./MajorMinorRevision/text()")[0]
 
-        (req_device_id, _) = struct.unpack(">BB", request_pdu[2:4])
+        req_device_id, _ = struct.unpack(">BB", request_pdu[2:4])
         device_info = {0: vendor_name, 1: product_code, 2: major_minor_revision}
 
         # MEI type
@@ -87,6 +86,12 @@ class MBSlave(Slave):
 
         with self._data_lock:  # thread-safe
             try:
+                # Empty PDU is a framing error: there is no function code to
+                # echo in an exception response. Real servers discard silently
+                # (see Modbus Messaging on TCP/IP / serial line guides).
+                if not request_pdu:
+                    raise ModbusInvalidRequestError("Request PDU is empty")
+
                 # get the function code
                 (self.function_code,) = struct.unpack(">B", request_pdu[:1])
 

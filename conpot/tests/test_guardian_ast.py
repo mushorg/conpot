@@ -21,7 +21,8 @@ monkey.patch_all()
 import re
 import unittest
 
-from gevent import socket
+import pytest
+from gevent import sleep, socket
 
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -35,14 +36,20 @@ DATA = {
 }
 
 
-class TestGuardianAST(unittest.TestCase):
-    def setUp(self):
-        self.guardian_ast_server, self.server_greenlet = spawn_test_server(
-            GuardianASTServer, "guardian_ast", "guardian_ast"
-        )
+@pytest.fixture(scope="class")
+def guardian_ast_server(request):
+    """One GuardianAST server for the whole test class (avoids per-test spawn cost)."""
+    server, greenlet = spawn_test_server(
+        GuardianASTServer, "guardian_ast", "guardian_ast"
+    )
+    request.cls.guardian_ast_server = server
+    request.cls.server_greenlet = greenlet
+    yield
+    teardown_test_server(server, greenlet)
 
-    def tearDown(self):
-        teardown_test_server(self.guardian_ast_server, self.server_greenlet)
+
+@pytest.mark.usefixtures("guardian_ast_server")
+class TestGuardianAST(unittest.TestCase):
 
     def test_I20100(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,6 +58,17 @@ class TestGuardianAST(unittest.TestCase):
         data = s.recv(1024)
         s.close()
         # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
+        self.assertEqual(
+            data[:8] + data[24:156], DATA["I20100"][:8] + DATA["I20100"][24:156]
+        )
+
+    def test_I20100_literal_caret_A(self):
+        # telnet/ncat users often type the two characters "^A" instead of SOH
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
+        s.send(b"^AI20100\r\n")
+        data = s.recv(1024)
+        s.close()
         self.assertEqual(
             data[:8] + data[24:156], DATA["I20100"][:8] + DATA["I20100"][24:156]
         )
@@ -99,73 +117,34 @@ class TestGuardianAST(unittest.TestCase):
         s.close()
         self.assertEqual(data, b"9999FF1B\n")
 
-    def test_S60201(self):
+    def _inventory_after_rename(self, rename_cmd):
+        """S602 has no reply; yield so the server applies the rename before I20100."""
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
         s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
-        s.send(b"\x01S60201NONSUPER\r\n")
-        try:
-            _ = s.recv(1024)
-        except socket.timeout:
-            pass
+        s.send(rename_cmd)
+        sleep(0.01)
         s.send(b"\x01I20100\r\n")
         data = s.recv(1024)
         s.close()
+        return data
+
+    def test_S60201(self):
+        data = self._inventory_after_rename(b"\x01S60201NONSUPER\r\n")
         self.assertIn(b"NONSUPER", data)
 
     def test_S60202(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
-        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
-        s.send(b"\x01S60202TESTLEAD\r\n")
-        try:
-            _ = s.recv(1024)
-        except socket.timeout:
-            pass
-        s.send(b"\x01I20100\r\n")
-        data = s.recv(1024)
-        s.close()
+        data = self._inventory_after_rename(b"\x01S60202TESTLEAD\r\n")
         self.assertIn(b"TESTLEAD", data)
 
     def test_S60203(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
-        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
-        s.send(b"\x01S60203TESTDIESEL\r\n")
-        try:
-            _ = s.recv(1024)
-        except socket.timeout:
-            pass
-        s.send(b"\x01I20100\r\n")
-        data = s.recv(1024)
-        s.close()
+        data = self._inventory_after_rename(b"\x01S60203TESTDIESEL\r\n")
         self.assertIn(b"TESTDIESEL", data)
 
     def test_S60204(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
-        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
-        s.send(b"\x01S60204TESTPREMIUM\r\n")
-        try:
-            _ = s.recv(1024)
-        except socket.timeout:
-            pass
-        s.send(b"\x01I20100\r\n")
-        data = s.recv(1024)
-        s.close()
+        data = self._inventory_after_rename(b"\x01S60204TESTPREMIUM\r\n")
         self.assertIn(b"TESTPREMIUM", data)
 
     def test_S60200(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.5)
-        s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
-        s.send(b"\x01S60200ULTIMATETEST\r\n")
-        try:
-            _ = s.recv(1024)
-        except socket.timeout:
-            pass
-        s.send(b"\x01I20100\r\n")
-        data = s.recv(1024)
-        s.close()
+        data = self._inventory_after_rename(b"\x01S60200ULTIMATETEST\r\n")
         count = len(re.findall("(?=ULTIMATETEST)", data.decode()))
         self.assertEqual(count, 4)

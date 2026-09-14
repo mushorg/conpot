@@ -10,6 +10,7 @@ from modbus_tk.modbus import (
     ModbusInvalidRequestError,
 )
 from modbus_tk import defines
+from modbus_tk.modbus_tcp import ModbusInvalidMbapError
 
 from conpot.protocols.modbus.slave import MBSlave
 import logging
@@ -18,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 
 class SlaveBase(Databank):
-
     """
     Database keeping track of the slaves.
     """
@@ -56,20 +56,37 @@ class SlaveBase(Databank):
         try:
             # extract the pdu and the slave id
             slave_id, request_pdu = query.parse_request(request)
-            if len(request_pdu) > 0:
-                (func_code,) = struct.unpack(">B", request_pdu[:1])
+
+            # No function code → cannot build an exception response. Discard
+            # like a real server (issue #511).
+            if not request_pdu:
+                logger.info(
+                    "Discarding Modbus request with empty PDU (slave_id=%s)",
+                    slave_id,
+                )
+                return (
+                    None,
+                    {
+                        "request": codecs.encode(request, "hex"),
+                        "slave_id": slave_id,
+                        "function_code": None,
+                        "response": b"",
+                    },
+                )
+
+            (func_code,) = struct.unpack(">B", request_pdu[:1])
 
             logger.debug("Working mode: %s" % mode)
 
             if mode == "tcp":
-                if slave_id == 0 or slave_id == 255:
+                # Serve any template-configured internal slave by unit id
+                # (issue #353). UID 255 remains the conventional Modbus/TCP
+                # "this device" address; other IDs map 1:1 to <slave id="...">.
+                if 0 <= slave_id <= 255:
                     slave = self.get_slave(slave_id)
                     response_pdu = slave.handle_request(request_pdu)
                     response = query.build_response(response_pdu)
                 else:
-                    # TODO:
-                    # Shall we return SLAVE DEVICE FAILURE, or ILLEGAL ACCESS?
-                    # Would it be better to make this configurable?
                     r = struct.pack(
                         ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
                     )
@@ -98,8 +115,6 @@ class SlaveBase(Databank):
                     # make the full response
                     response = query.build_response(response_pdu)
                 else:
-                    # TODO:
-                    # Same here. Return SLAVE DEVICE FAILURE or ILLEGAL ACCESS?
                     r = struct.pack(
                         ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
                     )
@@ -111,9 +126,17 @@ class SlaveBase(Databank):
             # return a server error response
             r = struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
             response = query.build_response(r)
-        except ModbusInvalidRequestError as e:
+        except (ModbusInvalidRequestError, ModbusInvalidMbapError) as e:
             logger.error(e)
-            # TODO: return something here?
+            return (
+                None,
+                {
+                    "request": codecs.encode(request, "hex"),
+                    "slave_id": slave_id,
+                    "function_code": function_code,
+                    "response": b"",
+                },
+            )
 
         if slave:
             function_code = slave.function_code

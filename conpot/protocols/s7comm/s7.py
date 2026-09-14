@@ -31,11 +31,13 @@ class S7(object):
         self.pdu_type = pdu_type
         self.reserved = reserved
         self.request_id = request_id
-        # sometimes "parameters" happen to be of type int, and not a byte string
+        # sometimes "parameters"/"data" happen to be of type int, and not a byte string
         self.param_length = (
             len(parameters) if isinstance(parameters, bytes) else len(str(parameters))
         )
-        self.data_length = len(data)
+        self.data_length = (
+            len(data) if isinstance(data, (bytes, str)) else len(str(data))
+        )
         self.result_info = result_info
         self.parameters = parameters
         self.data = data
@@ -215,7 +217,9 @@ class S7(object):
             chunk = chunk[4 + data_next_bytes :]
             chunk_id += 1
 
-        return 0x00, 0x00
+        # No matching SSL/SZL handler — return empty byte payloads (not ints).
+        # Returning ints used to crash S7.__init__ via len(data).
+        return b"", b""
 
     # W#16#xy11 - module identification
     def request_ssl_17(self, data_ssl_index):
@@ -223,7 +227,6 @@ class S7(object):
         current_ssl = S7.ssl_lists["W#16#xy11"]
 
         if data_ssl_index == 1:  # 0x0001 - component identification
-
             ssl_index_description = "Component identification"
 
             ssl_resp_data = pack(
@@ -260,7 +263,7 @@ class S7(object):
                 str_to_bytes(self.data_bus.get_value(current_ssl["W#16#0006"])),
                 # 10 WORDS  ( MLFB of component: 20 bytes => 19 chars + 1 blank (0x20) )
                 0x0,  # 1  WORD   ( RESERVED )
-                "V3",  # 1  WORD   ( 'V' and first digit of version number )
+                0x5633,  # 1  WORD   ( 'V' and first digit '3' as ASCII bytes )
                 0x539,
             )  # 1  WORD   ( remaining digits of version number )
 
@@ -283,7 +286,7 @@ class S7(object):
                 data_ssl_index,  # 1  WORD   ( Data Index )
                 str_to_bytes(str(0x0)),  # 10 WORDS  ( RESERVED )
                 0x0,  # 1  WORD   ( RESERVED )
-                "V3",  # 1  WORD   ( 'V' and first digit of version number )
+                0x5633,  # 1  WORD   ( 'V' and first digit '3' as ASCII bytes )
                 0x53A,
             )  # 1  WORD   ( remaining digits of version number )
 

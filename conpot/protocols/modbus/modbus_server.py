@@ -134,19 +134,79 @@ class ModbusServer(modbus.Server):
                     session.add_event({"type": "CONNECTION_TERMINATED"})
                     break
                 _, _, length = struct.unpack(">HHH", request[:6])
+                # MBAP length covers unit id + PDU. Legal minimum is 2
+                # (unit id + function code). Length 0/1 are reserved/malformed;
+                # scanners (e.g. nmap modbus-info) often send length 0, and
+                # length 1 yields an empty PDU that used to crash the greenlet
+                # (issue #511).
+                if length < 2:
+                    logger.info(
+                        "Modbus client %s declared an invalid length %s, "
+                        "dropping connection. (%s)",
+                        address[0],
+                        length,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
+                # A conforming Modbus/TCP frame never needs more than 254
+                # bytes here (1-byte unit id + up to 253 bytes of PDU, the
+                # limit inherited from serial Modbus). An unauthenticated
+                # client can otherwise declare up to 0xFFFF and force this
+                # handler to read up to ~64KB one byte at a time via
+                # sock.recv(1) below, which - since Conpot runs every
+                # protocol as greenlets on one shared event loop - can stall
+                # every other emulated service for the duration of the read.
+                if length > 254:
+                    logger.info(
+                        "Modbus client %s declared an oversized length %s, "
+                        "dropping connection. (%s)",
+                        address[0],
+                        length,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 while len(request) < (length + 6):
                     try:
-                        new_byte = sock.recv(1)
-                        request += new_byte
+                        remaining = (length + 6) - len(request)
+                        new_bytes = sock.recv(remaining)
+                        if not new_bytes:
+                            break
+                        request += new_bytes
                     except Exception:
                         break
+                # Peer closed or timed out before the declared body arrived.
+                # Do not hand a truncated frame to modbus_tk - parse_request
+                # raises ModbusInvalidMbapError and would crash the greenlet.
+                if len(request) < (length + 6):
+                    logger.info(
+                        "Modbus client %s sent incomplete request "
+                        "(got %s bytes, expected %s). (%s)",
+                        address[0],
+                        len(request),
+                        length + 6,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 query = modbus_tcp.TcpQuery()
 
                 # logdata is a dictionary containing request, slave_id,
                 # function_code and response
-                response, logdata = self._databank.handle_request(
-                    query, request, self.mode
-                )
+                try:
+                    response, logdata = self._databank.handle_request(
+                        query, request, self.mode
+                    )
+                except modbus_tcp.ModbusInvalidMbapError as e:
+                    logger.info(
+                        "Modbus client %s sent invalid MBAP: %s (%s)",
+                        address[0],
+                        e,
+                        session.id,
+                    )
+                    session.add_event({"type": "CONNECTION_TERMINATED"})
+                    break
                 logdata["request"] = codecs.encode(request, "hex")
                 session.add_event(logdata)
 

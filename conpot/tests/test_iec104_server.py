@@ -21,6 +21,7 @@ import socket
 import time
 import unittest
 from unittest.mock import patch
+import gevent
 import conpot.core as conpot_core
 from conpot.protocols.IEC104 import IEC104_server, frames
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -223,3 +224,51 @@ class TestIEC104Server(unittest.TestCase):
         self.assertEqual("CONNECTION_LOST", con_lost_event["data"]["type"])
 
         s.close()
+
+    def test_single_byte_then_close_does_not_hang(self):
+        """
+        Regression test for issue #482.
+
+        A client that sends one byte then half-closes used to busy-loop in
+        the header gather while (CPU DoS). The handler must drop the
+        connection promptly and still serve later clients.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", 2404))
+        s.sendall(b"\x68")
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"")
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
+        s.connect(("127.0.0.1", 2404))
+        s.send(frames.STARTDT_act.build())
+        data = s.recv(6)
+        s.close()
+        self.assertSequenceEqual(data, frames.STARTDT_con.build())
+
+    def test_trailing_byte_then_close_does_not_hang(self):
+        """
+        Regression test for issue #482.
+
+        A valid APDU plus one trailing byte left in the TCP buffer, followed
+        by a half-close, must not busy-loop when the leftover byte is read as
+        an incomplete next header.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", 2404))
+        # STARTDT act (6 bytes) + one stray byte
+        s.sendall(frames.STARTDT_act.build() + b"\x00")
+        with gevent.Timeout(2.0, TimeoutError("server did not answer STARTDT")):
+            data = s.recv(6)
+        self.assertSequenceEqual(data, frames.STARTDT_con.build())
+
+        s.shutdown(socket.SHUT_WR)
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"")

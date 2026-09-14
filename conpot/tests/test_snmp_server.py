@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -68,10 +68,11 @@ class TestSNMPServer(unittest.TestCase):
         oid = ((1, 3, 6, 1, 2, 1, 1, 6, 0), rfc1902.OctetString("TESTVALUE"))
         client.set_command(oid, callback=self.mock_callback)
         databus = conpot_core.get_databus()
-        self.assertEqual("TESTVALUE", databus.get_value("sysLocation")._value.decode())
+        self.assertEqual("TESTVALUE", databus.get_value("sysLocation"))
 
     def mock_callback(
         self,
+        snmpEngine,
         sendRequestHandle,
         errorIndication,
         errorStatus,

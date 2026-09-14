@@ -1,36 +1,56 @@
-FROM python:3.8 AS conpot-builder
+# Stage 1: Build stage
+FROM python:3.14 AS conpot-builder
 
+# Install required dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    git \
+    libffi-dev \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the app from the host folder (probably a cloned repo) to the container
+# Set working directory
+WORKDIR /opt/conpot
+
+# Copy the source code to the container
+COPY . .
+
+# Install uv and project dependencies
+RUN pip3 install --no-cache-dir uv \
+    && uv pip install --system --no-cache .
+
+# Stage 2: Runtime stage
+FROM python:3.14-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
 RUN adduser --disabled-password --gecos "" conpot
 
-COPY --chown=conpot:conpot . /opt/conpot/
+# Create required directories and set permissions
+RUN mkdir -p /var/log/conpot \
+    && mkdir -p /usr/local/lib/python3.14/site-packages/conpot/tests/data/data_temp_fs/ftp \
+    && mkdir -p /usr/local/lib/python3.14/site-packages/conpot/tests/data/data_temp_fs/tftp \
+    && chown -R conpot:conpot /var/log/conpot \
+    && chown -R conpot:conpot /usr/local/lib/python3.14/site-packages/conpot/tests/data
 
-# Install Conpot
+# Set working directory and copy dependencies from build stage
+WORKDIR /home/conpot
+COPY --from=conpot-builder /usr/local/lib/python3.14/ /usr/local/lib/python3.14/
+COPY --from=conpot-builder /usr/local/bin/ /usr/local/bin/
+
+# Set permissions for non-root user
+RUN chown -R conpot:conpot /home/conpot
+
+# Switch to non-root user
 USER conpot
 ENV PATH=$PATH:/home/conpot/.local/bin
-RUN pip3 install --user --no-cache-dir /opt/conpot
-
-
-# Run container
-FROM python:3.8-slim
-
-RUN adduser --disabled-password --gecos "" conpot
-WORKDIR /home/conpot
-
-COPY --from=conpot-builder --chown=conpot:conpot /home/conpot/.local/ /home/conpot/.local/
-
-# Create directories
-RUN mkdir -p /var/log/conpot/ \
-    && mkdir -p /data/tftp/ \
-    && chown conpot:conpot /var/log/conpot \
-    && chown conpot:conpot -R /data
-
-USER conpot
-WORKDIR /home/conpot
 ENV USER=conpot
-ENTRYPOINT ["/home/conpot/.local/bin/conpot"]
-CMD ["--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp" ]
+
+# Set the default command
+ENTRYPOINT ["python", "-m", "conpot"]
+CMD ["--template", "default", "--logfile", "/var/log/conpot/conpot.log", "-f", "--temp_dir", "/tmp"]

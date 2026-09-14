@@ -1,4 +1,4 @@
-# Copyright (C) 2015 Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2015 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -136,3 +136,11 @@ class TestIPMI(unittest.TestCase):
         # change the session pass
         result = self.run_cmd(["set", "password", "1", "TEST"])
         self.assertEqual(result, "Set session password\n")
+
+
+class TestFakeSession(unittest.TestCase):
+    def test_init_sets_maxtimeout(self):
+        from conpot.protocols.ipmi.fakesession import FakeSession
+
+        session = FakeSession("127.0.0.1", "", "", 6230)
+        self.assertEqual(session.maxtimeout, 3)

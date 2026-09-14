@@ -14,6 +14,48 @@ Style
 -----
 * We obey to the `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_
 
+Python environment (uv)
+-----------------------
+
+Dependencies are declared in ``pyproject.toml`` and locked in ``uv.lock``. Install `uv <https://docs.astral.sh/uv/>`_, then from the repository root:
+
+::
+
+  uv sync --group dev
+
+That creates ``.venv`` and installs the project plus development tools (pytest, etc.). Typical commands:
+
+::
+
+  uv run pytest
+  uv run conpot --template default -f
+  uv run black .
+
+The root ``Makefile`` exposes ``make install``, ``make test``, and ``make format`` around the same uv commands.
+
+When you add or change a dependency, update ``pyproject.toml``, run ``uv lock``, and commit ``uv.lock`` together with your change.
+
+Read the Docs builds use the root ``.readthedocs.yaml``: the ``install`` job runs ``uv sync --frozen --link-mode=copy`` into ``$READTHEDOCS_VIRTUALENV_PATH`` so published docs match the lockfile. Commit ``uv.lock`` whenever dependencies change or doc builds on Read the Docs will fail.
+
+Running the test suite
+----------------------
+
+1. Install system packages for your distribution. On Debian/Ubuntu, besides the build
+   dependencies listed in :doc:`../installation/install`, install ``ipmitool`` (required
+   by the IPMI tests; not needed to run Conpot itself)::
+
+     sudo apt-get install ipmitool
+
+2. Sync the project and the ``dev`` dependency group, then run pytest::
+
+     uv sync --group dev
+     uv run pytest
+
+   Equivalent: ``make install`` then ``make test``.
+
+CI (``.github/workflows/python.yml``) installs ``gcc`` and ``ipmitool``, runs
+``uv sync --frozen --group dev``, then ``uv run pytest``.
+
 Copyright
 ---------
 * If you are adding a file/code which is produced only by you, feel free to add the license information and a notice who holds the copyrights.
@@ -24,7 +66,7 @@ Recommended git workflow
 For contributors
 ~~~~~~~~~~~~~~~~
 
-0, You can do this step when you are on master, or feature_branch, anytime there are new commits in original project.
+0, You can do this step when you are on main, or feature_branch, anytime there are new commits in original project.
 
 Just one-time add of remote:
 
@@ -37,9 +79,9 @@ And rebase:
 ::
 
   git fetch mushorg
-  git rebase mushorg/master feature_branch
+  git rebase mushorg/main feature_branch
 
-This way, your feature_branch or master will be up-to-date.
+This way, your feature_branch or main will be up-to-date.
 
 1, For every feature, create new branch:
 
@@ -98,15 +140,15 @@ To avoid additional Merge commits, use cherry-pick:
 
 ::
 
-  git checkout master
+  git checkout main
   git remote add user https://github.com/user/conpot.git
   git fetch user
   (look at 'git log user/feature_branch')
   git cherry-pick commit_hash
-  git push origin master
+  git push origin main
   git remote rm user
 
-Comment on pull request that you added it to master, and close pull request.
+Comment on pull request that you added it to main, and close pull request.
 
 This approach is usefull for majority of pull requests (1-3 commits).
 
@@ -114,4 +156,4 @@ If you expect conflicts (a lot of commits in feature branch with a lot of change
 
 Revert will be easier too.
 
-Conflicts should not happen, if feature branch is rebased on current master.
+Conflicts should not happen, if feature branch is rebased on current main.

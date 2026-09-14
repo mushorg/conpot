@@ -14,15 +14,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import errno
+import logging
+import socket
+import struct
+
+import conpot.core as conpot_core
+import gevent
+from gevent.server import StreamServer
+
+from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
 from conpot.protocols.IEC104.IEC104 import IEC104
-from .frames import struct, TESTFR_act, socket, errno
-import logging
-import conpot.core as conpot_core
-from gevent.server import StreamServer
-import gevent
 from .errors import Timeout_t3
-from conpot.core.protocol_wrapper import conpot_protocol
+from .frames import TESTFR_act
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +73,23 @@ class IEC104Server(object):
                             session.add_event({"type": "CONNECTION_LOST"})
                             iec104_handler.disconnect()
                             break
-                        while request and len(request) < 2:
+                        # Gather start + length bytes. An empty recv is EOF; without
+                        # this check a single-byte write followed by close busy-loops
+                        # (issue #482) and never yields to T_3.
+                        while len(request) < 2:
                             new_byte = sock.recv(1)
+                            if not new_byte:
+                                break
                             request += new_byte
+                        if len(request) < 2:
+                            logger.info(
+                                "IEC104 Station disconnected with incomplete "
+                                "header. (%s)",
+                                session.id,
+                            )
+                            session.add_event({"type": "CONNECTION_LOST"})
+                            iec104_handler.disconnect()
+                            break
 
                         _, length = struct.unpack(">BB", request[:2])
                         while len(request) < (length + 2):
@@ -78,6 +97,16 @@ class IEC104Server(object):
                             if not new_byte:
                                 break
                             request += new_byte
+
+                        if len(request) < (length + 2):
+                            logger.info(
+                                "IEC104 Station disconnected with incomplete "
+                                "APDU. (%s)",
+                                session.id,
+                            )
+                            session.add_event({"type": "CONNECTION_LOST"})
+                            iec104_handler.disconnect()
+                            break
 
                         # check if IEC 104 packet or for the first occurrence of the indication 0x68 for IEC 104
                         for elem in list(request):

@@ -19,7 +19,9 @@ from gevent import monkey
 
 monkey.patch_all()
 
+import struct
 import unittest
+import gevent
 import modbus_tk.defines as cst
 import modbus_tk.modbus_tcp as modbus_tcp
 
@@ -44,9 +46,10 @@ class TestModbusServer(unittest.TestCase):
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port
 
-        # We have to use different slave IDs under different modes. In tcp mode,
-        # only 255 and 0 make sense. However, modbus_tcp.TcpMaster explicitly
-        # ignores slave ID 0. Therefore we can only use 255 in tcp mode.
+        # We have to use different slave IDs under different modes. In tcp mode
+        # any configured internal unit id works (including 255). In serial mode
+        # the default template is exercised via slave id 1. modbus_tcp.TcpMaster
+        # ignores slave ID 0, so tcp-mode tests that need a single id use 255.
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
@@ -160,18 +163,21 @@ class TestModbusServer(unittest.TestCase):
         self.assertEqual("127.0.0.1", modbus_log_item["remote"][0])
         self.assertEqual("modbus", modbus_log_item["data_type"])
 
-        req = (
-            "000100000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
+        req_suffix = (
+            "000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
         ).encode()
-        # testing the actual modbus data
-        modbus_expected_payload = {
-            "function_code": 1,
-            "slave_id": self.target_slave_id,
-            "request": req,
-            "response": b"0110ffffffffffffffffffffffffffffffff",
-        }
-
-        self.assertDictEqual(modbus_expected_payload, modbus_log_item["data"])
+        # testing the actual modbus data (transaction id is process-global in
+        # modbus_tk.TcpQuery, so do not assert a fixed MBAP tid)
+        self.assertEqual(1, modbus_log_item["data"]["function_code"])
+        self.assertEqual(self.target_slave_id, modbus_log_item["data"]["slave_id"])
+        self.assertTrue(
+            modbus_log_item["data"]["request"].endswith(req_suffix),
+            modbus_log_item["data"]["request"],
+        )
+        self.assertEqual(
+            b"0110ffffffffffffffffffffffffffffffff",
+            modbus_log_item["data"]["response"],
+        )
 
     def test_report_slave_id(self):
         """
@@ -192,3 +198,131 @@ class TestModbusServer(unittest.TestCase):
         data = s.recv(1024)
         s.close()
         self.assertTrue(b"SIMATIC" in data and b"Siemens" in data)
+
+    def test_oversized_length_is_rejected_without_reading_body(self):
+        """
+        Regression test for the DoS in issue #619.
+
+        A client that declares an oversized MBAP length and then half-closes
+        its write side (sends nothing more) must be dropped as soon as the
+        length is parsed. Before the fix, ModbusServer.handle() would enter
+        `while len(request) < (length + 6): request += sock.recv(1)` - once
+        the peer's write side is closed, recv(1) returns b'' *immediately*
+        on every call instead of raising, so `request` never grows and the
+        loop never terminates: a single such connection pins one CPU core
+        forever and, since Conpot runs every protocol as greenlets on one
+        shared event loop, starves every other protocol Conpot serves.
+
+        This is deliberately not a wall-clock timing assertion - the
+        underlying bug is a genuine infinite loop, not merely a slow one.
+        Note the gevent.Timeout below is best-effort, not a real safety net:
+        against the pre-fix code this test doesn't cleanly fail, it hangs
+        the whole process. A tight CPU-bound loop that never calls anything
+        which yields never gives gevent's hub a chance to run *any* other
+        callback, including the timer backing this very Timeout - confirmed
+        manually with a 15s wall-clock timeout (`timeout 15 python3 ...`)
+        that had to kill the process from the outside. If this test ever
+        hangs your test run instead of failing, that itself is the bug.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        length = 0xFFFF
+        # 7-byte MBAP header: transaction id, protocol id, length, unit id.
+        header = struct.pack(">HHHB", 0, 0, length, 0)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
+
+    def test_zero_length_mbap_is_rejected(self):
+        """
+        nmap modbus probes often send an MBAP header with length 0.
+        That must close the connection cleanly instead of raising
+        ModbusInvalidMbapError and killing the handler greenlet.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # 7-byte MBAP: tid, pid, length=0, unit id
+        header = struct.pack(">HHHB", 0, 0, 0, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
+
+    def test_empty_pdu_is_discarded(self):
+        """
+        Regression test for issue #511.
+
+        MBAP length 1 is unit id only (empty PDU). Real Modbus servers send
+        no exception response for framing errors; Conpot must discard without
+        crashing the handler greenlet on struct.unpack of the missing FC.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # length=1: only unit id follows, no function code
+        header = struct.pack(">HHHB", 0, 0, 1, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")
+
+        # Handler must still accept a valid request on a new connection.
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
+        with gevent.Timeout(2.0, TimeoutError("server did not answer valid request")):
+            data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
+
+    def test_empty_pdu_databank_discards_without_response(self):
+        """
+        Databank must return no response for an empty PDU (serial broadcast
+        was the original #511 crash path) instead of unpacking a missing FC.
+        """
+        query = modbus_tcp.TcpQuery()
+        # length=1, unit id 0 → empty PDU; serial mode would broadcast.
+        request = struct.pack(">HHHB", 0, 0, 1, 0)
+        response, logdata = self.modbus._databank.handle_request(
+            query, request, "serial"
+        )
+        self.assertIsNone(response)
+        self.assertEqual(logdata["slave_id"], 0)
+        self.assertIsNone(logdata["function_code"])
+        self.assertEqual(logdata["response"], b"")
+
+        with self.assertRaises(modbus_tcp.ModbusInvalidRequestError):
+            self.modbus._databank.get_slave(self.target_slave_id).handle_request(
+                b"", broadcast=True
+            )
+
+    def test_incomplete_request_is_rejected(self):
+        """
+        A client that declares a valid length then half-closes before the
+        body arrives must be dropped without crashing the greenlet.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((self.host, self.port))
+        # length=5 means 5 bytes after the 6-byte prefix (unit id + 4 PDU),
+        # but we only send the 7-byte header then close the write side.
+        header = struct.pack(">HHHB", 0, 0, 5, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+            data = s.recv(1024)
+        s.close()
+
+        self.assertEqual(data, b"")

@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -44,8 +44,7 @@ class SQLiteLogger(object):
 
     def _create_db(self):
         cursor = self.conn.cursor()
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS events
+        cursor.execute("""CREATE TABLE IF NOT EXISTS events
             (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session TEXT,
@@ -54,8 +53,7 @@ class SQLiteLogger(object):
                 protocol TEXT,
                 request TEXT,
                 response TEXT
-            )"""
-        )
+            )""")
 
     def log(self, event):
         cursor = self.conn.cursor()

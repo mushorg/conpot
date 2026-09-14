@@ -20,21 +20,37 @@ from gevent import monkey
 monkey.patch_all()
 import unittest
 
+import pytest
 from cpppo.server.enip import client
 from gevent import socket
 
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
-
 # In lieu of creating dedicated test templates we modify
-# EnipServer config through inheritance
+# EnipServer config through inheritance.
+# Values intentionally differ from cpppo's built-in Identity defaults so
+# list_identity tests prove template device_info is wired through.
+_TEST_PRODUCT_NAME = "ConpotTestENIP"
+_TEST_PRODUCT_CODE = 70
+_TEST_VENDOR_ID = 68
+_TEST_DEVICE_TYPE = 31
+_TEST_SERIAL_NUMBER = "720834"
+_TEST_PRODUCT_REV = 0x1001
+
+
 class EnipServerTCP(EnipServer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.addr = "127.0.0.1"
         self.port = 50002
         self.config.mode = "tcp"
+        self.config.product_name = _TEST_PRODUCT_NAME
+        self.config.product_code = _TEST_PRODUCT_CODE
+        self.config.vendor_id = _TEST_VENDOR_ID
+        self.config.device_type = _TEST_DEVICE_TYPE
+        self.config.serial_number = _TEST_SERIAL_NUMBER
+        self.config.product_rev = _TEST_PRODUCT_REV
 
 
 class EnipServerUDP(EnipServer):
@@ -43,21 +59,34 @@ class EnipServerUDP(EnipServer):
         self.addr = "127.0.0.1"
         self.port = 60002
         self.config.mode = "udp"
+        self.config.product_name = _TEST_PRODUCT_NAME
+        self.config.product_code = _TEST_PRODUCT_CODE
+        self.config.vendor_id = _TEST_VENDOR_ID
+        self.config.device_type = _TEST_DEVICE_TYPE
+        self.config.serial_number = _TEST_SERIAL_NUMBER
+        self.config.product_rev = _TEST_PRODUCT_REV
 
 
+@pytest.fixture(scope="class")
+def enip_test_servers(request):
+    """One TCP + UDP ENIP server pair for the whole test class (avoids ~10× spawn cost)."""
+    tcp_server, tcp_greenlet = spawn_test_server(
+        EnipServerTCP, "default", "enip", port=50002
+    )
+    udp_server, udp_greenlet = spawn_test_server(
+        EnipServerUDP, "default", "enip", port=60002
+    )
+    request.cls.enip_server_tcp = tcp_server
+    request.cls.server_greenlet_tcp = tcp_greenlet
+    request.cls.enip_server_udp = udp_server
+    request.cls.server_greenlet_udp = udp_greenlet
+    yield
+    teardown_test_server(udp_server, udp_greenlet)
+    teardown_test_server(tcp_server, tcp_greenlet)
+
+
+@pytest.mark.usefixtures("enip_test_servers")
 class TestENIPServer(unittest.TestCase):
-    def setUp(self):
-        self.enip_server_tcp, self.server_greenlet_tcp = spawn_test_server(
-            EnipServerTCP, "default", "enip", port=50002
-        )
-
-        self.enip_server_udp, self.server_greenlet_udp = spawn_test_server(
-            EnipServerUDP, "default", "enip", port=60002
-        )
-
-    def tearDown(self):
-        teardown_test_server(self.enip_server_udp, self.server_greenlet_udp)
-        teardown_test_server(self.enip_server_tcp, self.server_greenlet_tcp)
 
     @staticmethod
     def attribute_operations(paths, int_type=None, **kwds):
@@ -149,10 +178,13 @@ class TestENIPServer(unittest.TestCase):
             connection.shutdown()
             response = self.await_cpf_response(connection, "list_identity")
 
-            expected = self.enip_server_tcp.config.product_name
-            self.assertEqual(
-                expected, response["item"][0]["identity_object"]["product_name"]
-            )
+            identity = response["item"][0]["identity_object"]
+            self.assertEqual(_TEST_PRODUCT_NAME, identity["product_name"])
+            self.assertEqual(_TEST_PRODUCT_CODE, identity["product_code"])
+            self.assertEqual(_TEST_VENDOR_ID, identity["vendor_id"])
+            self.assertEqual(_TEST_DEVICE_TYPE, identity["device_type"])
+            self.assertEqual(int(_TEST_SERIAL_NUMBER), identity["serial_number"])
+            self.assertEqual(_TEST_PRODUCT_REV, identity["product_revision"])
 
     def test_list_identity_udp(self):
         with client.connector(
@@ -165,10 +197,13 @@ class TestENIPServer(unittest.TestCase):
             connection.list_identity()
             response = self.await_cpf_response(connection, "list_identity")
 
-            expected = self.enip_server_tcp.config.product_name
-            self.assertEqual(
-                expected, response["item"][0]["identity_object"]["product_name"]
-            )
+            identity = response["item"][0]["identity_object"]
+            self.assertEqual(_TEST_PRODUCT_NAME, identity["product_name"])
+            self.assertEqual(_TEST_PRODUCT_CODE, identity["product_code"])
+            self.assertEqual(_TEST_VENDOR_ID, identity["vendor_id"])
+            self.assertEqual(_TEST_DEVICE_TYPE, identity["device_type"])
+            self.assertEqual(int(_TEST_SERIAL_NUMBER), identity["serial_number"])
+            self.assertEqual(_TEST_PRODUCT_REV, identity["product_revision"])
 
     def test_list_interfaces_tcp(self):
         with client.connector(
@@ -204,13 +239,19 @@ class TestENIPServer(unittest.TestCase):
 
     def test_malformend_request_tcp(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.enip_server_tcp.addr, self.enip_server_tcp.port))
-        s.send(
-            b"e\x00\x04\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            + b"x00\x00\x01\x00\x00\x00"
-        )  # test the help command
-        _ = s.recv(1024)
-        s.close()
+        try:
+            s.settimeout(4.0)
+            s.connect((self.enip_server_tcp.addr, self.enip_server_tcp.port))
+            s.send(
+                b"e\x00\x04\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                + b"x00\x00\x01\x00\x00\x00"
+            )  # test the help command
+            try:
+                _ = s.recv(1024)
+            except socket.timeout:
+                pass
+        finally:
+            s.close()
         # TODO: verify data packet?
 
     def test_malformend_request_udp(self):

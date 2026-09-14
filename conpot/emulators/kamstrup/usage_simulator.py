@@ -20,7 +20,6 @@ import logging
 import gevent
 import conpot.core as conpot_core
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -113,10 +112,10 @@ class UsageSimulator(object):
         return self.energy_out
 
     def _get_energy_in_lowres(self):
-        return self.energy_in / 1000
+        return self.energy_in // 1000
 
     def _get_energy_out_lowres(self):
-        return self.energy_out / 1000
+        return self.energy_out // 1000
 
     def _get_voltage_1(self):
         return self.voltage[0]

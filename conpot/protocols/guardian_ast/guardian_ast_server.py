@@ -1,4 +1,4 @@
-# Copyright (C) 2015  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2015 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,6 +24,7 @@ from gevent.server import StreamServer
 import datetime
 import logging
 import random
+import socket
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.networking import str_to_bytes
@@ -38,6 +39,7 @@ AST_ERROR = "9999FF1B\n"
 @conpot_protocol
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
+        self.timeout = 5
         self.server = None
         self.databus = conpot_core.get_databus()
         # dom = etree.parse(template)
@@ -45,6 +47,10 @@ class GuardianASTServer(object):
         logger.info("Conpot GuardianAST initialized")
 
     def handle(self, sock, addr):
+        # Idle scanners (e.g. nmap -A) often leave a TCP connection open with no
+        # further data. Without a recv timeout the greenlet blocks forever and
+        # the session never finishes (GitHub issue #441).
+        sock.settimeout(self.timeout)
         session = conpot_core.get_session(
             "guardian_ast",
             addr[0],
@@ -316,198 +322,216 @@ class GuardianASTServer(object):
             ret += "  4    " + product4 + "  NORMAL\n\n"
             return ret
 
-        while True:
-            try:
-                # Get the initial data
-                request = sock.recv(4096)
-                # The connection has been closed
-                if not request:
-                    break
-                while not (b"\n" in request or b"00" in request):
-                    request += sock.recv(4096)
-                # if first value is not ^A then do nothing
-                # thanks John(achillean) for the help
-                if request[:1] != b"\x01":
-                    logger.info(
-                        "Non ^A command attempt %s:%d. (%s)",
-                        addr[0],
-                        addr[1],
-                        session.id,
-                    )
-                    break
-                # if request is less than 6, than do nothing
-                if len(request) < 6:
-                    logger.info(
-                        "Invalid command attempt %s:%d. (%s)",
-                        addr[0],
-                        addr[1],
-                        session.id,
-                    )
-                    break
+        try:
+            while True:
+                try:
+                    # Get the initial data
+                    request = sock.recv(4096)
+                    # The connection has been closed
+                    if not request:
+                        break
+                    while not (b"\n" in request or b"00" in request):
+                        request += sock.recv(4096)
+                    # Accept real SOH (\x01) or the literal "^A" typed in telnet/ncat
+                    # thanks John(achillean) for the help
+                    if request[:1] == b"\x01":
+                        cmd = request[1:7].decode()  # strip ^A and \n out
+                    elif request[:2] == b"^A":
+                        cmd = request[2:8].decode()
+                    else:
+                        logger.info(
+                            "Non ^A command attempt %s:%d. (%s)",
+                            addr[0],
+                            addr[1],
+                            session.id,
+                        )
+                        break
+                    # if request is less than 6, than do nothing
+                    if len(request) < 6:
+                        logger.info(
+                            "Invalid command attempt %s:%d. (%s)",
+                            addr[0],
+                            addr[1],
+                            session.id,
+                        )
+                        break
 
-                cmds = {
-                    "I20100": I20100,
-                    "I20200": I20200,
-                    "I20300": I20300,
-                    "I20400": I20400,
-                    "I20500": I20500,
-                }
-                cmd = request[1:7].decode()  # strip ^A and \n out
-                response = None
-                if cmd in cmds:
-                    logger.info(
-                        "%s command attempt %s:%d. (%s)",
-                        cmd,
-                        addr[0],
-                        addr[1],
-                        session.id,
-                    )
-                    response = cmds[cmd]()
-                elif cmd.startswith("S6020"):
-                    # change the tank name
-                    if cmd.startswith("S60201"):
-                        # split string into two, the command, and the data
-                        TEMP = request.split(b"S60201")
-                        # if length is less than two, print error
-                        if len(TEMP) < 2:
-                            response = AST_ERROR
-                        # Else the command was entered correctly and continue
-                        else:
-                            # Strip off the carrage returns and new lines
-                            TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
-                            # if Length is less than 22
-                            if len(TEMP1) < 22:
-                                # pad the result to have 22 chars
-                                product1 = TEMP1.ljust(22)
-                            elif len(TEMP1) > 22:
-                                # else only print 22 chars if the result was longer
-                                product1 = TEMP1[:20] + "  "
-                            else:
-                                # else it fits fine (22 chars)
-                                product1 = TEMP1
+                    cmds = {
+                        "I20100": I20100,
+                        "I20200": I20200,
+                        "I20300": I20300,
+                        "I20400": I20400,
+                        "I20500": I20500,
+                    }
+                    response = None
+                    if cmd in cmds:
                         logger.info(
-                            "S60201: %s command attempt %s:%d. (%s)",
-                            TEMP1,
+                            "%s command attempt %s:%d. (%s)",
+                            cmd,
                             addr[0],
                             addr[1],
                             session.id,
                         )
-                    # Follows format for S60201 for comments
-                    elif cmd.startswith("S60202"):
-                        TEMP = request.split(b"S60202")
-                        if len(TEMP) < 2:
-                            response = AST_ERROR
-                        else:
-                            TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
-                            if len(TEMP1) < 22:
-                                product2 = TEMP1.ljust(22)
-                            elif len(TEMP1) > 22:
-                                product2 = TEMP1[:20] + "  "
+                        response = cmds[cmd]()
+                    elif cmd.startswith("S6020"):
+                        # change the tank name
+                        if cmd.startswith("S60201"):
+                            # split string into two, the command, and the data
+                            TEMP = request.split(b"S60201")
+                            # if length is less than two, print error
+                            if len(TEMP) < 2:
+                                response = AST_ERROR
+                            # Else the command was entered correctly and continue
                             else:
-                                product2 = TEMP1
-                        logger.info(
-                            "S60202: %s command attempt %s:%d. (%s)",
-                            TEMP1,
-                            addr[0],
-                            addr[1],
-                            session.id,
-                        )
-                    # Follows format for S60201 for comments
-                    elif cmd.startswith("S60203"):
-                        TEMP = request.split(b"S60203")
-                        if len(TEMP) < 2:
-                            response = AST_ERROR
-                        else:
-                            TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
-                            if len(TEMP1) < 22:
-                                product3 = TEMP1.ljust(22)
-                            elif len(TEMP1) > 22:
-                                product3 = TEMP1[:20] + "  "
+                                # Strip off the carrage returns and new lines
+                                TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
+                                # if Length is less than 22
+                                if len(TEMP1) < 22:
+                                    # pad the result to have 22 chars
+                                    product1 = TEMP1.ljust(22)
+                                elif len(TEMP1) > 22:
+                                    # else only print 22 chars if the result was longer
+                                    product1 = TEMP1[:20] + "  "
+                                else:
+                                    # else it fits fine (22 chars)
+                                    product1 = TEMP1
+                            logger.info(
+                                "S60201: %s command attempt %s:%d. (%s)",
+                                TEMP1,
+                                addr[0],
+                                addr[1],
+                                session.id,
+                            )
+                        # Follows format for S60201 for comments
+                        elif cmd.startswith("S60202"):
+                            TEMP = request.split(b"S60202")
+                            if len(TEMP) < 2:
+                                response = AST_ERROR
                             else:
-                                product3 = TEMP1
-                        logger.info(
-                            "S60203: %s command attempt %s:%d. (%s)",
-                            TEMP1,
-                            addr[0],
-                            addr[1],
-                            session.id,
-                        )
-                    # Follows format for S60201 for comments
-                    elif cmd.startswith("S60204"):
-                        TEMP = request.split(b"S60204")
-                        if len(TEMP) < 2:
-                            response = AST_ERROR
-                        else:
-                            TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
-                            if len(TEMP1) < 22:
-                                product4 = TEMP1.ljust(22)
-                            elif len(TEMP1) > 22:
-                                product4 = TEMP1[:20] + "  "
+                                TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
+                                if len(TEMP1) < 22:
+                                    product2 = TEMP1.ljust(22)
+                                elif len(TEMP1) > 22:
+                                    product2 = TEMP1[:20] + "  "
+                                else:
+                                    product2 = TEMP1
+                            logger.info(
+                                "S60202: %s command attempt %s:%d. (%s)",
+                                TEMP1,
+                                addr[0],
+                                addr[1],
+                                session.id,
+                            )
+                        # Follows format for S60201 for comments
+                        elif cmd.startswith("S60203"):
+                            TEMP = request.split(b"S60203")
+                            if len(TEMP) < 2:
+                                response = AST_ERROR
                             else:
-                                product4 = TEMP1
-                        logger.info(
-                            "S60204: %s command attempt %s:%d. (%s)",
-                            TEMP1,
-                            addr[0],
-                            addr[1],
-                            session.id,
-                        )
-                    # Follows format for S60201 for comments
-                    elif cmd.startswith("S60200"):
-                        TEMP = request.split(b"S60200")
-                        if len(TEMP) < 2:
-                            response = AST_ERROR
-                        else:
-                            TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
-                            if len(TEMP1) < 22:
-                                product1 = TEMP1.ljust(22)
-                                product2 = TEMP1.ljust(22)
-                                product3 = TEMP1.ljust(22)
-                                product4 = TEMP1.ljust(22)
-                            elif len(TEMP1) > 22:
-                                product1 = TEMP1[:20] + "  "
-                                product2 = TEMP1[:20] + "  "
-                                product3 = TEMP1[:20] + "  "
-                                product4 = TEMP1[:20] + "  "
+                                TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
+                                if len(TEMP1) < 22:
+                                    product3 = TEMP1.ljust(22)
+                                elif len(TEMP1) > 22:
+                                    product3 = TEMP1[:20] + "  "
+                                else:
+                                    product3 = TEMP1
+                            logger.info(
+                                "S60203: %s command attempt %s:%d. (%s)",
+                                TEMP1,
+                                addr[0],
+                                addr[1],
+                                session.id,
+                            )
+                        # Follows format for S60201 for comments
+                        elif cmd.startswith("S60204"):
+                            TEMP = request.split(b"S60204")
+                            if len(TEMP) < 2:
+                                response = AST_ERROR
                             else:
-                                product1 = TEMP1
-                                product2 = TEMP1
-                                product3 = TEMP1
-                                product4 = TEMP1
-                        logger.info(
-                            "S60200: %s command attempt %s:%d. (%s)",
-                            TEMP1,
-                            addr[0],
-                            addr[1],
-                            session.id,
-                        )
+                                TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
+                                if len(TEMP1) < 22:
+                                    product4 = TEMP1.ljust(22)
+                                elif len(TEMP1) > 22:
+                                    product4 = TEMP1[:20] + "  "
+                                else:
+                                    product4 = TEMP1
+                            logger.info(
+                                "S60204: %s command attempt %s:%d. (%s)",
+                                TEMP1,
+                                addr[0],
+                                addr[1],
+                                session.id,
+                            )
+                        # Follows format for S60201 for comments
+                        elif cmd.startswith("S60200"):
+                            TEMP = request.split(b"S60200")
+                            if len(TEMP) < 2:
+                                response = AST_ERROR
+                            else:
+                                TEMP1 = TEMP[1].rstrip(b"\r\n").decode()
+                                if len(TEMP1) < 22:
+                                    product1 = TEMP1.ljust(22)
+                                    product2 = TEMP1.ljust(22)
+                                    product3 = TEMP1.ljust(22)
+                                    product4 = TEMP1.ljust(22)
+                                elif len(TEMP1) > 22:
+                                    product1 = TEMP1[:20] + "  "
+                                    product2 = TEMP1[:20] + "  "
+                                    product3 = TEMP1[:20] + "  "
+                                    product4 = TEMP1[:20] + "  "
+                                else:
+                                    product1 = TEMP1
+                                    product2 = TEMP1
+                                    product3 = TEMP1
+                                    product4 = TEMP1
+                            logger.info(
+                                "S60200: %s command attempt %s:%d. (%s)",
+                                TEMP1,
+                                addr[0],
+                                addr[1],
+                                session.id,
+                            )
+                        else:
+                            response = AST_ERROR
                     else:
                         response = AST_ERROR
-                else:
-                    response = AST_ERROR
-                    # log what was entered
-                    logger.info(
-                        "%s command attempt %s:%d. (%s)",
-                        request,
+                        # log what was entered
+                        logger.info(
+                            "%s command attempt %s:%d. (%s)",
+                            request,
+                            addr[0],
+                            addr[1],
+                            session.id,
+                        )
+                    if response:
+                        sock.send(str_to_bytes(response))
+                    session.add_event(
+                        {
+                            "type": "AST {0}".format(cmd),
+                            "request": request,
+                            "response": response,
+                        }
+                    )
+                except socket.timeout:
+                    logger.debug(
+                        "Socket timeout, remote: %s:%d. (%s)",
                         addr[0],
                         addr[1],
                         session.id,
                     )
-                if response:
-                    sock.send(str_to_bytes(response))
-                session.add_event(
-                    {
-                        "type": "AST {0}".format(cmd),
-                        "request": request,
-                        "response": response,
-                    }
-                )
-            except Exception as e:
-                logger.exception(("Unknown Error: {}".format(str(e))))
-        logger.info(
-            "GuardianAST client disconnected %s:%d. (%s)", addr[0], addr[1], session.id
-        )
-        session.add_event({"type": "CONNECTION_LOST"})
+                    break
+                except Exception as e:
+                    logger.exception("Unknown Error: {}".format(str(e)))
+                    break
+        finally:
+            logger.info(
+                "GuardianAST client disconnected %s:%d. (%s)",
+                addr[0],
+                addr[1],
+                session.id,
+            )
+            session.add_event({"type": "CONNECTION_LOST"})
+            sock.close()
 
     def start(self, host, port):
         connection = (host, port)

@@ -14,8 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import logging
+
 import gevent
 import natsort
+
 from conpot.protocols.IEC104.DeviceDataController import addr_in_hex, inro_response
 from conpot.protocols.IEC104.i_frames_check import *
 import conpot.core as conpot_core

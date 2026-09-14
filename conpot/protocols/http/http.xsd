@@ -27,7 +27,7 @@
                             <xs:element name="headers">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="entity">
+                                        <xs:element name="entity" maxOccurs="unbounded">
                                             <xs:complexType>
                                                 <xs:simpleContent>
                                                     <xs:extension base="xs:string">

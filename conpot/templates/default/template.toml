@@ -1,8 +1,8 @@
 [core.template]
-unit = "S7-200"
-vendor = "Siemens"
-description = "Rough simulation of a basic Siemens S7-200 CPU with 2 slaves"
-protocols = ["HTTP", "MODBUS", "s7comm", "SNMP"]
+unit = "multi-protocol sample"
+vendor = "Conpot"
+description = "Sample profile enabling most Conpot protocols (Siemens-flavored identity strings for deception)"
+protocols = ["bacnet", "enip", "ftp", "http", "ipmi", "modbus", "s7comm", "snmp", "tftp"]
 creator = "the conpot team"
 
 [core.databus.key_value_mappings]

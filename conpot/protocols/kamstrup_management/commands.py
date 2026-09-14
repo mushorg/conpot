@@ -374,7 +374,6 @@ class SetConfigCommand(BaseCommand):
         if params:
             params_split = params.split(" ")
             if len(params_split) >= 10:
-
                 if params_split[0] == "1":
                     databus.set_value("use_dhcp", "YES")
                 else:
