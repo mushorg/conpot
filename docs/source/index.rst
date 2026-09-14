@@ -43,6 +43,7 @@ Usage and Frequently asked questions
 .. toctree::
    :maxdepth: 2
 
+   usage/index
    faq
 
 

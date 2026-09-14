@@ -9,3 +9,4 @@ Conpot usage
 
     usage
     customization
+    plc_emulator
