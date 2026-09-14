@@ -28,24 +28,28 @@ logger = logging.getLogger(__name__)
 
 class VirtualFS(object):
     """
-    Conpot's virtual file system. Based on Pyfilesystem2, it would allow us to have
-    arbitrary file uploads while sand boxing them for later analysis. This is how it should look like:
+    Conpot's virtual file system. Based on PyFilesystem2, it allows arbitrary
+    file uploads while sandboxing them for later analysis.
 
-                      [_conpot_vfs]
-                            |
-                            |-- data_fs (persistent)
-                            |    |-- ftp/uploads
-                            |    `-- misc.
-                            |
-                            `-- protocol_fs (temporary, refreshed at startup)
-                                 |-- common
-                                 |-- telnet
-                                 |-- http
-                                 |-- snmp
-                                 `-- ftp etc.
-    :param data_fs_path: Path for storing data_fs. A dictionary with attribute name _protocol_vfs stores all the
-    fs folders made by all the individual protocols.
-    :type data_fs_path: fs.open_fs
+    Layout::
+
+                          [_conpot_vfs]
+                                |
+                                |-- data_fs (persistent)
+                                |    |-- ftp/uploads
+                                |    `-- misc.
+                                |
+                                `-- protocol_fs (temporary, refreshed at startup)
+                                     |-- common
+                                     |-- telnet
+                                     |-- http
+                                     |-- snmp
+                                     `-- ftp etc.
+
+    :param data_fs_path: Path for storing data_fs. A dictionary with attribute
+        name ``_protocol_vfs`` stores all the fs folders made by individual
+        protocols.
+    :type data_fs_path: str
     """
 
     def __init__(self, data_fs_path=None):

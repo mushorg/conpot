@@ -202,7 +202,7 @@ class TestBACnetServer(unittest.TestCase):
         self.assertEqual(exp_pdu.pduData, rec_pdu.pduData)
 
     def test_nmap_vendor_id_query(self):
-        """nmap bacnet-info ReadProperty(vendorIdentifier) against device/*."""
+        """nmap bacnet-info ReadProperty(vendorIdentifier) against ``device/*``."""
         query = nmap_read_property_query(0x78)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(2)

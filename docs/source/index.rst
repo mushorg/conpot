@@ -5,7 +5,7 @@ Conpot is an ICS honeypot with the goal to collect intelligence about the motive
 methods of adversaries targeting industrial control systems.
 
 Installation
--------------
+------------
 
 Basic instructions on how to install Conpot:
 
@@ -17,19 +17,18 @@ Basic instructions on how to install Conpot:
 
    installation/quick_install
    installation/install
+   installation/configuration
 
 Conpot concepts
--------------
-<todo: add some data here>
+---------------
 
 .. toctree::
    :glob:
 
    concepts/*
 
-Developmental guidelines
--------------------------
-<todo: add some data here>
+Development guidelines
+-----------------------
 
 .. toctree::
    :maxdepth: 2
@@ -37,19 +36,16 @@ Developmental guidelines
    development/guidelines
 
 Usage and Frequently asked questions
--------------
-<todo: add some data here>
+------------------------------------
 
 .. toctree::
    :maxdepth: 2
 
+   usage/index
    faq
 
-
 API reference
---------------
 -------------
-<todo: add some data here>
 
 .. toctree::
    :maxdepth: 2

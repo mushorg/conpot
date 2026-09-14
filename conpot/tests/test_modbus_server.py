@@ -121,15 +121,17 @@ class TestModbusServer(unittest.TestCase):
     def test_modbus_logging(self):
         """
         Objective: Test if modbus generates log messages as expected.
-        Expected output is a dictionary with the following structure:
-        {'timestamp': datetime.datetime(2013, 4, 23, 18, 47, 38, 532960),
-         'remote': ('127.0.0.1', 60991),
-         'data_type': 'modbus',
-         'id': '01bd90d6-76f4-43cb-874f-5c8f254367f5',
-         'data': {'function_code': 1,
-                  'slave_id': 1,
-                  'request': '0100010080',
-                  'response': '0110ffffffffffffffffffffffffffffffff'}}
+
+        Expected output is a dictionary with the following structure::
+
+            {'timestamp': datetime.datetime(2013, 4, 23, 18, 47, 38, 532960),
+             'remote': ('127.0.0.1', 60991),
+             'data_type': 'modbus',
+             'id': '01bd90d6-76f4-43cb-874f-5c8f254367f5',
+             'data': {'function_code': 1,
+                      'slave_id': 1,
+                      'request': '0100010080',
+                      'response': '0110ffffffffffffffffffffffffffffffff'}}
         """
 
         self.databus.set_value(

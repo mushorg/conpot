@@ -694,17 +694,18 @@ class AbstractFS(WrapFS):
     def chown(
         self, fs_path: str, uid: int, gid: int, recursive: Optional[bool] = False
     ) -> None:
-        """Change the owner of a specified file. Wrapper for os.chown
-        :param fs_path: path or directory in the VFS where chown would be executed.
-        :param uid: The `uid` of the user. **User must be a registered user on the filesystem or an exception would be
-        thrown.
-        :param gid: The `gid` of the group **Group must be a registered group on the filesystem or an exception would be
-        thrown.
-        :param recursive: If the given path is directory, then setting the recursive option to true would walk down the
-        tree and recursive change permissions in the cache.
+        """Change the owner of a specified file. Wrapper for os.chown.
 
-        ** `fs_path` needs to be the absolute path w.r.t to the vfs. If you are in a sub file system, please use
-        `subvfs.getcwd()` to get the current directory. **
+        :param fs_path: path or directory in the VFS where chown would be executed.
+        :param uid: The uid of the user. User must be registered on the filesystem
+            or an exception is raised.
+        :param gid: The gid of the group. Group must be registered on the filesystem
+            or an exception is raised.
+        :param recursive: If the given path is a directory, walk the tree and
+            recursively change permissions in the cache.
+
+        ``fs_path`` must be absolute with respect to the VFS. If you are in a
+        sub filesystem, use ``subvfs.getcwd()`` to get the current directory.
         """
         path = self.norm_path(fs_path)
         try:

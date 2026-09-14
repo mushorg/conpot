@@ -12,10 +12,18 @@ conpot.utils.ext\_ip module
    :undoc-members:
    :show-inheritance:
 
-conpot.utils.mac\_addr module
------------------------------
+conpot.utils.greenlet module
+----------------------------
 
-.. automodule:: conpot.utils.mac_addr
+.. automodule:: conpot.utils.greenlet
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+conpot.utils.logging module
+---------------------------
+
+.. automodule:: conpot.utils.logging
    :members:
    :undoc-members:
    :show-inheritance:

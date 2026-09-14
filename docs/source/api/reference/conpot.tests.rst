@@ -139,14 +139,6 @@ conpot.tests.test\_proxy module
    :undoc-members:
    :show-inheritance:
 
-conpot.tests.test\_pysnmp\_wrapper module
------------------------------------------
-
-.. automodule:: conpot.tests.test_pysnmp_wrapper
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 conpot.tests.test\_s7\_server module
 ------------------------------------
 
@@ -175,14 +167,6 @@ conpot.tests.test\_utils\_ext\_ip module
 ----------------------------------------
 
 .. automodule:: conpot.tests.test_utils_ext_ip
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-conpot.tests.test\_utils\_mac\_addr module
-------------------------------------------
-
-.. automodule:: conpot.tests.test_utils_mac_addr
    :members:
    :undoc-members:
    :show-inheritance:
