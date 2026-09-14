@@ -30,7 +30,6 @@ from conpot.protocols.tftp import tftp_handler
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.networking import get_interface_ip
 
-
 logger = logging.getLogger(__name__)
 
 
