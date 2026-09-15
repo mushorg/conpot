@@ -170,3 +170,35 @@ class TestS7Server(unittest.TestCase):
             # Wire format carries ASCII 'V''3' in the version word (0x5633).
             self.assertIn(b"V3", data)
         con.s.close()
+
+    def test_read_write_db_via_databus(self):
+        """Read/Write VAR on DB1 must use the databus-backed bytearray (issue #524)."""
+        import conpot.core as conpot_core
+
+        db = conpot_core.get_databus().get_value("s7_db1")
+        self.assertIsInstance(db, bytearray)
+        self.assertEqual(len(db), 256)
+        # Seed a known pattern without going through S7
+        db[0:4] = b"\x10\x20\x30\x40"
+
+        con = self._connect()
+        # Area DB = 0x84
+        data = con.ReadVar(0x84, 1, 0, 4)
+        self.assertEqual(data, b"\x10\x20\x30\x40")
+
+        con.WriteVar(0x84, 1, 2, b"\xaa\xbb")
+        self.assertEqual(bytes(db[0:4]), b"\x10\x20\xaa\xbb")
+        data = con.ReadVar(0x84, 1, 0, 4)
+        self.assertEqual(data, b"\x10\x20\xaa\xbb")
+        con.s.close()
+
+    def test_read_db_out_of_range_keeps_connection(self):
+        """Out-of-range Read VAR returns an item error without dropping the session."""
+        con = self._connect()
+        with self.assertRaises(s7comm_client.S7Error):
+            # DB1 is 256 bytes; offset 250 + length 20 exceeds the block
+            con.ReadVar(0x84, 1, 250, 20)
+        # Connection must still accept another request
+        data = con.ReadVar(0x84, 1, 0, 2)
+        self.assertEqual(len(data), 2)
+        con.s.close()

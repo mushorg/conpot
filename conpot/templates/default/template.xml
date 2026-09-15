@@ -73,6 +73,19 @@
             <key name="empty">
                 <value type="value">""</value>
             </key>
+            <!-- S7 process images (bytearray); wired from s7comm.xml memory_areas -->
+            <key name="s7_db1">
+                <value type="value">bytearray(256)</value>
+            </key>
+            <key name="s7_merkers">
+                <value type="value">bytearray(128)</value>
+            </key>
+            <key name="s7_inputs">
+                <value type="value">bytearray(32)</value>
+            </key>
+            <key name="s7_outputs">
+                <value type="value">bytearray(32)</value>
+            </key>
         </key_value_mappings>
     </databus>
 </core>
