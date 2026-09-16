@@ -17,4 +17,11 @@
             <firmware_identification id="W#16#0006">empty</firmware_identification>
         </ssl>
     </system_status_lists>
+    <!-- Databus keys hold bytearray process images; type/number select S7 area addressing -->
+    <memory_areas>
+        <area type="DB" number="1" name="s7_db1" size="256"/>
+        <area type="M" name="s7_merkers" size="128"/>
+        <area type="I" name="s7_inputs" size="32"/>
+        <area type="Q" name="s7_outputs" size="32"/>
+    </memory_areas>
 </s7comm>

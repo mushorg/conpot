@@ -68,6 +68,11 @@ Protocol XML files (for example ``snmp.xml``, ``modbus.xml``, ``s7comm.xml``)
 usually store a **databus key name**, not the payload itself. Missing keys raise
 ``AssertionError`` when a handler calls ``get_value``.
 
+S7 memory areas are declared under ``<memory_areas>`` in ``s7comm.xml``. Each
+``<area>`` maps an S7 address space (``DB``, ``M``, ``I``, or ``Q``) to a databus
+key. Prefer ``bytearray`` values for those keys so Read/Write VAR can mutate the
+process image in place (Modbus blocks typically use lists of ints instead).
+
 See :doc:`../usage/customization` for SNMP and Modbus examples that wire symbols
 and memory blocks to databus keys.
 

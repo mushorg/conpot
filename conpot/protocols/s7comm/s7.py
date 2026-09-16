@@ -8,15 +8,43 @@ from struct import pack, unpack
 import struct
 import conpot.core as conpot_core
 from conpot.protocols.s7comm.exceptions import AssembleException, ParseException
+from conpot.protocols.s7comm.s7_memory_map import S7AddressError, S7MemoryMap
 from conpot.utils.networking import str_to_bytes
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Return codes for Read/Write VAR data items
+S7_ITEM_OK = 0xFF
+S7_ITEM_ADDRESS_ERROR = 0x05
+S7_ITEM_NOT_AVAILABLE = 0x0A
+
+# Request-item word lengths (any-type) → bytes per element
+_WORD_LEN_BYTES = {
+    0x01: 0,  # BIT — handled specially
+    0x02: 1,  # BYTE
+    0x03: 1,  # CHAR
+    0x04: 2,  # WORD
+    0x05: 2,  # INT
+    0x06: 4,  # DWORD
+    0x07: 4,  # DINT
+    0x08: 4,  # REAL
+}
+
+
+def _item_byte_length(word_len, count):
+    if word_len == 0x01:
+        return (count + 7) // 8
+    unit = _WORD_LEN_BYTES.get(word_len)
+    if unit is None:
+        return count
+    return count * unit
+
 
 # S7 packet
 class S7(object):
     ssl_lists = {}
+    memory_map = S7MemoryMap()
 
     def __init__(
         self,
@@ -41,13 +69,14 @@ class S7(object):
         self.result_info = result_info
         self.parameters = parameters
         self.data = data
+        self._session = None
 
         # param codes (http://www.bj-ig.de/147.html):
         # maps request types to methods
         self.param_mapping = {
             0x00: ("diagnostics", self.request_diagnostics),
-            0x04: ("read", self.request_not_implemented),
-            0x05: ("write", self.request_not_implemented),
+            0x04: ("read", self.request_read_var),
+            0x05: ("write", self.request_write_var),
             0x1A: ("request_download", self.request_not_implemented),
             0x1B: ("download_block", self.request_not_implemented),
             0x1C: ("end_download", self.request_not_implemented),
@@ -74,7 +103,8 @@ class S7(object):
         else:
             return 10 + int(self.param_length) + int(self.data_length)
 
-    def handle(self, current_client=None):
+    def handle(self, current_client=None, session=None):
+        self._session = session
         if self.param in self.param_mapping:
             if self.param == 0x29:
                 return self.param_mapping[self.param][1](current_client)
@@ -83,6 +113,135 @@ class S7(object):
 
     def request_not_implemented(self):
         raise ParseException("s7comm", "request not implemented in honeypot yet.")
+
+    def _parse_request_items(self):
+        """Parse any-type (0x10) request items from the parameter section."""
+        params = self.parameters
+        if not isinstance(params, bytes):
+            params = str_to_bytes(params)
+        if len(params) < 2:
+            raise ParseException("s7comm", "truncated read/write parameters")
+        item_count = params[1]
+        offset = 2
+        items = []
+        for _ in range(item_count):
+            if offset + 2 > len(params):
+                raise ParseException("s7comm", "truncated request item")
+            spec = params[offset]
+            rest_len = params[offset + 1]
+            item_end = offset + 2 + rest_len
+            if spec != 0x12 or item_end > len(params):
+                raise ParseException("s7comm", "malformed request item")
+            body = params[offset + 2 : item_end]
+            if len(body) < 10 or body[0] != 0x10:
+                raise ParseException(
+                    "s7comm", "unsupported or malformed addressing mode"
+                )
+            word_len = body[1]
+            count = unpack("!H", body[2:4])[0]
+            db_number = unpack("!H", body[4:6])[0]
+            area = body[6]
+            bit_addr = (body[7] << 16) | (body[8] << 8) | body[9]
+            items.append(
+                {
+                    "word_len": word_len,
+                    "count": count,
+                    "db_number": db_number,
+                    "area": area,
+                    "bit_addr": bit_addr,
+                    "byte_offset": bit_addr >> 3,
+                }
+            )
+            offset = item_end
+        return items
+
+    def _parse_write_data_items(self, item_count):
+        """Parse write request data items; lengths are even-padded between items."""
+        raw = self.data
+        if not isinstance(raw, bytes):
+            raw = str_to_bytes(raw)
+        offset = 0
+        payloads = []
+        for i in range(item_count):
+            if offset + 4 > len(raw):
+                raise ParseException("s7comm", "truncated write data item")
+            # return_code (ignored on request), transport_size, length
+            transport = raw[offset + 1]
+            length_field = unpack("!H", raw[offset + 2 : offset + 4])[0]
+            # Transport 0x03 BIT / 0x04 BYTE-oriented → length in bits; 0x09 → bytes
+            if transport in (0x03, 0x04, 0x05, 0x06, 0x07):
+                byte_len = (length_field + 7) // 8
+            else:
+                byte_len = length_field
+            data_start = offset + 4
+            data_end = data_start + byte_len
+            if data_end > len(raw):
+                raise ParseException("s7comm", "truncated write data payload")
+            payloads.append(raw[data_start:data_end])
+            offset = data_end
+            # Pad to even boundary when another item follows
+            if i < item_count - 1 and (byte_len % 2) == 1:
+                offset += 1
+        return payloads
+
+    def _log_var_event(self, event_type, item, length, success):
+        if self._session is None:
+            return
+        self._session.add_event(
+            {
+                "type": event_type,
+                "area": item["area"],
+                "db": item["db_number"],
+                "offset": item["byte_offset"],
+                "length": length,
+                "success": success,
+            }
+        )
+
+    def request_read_var(self):
+        """Handle Read VAR (0x04); returns Ack-Data parameters and data."""
+        items = self._parse_request_items()
+        response_data = b""
+        for index, item in enumerate(items):
+            byte_len = _item_byte_length(item["word_len"], item["count"])
+            try:
+                raw = S7.memory_map.read(
+                    item["area"], item["db_number"], item["byte_offset"], byte_len
+                )
+                # BYTE-oriented transport with length in bits (common for BYTE/WORD)
+                chunk = pack("!BBH", S7_ITEM_OK, 0x04, byte_len * 8) + raw
+                self._log_var_event("READ_VAR", item, byte_len, True)
+            except S7AddressError:
+                chunk = pack("!B", S7_ITEM_NOT_AVAILABLE)
+                self._log_var_event("READ_VAR", item, byte_len, False)
+            # Even padding between data items
+            if index < len(items) - 1 and (len(chunk) % 2) == 1:
+                chunk += b"\x00"
+            response_data += chunk
+        response_params = pack("!BB", 0x04, len(items))
+        return response_params, response_data
+
+    def request_write_var(self):
+        """Handle Write VAR (0x05); returns Ack-Data parameters and per-item status."""
+        items = self._parse_request_items()
+        payloads = self._parse_write_data_items(len(items))
+        status = b""
+        for item, payload in zip(items, payloads):
+            expected = _item_byte_length(item["word_len"], item["count"])
+            if expected and len(payload) != expected:
+                # Allow payload length from transport header to drive the write size
+                pass
+            try:
+                S7.memory_map.write(
+                    item["area"], item["db_number"], item["byte_offset"], payload
+                )
+                status += pack("!B", S7_ITEM_OK)
+                self._log_var_event("WRITE_VAR", item, len(payload), True)
+            except S7AddressError:
+                status += pack("!B", S7_ITEM_ADDRESS_ERROR)
+                self._log_var_event("WRITE_VAR", item, len(payload), False)
+        response_params = pack("!BB", 0x05, len(items))
+        return response_params, status
 
     def pack(self):
         if self.pdu_type not in self.pdu_mapping:

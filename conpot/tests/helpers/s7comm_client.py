@@ -350,6 +350,49 @@ class s7:
 
         return Split(szl_data[8:], element_size)
 
+    @staticmethod
+    def _var_item(area, db_number, start, size, word_len=0x02):
+        """Build a 12-byte S7-Any request item (BYTE addressing by default)."""
+        bit_addr = start * 8
+        return pack(
+            "!BBBBHHBBBB",
+            0x12,  # variable specification
+            0x0A,  # remaining length
+            0x10,  # S7ANY syntax
+            word_len,
+            size,
+            db_number,
+            area,
+            (bit_addr >> 16) & 0xFF,
+            (bit_addr >> 8) & 0xFF,
+            bit_addr & 0xFF,
+        )
+
+    def ReadVar(self, area, db_number, start, size):
+        """Read ``size`` bytes from S7 memory (function 0x04)."""
+        params = pack("!BB", 0x04, 1) + self._var_item(area, db_number, start, size)
+        response = self.Request(0x01, params, b"")
+        if not response.data or response.data[0] != 0xFF:
+            code = response.data[0] if response.data else 0
+            raise S7Error(code)
+        # return_code, transport, bit_length, then payload
+        _, _, bit_len = unpack("!BBH", response.data[:4])
+        byte_len = (bit_len + 7) // 8
+        return response.data[4 : 4 + byte_len]
+
+    def WriteVar(self, area, db_number, start, data):
+        """Write bytes into S7 memory (function 0x05)."""
+        data = str_to_bytes(data)
+        params = pack("!BB", 0x05, 1) + self._var_item(
+            area, db_number, start, len(data)
+        )
+        data_item = pack("!BBH", 0x00, 0x04, len(data) * 8) + data
+        response = self.Request(0x01, params, data_item)
+        if not response.data or response.data[0] != 0xFF:
+            code = response.data[0] if response.data else 0
+            raise S7Error(code)
+        return response.data[0]
+
 
 def BruteTsap(ip, port, src_tsaps=(0x100, 0x200), dst_tsaps=(0x102, 0x200, 0x201)):
     for src_tsap in src_tsaps:
