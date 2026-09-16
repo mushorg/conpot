@@ -34,31 +34,39 @@ requests to an external PLC; every unit id you configure is served from the temp
 * ``serial`` — unit id ``0`` is treated as a serial-line broadcast (no response); ids
   ``1``–``247`` address internal slaves.
 
-An binary output block has the type ``COILS``, binary input blocks ``DISCRETE_INPUTS``. You define the starting address
-and size. ``ANALOG_INPUTS`` hold data in byte size.
+A binary output block has the type ``COILS``, binary input blocks ``DISCRETE_INPUTS``.
+``ANALOG_INPUTS`` and ``HOLDING_REGISTERS`` hold 16-bit register values. You define the
+starting address and size.
 
-In the ``<values />`` section you take the starting address and fill the field with values. The content is evaluated so
-you can easily fill it with random values.
+The block ``name`` attribute is the **databus key**. Payload lives in ``template.xml``,
+not inline in ``modbus.xml``. ``<content>`` is documentation only; the Python handler
+never reads it.
 
 .. code-block:: xml
 
-    <block name="a">
-        <!-- COILS/DISCRETE_OUTPUTS aka. binary output, power on/power off
-             Here we map modbus addresses 1 to 127 to S7-200 PLC Addresses Q0.0 to Q15.7 -->
+    <block name="memoryModbusSlave1BlockA">
         <type>COILS</type>
         <starting_address>1</starting_address>
-        <size>128</size>
-        <values>
-            <value>
-                <address>1</address>
-                <!-- Will be parsed with eval() -->
-                <content>[random.randint(0,1) for b in range(0,128)]</content>
-            </value>
-        </values>
+        <size>8</size>
+        <content>memoryModbusSlave1BlockA</content>
     </block>
 
-``HOLDING_REGISTERS`` can be considered as temporary data storage. You define them with the starting address and their
-size. Holding registers don't have any initial value.
+Initialize that key as a list on the databus (evaluated once at startup):
+
+.. code-block:: xml
+
+    <key name="memoryModbusSlave1BlockA">
+        <value type="value">[0 for b in range(0,8)]</value>
+    </key>
+
+The ``plc_modbus`` profile wires those lists to a scan cycle so coil writes
+produce changing discrete inputs, holding registers, and analog inputs.
+See :doc:`plc_emulator` for how the emulator works, how to configure it, and
+how to test it. The default template still uses static (randomized-once)
+lists and is unchanged.
+
+``HOLDING_REGISTERS`` are writable working registers. In ``plc_modbus``, holding
+register 0 is incremented by the native engine while the plant is running.
 
 Example with several internal slaves (each ``id`` is a distinct unit id):
 
