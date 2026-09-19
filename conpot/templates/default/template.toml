@@ -40,3 +40,8 @@ Copyright = "Original Siemens Equipment"
 s7_id = "88111222"
 s7_module_type = "IM151-8 PN/DP CPU"
 empty = ""
+# S7 process images (bytearray); wired from s7comm.xml memory_areas
+s7_db1 = { value = "bytearray(256)" }
+s7_merkers = { value = "bytearray(128)" }
+s7_inputs = { value = "bytearray(32)" }
+s7_outputs = { value = "bytearray(32)" }
