@@ -30,11 +30,12 @@ wheels = [
 ]
 
 [[package]]
-name = "bacpypes"
-version = "0.17.0"
+name = "bacpypes3"
+version = "0.0.108"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a4/70/61cfae4c377759d67a5a0005cb4e0267cf73b3418f38315eb845a4867e03/bacpypes3-0.0.108.tar.gz", hash = "sha256:9a3d0e4b42af17e918aaeb6f29c54619465fbd776526dcf534c68f370ec9c081", size = 247404, upload-time = "2026-09-19T19:15:07.916Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/36/b83a802fbe8bb565c953efbed7eac87266a1b85a43a412819d9a6c6b7774/bacpypes-0.17.0-py3-none-any.whl", hash = "sha256:d9b6a79068a3283a8eb14ee6b714e0adcdfbf552ad0b40ce8e6eb273e4c9515b", size = 166192, upload-time = "2018-04-10T14:04:22.702Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/16/2ad7e3b7463a280446e5262b9aa3221d7c3f11a95b98d6ee607a1cf27071/bacpypes3-0.0.108-py3-none-any.whl", hash = "sha256:a1f7c622853bc2fb3e6b03fa36a12c74486a33ec978f0fda610387634459988a", size = 277466, upload-time = "2026-09-19T19:15:06.432Z" },
 ]
 
 [[package]]
@@ -243,7 +244,7 @@ wheels = [
 name = "conpot"
 source = { editable = "." }
 dependencies = [
-    { name = "bacpypes" },
+    { name = "bacpypes3" },
     { name = "cpppo" },
     { name = "crc16" },
     { name = "cryptography" },
@@ -260,7 +261,6 @@ dependencies = [
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1" },
-    { name = "pyasyncore" },
     { name = "pyghmi" },
     { name = "pysmi" },
     { name = "pysnmp" },
@@ -285,7 +285,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bacpypes", specifier = "==0.17.0" },
+    { name = "bacpypes3", specifier = "==0.0.108" },
     { name = "cpppo" },
     { name = "crc16" },
     { name = "cryptography", specifier = "==50.0.0" },
@@ -302,7 +302,6 @@ requires-dist = [
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1", specifier = "==0.6.4" },
-    { name = "pyasyncore", specifier = ">=1.0.2" },
     { name = "pyghmi", specifier = "==1.4.1" },
     { name = "pysmi", specifier = ">=1.6.1" },
     { name = "pysnmp", specifier = ">=7.1.22,<8" },
@@ -856,15 +855,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a4/9a/23310166d960def5897e91fe20e5b724601b02a22e84ba1f94232c0b7f67/pyasn1-0.6.4.tar.gz", hash = "sha256:9c447d8431c947fe4c8febc4ed9e760bc29011a5b01e5c74b67025bd9fb8ce81", size = 151262, upload-time = "2026-07-09T01:12:33.988Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9a/3b/6163796d69c3977d1e4287bea4a6979161cbbdd170ebb430511e8e1999ce/pyasn1-0.6.4-py3-none-any.whl", hash = "sha256:deda9277cfd454080ec40b207fb6df82206a3a2688735233cdcd8d3d565f088b", size = 84410, upload-time = "2026-07-09T01:12:32.92Z" },
-]
-
-[[package]]
-name = "pyasyncore"
-version = "1.0.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4e/43/035dfe0cb01687c1940fdc008f46a43c41067e226e862df49327469764a0/pyasyncore-1.0.5.tar.gz", hash = "sha256:dd483d5103a6d59b66b86e0ca2334ad43dca732ff23a0ac5d63c88c52510542e", size = 15854, upload-time = "2026-01-05T19:59:31.893Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1f/ab/b10cee56269ae150763f3f83b3e9305a11f42f50b3dcd58eeb8f7988f0bb/pyasyncore-1.0.5-py3-none-any.whl", hash = "sha256:269bbc5252671827387636822841a1fb721ec6e858b23a3e12cf92eb1f97da2a", size = 10237, upload-time = "2026-01-05T19:59:30.824Z" },
 ]
 
 [[package]]
