@@ -328,3 +328,77 @@ class TestModbusServer(unittest.TestCase):
         s.close()
 
         self.assertEqual(data, b"")
+
+    def test_umas_disabled_is_illegal_function(self):
+        """Default template is Siemens and does not speak UMAS."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        # unit 1, function 0x5A, session 0x00, UMAS stop 0x41
+        s.sendall(b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\x41")
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x03\x01\xda\x01")
+
+
+class TestModbusUmas(unittest.TestCase):
+    def setUp(self):
+        conpot_core.get_sessionManager().purge_sessions()
+        self.modbus, self.greenlet = spawn_test_server(
+            modbus_server.ModbusServer, "plc_modbus", "modbus"
+        )
+        self.host = self.modbus.server.server_host
+        self.port = self.modbus.server.server_port
+
+    def tearDown(self):
+        teardown_test_server(self.modbus, self.greenlet)
+
+    def _exchange(self, pdu):
+        header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        s.sendall(header + pdu)
+        data = s.recv(1024)
+        s.close()
+        return data
+
+    def test_stop_and_start(self):
+        slave = self.modbus._databank.get_slave(1)
+        self.assertTrue(slave.running)
+
+        stop = self._exchange(b"\x5a\x01\x41\xff\x00")
+        self.assertEqual(stop, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x01\xfe")
+        self.assertFalse(slave.running)
+
+        start = self._exchange(b"\x5a\x00\x40")
+        self.assertEqual(start, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+        self.assertTrue(slave.running)
+
+        log_queue = conpot_core.get_sessionManager().log_queue
+        types = []
+        while not log_queue.empty():
+            item = log_queue.get_nowait()
+            event_type = item["data"].get("type")
+            if event_type:
+                types.append(event_type)
+        self.assertIn("UMAS_STOP", types)
+        self.assertIn("UMAS_START", types)
+
+    def test_other_umas_code_is_rejected(self):
+        data = self._exchange(b"\x5a\x00\x02")
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfd")
+
+    def test_short_umas_is_illegal_value(self):
+        data = self._exchange(b"\x5a")
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x03\x01\xda\x03")
+
+    def test_device_info_matches_umas(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        s.sendall(b"\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02")
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b"Schneider Electric", data)
+        self.assertIn(b"Modicon M340", data)

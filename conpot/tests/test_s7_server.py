@@ -22,6 +22,7 @@ import socket
 import unittest
 from struct import pack
 
+from conpot.protocols.s7comm.s7 import S7
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -201,4 +202,27 @@ class TestS7Server(unittest.TestCase):
         # Connection must still accept another request
         data = con.ReadVar(0x84, 1, 0, 2)
         self.assertEqual(len(data), 2)
+        con.s.close()
+
+    def test_plc_stop_is_ack_data(self):
+        S7.cpu_running = True
+        con = self._connect()
+        packet = con.plc_stop_function()
+        self.assertIsNotNone(packet)
+        self.assertEqual(packet.type, 3)
+        self.assertEqual(packet.error, 0)
+        self.assertEqual(packet.parameters, b"\x29")
+        self.assertEqual(packet.data, b"")
+        self.assertFalse(S7.cpu_running)
+        con.s.close()
+
+    def test_plc_start_is_ack_data(self):
+        S7.cpu_running = False
+        con = self._connect()
+        packet = con.plc_start_function(b"COLD_START")
+        self.assertIsNotNone(packet)
+        self.assertEqual(packet.type, 3)
+        self.assertEqual(packet.error, 0)
+        self.assertEqual(packet.parameters, b"\x28")
+        self.assertTrue(S7.cpu_running)
         con.s.close()

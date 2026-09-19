@@ -54,6 +54,15 @@ _BROADCAST_FUNCTIONS = (
 # Importing the message modules registers their PDUs on DecodePDU.
 _DECODER = DecodePDU(True)
 
+# Schneider UMAS rides on Modbus function 90. Start/stop do not need a
+# reservation when no application password is set; other UMAS codes are
+# acknowledged and rejected so the unit still looks like it speaks UMAS.
+_UMAS_FUNCTION = 0x5A
+_UMAS_START = 0x40
+_UMAS_STOP = 0x41
+_UMAS_OK = 0xFE
+_UMAS_ERROR = 0xFD
+
 
 class ModbusInvalidRequestError(Exception):
     """A PDU that cannot be turned into an exception response."""
@@ -66,6 +75,9 @@ class MBSlave(object):
         self._id = slave_id
         self.dom = dom
         self.function_code = None
+        self.event_type = None
+        self.running = True
+        self._umas_enabled = _template_umas_enabled(dom)
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
@@ -102,12 +114,15 @@ class MBSlave(object):
             raise ModbusInvalidRequestError("Request PDU is empty")
 
         self.function_code = request_pdu[0]
+        self.event_type = None
         if broadcast and self.function_code not in _BROADCAST_FUNCTIONS:
             raise ModbusInvalidRequestError(
                 "Function %d can not be broadcasted" % self.function_code
             )
 
-        if self.function_code == 0x11:
+        if self.function_code == _UMAS_FUNCTION and self._umas_enabled:
+            response = self._umas(request_pdu)
+        elif self.function_code == 0x11:
             response = self._report_slave_id()
         elif self.function_code == 0x2B:
             response = self._device_info(request_pdu)
@@ -244,6 +259,24 @@ class MBSlave(object):
                     return block, offset
         return None
 
+    def _umas(self, request_pdu):
+        """Answer Schneider UMAS (function 90) start/stop. Do not stop the server."""
+        if len(request_pdu) < 3:
+            return _exception_pdu(self.function_code, ExcCodes.ILLEGAL_VALUE)
+        session_key = request_pdu[1]
+        umas_code = request_pdu[2]
+        if umas_code == _UMAS_START:
+            self.running = True
+            self.event_type = "UMAS_START"
+            status = _UMAS_OK
+        elif umas_code == _UMAS_STOP:
+            self.running = False
+            self.event_type = "UMAS_STOP"
+            status = _UMAS_OK
+        else:
+            status = _UMAS_ERROR
+        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, status)
+
     def _report_slave_id(self):
         # Historical Conpot PDU: function code is present twice. Scanners and
         # test_report_slave_id lock this layout; pymodbus ReportDeviceIdResponse
@@ -277,6 +310,13 @@ class MBSlave(object):
             response += struct.pack(">B", len(device_info[object_id]))
             response += str_to_bytes(device_info[object_id])
         return response
+
+
+def _template_umas_enabled(dom):
+    values = dom.xpath("//modbus/umas/@enabled")
+    if not values:
+        return False
+    return str(values[0]).strip().lower() in ("true", "1")
 
 
 def _exception_pdu(function_code, code):

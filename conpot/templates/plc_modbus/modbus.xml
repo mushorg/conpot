@@ -1,11 +1,12 @@
 <modbus enabled="True" host="0.0.0.0" port="5020">
     <device_info>
-        <VendorName>Siemens</VendorName>
-        <ProductCode>SIMATIC</ProductCode>
-        <MajorMinorRevision>S7-200</MajorMinorRevision>
+        <VendorName>Schneider Electric</VendorName>
+        <ProductCode>Modicon M340</ProductCode>
+        <MajorMinorRevision>BMXP342020</MajorMinorRevision>
     </device_info>
     <mode>serial</mode>
     <delay>0</delay>
+    <umas enabled="true"/>
     <slaves>
         <slave id="1">
             <blocks>

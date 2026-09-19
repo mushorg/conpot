@@ -18,11 +18,12 @@
 from gevent import monkey
 
 monkey.patch_all()
+import struct
 import unittest
 
 import pytest
 from cpppo.server.enip import client
-from gevent import socket
+from gevent import sleep, socket
 
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -232,10 +233,48 @@ class TestENIPServer(unittest.TestCase):
 
             self.assertDictEqual({"count": 0}, response)
 
-    # Tests related to restart of ENIP device..
-    # def test_send_NOP(self):
-    #     # test tcp
-    #     pass
+    def test_send_nop(self):
+        """NOP is a keepalive: no reply, and the TCP session stays up."""
+        nop = struct.pack("<HHII8sI", 0, 0, 0, 0, b"\x00" * 8, 0)
+        identity = struct.pack("<HHII8sI", 0x0063, 0, 0, 0, b"\x00" * 8, 0)
+
+        tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            tcp.settimeout(2.0)
+            tcp.connect((self.enip_server_tcp.addr, self.enip_server_tcp.port))
+            tcp.sendall(nop)
+            tcp.settimeout(0.4)
+            with self.assertRaises(socket.timeout):
+                tcp.recv(1024)
+            tcp.settimeout(2.0)
+            tcp.sendall(identity)
+            reply = tcp.recv(1024)
+        finally:
+            tcp.close()
+        self.assertGreaterEqual(len(reply), 24)
+        self.assertEqual(struct.unpack_from("<H", reply)[0], 0x0063)
+        self.assertIn(b"ConpotTestENIP", reply)
+
+        udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            udp.settimeout(0.5)
+            udp.sendto(nop, (self.enip_server_udp.addr, self.enip_server_udp.port))
+            with self.assertRaises(socket.timeout):
+                udp.recvfrom(1024)
+        finally:
+            udp.close()
+        sleep(0.2)
+        with client.connector(
+            host=self.enip_server_udp.addr,
+            port=self.enip_server_udp.port,
+            timeout=4.0,
+            udp=True,
+            broadcast=True,
+        ) as conn:
+            conn.list_identity()
+            response = self.await_cpf_response(conn, "list_identity")
+        identity = response["item"][0]["identity_object"]
+        self.assertEqual(_TEST_PRODUCT_NAME, identity["product_name"])
 
     def test_malformend_request_tcp(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

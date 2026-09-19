@@ -136,15 +136,15 @@ class SlaveBase(object):
         if slave is not None and slave.function_code is not None:
             logged_function = slave.function_code
 
-        return (
-            response,
-            {
-                "request": codecs.encode(request_pdu, "hex"),
-                "slave_id": slave_id,
-                "function_code": logged_function,
-                "response": codecs.encode(response_pdu, "hex"),
-            },
-        )
+        logdata = {
+            "request": codecs.encode(request_pdu, "hex"),
+            "slave_id": slave_id,
+            "function_code": logged_function,
+            "response": codecs.encode(response_pdu, "hex"),
+        }
+        if slave is not None and slave.event_type:
+            logdata["type"] = slave.event_type
+        return response, logdata
 
     def _call_slave(self, slave_id, request_pdu, broadcast):
         slave = self.get_slave(slave_id)
