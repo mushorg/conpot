@@ -20,62 +20,50 @@
 
 import logging
 import socket
-from copy import deepcopy
 
-from bacpypes import bvll
-from bacpypes.apdu import APDU
-from bacpypes.errors import DecodingError
-from bacpypes.local.device import LocalDeviceObject
-from bacpypes.npdu import NPDU
-from bacpypes.pdu import Address as PduAddress
-from bacpypes.pdu import PDU
+from bacpypes3.errors import DecodingError
+from bacpypes3.object import DeviceObject
+from gevent.event import Event
 from gevent.server import DatagramServer
 from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
+from conpot.protocols.bacnet.bacnet_ip import decode_bacnet_ip
 from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
 
 
-def decode_bacnet_ip(data, address):
-    """Decode a BACnet/IP datagram (BVLC + NPDU + APDU) into an APDU."""
-    pdu = PDU(bytearray(data), source=PduAddress(address))
-    bvlpdu = bvll.BVLPDU()
-    bvlpdu.decode(pdu)
-    rpdu = bvll.bvl_pdu_types[bvlpdu.bvlciFunction]()
-    rpdu.decode(bvlpdu)
-    npdu = NPDU(user_data=rpdu.pduUserData)
-    npdu.decode(rpdu)
-    apdu = APDU()
-    apdu.decode(deepcopy(npdu))
-    return apdu
+def build_device_object(dom):
+    """Build the local device object from a BACnet template DOM."""
+    device_info_root = dom.xpath("//bacnet/device_info")[0]
+    name_key = device_info_root.xpath("./device_name/text()")[0]
+    id_key = device_info_root.xpath("./device_identifier/text()")[0]
+    vendor_name_key = device_info_root.xpath("./vendor_name/text()")[0]
+    vendor_identifier_key = device_info_root.xpath("./vendor_identifier/text()")[0]
+    apdu_length_key = device_info_root.xpath("./max_apdu_length_accepted/text()")[0]
+    segmentation_key = device_info_root.xpath("./segmentation_supported/text()")[0]
+    return DeviceObject(
+        objectName=name_key,
+        objectIdentifier=("device", int(id_key)),
+        maxApduLengthAccepted=int(apdu_length_key),
+        segmentationSupported=segmentation_key,
+        vendorName=vendor_name_key,
+        vendorIdentifier=int(vendor_identifier_key),
+    )
 
 
 @conpot_protocol
 class BacnetServer(object):
     def __init__(self, template, template_directory, args):
         self.dom = etree.parse(template)
-        device_info_root = self.dom.xpath("//bacnet/device_info")[0]
-        name_key = device_info_root.xpath("./device_name/text()")[0]
-        id_key = device_info_root.xpath("./device_identifier/text()")[0]
-        vendor_name_key = device_info_root.xpath("./vendor_name/text()")[0]
-        vendor_identifier_key = device_info_root.xpath("./vendor_identifier/text()")[0]
-        apdu_length_key = device_info_root.xpath("./max_apdu_length_accepted/text()")[0]
-        segmentation_key = device_info_root.xpath("./segmentation_supported/text()")[0]
-
-        self.thisDevice = LocalDeviceObject(
-            objectName=name_key,
-            objectIdentifier=int(id_key),
-            maxApduLengthAccepted=int(apdu_length_key),
-            segmentationSupported=segmentation_key,
-            vendorName=vendor_name_key,
-            vendorIdentifier=int(vendor_identifier_key),
-        )
+        self.thisDevice = build_device_object(self.dom)
         self.bacnet_app = None
         self.server = None  # Initialize later
+        # Set once host/port are bound, before serve_forever blocks.
+        self.ready = Event()
         logger.info("Conpot Bacnet initialized using the %s template.", template)
 
     def handle(self, data, address):
@@ -138,6 +126,7 @@ class BacnetServer(object):
         self.bacnet_app.get_objects_and_properties(self.dom)
 
         logger.info("Bacnet server started on: %s", (self.host, self.port))
+        self.ready.set()
         self.server.serve_forever()
 
     def stop(self):
