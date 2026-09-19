@@ -21,9 +21,11 @@ Lifecycle
 ---------
 
 1. Conpot creates one ``Databus`` instance at import time (see ``conpot.core``).
-2. At startup, ``cli`` (and the test helpers) call ``get_databus().initialize(template.xml)``.
-3. ``initialize`` parses ``//core/databus/key_value_mappings/*``, loads every key,
-   then sets ``databus.initialized`` (a ``gevent.event.Event``).
+2. At startup, ``cli`` (and the test helpers) call ``get_databus().initialize(...)``
+   with either a parsed ``template.toml`` dict or a legacy ``template.xml`` path.
+3. ``initialize`` loads every key from ``core.databus.key_value_mappings`` (TOML) or
+   ``//core/databus/key_value_mappings/*`` (XML), then sets ``databus.initialized``
+   (a ``gevent.event.Event``).
 4. Protocol servers start after that and resolve template references to databus keys.
 5. ``reset()`` clears keys and observers; any stored object with a ``stop()`` method
    is stopped first (used by long-running emulators).
@@ -36,7 +38,23 @@ Emulators that start their own greenlets should wait until the bus is ready::
 Template configuration
 ----------------------
 
-Keys are declared in the profile's ``template.xml`` under ``<core><databus>``:
+**TOML (preferred).** Keys are declared in ``template.toml``:
+
+.. code-block:: toml
+
+    [core.databus.key_value_mappings]
+    SystemDescription = "Siemens, SIMATIC, S7-200"
+    Uptime = { function = "conpot.emulators.misc.uptime.Uptime" }
+    memoryModbusSlave0BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
+
+* Plain scalars are stored as-is.
+* ``{ value = "..." }`` — the string is passed to ``eval()`` (same trust model as XML
+  ``type="value"``). ``random`` is available in that evaluation context.
+* ``{ function = "module.Class" [, params = [...]] }`` — import path of a class;
+  Conpot stores an instance (optional ``params`` list for the constructor).
+
+**XML (legacy).** Keys are declared in the profile's ``template.xml`` under
+``<core><databus>``:
 
 .. code-block:: xml
 
@@ -64,7 +82,7 @@ Keys are declared in the profile's ``template.xml`` under ``<core><databus>``:
   with a ``param`` attribute on ``<value>`` (a Python list literal evaluated at load
   time).
 
-Protocol XML files (for example ``snmp.xml``, ``modbus.xml``, ``s7comm.xml``)
+Protocol config files (for example ``snmp.xml`` / ``tftp.toml``, ``modbus.xml``)
 usually store a **databus key name**, not the payload itself. Missing keys raise
 ``AssertionError`` when a handler calls ``get_value``.
 

@@ -29,6 +29,7 @@ dependencies = [
     "pysmi>=1.6.1",
     "pyasn1==0.6.4",
     "lxml",
+    "schema",
     "requests",
     "sphinx",
     "libtaxii>=1.1.0",

@@ -74,9 +74,41 @@ class Databus(object):
             self._observer_map[key] = []
         self._observer_map[key].append(callback)
 
-    def initialize(self, config_file):
+    def initialize(self, template):
+        """Initialize from a TOML template dict or a legacy template.xml path."""
         self.reset()
         assert self.initialized.isSet() is False
+        if isinstance(template, str):
+            self._initialize_from_xml(template)
+        else:
+            self._initialize_from_toml(template)
+        self.initialized.set()
+
+    def _initialize_from_toml(self, template):
+        logger.debug("Initializing databus from TOML template")
+        for key, value in template["core"]["databus"]["key_value_mappings"].items():
+            assert key not in self._data
+            logger.debug("Initializing %s with %s", key, value)
+            if isinstance(value, dict):
+                if "function" in value:
+                    namespace, _classname = value["function"].rsplit(".", 1)
+                    module = __import__(namespace, fromlist=[_classname])
+                    _class = getattr(module, _classname)
+                    params = value.get("params")
+                    if params is not None:
+                        self.set_value(key, _class(*(tuple(params))))
+                    else:
+                        self.set_value(key, _class())
+                elif "value" in value:
+                    self.set_value(key, eval(value["value"]))
+                else:
+                    raise Exception(
+                        "Unknown databus mapping for {0}: {1}".format(key, value)
+                    )
+            else:
+                self.set_value(key, value)
+
+    def _initialize_from_xml(self, config_file):
         logger.debug("Initializing databus using %s.", config_file)
         dom = etree.parse(config_file)
         entries = dom.xpath("//core/databus/key_value_mappings/*")
@@ -85,7 +117,7 @@ class Databus(object):
             value = entry.xpath("./value/text()")[0].strip()
             value_type = str(entry.xpath("./value/@type")[0])
             assert key not in self._data
-            logging.debug("Initializing %s with %s as a %s.", key, value, value_type)
+            logger.debug("Initializing %s with %s as a %s.", key, value, value_type)
             if value_type == "value":
                 self.set_value(key, eval(value))
             elif value_type == "function":
@@ -101,7 +133,6 @@ class Databus(object):
                     self.set_value(key, _class())
             else:
                 raise Exception("Unknown value type: {0}".format(value_type))
-        self.initialized.set()
 
     def reset(self):
         logger.debug("Resetting databus.")

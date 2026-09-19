@@ -8,7 +8,7 @@ Human docs: [README.md](README.md), [conpot.readthedocs.io](https://conpot.readt
 
 - `conpot/core/` — databus, attack sessions, VFS, `@conpot_protocol`
 - `conpot/protocols/` — one directory per protocol (+ XSD); registry in `conpot/protocols/__init__.py` (`name_mapping`)
-- `conpot/templates/` — deployment profiles (`template.xml` + per-protocol XML)
+- `conpot/templates/` — deployment profiles (`template.toml` preferred, `template.xml` still supported) plus per-protocol `*.toml` / `*.xml`
 - `conpot/tests/` — pytest suite; helpers in `conpot/utils/greenlet.py`
 - `conpot/cli.py` — entrypoint (`monkey.patch_all()`); also `python -m conpot`
 - `tools/` — standalone helpers (`start_protocol.py`, `conpot_cloner`, `kamstrup_prober.py`)
@@ -26,7 +26,7 @@ uv run conpot --template default -f
 
 - Python 3.14; Black **26.5.1** (pinned in `pyproject.toml`)
 - Dependency changes: edit `pyproject.toml`, run `uv lock`, commit `uv.lock` with the change
-- CI: pytest (`.github/workflows/python.yml`), black check, xmllint on default template XML
+- CI: pytest (`.github/workflows/python.yml`), black check, xmllint on default template XML (legacy; TOML validated via `schema` at startup)
 - Deeper contributor notes: `docs/source/development/guidelines.rst`
 
 ## Code conventions
@@ -34,7 +34,8 @@ uv run conpot --template default -f
 - **gevent**, not asyncio. Use `gevent.server` / greenlets; patch with `monkey.patch_all()` in entrypoints and tests.
 - Protocol servers use `@conpot_protocol` from `conpot.core.protocol_wrapper`. Typical shape: `__init__(template, template_directory, args)`, `handle(sock, addr)`, `start(host, port)`, `stop()`.
 - Record attacker activity via `conpot.core.get_session(...)` then `session.add_event(...)`.
-- Templates: `templates/<name>/template.xml` (databus + metadata) plus `templates/<name>/<protocol>.xml`, validated against XSDs at startup. Keep per-protocol subdirs only for auxiliary files (e.g. `http/htdocs`). Prefer databus for shared state.
+- Templates: dual-format. Prefer `templates/<name>/template.toml` (databus + metadata) and `templates/<name>/<protocol>.toml`, validated with the `schema` package (`conpot/templates/validate.py`, `conpot/protocols/schemas.py`). XML + XSD remain supported when no TOML file is present. Startup passes a **dict** for TOML protocols and a **path string** for XML; only migrate a protocol to `.toml` after its server accepts a dict (see TFTP). Keep per-protocol subdirs only for auxiliary files (e.g. `http/htdocs`). Prefer databus for shared state.
+- Databus TOML mappings: plain scalars are stored as-is; use `{ value = "..." }` for eval'd expressions (like XML `type="value"`); use `{ function = "module.Class" [, params = [...]] }` for emulators.
 - Style: PEP8, 4 spaces, no one-line conditionals. Run Black before claiming work done.
 - Match neighboring protocol and test style when editing.
 
