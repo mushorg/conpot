@@ -22,15 +22,20 @@ monkey.patch_all()
 import struct
 import unittest
 import gevent
-import modbus_tk.defines as cst
-import modbus_tk.modbus_tcp as modbus_tcp
 
 from datetime import datetime
-from modbus_tk.exceptions import ModbusError
 from gevent import socket
 
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
+from conpot.protocols.modbus.slave import ModbusInvalidRequestError
+from conpot.tests.helpers.modbus_client import (
+    READ_COILS,
+    SLAVE_DEVICE_FAILURE,
+    WRITE_MULTIPLE_COILS,
+    ModbusError,
+    TcpMaster,
+)
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 
@@ -48,7 +53,7 @@ class TestModbusServer(unittest.TestCase):
 
         # We have to use different slave IDs under different modes. In tcp mode
         # any configured internal unit id works (including 255). In serial mode
-        # the default template is exercised via slave id 1. modbus_tcp.TcpMaster
+        # the default template is exercised via slave id 1. TcpMaster
         # ignores slave ID 0, so tcp-mode tests that need a single id use 255.
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
@@ -65,11 +70,11 @@ class TestModbusServer(unittest.TestCase):
         )
 
         # create READ_COILS request
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         actual_bits = master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=128,
         )
@@ -82,21 +87,21 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if we can change values using the modbus protocol.
         """
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         set_bits = [1, 0, 0, 1, 0, 0, 1, 1]
 
         # write 8 bits
         master.execute(
             slave=self.target_slave_id,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=set_bits,
         )
         # read 8 bit
         actual_bit = master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=8,
         )
@@ -107,16 +112,16 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if the correct exception is raised when trying to read from nonexistent slave.
         """
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
             master.execute(
                 slave=5,
-                function_code=cst.READ_COILS,
+                function_code=READ_COILS,
                 starting_address=1,
                 quantity_of_x=1,
             )
-        self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
+        self.assertEqual(cm.exception.get_exception_code(), SLAVE_DEVICE_FAILURE)
 
     def test_modbus_logging(self):
         """
@@ -137,13 +142,13 @@ class TestModbusServer(unittest.TestCase):
             [1 for b in range(0, 128)],
         )
 
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
 
         # issue request to modbus server
         master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=128,
         )
@@ -166,8 +171,8 @@ class TestModbusServer(unittest.TestCase):
         req_suffix = (
             "000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
         ).encode()
-        # testing the actual modbus data (transaction id is process-global in
-        # modbus_tk.TcpQuery, so do not assert a fixed MBAP tid)
+        # testing the actual modbus data (transaction id is chosen by the
+        # test client, so do not assert a fixed MBAP tid)
         self.assertEqual(1, modbus_log_item["data"]["function_code"])
         self.assertEqual(self.target_slave_id, modbus_log_item["data"]["slave_id"])
         self.assertTrue(
@@ -183,7 +188,7 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test conpot for function code 17.
         """
-        # Function 17 is not currently supported by modbus_tk
+        # Function 17 is not a stock read/write; Conpot answers it directly.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
@@ -292,18 +297,15 @@ class TestModbusServer(unittest.TestCase):
         Databank must return no response for an empty PDU (serial broadcast
         was the original #511 crash path) instead of unpacking a missing FC.
         """
-        query = modbus_tcp.TcpQuery()
         # length=1, unit id 0 → empty PDU; serial mode would broadcast.
         request = struct.pack(">HHHB", 0, 0, 1, 0)
-        response, logdata = self.modbus._databank.handle_request(
-            query, request, "serial"
-        )
+        response, logdata = self.modbus._databank.handle_request(request, "serial")
         self.assertIsNone(response)
         self.assertEqual(logdata["slave_id"], 0)
         self.assertIsNone(logdata["function_code"])
         self.assertEqual(logdata["response"], b"")
 
-        with self.assertRaises(modbus_tcp.ModbusInvalidRequestError):
+        with self.assertRaises(ModbusInvalidRequestError):
             self.modbus._databank.get_slave(self.target_slave_id).handle_request(
                 b"", broadcast=True
             )

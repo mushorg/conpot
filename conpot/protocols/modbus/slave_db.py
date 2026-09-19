@@ -1,64 +1,63 @@
-# modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
-# Brno University of Technology, Faculty of Information Technology
-import struct
-from lxml import etree
 import codecs
-from modbus_tk.modbus import (
-    Databank,
-    DuplicatedKeyError,
-    MissingKeyError,
-    ModbusInvalidRequestError,
-)
-from modbus_tk import defines
-from modbus_tk.modbus_tcp import ModbusInvalidMbapError
-
-from conpot.protocols.modbus.slave import MBSlave
 import logging
+import struct
+
+from lxml import etree
+from pymodbus.constants import ExcCodes
+
+from conpot.protocols.modbus.slave import MBSlave, ModbusInvalidRequestError
 
 logger = logging.getLogger(__name__)
 
 
-class SlaveBase(Databank):
-    """
-    Database keeping track of the slaves.
-    """
+class SlaveBase(object):
+    """Slave table. Unit ids 0..255 are allowed; pymodbus' own context stops at 247."""
 
     def __init__(self, template):
-        Databank.__init__(self)
+        self._slaves = {}
         self.dom = etree.parse(template)
 
-    def add_slave(self, slave_id, unsigned=True, memory=None):
-        """
-        Add a new slave with the given id
-        """
+    def add_slave(self, slave_id):
         if (slave_id < 0) or (slave_id > 255):
-            raise Exception("Invalid slave id %d" % slave_id)
-        if slave_id not in self._slaves:
-            self._slaves[slave_id] = MBSlave(slave_id, self.dom)
-            return self._slaves[slave_id]
-        else:
-            raise DuplicatedKeyError("Slave %d already exists" % slave_id)
+            raise ValueError("Invalid slave id %d" % slave_id)
+        if slave_id in self._slaves:
+            raise ValueError("Slave %d already exists" % slave_id)
+        self._slaves[slave_id] = MBSlave(slave_id, self.dom)
+        return self._slaves[slave_id]
 
-    def handle_request(self, query, request, mode):
+    def get_slave(self, slave_id):
+        try:
+            return self._slaves[slave_id]
+        except KeyError:
+            raise KeyError("Slave %s does not exist" % slave_id)
+
+    def handle_request(self, request, mode):
         """
-        Handles a request. Return value is a tuple where element 0
-        is the response object and element 1 is a dictionary
-        of items to log.
+        Handle one MBAP request.
+
+        Return value is ``(response, logdata)``. ``response`` is the bytes to
+        send, or None when the peer should get nothing (empty PDU, broadcast,
+        or a framing error).
         """
-        request_pdu = None
-        response_pdu = b""
         slave_id = None
         function_code = None
-        func_code = None
-        slave = None
-        response = None
+        response_pdu = b""
 
         try:
-            # extract the pdu and the slave id
-            slave_id, request_pdu = query.parse_request(request)
+            if len(request) < 7:
+                raise ModbusInvalidRequestError(
+                    "Request length is only %d bytes" % len(request)
+                )
+            _transaction, _protocol, length, slave_id = struct.unpack(
+                ">HHHB", request[:7]
+            )
+            request_pdu = request[7:]
+            if length != len(request_pdu) + 1:
+                raise ModbusInvalidRequestError(
+                    "MBAP length %s does not match PDU of %s bytes"
+                    % (length, len(request_pdu))
+                )
 
-            # No function code → cannot build an exception response. Discard
-            # like a real server (issue #511).
             if not request_pdu:
                 logger.info(
                     "Discarding Modbus request with empty PDU (slave_id=%s)",
@@ -74,60 +73,54 @@ class SlaveBase(Databank):
                     },
                 )
 
-            (func_code,) = struct.unpack(">B", request_pdu[:1])
-
-            logger.debug("Working mode: %s" % mode)
+            function_code = request_pdu[0]
+            logger.debug("Working mode: %s", mode)
 
             if mode == "tcp":
                 # Serve any template-configured internal slave by unit id
                 # (issue #353). UID 255 remains the conventional Modbus/TCP
                 # "this device" address; other IDs map 1:1 to <slave id="...">.
                 if 0 <= slave_id <= 255:
-                    slave = self.get_slave(slave_id)
-                    response_pdu = slave.handle_request(request_pdu)
-                    response = query.build_response(response_pdu)
+                    response_pdu = self._call_slave(slave_id, request_pdu, False)
                 else:
-                    r = struct.pack(
-                        ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
-                    )
-                    response = query.build_response(r)
-
+                    response_pdu = _device_failure(function_code)
             elif mode == "serial":
-                if slave_id == 0:  # broadcasting
+                if slave_id == 0:
                     for key in self._slaves:
-                        response_pdu = self._slaves[key].handle_request(
-                            request_pdu, broadcast=True
-                        )
-
-                    # no response is sent back
+                        self._slaves[key].handle_request(request_pdu, broadcast=True)
                     return (
                         None,
                         {
                             "request": request_pdu.hex(),
                             "slave_id": slave_id,
-                            "function_code": func_code,
+                            "function_code": function_code,
                             "response": "",
                         },
                     )
-                elif 0 < slave_id <= 247:  # normal request handling
-                    slave = self.get_slave(slave_id)
-                    response_pdu = slave.handle_request(request_pdu)
-                    # make the full response
-                    response = query.build_response(response_pdu)
+                elif 0 < slave_id <= 247:
+                    response_pdu = self._call_slave(slave_id, request_pdu, False)
                 else:
-                    r = struct.pack(
-                        ">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE
-                    )
-                    response = query.build_response(r)
+                    response_pdu = _device_failure(function_code)
+            else:
+                response_pdu = _device_failure(function_code)
 
-        except (MissingKeyError, IOError) as e:
-            logger.error(e)
-            # If slave was not found or the request was not handled correctly,
-            # return a server error response
-            r = struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
-            response = query.build_response(r)
-        except (ModbusInvalidRequestError, ModbusInvalidMbapError) as e:
-            logger.error(e)
+            if response_pdu is None:
+                return (
+                    None,
+                    {
+                        "request": codecs.encode(request, "hex"),
+                        "slave_id": slave_id,
+                        "function_code": function_code,
+                        "response": b"",
+                    },
+                )
+            response = _build_mbap(request, response_pdu)
+        except (KeyError, OSError) as exc:
+            logger.error(exc)
+            response_pdu = _device_failure(function_code or 0)
+            response = _build_mbap(request, response_pdu)
+        except ModbusInvalidRequestError as exc:
+            logger.error(exc)
             return (
                 None,
                 {
@@ -138,15 +131,35 @@ class SlaveBase(Databank):
                 },
             )
 
-        if slave:
-            function_code = slave.function_code
+        logged_function = function_code
+        slave = self._slaves.get(slave_id)
+        if slave is not None and slave.function_code is not None:
+            logged_function = slave.function_code
 
         return (
             response,
             {
                 "request": codecs.encode(request_pdu, "hex"),
                 "slave_id": slave_id,
-                "function_code": function_code,
+                "function_code": logged_function,
                 "response": codecs.encode(response_pdu, "hex"),
             },
         )
+
+    def _call_slave(self, slave_id, request_pdu, broadcast):
+        slave = self.get_slave(slave_id)
+        return slave.handle_request(request_pdu, broadcast=broadcast)
+
+
+def _device_failure(function_code):
+    return struct.pack(">BB", (function_code or 0) + 0x80, int(ExcCodes.DEVICE_FAILURE))
+
+
+def _build_mbap(request, response_pdu):
+    transaction_id, protocol_id, _length, unit_id = struct.unpack(">HHHB", request[:7])
+    return (
+        struct.pack(
+            ">HHHB", transaction_id, protocol_id, len(response_pdu) + 1, unit_id
+        )
+        + response_pdu
+    )

@@ -205,10 +205,10 @@ Manual test: start Conpot
 You should see Modbus started on ``0.0.0.0:5020``. Port 5020 does not
 require root. Use **slave / unit ID 1**.
 
-Manual test: Python (modbus-tk)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Manual test: Python (pymodbus)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``modbus-tk`` is already a Conpot dependency. In another terminal:
+In another terminal, outside the Conpot process:
 
 ::
 
@@ -217,29 +217,34 @@ Manual test: Python (modbus-tk)
 .. code-block:: python
 
     import time
-    import modbus_tk.defines as cst
-    import modbus_tk.modbus_tcp as modbus_tcp
+    from pymodbus.client import ModbusTcpClient
 
-    m = modbus_tcp.TcpMaster(host="127.0.0.1", port=5020)
-    m.set_timeout(2.0)
+    m = ModbusTcpClient("127.0.0.1", port=5020, timeout=2)
+    m.connect()
     slave = 1
 
     def snap():
-        coils = m.execute(slave, cst.READ_COILS, 1, 2)
-        run = m.execute(slave, cst.READ_DISCRETE_INPUTS, 10001, 1)
-        hold = m.execute(slave, cst.READ_HOLDING_REGISTERS, 40001, 1)
-        analog = m.execute(slave, cst.READ_INPUT_REGISTERS, 30001, 1)
-        print("coils", coils, "running", run, "holding", hold, "analog", analog)
+        coils = m.read_coils(1, count=2, device_id=slave)
+        run = m.read_discrete_inputs(10001, count=1, device_id=slave)
+        hold = m.read_holding_registers(40001, count=1, device_id=slave)
+        analog = m.read_input_registers(30001, count=1, device_id=slave)
+        print(
+            "coils", coils.bits,
+            "running", run.bits,
+            "holding", hold.registers,
+            "analog", analog.registers,
+        )
 
     snap()
-    m.execute(slave, cst.WRITE_MULTIPLE_COILS, 1, output_value=[1, 0])
+    m.write_coils(1, [True, False], device_id=slave)
     time.sleep(0.3)
     snap()
     time.sleep(0.3)
     snap()
-    m.execute(slave, cst.WRITE_MULTIPLE_COILS, 1, output_value=[0, 1])
+    m.write_coils(1, [False, True], device_id=slave)
     time.sleep(0.2)
     snap()
+    m.close()
 
 After start, discrete 10001 should be ``1`` and holding 40001 should
 increase between snaps. Analog 30001 should be about ``holding * 10``.

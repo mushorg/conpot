@@ -15,13 +15,18 @@ import os
 import tempfile
 import unittest
 
-import modbus_tk.defines as cst
-import modbus_tk.modbus_tcp as modbus_tcp
-from modbus_tk.exceptions import ModbusError
-
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
+from conpot.tests.helpers.modbus_client import (
+    READ_COILS,
+    READ_HOLDING_REGISTERS,
+    SLAVE_DEVICE_FAILURE,
+    WRITE_MULTIPLE_COILS,
+    WRITE_MULTIPLE_REGISTERS,
+    ModbusError,
+    TcpMaster,
+)
 from conpot.utils.greenlet import spawn_startable_greenlet, teardown_test_server
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -106,18 +111,18 @@ class TestModbusInternalSlaves(unittest.TestCase):
         self.databus.set_value("memoryModbusSlave1BlockA", [1, 0, 1, 0, 1, 0, 1, 0])
         self.databus.set_value("memoryModbusSlave255BlockA", [0, 0, 0, 0, 0, 0, 0, 1])
 
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
 
         bits_uid1 = master.execute(
             slave=1,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=8,
         )
         bits_uid255 = master.execute(
             slave=255,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=8,
         )
@@ -131,31 +136,31 @@ class TestModbusInternalSlaves(unittest.TestCase):
         self.databus.set_value("memoryModbusSlave1BlockA", [0] * 8)
         self.databus.set_value("memoryModbusSlave2BlockD", [0] * 8)
 
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
 
         master.execute(
             slave=1,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=[1, 1, 1, 1, 0, 0, 0, 0],
         )
         master.execute(
             slave=2,
-            function_code=cst.WRITE_MULTIPLE_REGISTERS,
+            function_code=WRITE_MULTIPLE_REGISTERS,
             starting_address=40001,
             output_value=[10, 20, 30, 40],
         )
 
         coils = master.execute(
             slave=1,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=8,
         )
         regs = master.execute(
             slave=2,
-            function_code=cst.READ_HOLDING_REGISTERS,
+            function_code=READ_HOLDING_REGISTERS,
             starting_address=40001,
             quantity_of_x=4,
         )
@@ -165,14 +170,14 @@ class TestModbusInternalSlaves(unittest.TestCase):
         self.assertSequenceEqual((10, 20, 30, 40), regs)
 
     def test_missing_internal_slave_returns_failure(self):
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
             master.execute(
                 slave=9,
-                function_code=cst.READ_COILS,
+                function_code=READ_COILS,
                 starting_address=1,
                 quantity_of_x=1,
             )
         master.close()
-        self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
+        self.assertEqual(cm.exception.get_exception_code(), SLAVE_DEVICE_FAILURE)
