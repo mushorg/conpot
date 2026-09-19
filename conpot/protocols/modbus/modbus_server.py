@@ -1,28 +1,32 @@
 # modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
 # Brno University of Technology, Faculty of Information Technology
-import struct
-import socket
-import time
-import logging
-import sys
 import codecs
-from lxml import etree
+import logging
+import socket
+import struct
+import sys
+import time
+
 from gevent.server import StreamServer
+from lxml import etree
 
-import modbus_tk.modbus_tcp as modbus_tcp
-from modbus_tk import modbus
-
-# Following imports are required for modbus template evaluation
-import modbus_tk.defines as mdef
+import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.modbus import slave_db
-import conpot.core as conpot_core
+from conpot.protocols.modbus.slave import BLOCK_TYPES, ModbusInvalidRequestError
 
 logger = logging.getLogger(__name__)
 
 
 @conpot_protocol
-class ModbusServer(modbus.Server):
+class ModbusServer(object):
+    """Modbus/TCP honeypot.
+
+    pymodbus decodes and encodes PDUs. The socket stays a gevent StreamServer:
+    pymodbus' own TCP server needs a running asyncio loop, which fights
+    ``monkey.patch_all()`` and would hide the session and MBAP checks below.
+    """
+
     def __init__(self, template, template_directory, args):
         self.timeout = 5
         self.delay = None
@@ -30,19 +34,9 @@ class ModbusServer(modbus.Server):
         self.host = None
         self.port = None
         self.server = None
+        self._databank = slave_db.SlaveBase(template)
 
-        databank = slave_db.SlaveBase(template)
-
-        # Constructor: initializes the server settings
-        modbus.Server.__init__(self, databank if databank else modbus.Databank())
-
-        # retrieve mode of connection and turnaround delay from the template
         self._get_mode_and_delay(template)
-
-        # not sure how this class remember slave configuration across
-        # instance creation, i guess there are some
-        # well hidden away class variables somewhere.
-        self.remove_all_slaves()
         self._configure_slaves(template)
 
     def _get_mode_and_delay(self, template):
@@ -67,18 +61,19 @@ class ModbusServer(modbus.Server):
         dom = etree.parse(template)
         slaves = dom.xpath("//modbus/slaves/*")
         try:
-            for s in slaves:
-                slave_id = int(s.attrib["id"])
-                slave = self.add_slave(slave_id)
+            for slave_xml in slaves:
+                slave_id = int(slave_xml.attrib["id"])
+                slave = self._databank.add_slave(slave_id)
                 logger.debug("Added slave with id %s.", slave_id)
-                for b in s.xpath("./blocks/*"):
-                    name = b.attrib["name"]
-                    request_type = eval("mdef." + b.xpath("./type/text()")[0])
-                    start_addr = int(b.xpath("./starting_address/text()")[0])
-                    size = int(b.xpath("./size/text()")[0])
+                for block in slave_xml.xpath("./blocks/*"):
+                    name = block.attrib["name"]
+                    block_type_name = block.xpath("./type/text()")[0]
+                    request_type = BLOCK_TYPES[block_type_name]
+                    start_addr = int(block.xpath("./starting_address/text()")[0])
+                    size = int(block.xpath("./size/text()")[0])
                     slave.add_block(name, request_type, start_addr, size)
                     logger.debug(
-                        "Added block %s to slave %s. " "(type=%s, start=%s, size=%s)",
+                        "Added block %s to slave %s. (type=%s, start=%s, size=%s)",
                         name,
                         slave_id,
                         request_type,
@@ -87,8 +82,8 @@ class ModbusServer(modbus.Server):
                     )
 
             logger.info("Conpot modbus initialized")
-        except Exception as e:
-            logger.error(e)
+        except Exception as exc:
+            logger.error(exc)
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
@@ -101,9 +96,11 @@ class ModbusServer(modbus.Server):
             sock.getsockname()[1],
         )
 
-        self.start_time = time.time()
         logger.info(
-            "New Modbus connection from %s:%s. (%s)", address[0], address[1], session.id
+            "New Modbus connection from %s:%s. (%s)",
+            address[0],
+            address[1],
+            session.id,
         )
         session.add_event({"type": "NEW_CONNECTION"})
 
@@ -112,28 +109,30 @@ class ModbusServer(modbus.Server):
                 request = None
                 try:
                     request = sock.recv(7)
-                except Exception as e:
+                except socket.timeout:
+                    raise
+                except Exception as exc:
                     logger.error(
                         "Exception occurred in ModbusServer.handle() "
                         "at sock.recv(): %s",
-                        str(e),
+                        str(exc),
                     )
 
                 if not request:
                     logger.info("Modbus client disconnected. (%s)", session.id)
                     session.add_event({"type": "CONNECTION_LOST"})
                     break
-                if request.strip().lower() == "quit.":
+                if request.strip().lower() == b"quit.":
                     logger.info("Modbus client quit. (%s)", session.id)
                     session.add_event({"type": "CONNECTION_QUIT"})
                     break
                 if len(request) < 7:
                     logger.info(
-                        "Modbus client provided data {} but invalid.".format(session.id)
+                        "Modbus client provided data %s but invalid.", session.id
                     )
                     session.add_event({"type": "CONNECTION_TERMINATED"})
                     break
-                _, _, length = struct.unpack(">HHH", request[:6])
+                _transaction, _protocol, length = struct.unpack(">HHH", request[:6])
                 # MBAP length covers unit id + PDU. Legal minimum is 2
                 # (unit id + function code). Length 0/1 are reserved/malformed;
                 # scanners (e.g. nmap modbus-info) often send length 0, and
@@ -153,8 +152,7 @@ class ModbusServer(modbus.Server):
                 # bytes here (1-byte unit id + up to 253 bytes of PDU, the
                 # limit inherited from serial Modbus). An unauthenticated
                 # client can otherwise declare up to 0xFFFF and force this
-                # handler to read up to ~64KB one byte at a time via
-                # sock.recv(1) below, which - since Conpot runs every
+                # handler to read that much, which - since Conpot runs every
                 # protocol as greenlets on one shared event loop - can stall
                 # every other emulated service for the duration of the read.
                 if length > 254:
@@ -174,11 +172,11 @@ class ModbusServer(modbus.Server):
                         if not new_bytes:
                             break
                         request += new_bytes
+                    except socket.timeout:
+                        break
                     except Exception:
                         break
                 # Peer closed or timed out before the declared body arrived.
-                # Do not hand a truncated frame to modbus_tk - parse_request
-                # raises ModbusInvalidMbapError and would crash the greenlet.
                 if len(request) < (length + 6):
                     logger.info(
                         "Modbus client %s sent incomplete request "
@@ -190,19 +188,16 @@ class ModbusServer(modbus.Server):
                     )
                     session.add_event({"type": "CONNECTION_TERMINATED"})
                     break
-                query = modbus_tcp.TcpQuery()
 
-                # logdata is a dictionary containing request, slave_id,
-                # function_code and response
                 try:
                     response, logdata = self._databank.handle_request(
-                        query, request, self.mode
+                        request, self.mode
                     )
-                except modbus_tcp.ModbusInvalidMbapError as e:
+                except ModbusInvalidRequestError as exc:
                     logger.info(
                         "Modbus client %s sent invalid MBAP: %s (%s)",
                         address[0],
-                        e,
+                        exc,
                         session.id,
                     )
                     session.add_event({"type": "CONNECTION_TERMINATED"})
@@ -218,12 +213,9 @@ class ModbusServer(modbus.Server):
                     sock.sendall(response)
                     logger.info("Modbus response sent to %s", address[0])
                 else:
-                    # TODO:
-                    # response could be None under several different cases
-
-                    # MB serial connection addressing UID=0
+                    # response is None for a serial broadcast (slave id 0) and
+                    # for frames we refuse to answer (empty PDU, bad address).
                     if (self.mode == "serial") and (logdata["slave_id"] == 0):
-                        # delay is in milliseconds
                         time.sleep(self.delay / 1000)
                         logger.debug("Modbus server's turnaround delay expired.")
                         logger.info(
@@ -233,10 +225,9 @@ class ModbusServer(modbus.Server):
                         sock.shutdown(socket.SHUT_RDWR)
                         sock.close()
                         break
-                    # Invalid addressing
                     else:
                         logger.info(
-                            "Modbus client ignored due to invalid addressing." " (%s)",
+                            "Modbus client ignored due to invalid addressing. (%s)",
                             session.id,
                         )
                         session.add_event({"type": "CONNECTION_TERMINATED"})
@@ -246,6 +237,11 @@ class ModbusServer(modbus.Server):
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
             session.add_event({"type": "CONNECTION_LOST"})
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
 
     def start(self, host, port):
         self.host = host

@@ -38,7 +38,7 @@ dependencies = [
     "natsort",
     "scapy>=2.6.0,<3",
     "hpfeeds3",
-    "modbus-tk",
+    "pymodbus==3.11.4",
     "stix-validator",
     "stix",
     "cybox",

@@ -257,11 +257,11 @@ dependencies = [
     { name = "libtaxii" },
     { name = "lxml" },
     { name = "mixbox" },
-    { name = "modbus-tk" },
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1" },
     { name = "pyghmi" },
+    { name = "pymodbus" },
     { name = "pysmi" },
     { name = "pysnmp" },
     { name = "pysnmp-mibs" },
@@ -298,11 +298,11 @@ requires-dist = [
     { name = "libtaxii", specifier = ">=1.1.0" },
     { name = "lxml" },
     { name = "mixbox" },
-    { name = "modbus-tk" },
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1", specifier = "==0.6.4" },
     { name = "pyghmi", specifier = "==1.4.1" },
+    { name = "pymodbus", specifier = "==3.11.4" },
     { name = "pysmi", specifier = ">=1.6.1" },
     { name = "pysnmp", specifier = ">=7.1.22,<8" },
     { name = "pysnmp-mibs" },
@@ -746,18 +746,6 @@ wheels = [
 ]
 
 [[package]]
-name = "modbus-tk"
-version = "1.1.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyserial" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/53/28/bdfb29ce9bec76015bf3d3ad6103324a0575843ee4b20663c53cc389c227/modbus_tk-1.1.5.tar.gz", hash = "sha256:77a72a3ad9d5d32a1d2110bc04216680ca57d7522912e0f271e9bf5f1b701b36", size = 35290, upload-time = "2025-05-09T12:41:02.415Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/37/e7796ae1e01d12545209ab2a41f9f07a3232c12067fce30c9df93e29ad56/modbus_tk-1.1.5-py3-none-any.whl", hash = "sha256:30d4ba14eee8ed5895b93fc8cb0d2c73398faa2c55a246b3127b5e2174a41afc", size = 30615, upload-time = "2025-05-09T12:41:00.842Z" },
-]
-
-[[package]]
 name = "mypy-extensions"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -907,12 +895,12 @@ wheels = [
 ]
 
 [[package]]
-name = "pyserial"
-version = "3.5"
+name = "pymodbus"
+version = "3.11.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/af/bbb716301ab9c60f0702c3cdf72cc0e373286a5648fe16bc4431400489dc/pymodbus-3.11.4.tar.gz", hash = "sha256:6910e385cb6b2f983cd457e9ecee2ff580dbb23cf3d84aefec0845e71edd606a", size = 163422, upload-time = "2025-11-30T10:36:33.717Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
+    { url = "https://files.pythonhosted.org/packages/02/80/84c32440949c77f2c201c38e5fa56fd8f19da31bf24df55bdbdaba67767c/pymodbus-3.11.4-py3-none-any.whl", hash = "sha256:89865929f53bd5e32b4076dde00ee86d9b8afb1686832ed74e69d55df22729c3", size = 166002, upload-time = "2025-11-30T10:36:31.992Z" },
 ]
 
 [[package]]

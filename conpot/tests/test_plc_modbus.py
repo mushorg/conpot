@@ -21,10 +21,15 @@ monkey.patch_all()
 
 import pytest
 from gevent import sleep
-import modbus_tk.defines as cst
-import modbus_tk.modbus_tcp as modbus_tcp
 
 import conpot.core as conpot_core
+from conpot.tests.helpers.modbus_client import (
+    READ_DISCRETE_INPUTS,
+    READ_HOLDING_REGISTERS,
+    READ_INPUT_REGISTERS,
+    WRITE_MULTIPLE_COILS,
+    TcpMaster,
+)
 from conpot.emulators.plc.awlsim_engine import AwlsimEngine
 from conpot.emulators.plc.scan_cycle import _make_engine
 from conpot.protocols.modbus import modbus_server
@@ -45,14 +50,12 @@ def plc_modbus_server(request):
     yield
     teardown_test_server(server, greenlet)
     conpot_core.get_databus().reset()
-    # Default Modbus tests assert MBAP transaction id 1; TcpQuery counts globally.
-    modbus_tcp.TcpQuery._last_transaction_id = 0
 
 
 @pytest.mark.usefixtures("plc_modbus_server")
 class TestPlcModbus:
     def _master(self):
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         return master
 
@@ -60,14 +63,14 @@ class TestPlcModbus:
         master = self._master()
         master.execute(
             slave=1,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=[1, 0],
         )
         sleep(SCAN_WAIT)
         running = master.execute(
             slave=1,
-            function_code=cst.READ_DISCRETE_INPUTS,
+            function_code=READ_DISCRETE_INPUTS,
             starting_address=10001,
             quantity_of_x=1,
         )
@@ -75,20 +78,20 @@ class TestPlcModbus:
 
         first = master.execute(
             slave=1,
-            function_code=cst.READ_HOLDING_REGISTERS,
+            function_code=READ_HOLDING_REGISTERS,
             starting_address=40001,
             quantity_of_x=1,
         )[0]
         sleep(SCAN_WAIT)
         second = master.execute(
             slave=1,
-            function_code=cst.READ_HOLDING_REGISTERS,
+            function_code=READ_HOLDING_REGISTERS,
             starting_address=40001,
             quantity_of_x=1,
         )[0]
         analog = master.execute(
             slave=1,
-            function_code=cst.READ_INPUT_REGISTERS,
+            function_code=READ_INPUT_REGISTERS,
             starting_address=30001,
             quantity_of_x=1,
         )[0]
@@ -103,21 +106,21 @@ class TestPlcModbus:
         master = self._master()
         master.execute(
             slave=1,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=[1, 0],
         )
         sleep(SCAN_WAIT)
         master.execute(
             slave=1,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=[0, 1],
         )
         sleep(SCAN_WAIT)
         running = master.execute(
             slave=1,
-            function_code=cst.READ_DISCRETE_INPUTS,
+            function_code=READ_DISCRETE_INPUTS,
             starting_address=10001,
             quantity_of_x=1,
         )
@@ -125,14 +128,14 @@ class TestPlcModbus:
 
         frozen = master.execute(
             slave=1,
-            function_code=cst.READ_HOLDING_REGISTERS,
+            function_code=READ_HOLDING_REGISTERS,
             starting_address=40001,
             quantity_of_x=1,
         )[0]
         sleep(SCAN_WAIT)
         later = master.execute(
             slave=1,
-            function_code=cst.READ_HOLDING_REGISTERS,
+            function_code=READ_HOLDING_REGISTERS,
             starting_address=40001,
             quantity_of_x=1,
         )[0]
