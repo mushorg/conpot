@@ -15,41 +15,86 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import gevent.monkey
-
-gevent.monkey.patch_all()
+import asyncio
+import threading
+import time
 import unittest
+
+from aiohttp import web
+
 import conpot.utils.ext_ip
 
-from gevent.pywsgi import WSGIServer
-import gevent
+
+class _AiohttpMockServer:
+    """Minimal aiohttp site on a background thread/greenlet."""
+
+    def __init__(self, host="127.0.0.1", port=8000):
+        self.host = host
+        self.port = port
+        self.loop = None
+        self._runner = None
+        self._ready = threading.Event()
+        self._error = None
+        self._thread = None
+
+    def start(self):
+        async def handle(_request):
+            return web.Response(text="127.0.0.1", content_type="text/html")
+
+        def run():
+            try:
+                self.loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(self.loop)
+
+                async def start_site():
+                    app = web.Application()
+                    app.router.add_get("/", handle)
+                    self._runner = web.AppRunner(app, access_log=None)
+                    await self._runner.setup()
+                    site = web.TCPSite(self._runner, self.host, self.port)
+                    await site.start()
+
+                self.loop.run_until_complete(start_site())
+                self._ready.set()
+                self.loop.run_forever()
+                self.loop.run_until_complete(self._runner.cleanup())
+            except Exception as exc:
+                self._error = exc
+                self._ready.set()
+            finally:
+                if self.loop is not None:
+                    self.loop.close()
+
+        self._thread = threading.Thread(target=run, daemon=True)
+        self._thread.start()
+        if not self._ready.wait(timeout=10):
+            raise RuntimeError("aiohttp mock server failed to start")
+        if self._error is not None:
+            raise self._error
+
+    def stop(self):
+        if self.loop is not None and self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+        if self._thread is not None:
+            self._thread.join(timeout=10)
 
 
 class TestExtIPUtil(unittest.TestCase):
-    def setUp(self):
-        def application(environ, start_response):
-            headers = [("Content-Type", "text/html")]
-            start_response("200 OK", headers)
-            return [b"127.0.0.1"]
-
-        self.server = WSGIServer(("localhost", 8000), application)
-        gevent.spawn(self.server.serve_forever)
-
-    def tearDown(self):
-        self.server.stop()
-
     def test_ip_verify(self):
         self.assertTrue(conpot.utils.ext_ip._verify_address("127.0.0.1") is True)
 
     def test_ext_util(self):
-        ip_address = str(
-            conpot.utils.ext_ip._fetch_data(
-                urls=[
-                    "http://127.0.0.1:8000",
-                ]
+        server = _AiohttpMockServer()
+        server.start()
+        try:
+            # Give the site a moment under gevent scheduling.
+            time.sleep(0.1)
+            ip_address = str(
+                conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000"])
             )
-        )
-        self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
+            self.assertTrue(conpot.utils.ext_ip._verify_address(ip_address) is True)
+        finally:
+            server.stop()
 
     def test_fetch_ext_ip(self):
         self.assertIsNotNone(

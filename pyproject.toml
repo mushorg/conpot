@@ -57,6 +57,7 @@ dependencies = [
     "cryptography==50.0.0",
     "sphinx_rtd_theme",
     "psutil",
+    "aiohttp==3.14.3",
 ]
 
 [project.urls]
