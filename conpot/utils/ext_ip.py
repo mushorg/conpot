@@ -15,12 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import json
 import logging
 import socket
+import subprocess
+import sys
+from asyncio import events
 
-import requests
-from requests.exceptions import Timeout, ConnectionError
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +36,80 @@ def _verify_address(addr):
         return False
 
 
-def _fetch_data(urls):
-    # we only want warning+ messages from the requests module
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    for url in urls:
-        try:
-            req = requests.get(url, timeout=5)
-            if req.status_code == 200:
-                data = req.text.strip()
-                if data is None or not _verify_address(data):
-                    continue
-                else:
-                    return data
-            else:
-                raise ConnectionError
-        except Timeout, ConnectionError:
-            logger.warning("Could not fetch public ip from %s", url)
+def _gevent_socket_patched():
+    try:
+        from gevent import monkey
+
+        return monkey.is_module_patched("socket")
+    except ImportError:
+        return False
+
+
+async def _fetch_data_async(urls):
+    logging.getLogger("aiohttp").setLevel(logging.WARNING)
+    timeout = aiohttp.ClientTimeout(total=5)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for url in urls:
+            try:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        data = (await resp.text()).strip()
+                        if data is None or not _verify_address(data):
+                            continue
+                        return data
+                    logger.warning("Could not fetch public ip from %s", url)
+            except asyncio.TimeoutError, aiohttp.ClientError:
+                logger.warning("Could not fetch public ip from %s", url)
     return None
+
+
+def _fetch_data_subprocess(urls):
+    """Run aiohttp fetch in a clean interpreter (avoids gevent+asyncio DNS hangs)."""
+    script = (
+        "import asyncio, json, sys\n"
+        "from conpot.utils.ext_ip import _fetch_data_async\n"
+        "urls = json.loads(sys.argv[1])\n"
+        "print(asyncio.run(_fetch_data_async(urls)) or '')\n"
+    )
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-c", script, json.dumps(list(urls))],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        logger.warning("Could not fetch public ip via subprocess: %s", exc)
+        return None
+    if completed.returncode != 0:
+        logger.warning(
+            "Could not fetch public ip via subprocess: %s",
+            completed.stderr.strip() or completed.returncode,
+        )
+        return None
+    data = completed.stdout.strip()
+    if data and _verify_address(data):
+        return data
+    return None
+
+
+def _fetch_data(urls):
+    """Fetch via aiohttp.
+
+    Under gevent monkey-patching, greenlets share an OS thread and asyncio DNS
+    over patched sockets hangs. Prefer an existing loop when present; otherwise
+    use a clean subprocess when gevent has patched ``socket``.
+    """
+    existing = events._get_running_loop()
+    if existing is not None:
+        future = asyncio.run_coroutine_threadsafe(_fetch_data_async(urls), existing)
+        return future.result(timeout=60)
+
+    if _gevent_socket_patched():
+        return _fetch_data_subprocess(urls)
+
+    return asyncio.run(_fetch_data_async(urls))
 
 
 def get_ext_ip(config=None, urls=None):
