@@ -15,8 +15,7 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
-from gevent import socket
-from gevent.server import DatagramServer
+import asyncio
 import struct
 import pyghmi.ipmi.private.constants as constants
 import pyghmi.ipmi.private.serversession as serversession
@@ -28,6 +27,7 @@ import collections
 from lxml import etree
 from conpot.protocols.ipmi.fakebmc import FakeBmc
 from conpot.protocols.ipmi.fakesession import FakeSession
+from conpot.utils.asyncio_serve import serve_udp_datagram
 from conpot.utils.networking import chr_py3
 import conpot.core as conpot_core
 import logging as logger
@@ -92,7 +92,13 @@ class IpmiServer(object):
         csum &= 0xFF
         return csum
 
+    def _ensure_sock(self):
+        if self.sock is None and self.server is not None:
+            self.sock = self.server.socket
+            self.port = self.server.server_port
+
     def _add_event(self, address, event_data):
+        self._ensure_sock()
         session = conpot_core.get_session(
             "ipmi",
             address[0],
@@ -103,6 +109,7 @@ class IpmiServer(object):
         session.add_event(event_data)
 
     def handle(self, data, address):
+        self._ensure_sock()
         # make sure self.session exists
         if not address[0] in self.sessions.keys() or not hasattr(self, "session"):
             # new session for new source
@@ -573,18 +580,22 @@ class IpmiServer(object):
                 "IPMI response sent (Invalid Command) to %s", self.session.sockaddr
             )
 
-    def start(self, host, port):
-        connection = (host, port)
+    async def start(self, host, port):
         self.port = port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(True)
-        self.sock.bind(connection)
-        self.server = DatagramServer(self.sock, self.handle)
-        self.server.start()
-        logger.info("IPMI server started on: %s", (host, self.server.server_port))
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("IPMI server started on: %s", (host, port))
+        await serve_udp_datagram(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="IPMIServer",
+            reuse_address=True,
+            broadcast=True,
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

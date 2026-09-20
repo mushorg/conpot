@@ -1,16 +1,16 @@
 # This module is based on the original work done by Giampaolo Rodola and pyftpdlib authors.
-# This is a heavily customized version that supports Conpot's virtual file system os.* wrappers and gevent support.
+# This is a heavily customized version that supports Conpot's virtual file system os.* wrappers.
 
 from conpot.protocols.ftp.ftp_base_handler import FTPHandlerBase
 import logging
 import fs
 import os
 import glob
+import socket
 import sys
 import tempfile
+import time
 from datetime import datetime
-import gevent
-from gevent import socket
 from conpot.core.filesystem import FilesystemError, FSOperationNotPermitted
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException, get_data_from_iter
 
@@ -491,7 +491,7 @@ class FTPCommandChannel(FTPHandlerBase):
             self.stop_data_channel(purge=True, reason="Switching from PASV mode.")
         self.active_passive_mode = "PASV"
         # We are in passive mode. Here we would create a simple socket listener.
-        self._data_listener_sock = gevent.socket.socket()
+        self._data_listener_sock = socket.socket()
         self._data_listener_sock.bind((self._local_ip, 0))
         ip, port = self._data_listener_sock.getsockname()
         self.respond(
@@ -510,6 +510,8 @@ class FTPCommandChannel(FTPHandlerBase):
                 self._data_sock,
                 (self.cli_ip, self.cli_port),
             ) = self._data_listener_sock.accept()
+            self._data_sock.setblocking(True)
+            self._data_sock.settimeout(None)
             logger.info(
                 "Client {} provided ({}:{}) for PASV connection.".format(
                     self.client_address, self.cli_ip, self.cli_port
@@ -545,7 +547,8 @@ class FTPCommandChannel(FTPHandlerBase):
             if not 0 <= port <= 65535:
                 raise ValueError
             self.cli_ip, self.cli_port = ip, port
-            self._data_sock = gevent.socket.socket()
+            self._data_sock = socket.socket()
+            self._data_sock.setblocking(True)
             self._data_sock.connect((self.cli_ip, self.cli_port))
             logger.info("Client {} entered FTP active mode".format(self.client_address))
             logger.info(
@@ -953,7 +956,7 @@ class FTPCommandChannel(FTPHandlerBase):
                 self.respond(b"421 Timeout.")
                 self.disconnect_client = True
             else:
-                gevent.sleep(0)
+                time.sleep(0.05)
 
         except UnicodeDecodeError:
             # RFC-2640 doesn't mention what to do in this case. So we'll just return 501

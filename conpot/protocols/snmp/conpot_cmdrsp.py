@@ -1,12 +1,12 @@
 import logging
 import random
+import time
 
 from pysnmp.entity.rfc3413 import cmdrsp
 from pysnmp.proto import error
 from pysnmp.proto.api import v2c
 import pysnmp.smi.error
 from pysnmp import debug
-import gevent
 import conpot.core as conpot_core
 from conpot.utils.networking import get_interface_ip
 
@@ -39,8 +39,14 @@ class conpot_extension(object):
         return addr, snmp_version
 
     def log(self, version, msg_type, addr, req_varBinds, res_varBinds=None, sock=None):
+        dest_port = self.port
+        if sock is not None:
+            try:
+                dest_port = sock.getsockname()[1]
+            except Exception:
+                dest_port = self.port
         session = conpot_core.get_session(
-            "snmp", addr[0], addr[1], get_interface_ip(addr[0]), sock.getsockname()[1]
+            "snmp", addr[0], addr[1], get_interface_ip(addr[0]), dest_port
         )
         req_oid = req_varBinds[0][0]
         req_val = req_varBinds[0][1]
@@ -60,15 +66,21 @@ class conpot_extension(object):
             {"type": event_type, "request": request, "response": response}
         )
 
-    def do_tarpit(self, delay):
+    def _tarpit_seconds(self, delay):
         lbound, _, ubound = delay.partition(";")
+        if not lbound:
+            return 0.0
+        if not ubound:
+            return float(lbound)
+        return random.uniform(float(lbound), float(ubound))
 
-        if not lbound or lbound is None:
-            pass
-        elif not ubound or ubound is None:
-            gevent.sleep(float(lbound))
-        else:
-            gevent.sleep(random.uniform(float(lbound), float(ubound)))
+    def do_tarpit(self, delay):
+        seconds = self._tarpit_seconds(delay)
+        if seconds <= 0:
+            return
+        # PySNMP invokes this from a sync callback. send_varbinds must run
+        # before the callback returns or request state is dropped.
+        time.sleep(seconds)
 
     def check_evasive(self, state, threshold, addr, cmd):
         state_individual, state_overall = state
@@ -131,8 +143,7 @@ class c_GetCommandResponder(cmdrsp.GetCommandResponder, conpot_extension):
             if response:
                 rsp_var_binds = [(tuple(rsp_var_binds[0][0]), response)]
         finally:
-            sock = snmpEngine.transport_dispatcher.socket
-            self.log(snmp_version, "Get", addr, var_binds, rsp_var_binds, sock)
+            self.log(snmp_version, "Get", addr, var_binds, rsp_var_binds)
 
         if _tarpit_active(self.tarpit):
             self.do_tarpit(self.tarpit)
@@ -186,8 +197,7 @@ class c_NextCommandResponder(cmdrsp.NextCommandResponder, conpot_extension):
                 else:
                     break
         finally:
-            sock = snmpEngine.transport_dispatcher.socket
-            self.log(snmp_version, "GetNext", addr, var_binds, rsp_var_binds, sock)
+            self.log(snmp_version, "GetNext", addr, var_binds, rsp_var_binds)
 
         self.release_state_information(stateReference)
 
@@ -245,8 +255,7 @@ class c_BulkCommandResponder(cmdrsp.BulkCommandResponder, conpot_extension):
                 var_binds = rsp_var_binds[-R:]
                 M -= 1
         finally:
-            sock = snmpEngine.transport_dispatcher.socket
-            self.log(snmp_version, "Bulk", addr, var_binds, rsp_var_binds, sock)
+            self.log(snmp_version, "Bulk", addr, var_binds, rsp_var_binds)
 
         if _tarpit_active(self.tarpit):
             self.do_tarpit(self.tarpit)
@@ -303,5 +312,4 @@ class c_SetCommandResponder(cmdrsp.SetCommandResponder, conpot_extension):
             if instrum_error:
                 raise instrum_error
         finally:
-            sock = snmpEngine.transport_dispatcher.socket
-            self.log(snmp_version, "Set", addr, var_binds, rsp_var_binds, sock)
+            self.log(snmp_version, "Set", addr, var_binds, rsp_var_binds)

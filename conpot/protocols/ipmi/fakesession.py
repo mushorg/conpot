@@ -51,9 +51,11 @@ class FakeSession(Session):
         self.bmc_handlers = {}
         self.userid = userid
         self.password = password
-        # pyghmi >= 1.5 _initsession() calls _getmaxtimeout(), which needs this.
-        # Session.__init__ sets it; FakeSession does not call super().
+        # pyghmi >= 1.5 _initsession() calls _getmaxtimeout(), which needs
+        # maxtimeout (Session.__init__) and logontries (Session.login).
+        # FakeSession does not call super() or login().
         self.maxtimeout = 3
+        self.logontries = 1
         self._initsession()
         self.sockaddr = (bmc, port)
         self.server = None
@@ -131,10 +133,14 @@ class FakeSession(Session):
                 self.server.close_server_session()
                 return
             remseqnumber = struct.unpack("<I", rawdata[10:14])[0]
-            if hasattr(self, "remseqnumber"):
-                if remseqnumber < self.remseqnumber and self.remseqnumber != 0xFFFFFFFF:
-                    self.server.close_server_session()
-                    return
+            if (
+                hasattr(self, "remseqnumber")
+                and self.remseqnumber is not None
+                and remseqnumber < self.remseqnumber
+                and self.remseqnumber != 0xFFFFFFFF
+            ):
+                self.server.close_server_session()
+                return
             self.remseqnumber = remseqnumber
             psize = data[14] + (data[15] << 8)
             payload = data[16 : 16 + psize]

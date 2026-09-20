@@ -28,7 +28,7 @@ updates without extra callbacks. That matches a real PLC: a cyclic scan
 samples the process image; it does not need a notification on every coil
 write.
 
-The scan runs in a gevent greenlet, started from a databus
+The scan runs in a daemon thread, started from a databus
 ``type="function"`` class (the same pattern as the Kamstrup usage
 simulator). On shutdown the databus calls ``stop()`` on that instance.
 

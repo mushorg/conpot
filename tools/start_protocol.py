@@ -14,9 +14,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-import sys
 
-import gevent
+import sys
+import time
 
 from conpot.utils.greenlet import init_test_server_by_name, teardown_test_server
 
@@ -41,12 +41,13 @@ def main():
     port = ports.get(name, 0)
 
     print(f"Starting '{name}'...")
-    server, greenlet = init_test_server_by_name(name, port=port)
+    server, handle = init_test_server_by_name(name, port=port)
 
     try:
-        gevent.wait()
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
-        teardown_test_server(server=server, greenlet=greenlet)
+        teardown_test_server(server=server, loop_task=handle)
 
 
 if __name__ == "__main__":

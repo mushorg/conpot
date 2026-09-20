@@ -20,13 +20,14 @@ Service support based on gaspot.py [https://github.com/sjhilt/GasPot]
 Original authors: Kyle Wilhoit and Stephen Hilt
 """
 
-from gevent.server import StreamServer
 import datetime
+import asyncio
 import logging
 import random
 import socket
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 from conpot.utils.networking import str_to_bytes
 
 logger = logging.getLogger(__name__)
@@ -533,11 +534,21 @@ class GuardianASTServer(object):
             session.add_event({"type": "CONNECTION_LOST"})
             sock.close()
 
-    def start(self, host, port):
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("GuardianAST server started on: {0}".format(connection))
-        self.server.serve_forever()
+    async def start(self, host, port):
+        self.host = host
+        self.port = port
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("GuardianAST server started on: {0}".format((host, port)))
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="GuardianASTServer",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

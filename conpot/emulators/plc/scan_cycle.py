@@ -16,9 +16,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-
-import gevent
-import gevent.event
+import threading
+import time
 
 import conpot.core as conpot_core
 from conpot.emulators.plc.engine import ProcessImage
@@ -59,8 +58,8 @@ class PlcScanCycle:
         self.holding_key = holding_key
         self.analog_key = analog_key
         self._enabled = True
-        self.stopped = gevent.event.Event()
-        gevent.spawn(self.initialize)
+        self.stopped = threading.Event()
+        threading.Thread(target=self.initialize, daemon=True).start()
 
     def stop(self):
         self._enabled = False
@@ -91,5 +90,5 @@ class PlcScanCycle:
                 engine.scan(image)
             except Exception:
                 logger.exception("PLC scan failed")
-            gevent.sleep(scan_s)
+            time.sleep(scan_s)
         self.stopped.set()

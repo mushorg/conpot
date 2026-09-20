@@ -15,16 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
-
+import socket
 import struct
 import unittest
-import gevent
 
 from datetime import datetime
-from gevent import socket
 
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
@@ -36,7 +31,12 @@ from conpot.tests.helpers.modbus_client import (
     ModbusError,
     TcpMaster,
 )
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.greenlet import (
+    drain_log_queue,
+    get_log_event,
+    spawn_test_server,
+    teardown_test_server,
+)
 
 
 class TestModbusServer(unittest.TestCase):
@@ -154,13 +154,11 @@ class TestModbusServer(unittest.TestCase):
         )
 
         # extract the generated log entries
-        log_queue = conpot_core.get_sessionManager().log_queue
-
-        conn_log_item = log_queue.get(True, 2)
+        conn_log_item = get_log_event(self.greenlet, timeout=2)
         conn_expected_payload = {"type": "NEW_CONNECTION"}
         self.assertDictEqual(conn_expected_payload, conn_log_item["data"])
 
-        modbus_log_item = log_queue.get(True, 2)
+        modbus_log_item = get_log_event(self.greenlet, timeout=2)
         self.assertIsInstance(modbus_log_item["timestamp"], datetime)
         self.assertTrue("data" in modbus_log_item)
         # we expect session_id to be 36 characters long (32 x char, 4 x dashes)
@@ -215,21 +213,17 @@ class TestModbusServer(unittest.TestCase):
         the peer's write side is closed, recv(1) returns b'' *immediately*
         on every call instead of raising, so `request` never grows and the
         loop never terminates: a single such connection pins one CPU core
-        forever and, since Conpot runs every protocol as greenlets on one
-        shared event loop, starves every other protocol Conpot serves.
+        forever and starves other protocol handlers on the same process.
 
         This is deliberately not a wall-clock timing assertion - the
         underlying bug is a genuine infinite loop, not merely a slow one.
-        Note the gevent.Timeout below is best-effort, not a real safety net:
+        The socket timeout below is best-effort, not a real safety net:
         against the pre-fix code this test doesn't cleanly fail, it hangs
-        the whole process. A tight CPU-bound loop that never calls anything
-        which yields never gives gevent's hub a chance to run *any* other
-        callback, including the timer backing this very Timeout - confirmed
-        manually with a 15s wall-clock timeout (`timeout 15 python3 ...`)
-        that had to kill the process from the outside. If this test ever
-        hangs your test run instead of failing, that itself is the bug.
+        the whole process. If this test ever hangs your test run instead
+        of failing, that itself is the bug.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         length = 0xFFFF
         # 7-byte MBAP header: transaction id, protocol id, length, unit id.
@@ -237,8 +231,10 @@ class TestModbusServer(unittest.TestCase):
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
@@ -247,17 +243,20 @@ class TestModbusServer(unittest.TestCase):
         """
         nmap modbus probes often send an MBAP header with length 0.
         That must close the connection cleanly instead of raising
-        ModbusInvalidMbapError and killing the handler greenlet.
+        ModbusInvalidMbapError and killing the handler.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         # 7-byte MBAP: tid, pid, length=0, unit id
         header = struct.pack(">HHHB", 0, 0, 0, 1)
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
@@ -268,27 +267,33 @@ class TestModbusServer(unittest.TestCase):
 
         MBAP length 1 is unit id only (empty PDU). Real Modbus servers send
         no exception response for framing errors; Conpot must discard without
-        crashing the handler greenlet on struct.unpack of the missing FC.
+        crashing the handler on struct.unpack of the missing FC.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         # length=1: only unit id follows, no function code
         header = struct.pack(">HHHB", 0, 0, 1, 1)
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
 
         # Handler must still accept a valid request on a new connection.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
-        with gevent.Timeout(2.0, TimeoutError("server did not answer valid request")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server did not answer valid request")
         s.close()
         self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
 
@@ -313,9 +318,10 @@ class TestModbusServer(unittest.TestCase):
     def test_incomplete_request_is_rejected(self):
         """
         A client that declares a valid length then half-closes before the
-        body arrives must be dropped without crashing the greenlet.
+        body arrives must be dropped without crashing the handler.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         # length=5 means 5 bytes after the 6-byte prefix (unit id + 4 PDU),
         # but we only send the 7-byte header then close the write side.
@@ -323,8 +329,10 @@ class TestModbusServer(unittest.TestCase):
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
@@ -375,10 +383,8 @@ class TestModbusUmas(unittest.TestCase):
         self.assertEqual(start, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
         self.assertTrue(slave.running)
 
-        log_queue = conpot_core.get_sessionManager().log_queue
         types = []
-        while not log_queue.empty():
-            item = log_queue.get_nowait()
+        for item in drain_log_queue(self.greenlet):
             event_type = item["data"].get("type")
             if event_type:
                 types.append(event_type)

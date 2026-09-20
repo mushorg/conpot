@@ -25,12 +25,12 @@ Lifecycle
    with either a parsed ``template.toml`` dict or a legacy ``template.xml`` path.
 3. ``initialize`` loads every key from ``core.databus.key_value_mappings`` (TOML) or
    ``//core/databus/key_value_mappings/*`` (XML), then sets ``databus.initialized``
-   (a ``gevent.event.Event``).
+   (a ``threading.Event``).
 4. Protocol servers start after that and resolve template references to databus keys.
 5. ``reset()`` clears keys and observers; any stored object with a ``stop()`` method
    is stopped first (used by long-running emulators).
 
-Emulators that start their own greenlets should wait until the bus is ready::
+Emulators that start their own background threads should wait until the bus is ready::
 
     databus = conpot.core.get_databus()
     databus.initialized.wait()
@@ -117,7 +117,8 @@ Python API
 
 ``set_value(key, value)``
     Stores ``value`` under ``key`` and notifies observers registered for that key
-    (each callback runs in a newly spawned greenlet).
+    (on the running asyncio loop via ``create_task``, or a daemon thread if no
+    loop is running).
 
 ``observe_value(key, callback)``
     Registers ``callback`` to run when ``key`` is written. The callback must be
@@ -127,7 +128,8 @@ Python API
 
 ``initialize(config_file)`` / ``reset()``
     Load or tear down the key set. Prefer letting Conpot's startup path call these;
-    tests use the same helpers via ``conpot.utils.greenlet``.
+    tests use the same helpers via ``conpot.utils.greenlet`` (asyncio loop-thread
+    harness; name kept for compatibility).
 
 Writing an emulator
 -------------------
@@ -145,7 +147,7 @@ Minimal pattern (see ``conpot.emulators.misc.uptime.Uptime``)::
         def get_value(self):
             return calendar.timegm(time.gmtime()) - self.started
 
-If the emulator owns a background greenlet, implement ``stop()`` so ``reset()``
+If the emulator owns a background thread, implement ``stop()`` so ``reset()``
 can shut it down cleanly.
 
 How protocols use the databus
@@ -173,7 +175,7 @@ Notes for contributors
   returning silent defaults.
 * ``type="value"`` uses ``eval``. Keep template expressions simple and treat
   profile XML as trusted configuration written by the operator.
-* Observers run asynchronously via ``gevent.spawn``. Avoid calling back into the
-  databus from ``get_value`` implementations in a way that re-enters the same key
-  while observers are firing.
+* Observers run asynchronously (asyncio task or thread). Avoid calling back into
+  the databus from ``get_value`` implementations in a way that re-enters the same
+  key while observers are firing.
 * Prefer shared databus keys over duplicating strings in every protocol XML file.

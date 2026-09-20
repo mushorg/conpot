@@ -24,7 +24,8 @@ Intended process-image mapping when the hardware-module bridge lands:
 * Holding / analog registers       -> MW / PIW
 
 Awlsim's interpreter must run in a native thread so a scan cannot block
-gevent. Do not import this module from required Conpot dependencies.
+the asyncio event loop. Do not import this module from required Conpot
+dependencies.
 """
 
 from conpot.emulators.plc.engine import ProcessImage

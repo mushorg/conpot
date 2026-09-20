@@ -15,8 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import time
 import unittest
-import gevent
 
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 
@@ -36,9 +36,9 @@ class Test_HPFriends(unittest.TestCase):
             "test.test",
         ]
         hpf = HPFriendsLogger(host, port, ident, secret, channels)
-        gevent.sleep(0.5)
+        time.sleep(0.5)
         error_message = hpf.log("some some test data")
-        gevent.sleep(0.5)
+        time.sleep(0.5)
         self.assertIsNone(
             error_message, "Unexpected error message: {0}".format(error_message)
         )

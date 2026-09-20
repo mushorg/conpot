@@ -16,16 +16,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import binascii
+import asyncio
 import logging
 import random
 import socket
-from gevent.server import StreamServer
-import gevent
+import threading
+import time
+
 import conpot.core as conpot_core
 from conpot.utils.networking import chr_py3
 from .request_parser import KamstrupRequestParser
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +47,14 @@ class KamstrupServer(object):
         assert key == "reboot_signal"
         self.server_active = False
         logger.info("Pretending server reboot")
-        gevent.spawn_later(2, self.set_reboot_done)
+        threading.Timer(2, self.set_reboot_done).start()
 
     def set_reboot_done(self):
         logger.info("Stopped pretending reboot")
         self.server_active = True
 
     def handle(self, sock, address):
+        sock.settimeout(5)
         session = conpot_core.get_session(
             "kamstrup_protocol",
             address[0],
@@ -94,7 +98,7 @@ class KamstrupServer(object):
                         }
                         response = self.command_responder.respond(request)
                         # real Kamstrup meters has delay in this interval
-                        gevent.sleep(random.uniform(0.24, 0.34))
+                        time.sleep(random.uniform(0.24, 0.34))
                         if response:
                             serialized_response = response.serialize()
                             logdata["response"] = binascii.hexlify(serialized_response)
@@ -116,13 +120,21 @@ class KamstrupServer(object):
 
         sock.close()
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("Kamstrup protocol server started on: %s", connection)
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("Kamstrup protocol server started on: {0}".format((host, port)))
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="KamstrupServer",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

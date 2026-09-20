@@ -6,11 +6,11 @@ This guide covers running Conpot directly on your machine (outside Docker). Conp
 System packages (Debian / Ubuntu)
 ---------------------------------
 
-Install build dependencies for lxml, gevent, and cryptography:
+Install build dependencies for lxml and cryptography:
 
 ::
 
-    $ sudo apt-get install gcc libxslt1-dev python3-dev libevent-dev libffi-dev libssl-dev
+    $ sudo apt-get install gcc libxslt1-dev python3-dev libffi-dev libssl-dev
 
 To run the full test suite you also need ``ipmitool`` (used by the IPMI tests; not required at runtime):
 

@@ -15,11 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
-
 import os
+import socket
 import struct
 import unittest
 
@@ -39,7 +36,6 @@ from bacpypes3.apdu import (
     WhoIsRequest,
 )
 from bacpypes3.primitivedata import ObjectIdentifier, ObjectType, Real
-from gevent import Timeout, socket
 
 from conpot.protocols.bacnet import bacnet_server
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
@@ -77,7 +73,7 @@ class TestBACnetServer(unittest.TestCase):
         self.bacnet_server, self.greenlet = spawn_test_server(
             bacnet_server.BacnetServer, "default", "bacnet"
         )
-        self.assertTrue(self.bacnet_server.ready.wait(2))
+        self.assertTrue(self.bacnet_server.ready.is_set())
         self.address = (self.bacnet_server.host, self.bacnet_server.port)
 
     def tearDown(self):
@@ -169,13 +165,16 @@ class TestBACnetServer(unittest.TestCase):
             encode_bacnet_ip(AbortPDU(invoke_id=101, reason=9)),
         ]
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.settimeout(1)
 
         buf_size = 1024
         for payload in payloads:
             s.sendto(payload, self.address)
         results = None
-        with Timeout(1, False):
+        try:
             results = [s.recvfrom(buf_size) for _ in payloads]
+        except socket.timeout:
+            results = None
         self.assertIsNone(results)
         s.close()
 

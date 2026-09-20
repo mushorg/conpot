@@ -87,7 +87,7 @@ class TestExtIPUtil(unittest.TestCase):
         server = _AiohttpMockServer()
         server.start()
         try:
-            # Give the site a moment under gevent scheduling.
+            # Give the site a moment to accept connections.
             time.sleep(0.1)
             ip_address = str(
                 conpot.utils.ext_ip._fetch_data(urls=["http://127.0.0.1:8000"])
