@@ -295,7 +295,7 @@ requires-dist = [
     { name = "gevent", specifier = ">=1.0" },
     { name = "hpfeeds3" },
     { name = "legacy-cgi", marker = "python_full_version >= '3.13'" },
-    { name = "libtaxii", specifier = ">=1.1.0" },
+    { name = "libtaxii", git = "https://github.com/ilia-eiq/libtaxii.git?rev=3bc1c15d9162c0e32bcde2e300056f3db9fd558a" },
     { name = "lxml" },
     { name = "mixbox" },
     { name = "natsort" },
@@ -615,15 +615,11 @@ wheels = [
 [[package]]
 name = "libtaxii"
 version = "1.1.119"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/ilia-eiq/libtaxii.git?rev=3bc1c15d9162c0e32bcde2e300056f3db9fd558a#3bc1c15d9162c0e32bcde2e300056f3db9fd558a" }
 dependencies = [
     { name = "lxml" },
     { name = "python-dateutil" },
     { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/b7/e8db58ffd46c6e9afb8d00b6f8f11323a97a04ff4163f84f6224acfabd71/libtaxii-1.1.119.tar.gz", hash = "sha256:7191b3a8db1f8eb379a640ca1e771d62f0a66d97496ddb347636506964b9e2e2", size = 119470, upload-time = "2021-04-15T17:28:06.355Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/5b/f38d50f85ad24393533fd783d44d2c43029d83d651a5f0632fef754725e1/libtaxii-1.1.119-py2.py3-none-any.whl", hash = "sha256:2ab065e4510b5ab3ad378cf845156a3ce9c362a873ba731726eca2d9b52f48b7", size = 130803, upload-time = "2021-04-15T17:28:04.65Z" },
 ]
 
 [[package]]

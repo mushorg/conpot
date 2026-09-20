@@ -65,6 +65,13 @@ See :doc:`plc_emulator` for how the emulator works, how to configure it, and
 how to test it. The default template still uses static (randomized-once)
 lists and is unchanged.
 
+Optional Schneider UMAS (Modbus function 90) is controlled by
+``<umas enabled="true"/>``. When enabled, UMAS start (``0x40``) and stop
+(``0x41``) return status ``0xFE`` and log ``UMAS_START`` / ``UMAS_STOP``.
+Other UMAS codes return ``0xFD``. Leave it off on Siemens-flavored
+profiles. ``plc_modbus`` turns it on and sets ``device_info`` to a Modicon
+identity. See :doc:`stop_restart` for local probes.
+
 ``HOLDING_REGISTERS`` are writable working registers. In ``plc_modbus``, holding
 register 0 is incremented by the native engine while the plant is running.
 

@@ -226,8 +226,9 @@ class S7Server(object):
                                         ) = S7_packet.handle(
                                             address[0], session=session
                                         )
-                                        # Job read/write → Ack-Data (0x03); SZL/userdata → 0x07
-                                        if S7_packet.param in (0x04, 0x05):
+                                        # Job read/write and CPU stop/start → Ack-Data (0x03);
+                                        # SZL/userdata → 0x07
+                                        if S7_packet.param in (0x04, 0x05, 0x28, 0x29):
                                             resp_pdu_type = 3
                                         else:
                                             resp_pdu_type = 7

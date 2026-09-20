@@ -21,6 +21,7 @@ import cpppo
 import contextlib
 import time
 import sys
+import struct
 import traceback
 
 from lxml import etree
@@ -32,6 +33,39 @@ from conpot.core.protocol_wrapper import conpot_protocol
 import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
+
+# EtherNet/IP encapsulation header is 24 bytes, little-endian. Command 0x0000
+# (NOP) is a keepalive: the receiver discards it and does not reply.
+_ENIP_HEADER_LEN = 24
+
+
+def drain_encapsulation_nops(buf):
+    """Split leading NOP commands from an encapsulation byte stream.
+
+    Returns ``(nop_count, hold, forward)``. ``hold`` is an incomplete header
+    or incomplete NOP that must stay out of the parser. ``forward`` is the
+    first non-NOP command, including any partial body already received.
+    """
+    offset = 0
+    nops = 0
+    while len(buf) - offset >= _ENIP_HEADER_LEN:
+        command, length = struct.unpack_from("<HH", buf, offset)
+        if command != 0:
+            return nops, b"", buf[offset:]
+        total = _ENIP_HEADER_LEN + length
+        if len(buf) - offset < total:
+            return nops, buf[offset:], b""
+        offset += total
+        nops += 1
+    return nops, buf[offset:], b""
+
+
+def _record_nops(session, nops, peer):
+    if not nops:
+        return
+    for _ in range(nops):
+        session.add_event({"type": "ENIP_NOP"})
+    logger.info("Discarded %d EtherNet/IP NOP from %s", nops, peer)
 
 
 class EnipConfig(object):
@@ -216,6 +250,7 @@ class EnipServer(object):
                     address
                 ), "EtherNet/IP CIP server for TCP/IP must be provided a peer address"
                 stats, connkey = self.stats_for(address)
+                nop_hold = b""
                 while not stats.eof:
                     data = cpppo.dotdict()
                     source.forget()
@@ -276,7 +311,23 @@ class EnipServer(object):
                                             len(msg),
                                             cpppo.reprlib.repr(msg),
                                         )
-                                    source.chain(msg)
+                                    if msg:
+                                        nops, nop_hold, forward = (
+                                            drain_encapsulation_nops(nop_hold + msg)
+                                        )
+                                        _record_nops(session, nops, address)
+                                        if not forward:
+                                            # Incomplete header, or only NOPs. Stay in
+                                            # the read loop so the parser is not resumed
+                                            # on an empty source.
+                                            msg = None
+                                            continue
+                                        source.chain(forward)
+                                    else:
+                                        if nop_hold:
+                                            source.chain(nop_hold)
+                                            nop_hold = b""
+                                        source.chain(msg)
                                 else:
                                     # No input.  If we have symbols available, no problem; continue.
                                     # This can occur if the state machine cannot make a transition on
@@ -467,6 +518,14 @@ class EnipServer(object):
                                     wait,
                                     self.stats_for(frm)[0],
                                 )
+                                if msg:
+                                    nops, hold, forward = drain_encapsulation_nops(msg)
+                                    # A UDP datagram will not be continued. Swallow it
+                                    # only when it is one or more complete NOPs.
+                                    if nops and not hold and not forward:
+                                        _record_nops(session, nops, frm)
+                                        msg = None
+                                        continue
                                 # If we're at a None (can't proceed), and we haven't yet received input,
                                 # then this is where we implement "Blocking"; we just loop for input.
 

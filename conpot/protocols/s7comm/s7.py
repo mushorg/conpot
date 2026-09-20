@@ -14,7 +14,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Return codes for Read/Write VAR data items
+# PI-Service object for CPU control, and the start modes accepted in the data.
+_CPU_CONTROL_OBJECT = b"P_PROGRAM"
+_CPU_START_MODES = frozenset(
+    {
+        b"WARM",
+        b"COLD",
+        b"HOT",
+        b"WARM_START",
+        b"COLD_START",
+        b"HOT_START",
+    }
+)
 S7_ITEM_OK = 0xFF
 S7_ITEM_ADDRESS_ERROR = 0x05
 S7_ITEM_NOT_AVAILABLE = 0x0A
@@ -41,10 +52,30 @@ def _item_byte_length(word_len, count):
     return count * unit
 
 
+def _length_prefixed_strings(blob):
+    """Pull ASCII strings stored as a length byte plus that many characters."""
+    found = []
+    index = 0
+    while index < len(blob):
+        length = blob[index]
+        end = index + 1 + length
+        if length and end <= len(blob):
+            chunk = blob[index + 1 : end]
+            if all(32 <= byte <= 126 for byte in chunk):
+                found.append(chunk)
+                index = end
+                continue
+        index += 1
+    return found
+
+
 # S7 packet
 class S7(object):
     ssl_lists = {}
     memory_map = S7MemoryMap()
+    # Emulated CPU mode. Never stop the listening greenlet; a stop probe must
+    # not take the honeypot down.
+    cpu_running = True
 
     def __init__(
         self,
@@ -83,7 +114,7 @@ class S7(object):
             0x1D: ("start_upload", self.request_not_implemented),
             0x1E: ("upload", self.request_not_implemented),
             0x1F: ("end_upload", self.request_not_implemented),
-            0x28: ("insert_block", self.request_not_implemented),
+            0x28: ("plc_control", self.plc_control),
             0x29: ("plc_stop", self.plc_stop_signal),
         }
 
@@ -328,9 +359,30 @@ class S7(object):
 
     # SSL/SZL System Status List/Systemzustandsliste
     def plc_stop_signal(self, current_client):
-        # This function gets executed after plc stop signal is received the function stops the server for a while and then restarts it
-        logger.info("Stop signal recieved from {}".format(current_client))
-        return str_to_bytes("0x00"), str_to_bytes("0x29")
+        logger.info("Stop signal received from %s", current_client)
+        S7.cpu_running = False
+        if self._session is not None:
+            self._session.add_event({"type": "PLC_STOP"})
+        return b"\x29", b""
+
+    def plc_control(self):
+        """PI-Service (0x28). Only warm/cold/hot start is emulated."""
+        params = self.parameters
+        data = self.data
+        if not isinstance(params, bytes):
+            params = str_to_bytes(params)
+        if not isinstance(data, bytes):
+            data = str_to_bytes(data)
+        param_strings = _length_prefixed_strings(params)
+        data_strings = _length_prefixed_strings(data)
+        if _CPU_CONTROL_OBJECT in param_strings and any(
+            mode in _CPU_START_MODES for mode in data_strings
+        ):
+            S7.cpu_running = True
+            if self._session is not None:
+                self._session.add_event({"type": "PLC_START"})
+            return b"\x28", b""
+        return self.request_not_implemented()
 
     def request_diagnostics(self):
         # semi-check

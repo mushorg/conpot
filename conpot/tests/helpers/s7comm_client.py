@@ -319,24 +319,31 @@ class s7:
         return response.data[4:]
 
     def plc_stop_function(self):
+        """Send CPU STOP (0x29) and return the unpacked Ack-Data packet."""
+        return self._plc_job(struct.pack("!B5x10p", 0x29, str_to_bytes("P_PROGRAM")))
+
+    def plc_start_function(self, mode=b"WARM_START"):
+        """Send a PI-Service warm/cold/hot start (0x28) and return the reply."""
+        mode = str_to_bytes(mode)
+        parameter = (
+            struct.pack("!B7x", 0x28) + bytes((len(b"P_PROGRAM"),)) + b"P_PROGRAM"
+        )
+        data = bytes((len(mode),)) + mode
+        return self._plc_job(parameter, data)
+
+    def _plc_job(self, parameters, data=b""):
         pdu_type = 1
         request_id = 256
-        stop_func_parameter = struct.pack(
-            "!B5x10p", 0x29, str_to_bytes("P_PROGRAM")  # function code  # Function Name
-        )
-        s7packet = S7Packet(pdu_type, request_id, stop_func_parameter).pack()
+        s7packet = S7Packet(pdu_type, request_id, parameters, data).pack()
         cotp_packet = COTPDataPacket(s7packet).pack()
         tpkt_packet = TPKTPacket(cotp_packet).pack()
         self.s.send(tpkt_packet)
         reply = self.s.recv(1024)
-        if reply:
-            return (
-                S7Packet()
-                .unpack(COTPDataPacket().unpack(TPKTPacket().unpack(reply).data).data)
-                .data
-            )
-        else:
+        if not reply:
             return None
+        return S7Packet().unpack(
+            COTPDataPacket().unpack(TPKTPacket().unpack(reply).data).data
+        )
 
     def ReadSZL(self, szl_id):
         szl_data = self.Function(

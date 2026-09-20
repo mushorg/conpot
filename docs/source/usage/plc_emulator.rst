@@ -189,8 +189,10 @@ Automated tests
 The suite writes the start coil, waits at least one scan, then asserts
 that the running bit is set and the holding register increases; it then
 writes stop and asserts that running clears and the counter freezes.
-Existing ``test_modbus_server.py`` still targets the ``default``
-template.
+
+UMAS function 90 (start/stop) on this profile is covered by
+``TestModbusUmas`` in ``test_modbus_server.py``. Manual probes for UMAS,
+S7comm CPU stop/start, and EtherNet/IP NOP are in :doc:`stop_restart`.
 
 ``tools/start_protocol.py modbus`` is not useful here: that helper loads
 ``default``, which has no scan cycle.
