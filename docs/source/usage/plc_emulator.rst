@@ -193,6 +193,8 @@ writes stop and asserts that running clears and the counter freezes.
 UMAS function 90 (start/stop) on this profile is covered by
 ``TestModbusUmas`` in ``test_modbus_server.py``. Manual probes for UMAS,
 S7comm CPU stop/start, and EtherNet/IP NOP are in :doc:`stop_restart`.
+Protocol pages: :doc:`../protocols/modbus`, :doc:`../protocols/s7comm`,
+:doc:`../protocols/enip`.
 
 ``tools/start_protocol.py modbus`` is not useful here: that helper loads
 ``default``, which has no scan cycle.

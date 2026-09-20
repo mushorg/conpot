@@ -91,8 +91,8 @@ S7 memory areas are declared under ``<memory_areas>`` in ``s7comm.xml``. Each
 key. Prefer ``bytearray`` values for those keys so Read/Write VAR can mutate the
 process image in place (Modbus blocks typically use lists of ints instead).
 
-See :doc:`../usage/customization` for SNMP and Modbus examples that wire symbols
-and memory blocks to databus keys.
+See :doc:`../protocols/snmp` and :doc:`../protocols/modbus` for examples that
+wire symbols and memory blocks to databus keys.
 
 Python API
 ----------
