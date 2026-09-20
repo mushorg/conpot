@@ -26,6 +26,7 @@ Per-protocol template notes
 * HTTP globals, htdocs, aliases, and proxy nodes — :doc:`../protocols/http`
 * EtherNet/IP identity and tags — :doc:`../protocols/enip`
 * S7comm CPU stop/start — :doc:`../protocols/s7comm`
+* DNP3 outstation addresses and point tables — :doc:`../protocols/dnp3`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
 :doc:`plc_emulator`.

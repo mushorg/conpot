@@ -121,6 +121,65 @@ async def serve_tcp_sync_handler(
             await asyncio.gather(*client_tasks, return_exceptions=True)
 
 
+async def serve_tcp_async_handler(
+    host: str,
+    port: int,
+    handler_obj,
+    *,
+    stop_event: asyncio.Event,
+    ready_event: asyncio.Event | None = None,
+    name: str = "TCPServer",
+):
+    """Accept TCP connections and await handler_obj.handle(reader, writer).
+
+    One Task per connection (asyncio.start_server). Bound for native-async
+    protocol stacks (e.g. DNP3 via dnp3py) that must not run in a thread pool.
+    """
+    client_tasks: set[asyncio.Task] = set()
+
+    async def _on_client(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
+        task = asyncio.current_task()
+        if task is not None:
+            client_tasks.add(task)
+        peer = writer.get_extra_info("peername")
+        try:
+            await handler_obj.handle(reader, writer)
+        except Exception:
+            logger.exception("%s connection handler crashed for %s", name, peer)
+        finally:
+            if task is not None:
+                client_tasks.discard(task)
+            try:
+                writer.close()
+            except Exception:
+                pass
+            try:
+                await writer.wait_closed()
+            except Exception, BaseExceptionGroup:
+                pass
+
+    server = await asyncio.start_server(
+        _on_client, host=host, port=port, reuse_address=True
+    )
+    bound_host, bound_port = server.sockets[0].getsockname()[:2]
+    _set_listener_addrs(handler_obj, bound_host, bound_port)
+    logger.info("%s listening on %s:%s", name, bound_host, bound_port)
+    if ready_event is not None:
+        ready_event.set()
+
+    try:
+        await stop_event.wait()
+    finally:
+        server.close()
+        await server.wait_closed()
+        for task in list(client_tasks):
+            task.cancel()
+        if client_tasks:
+            await asyncio.gather(*client_tasks, return_exceptions=True)
+
+
 class _DatagramProtocol(asyncio.DatagramProtocol):
     def __init__(self, handler_obj, loop: asyncio.AbstractEventLoop):
         self.handler_obj = handler_obj

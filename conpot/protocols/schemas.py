@@ -27,6 +27,36 @@ guardian_ast = Schema(
     }
 )
 
+dnp3 = Schema(
+    {
+        "dnp3": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("timeout"): Or(int, float),
+            Optional("outstation_address"): int,
+            Optional("master_address"): int,
+            Optional("unsolicited_enabled"): bool,
+            Optional("device_info"): {
+                Optional("vendor_name"): str,
+                Optional("product_code"): str,
+            },
+            Optional("binary_inputs"): [
+                {
+                    "index": int,
+                    Optional("value"): bool,
+                }
+            ],
+            Optional("analog_inputs"): [
+                {
+                    "index": int,
+                    Optional("value"): Or(int, float),
+                }
+            ],
+        }
+    }
+)
+
 kamstrup_management = Schema(
     {
         "kamstrup_management": {

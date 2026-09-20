@@ -1,0 +1,28 @@
+[dnp3]
+enabled = true
+host = "0.0.0.0"
+port = 20000
+timeout = 5
+outstation_address = 1
+master_address = 0
+unsolicited_enabled = false
+
+[dnp3.device_info]
+vendor_name = "Generic"
+product_code = "DNP3 RTU"
+
+[[dnp3.binary_inputs]]
+index = 0
+value = false
+
+[[dnp3.binary_inputs]]
+index = 1
+value = true
+
+[[dnp3.analog_inputs]]
+index = 0
+value = 25
+
+[[dnp3.analog_inputs]]
+index = 1
+value = 100
