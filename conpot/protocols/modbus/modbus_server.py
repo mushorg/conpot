@@ -204,6 +204,7 @@ class ModbusServer(object):
                     break
                 logdata["request"] = codecs.encode(request, "hex")
                 session.log_event(
+                    event_type=logdata.get("type"),
                     request=logdata.get("request"),
                     response=logdata.get("response"),
                     **{
