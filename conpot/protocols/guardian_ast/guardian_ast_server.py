@@ -40,10 +40,11 @@ AST_ERROR = "9999FF1B\n"
 @conpot_protocol
 class GuardianASTServer(object):
     def __init__(self, template, template_directory, args):
+        # template is a dict from guardian_ast.toml (listen/device_info only;
+        # tank state comes from the databus).
         self.timeout = 5
         self.server = None
         self.databus = conpot_core.get_databus()
-        # dom = etree.parse(template)
         self.fill_offset_time = datetime.datetime.utcnow()
         logger.info("Conpot GuardianAST initialized")
 

@@ -71,13 +71,13 @@ class ModbusInvalidRequestError(Exception):
 class MBSlave(object):
     """One Modbus unit id: template blocks plus pymodbus encode/decode."""
 
-    def __init__(self, slave_id, dom):
+    def __init__(self, slave_id, template):
         self._id = slave_id
-        self.dom = dom
+        self.template = template
         self.function_code = None
         self.event_type = None
         self.running = True
-        self._umas_enabled = _template_umas_enabled(dom)
+        self._umas_enabled = bool(template.get("umas_enabled", False))
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
@@ -289,12 +289,12 @@ class MBSlave(object):
         # only the requested object id; the default template test asks for
         # object 2 and still expects VendorName and ProductCode in the body.
         try:
-            info_root = self.dom.xpath("//modbus/device_info")[0]
-            vendor_name = info_root.xpath("./VendorName/text()")[0]
-            product_code = info_root.xpath("./ProductCode/text()")[0]
-            major_minor_revision = info_root.xpath("./MajorMinorRevision/text()")[0]
+            info = self.template["device_info"]
+            vendor_name = info["VendorName"]
+            product_code = info["ProductCode"]
+            major_minor_revision = info["MajorMinorRevision"]
             _req_device_id, _object_id = struct.unpack(">BB", request_pdu[2:4])
-        except struct.error, IndexError:
+        except struct.error, IndexError, KeyError, TypeError:
             return _exception_pdu(0x2B, ExcCodes.ILLEGAL_VALUE)
 
         device_info = {0: vendor_name, 1: product_code, 2: major_minor_revision}
@@ -310,13 +310,6 @@ class MBSlave(object):
             response += struct.pack(">B", len(device_info[object_id]))
             response += str_to_bytes(device_info[object_id])
         return response
-
-
-def _template_umas_enabled(dom):
-    values = dom.xpath("//modbus/umas/@enabled")
-    if not values:
-        return False
-    return str(values[0]).strip().lower() in ("true", "1")
 
 
 def _exception_pdu(function_code, code):

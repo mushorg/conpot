@@ -19,8 +19,6 @@ import asyncio
 import logging
 import os
 
-from lxml import etree
-
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.snmp.command_responder import CommandResponder
@@ -32,85 +30,57 @@ logger = logging.getLogger()
 class SNMPServer(object):
     def __init__(self, template, template_directory, args):
         """
-        :param host:        hostname or ip address on which to server the snmp service (string).
-        :param port:        listen port (integer).
-        :param template:    path to the protocol specific xml configuration file (string).
+        :param template:    protocol config dict from snmp.toml.
         """
 
-        self.dom = etree.parse(template)
+        self.template = template
         self.cmd_responder = None
 
         self.compiled_mibs = args.mibcache
         self.raw_mibs = os.path.join(template_directory, "snmp", "mibs")
 
-    def xml_general_config(self, dom):
-        snmp_config = dom.xpath("//snmp/config/*")
-        if snmp_config:
-            for entity in snmp_config:
-                # TARPIT: individual response delays
-                if entity.attrib["name"].lower() == "tarpit":
-                    if entity.attrib["command"].lower() == "get":
-                        self.cmd_responder.resp_app_get.tarpit = (
-                            self.config_sanitize_tarpit(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "set":
-                        self.cmd_responder.resp_app_set.tarpit = (
-                            self.config_sanitize_tarpit(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "next":
-                        self.cmd_responder.resp_app_next.tarpit = (
-                            self.config_sanitize_tarpit(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "bulk":
-                        self.cmd_responder.resp_app_bulk.tarpit = (
-                            self.config_sanitize_tarpit(entity.text)
-                        )
+    def apply_general_config(self):
+        for entity in self.template.get("config", []):
+            name = str(entity.get("name", "")).lower()
+            command = str(entity.get("command", "")).lower()
+            text = entity.get("value")
+            # TARPIT: individual response delays
+            if name == "tarpit":
+                sanitized = self.config_sanitize_tarpit(text)
+                if command == "get":
+                    self.cmd_responder.resp_app_get.tarpit = sanitized
+                elif command == "set":
+                    self.cmd_responder.resp_app_set.tarpit = sanitized
+                elif command == "next":
+                    self.cmd_responder.resp_app_next.tarpit = sanitized
+                elif command == "bulk":
+                    self.cmd_responder.resp_app_bulk.tarpit = sanitized
 
-                # EVASION: response thresholds
-                if entity.attrib["name"].lower() == "evasion":
-                    if entity.attrib["command"].lower() == "get":
-                        self.cmd_responder.resp_app_get.threshold = (
-                            self.config_sanitize_threshold(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "set":
-                        self.cmd_responder.resp_app_set.threshold = (
-                            self.config_sanitize_threshold(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "next":
-                        self.cmd_responder.resp_app_next.threshold = (
-                            self.config_sanitize_threshold(entity.text)
-                        )
-                    elif entity.attrib["command"].lower() == "bulk":
-                        self.cmd_responder.resp_app_bulk.threshold = (
-                            self.config_sanitize_threshold(entity.text)
-                        )
+            # EVASION: response thresholds
+            if name == "evasion":
+                sanitized = self.config_sanitize_threshold(text)
+                if command == "get":
+                    self.cmd_responder.resp_app_get.threshold = sanitized
+                elif command == "set":
+                    self.cmd_responder.resp_app_set.threshold = sanitized
+                elif command == "next":
+                    self.cmd_responder.resp_app_next.threshold = sanitized
+                elif command == "bulk":
+                    self.cmd_responder.resp_app_bulk.threshold = sanitized
 
-    def xml_mib_config(self):
-        mibs = self.dom.xpath("//snmp/mibs/*")
-
-        # parse mibs and oid tables
-        for mib in mibs:
-            mib_name = mib.attrib["name"]
-
-            for symbol in mib:
-                symbol_name = symbol.attrib["name"]
-
-                # retrieve instance from template
-                if "instance" in symbol.attrib:
-                    # convert instance to (int-)tuple
-                    symbol_instance = symbol.attrib["instance"].split(".")
-                    symbol_instance = tuple(map(int, symbol_instance))
+    def apply_mib_config(self):
+        for mib in self.template.get("mibs", []):
+            mib_name = mib["name"]
+            for symbol in mib.get("symbols", []):
+                symbol_name = symbol["name"]
+                if "instance" in symbol:
+                    symbol_instance = tuple(
+                        map(int, str(symbol["instance"]).split("."))
+                    )
                 else:
-                    # use default instance (0)
                     symbol_instance = (0,)
-
-                # retrieve value from databus
-                value = conpot_core.get_databus().get_value(
-                    symbol.xpath("./value/text()")[0]
-                )
-                profile_map_name = symbol.xpath("./value/text()")[0]
-
-                # register this MIB instance to the command responder
+                profile_map_name = symbol["value"]
+                value = conpot_core.get_databus().get_value(profile_map_name)
                 self.cmd_responder.register(
                     mib_name, symbol_name, symbol_instance, value, profile_map_name
                 )
@@ -178,8 +148,8 @@ class SNMPServer(object):
             host, port, self.raw_mibs, self.compiled_mibs
         )
         await self.cmd_responder.start()
-        self.xml_general_config(self.dom)
-        self.xml_mib_config()
+        self.apply_general_config()
+        self.apply_mib_config()
 
         logger.info("SNMP server started on: %s", (host, self.get_port()))
         self._ready.set()

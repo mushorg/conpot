@@ -14,7 +14,7 @@ Databus identity strings in this profile still use Siemens-flavored values (for 
 ``Siemens, SIMATIC, S7-200``) for deception realism. Those fingerprints are independent of
 the operator-facing template catalog description.
 
-While most of the configuration takes place within the XML / TOML profile, protocols that
+While most of the configuration takes place within the TOML profile, protocols that
 need auxiliary files (for example HTTP ``htdocs`` / ``statuscodes``, or SNMP MIB sources)
 keep those in a subdirectory next to the protocol config.
 

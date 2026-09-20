@@ -99,7 +99,7 @@ Configuration
 -------------
 
 The profile lives under ``conpot/templates/plc_modbus/``:
-``template.xml`` (databus + metadata) and ``modbus.xml`` (slave and
+``template.toml`` (databus + metadata) and ``modbus.toml`` (slave and
 blocks).
 
 Databus lists

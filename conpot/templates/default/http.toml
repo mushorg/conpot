@@ -1,0 +1,64 @@
+[http]
+enabled = true
+host = "0.0.0.0"
+port = 8800
+
+[http.global.config]
+"protocol_version" = "HTTP/1.1"
+"update_header_date" = "true"
+"disable_method_head" = "false"
+"disable_method_trace" = "false"
+"disable_method_options" = "false"
+"tarpit" = "0"
+
+[http.global.headers]
+"Date" = "Sat, 28 Apr 1984 07:30:00 GMT"
+
+[[http.htdocs]]
+name = "/"
+status = 302
+headers = { "Content-Type" = "text/html", "Location" = "/index.html" }
+
+[[http.htdocs]]
+name = "/index.html"
+tarpit = "0.0;0.3"
+headers = { "Last-Modified" = "Tue, 19 May 1993 09:00:00 GMT", "Content-Type" = "text/html", "Set-cookie" = "path=/" }
+
+[[http.htdocs]]
+name = "/index.htm"
+alias = "/index.html"
+
+[[http.htdocs]]
+name = "/tests/unittest_base.html"
+headers = { "Last-Modified" = "Tue, 19 May 1993 09:00:00 GMT", "Content-Type" = "text/html" }
+
+[[http.htdocs]]
+name = "/tests/unittest_databus.html"
+headers = { "Last-Modified" = "Tue, 19 May 1993 09:00:00 GMT", "Content-Type" = "text/html" }
+
+[[http.htdocs]]
+name = "/tests/unittest_tarpit.html"
+tarpit = "5"
+headers = { "Last-Modified" = "Tue, 19 May 1993 09:00:00 GMT", "Content-Type" = "text/html" }
+
+[[http.htdocs]]
+name = "/tests/unittest_subselects.html"
+headers = { "Last-Modified" = "Tue, 19 May 1993 09:00:00 GMT", "Content-Type" = "text/html" }
+triggers = [
+    { "appendix" = "5459fa05e5c1db37f2679b65a5175bcf", "value" = "action=unit;subaction=test" },
+]
+
+[[http.statuscodes]]
+name = "400"
+tarpit = "0"
+headers = { "Content-Type" = "text/html" }
+
+[[http.statuscodes]]
+name = "404"
+tarpit = "0"
+headers = { "Content-Type" = "text/html" }
+
+[[http.statuscodes]]
+name = "501"
+tarpit = "0"
+headers = { "Content-Type" = "text/html" }

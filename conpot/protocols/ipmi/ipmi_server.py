@@ -24,7 +24,6 @@ import hmac
 import hashlib
 import os
 import collections
-from lxml import etree
 from conpot.protocols.ipmi.fakebmc import FakeBmc
 from conpot.protocols.ipmi.fakesession import FakeSession
 from conpot.utils.asyncio_serve import serve_udp_datagram
@@ -35,11 +34,8 @@ import logging as logger
 
 class IpmiServer(object):
     def __init__(self, template, template_directory, args):
-        dom = etree.parse(template)
         databus = conpot_core.get_databus()
-        self.device_name = databus.get_value(
-            dom.xpath("//ipmi/device_info/device_name/text()")[0]
-        )
+        self.device_name = databus.get_value(template["device_info"]["device_name"])
         self.port = None
         self.sessions = dict()
 
@@ -58,27 +54,25 @@ class IpmiServer(object):
         self.server = None
         self.session = None
         self.attack_sessions = {}
-        self.bmc = self._configure_users(dom)
-        logger.info("Conpot IPMI initialized using %s template", template)
+        self.bmc = self._configure_users(template)
+        logger.info("Conpot IPMI initialized")
 
-    def _configure_users(self, dom):
-        # XML parsing
-        authdata_name = dom.xpath("//ipmi/user_list/user/user_name/text()")
-        authdata_passwd = dom.xpath("//ipmi/user_list/user/password/text()")
-        authdata_name = [i.encode("utf-8") for i in authdata_name]
-        authdata_passwd = [i.encode("utf-8") for i in authdata_passwd]
+    def _configure_users(self, template):
+        users = template["user_list"]
+        authdata_name = [u["user_name"].encode("utf-8") for u in users]
+        authdata_passwd = [u["password"].encode("utf-8") for u in users]
         self.authdata = collections.OrderedDict(zip(authdata_name, authdata_passwd))
 
-        authdata_priv = dom.xpath("//ipmi/user_list/user/privilege/text()")
+        authdata_priv = [u["privilege"] for u in users]
         if False in map(lambda k: 0 < int(k) <= 4, authdata_priv):
             raise ValueError("Privilege level must be between 1 and 4")
         authdata_priv = [int(k) for k in authdata_priv]
         self.privdata = collections.OrderedDict(zip(authdata_name, authdata_priv))
 
-        activeusers = dom.xpath("//ipmi/user_list/user/active/text()")
+        activeusers = ["true" if u["active"] else "false" for u in users]
         self.activeusers = [1 if x == "true" else 0 for x in activeusers]
 
-        fixedusers = dom.xpath("//ipmi/user_list/user/fixed/text()")
+        fixedusers = ["true" if u["fixed"] else "false" for u in users]
         self.fixedusers = [1 if x == "true" else 0 for x in fixedusers]
         self.channelaccessdata = collections.OrderedDict(
             zip(authdata_name, activeusers)

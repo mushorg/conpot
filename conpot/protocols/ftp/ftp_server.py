@@ -21,8 +21,6 @@ import logging
 from os import R_OK, W_OK
 from datetime import datetime
 
-from lxml import etree
-
 from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
@@ -38,7 +36,7 @@ class FTPConfig(object):
         self.grp_db = (
             dict()
         )  # grp_db[gid] = {group: 'group_name'. users: set(users_uid))
-        dom = etree.parse(template)
+        device_info = template["device_info"]
         # First let us get FTP related data
         self.all_commands = [
             "USER",
@@ -78,14 +76,18 @@ class FTPConfig(object):
             "STOU",
         ]
         # Implementation Note: removing a command from here would make it unrecognizable in FTP server.
-        self.enabled_commands = (
-            "".join(
-                dom.xpath("//ftp/device_info/enabled_commands/text()")[0]
-                .strip()
-                .split()
+        raw_commands = device_info["enabled_commands"]
+        if isinstance(raw_commands, list):
+            self.enabled_commands = [
+                str(i).replace("'", "").strip() for i in raw_commands
+            ]
+        else:
+            self.enabled_commands = ("".join(str(raw_commands).strip().split())).split(
+                ","
             )
-        ).split(",")
-        self.enabled_commands = [i.replace("'", "") for i in self.enabled_commands]
+            self.enabled_commands = [
+                i.replace("'", "").strip() for i in self.enabled_commands if i
+            ]
         if "SITEHELP" in self.enabled_commands:
             self.enabled_commands.remove("SITEHELP")
             self.enabled_commands.append("SITE HELP")
@@ -93,66 +95,53 @@ class FTPConfig(object):
             self.enabled_commands.remove("SITECHMOD")
             self.enabled_commands.append("SITE CHMOD")
         for i in self.enabled_commands:
-            assert i in self.all_commands
-        self.device_type = dom.xpath("//ftp/device_info/device_type/text()")[0]
-        self.banner = dom.xpath("//ftp/device_info/banner/text()")[0]
-        self.max_login_attempts = int(
-            dom.xpath("//ftp/device_info/max_login_attempts/text()")[0]
-        )
+            assert i in self.all_commands, "Unknown FTP command: %r" % i
+        self.device_type = device_info["device_type"]
+        self.banner = device_info["banner"]
+        self.max_login_attempts = int(device_info["max_login_attempts"])
         # set the connection timeout to 300 secs.
-        self.timeout = int(dom.xpath("//ftp/device_info/sever_timeout/text()")[0])
-        if dom.xpath("//ftp/device_info/motd/text()"):
-            self.motd = dom.xpath("//ftp/device_info/motd/text()")[0]
-        else:
-            self.motd = None
-        self.stou_prefix = dom.xpath("//ftp/device_info/stou_prefix/text()")
-        self.stou_suffix = dom.xpath("//ftp/device_info/stou_suffix/text()")
+        self.timeout = int(device_info["sever_timeout"])
+        self.motd = device_info.get("motd")
+        self.stou_prefix = device_info.get("stou_prefix") or ""
+        self.stou_suffix = device_info.get("stou_suffix") or ""
         # Restrict FTP to only enabled FTP commands
         self.COMMANDS = {i: ftp_commands[i] for i in self.enabled_commands}
 
         # -- Now that we fetched FTP meta, let us populate users.
-        grp = dom.xpath("//ftp/ftp_users/users")[0].attrib["group"]
-        for i in dom.xpath("//ftp/ftp_users/users/*"):
-            self.user_db[int(i.attrib["uid"])] = {
-                "uname": i.xpath("./uname/text()")[0],
+        ftp_users = template["ftp_users"]
+        grp = ftp_users["group"]
+        for i in ftp_users.get("users", []):
+            self.user_db[int(i["uid"])] = {
+                "uname": i["uname"],
                 "grp": grp,
-                "password": i.xpath("./password/text()")[0],
+                "password": i["password"],
             }
-        self.anon_auth = bool(
-            dom.xpath("//ftp/ftp_users/anon_login")[0].attrib["enabled"]
-        )
+        self.anon_auth = bool(ftp_users.get("anon_enabled", False))
         if self.anon_auth:
-            self.anon_uid = int(
-                dom.xpath("//ftp/ftp_users/anon_login")[0].attrib["uid"]
-            )
+            self.anon_uid = int(ftp_users["anon_uid"])
             self.user_db[self.anon_uid] = {
-                "uname": dom.xpath("//ftp/ftp_users/anon_login/uname/text()")[0],
+                "uname": ftp_users["anon_uname"],
                 "grp": grp,
                 "password": "",
             }
 
         # As a last step, get VFS related data.
-        self.root_path = dom.xpath("//ftp/ftp_vfs/path/text()")[0]
-        self.data_fs_subdir = dom.xpath("//ftp/ftp_vfs/data_fs_subdir/text()")[0]
-        if len(dom.xpath("//ftp/ftp_vfs/add_src/text()")) == 0:
+        vfs = template["ftp_vfs"]
+        self.root_path = vfs["path"]
+        self.data_fs_subdir = vfs["data_fs_subdir"]
+        if not vfs.get("add_src"):
             self.add_src = None
         else:
-            self.add_src = dom.xpath("//ftp/ftp_vfs/add_src/text()")[0].lower()
+            self.add_src = str(vfs["add_src"]).lower()
         # default ftp owners and groups
-        self.default_owner = int(dom.xpath("//ftp/ftp_vfs/default_owner/text()")[0])
+        self.default_owner = int(vfs["default_owner"])
         self.default_group = int(grp.split(":")[0])
 
-        self.default_perms = oct(
-            int(dom.xpath("//ftp/ftp_vfs/default_perms/text()")[0], 8)
-        )
-        self.file_default_perms = oct(
-            int(dom.xpath("//ftp/ftp_vfs/upload_file_perms/text()")[0], 8)
-        )
-        self.dir_default_perms = oct(
-            int(dom.xpath("//ftp/ftp_vfs/upload_file_perms/text()")[0], 8)
-        )
-        self._custom_files = dom.xpath("//ftp/ftp_vfs/file")
-        self._custom_dirs = dom.xpath("//ftp/ftp_vfs/dir")
+        self.default_perms = oct(int(str(vfs["default_perms"]), 8))
+        self.file_default_perms = oct(int(str(vfs["upload_file_perms"]), 8))
+        self.dir_default_perms = oct(int(str(vfs["upload_file_perms"]), 8))
+        self._custom_files = vfs.get("files", [])
+        self._custom_dirs = vfs.get("dirs", [])
         self._init_user_db()  # Initialize User DB
         self._init_fs()  # Initialize FTP file system.
 
@@ -214,33 +203,25 @@ class FTPConfig(object):
             )
         # Finally apply permissions to specific files.
         for _file in self._custom_files:
-            _path = _file.attrib["path"]
+            _path = _file["path"]
             _path = _path.replace(self.root_path, self.root)
-            _owner = int(_file.xpath("./owner_uid/text()")[0])
-            _perms = oct(int(_file.xpath("./perms/text()")[0], 8))
-            _accessed = datetime.fromtimestamp(
-                float(_file.xpath("./last_accessed/text()")[0])
-            )
-            _modified = datetime.fromtimestamp(
-                float(_file.xpath("./last_modified/text()")[0])
-            )
+            _owner = int(_file["owner_uid"])
+            _perms = oct(int(str(_file["perms"]), 8))
+            _accessed = datetime.fromtimestamp(float(_file["last_accessed"]))
+            _modified = datetime.fromtimestamp(float(_file["last_modified"]))
             self.vfs.chown(_path, _owner, self.default_group)
             self.vfs.chmod(_path, _perms)
             _fs = self.vfs.delegate_fs().delegate_fs()
             _fs.settimes(self.vfs.delegate_path(_path)[1], _accessed, _modified)
 
         for _dir in self._custom_dirs:
-            _path = _dir.attrib["path"]
-            _recursive = bool(_dir.attrib["recursive"])
+            _path = _dir["path"]
+            _recursive = bool(_dir.get("recursive", False))
             _path = _path.replace(self.root_path, self.root)
-            _owner = int(_dir.xpath("./owner_uid/text()")[0])
-            _perms = oct(int(_dir.xpath("./perms/text()")[0], 8))
-            _accessed = datetime.fromtimestamp(
-                float(_dir.xpath("./last_accessed/text()")[0])
-            )
-            _modified = datetime.fromtimestamp(
-                float(_dir.xpath("./last_modified/text()")[0])
-            )
+            _owner = int(_dir["owner_uid"])
+            _perms = oct(int(str(_dir["perms"]), 8))
+            _accessed = datetime.fromtimestamp(float(_dir["last_accessed"]))
+            _modified = datetime.fromtimestamp(float(_dir["last_modified"]))
             self.vfs.chown(_path, _owner, self.default_group, _recursive)
             self.vfs.chmod(_path, _perms)
             _fs = self.vfs.delegate_fs().delegate_fs()

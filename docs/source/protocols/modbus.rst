@@ -28,7 +28,7 @@ A binary output block has the type ``COILS``, binary input blocks
 register values. You define the starting address and size.
 
 The block ``name`` attribute is the **databus key**. Payload lives in
-``template.toml`` / ``template.xml``, not inline in ``modbus.xml``.
+``template.toml``, not inline in ``modbus.toml``.
 ``<content>`` is documentation only; the Python handler never reads it.
 
 .. code-block:: xml

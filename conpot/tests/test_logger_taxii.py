@@ -22,8 +22,6 @@ from io import StringIO
 
 import unittest
 from configparser import ConfigParser
-from lxml import etree
-
 from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.stix_transform import StixTransformer
 import sdv.validators as validators
@@ -53,8 +51,10 @@ class TestLoggers(unittest.TestCase):
                 1: {"request": "give me apples", "response": "no way"},
             },
         }
-        dom = etree.parse("conpot/templates/default/template.xml")
-        stixTransformer = StixTransformer(config, dom)
+        from conpot.templates.parse import parse_toml_config
+
+        template = parse_toml_config("conpot/templates/default/template.toml")
+        stixTransformer = StixTransformer(config, template)
         stix_package_xml = stixTransformer.transform(test_event)
 
         validator = validators.STIXSchemaValidator()
@@ -96,8 +96,10 @@ class TestLoggers(unittest.TestCase):
                 1: {"request": "give me apples", "response": "no way"},
             },
         }
-        dom = etree.parse("conpot/templates/default/template.xml")
-        taxiiLogger = TaxiiLogger(config, dom)
+        from conpot.templates.parse import parse_toml_config
+
+        template = parse_toml_config("conpot/templates/default/template.toml")
+        taxiiLogger = TaxiiLogger(config, template)
         taxii_result = taxiiLogger.log(test_event)
         # TaxiiLogger returns false if the message could not be delivered
         self.assertTrue(taxii_result)

@@ -18,7 +18,6 @@
 import logging
 from . import messages
 import copy
-from lxml import etree
 
 from .register import KamstrupRegister
 
@@ -29,18 +28,13 @@ class CommandResponder(object):
     def __init__(self, template):
         # key: kamstrup_meter register, value: databus key
         self.registers = {}
-
-        dom = etree.parse(template)
-        registers = dom.xpath("//kamstrup_meter/registers/*")
-        self.communication_address = int(
-            dom.xpath("//kamstrup_meter/config/communication_address/text()")[0]
-        )
-        for register in registers:
-            name = int(register.attrib["name"])
-            length = int(register.attrib["length"])
-            units = int(register.attrib["units"])
-            unknown = int(register.attrib["unknown"])
-            databuskey = register.xpath("./value/text()")[0]
+        self.communication_address = int(template["communication_address"])
+        for register in template.get("registers", []):
+            name = int(register["name"])
+            length = int(register["length"])
+            units = int(register["units"])
+            unknown = int(register["unknown"])
+            databuskey = register["value"]
             kamstrup_register = KamstrupRegister(
                 name, units, length, unknown, databuskey
             )

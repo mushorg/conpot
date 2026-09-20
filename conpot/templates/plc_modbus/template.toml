@@ -1,0 +1,13 @@
+[core.template]
+unit = "plc_modbus"
+vendor = "Conpot"
+description = "Modbus slave whose coils and registers are driven by a PLC scan cycle"
+protocols = ["modbus"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+memoryModbusSlave1BlockA = { value = "[0 for b in range(0,8)]" }
+memoryModbusSlave1BlockB = { value = "[0 for b in range(0,8)]" }
+memoryModbusSlave1BlockC = { value = "[0 for b in range(0,8)]" }
+memoryModbusSlave1BlockD = { value = "[0 for b in range(0,8)]" }
+plc_scan = { function = "conpot.emulators.plc.scan_cycle.PlcScanCycle" }

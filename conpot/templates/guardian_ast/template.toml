@@ -1,0 +1,34 @@
+[core.template]
+unit = "Guardian AST tank-monitoring system"
+vendor = "Guardian"
+description = "Guardian AST tank-monitoring system"
+protocols = ["guardian_ast"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+product1 = { value = '"SUPER"' }
+product2 = { value = '"UNLEAD"' }
+product3 = { value = '"DIESEL"' }
+product4 = { value = '"PREMIUM"' }
+station_name = { value = '"STATOIL STATION"' }
+vol1 = { value = "random.randint(1000, 9050)" }
+vol2 = { value = "random.randint(1000, 9050)" }
+vol3 = { value = "random.randint(1000, 9050)" }
+vol4 = { value = "random.randint(1000, 9050)" }
+ullage1 = { value = "random.randint(3000, 9999)" }
+ullage2 = { value = "random.randint(3000, 9999)" }
+ullage3 = { value = "random.randint(3000, 9999)" }
+ullage4 = { value = "random.randint(3000, 9999)" }
+height1 = { value = "round(random.uniform(25.00, 75.99), 2)" }
+height2 = { value = "round(random.uniform(25.00, 75.99), 2)" }
+height3 = { value = "round(random.uniform(25.00, 75.99), 2)" }
+height4 = { value = "round(random.uniform(25.00, 75.99), 2)" }
+h2o1 = { value = "round(random.uniform(0.0, 9.99), 2)" }
+h2o2 = { value = "round(random.uniform(0.0, 9.99), 2)" }
+h2o3 = { value = "round(random.uniform(0.0, 9.99), 2)" }
+h2o4 = { value = "round(random.uniform(0.0, 9.99), 2)" }
+temp1 = { value = "round(random.uniform(50.0, 59.99), 2)" }
+temp2 = { value = "round(random.uniform(50.0, 59.99), 2)" }
+temp3 = { value = "round(random.uniform(50.0, 59.99), 2)" }
+temp4 = { value = "round(random.uniform(50.0, 59.99), 2)" }
+empty = { value = '""' }

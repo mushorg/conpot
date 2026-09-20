@@ -45,12 +45,15 @@ class FakeServer:
             self._stop.set()
 
 
-def _write_protocol_xml(root, name, enabled, host="127.0.0.1", port=15020):
-    path = os.path.join(root, "{}.xml".format(name))
+def _write_protocol_toml(root, name, enabled, host="127.0.0.1", port=15020):
+    path = os.path.join(root, "{}.toml".format(name))
     with open(path, "w") as fh:
         fh.write(
-            '<{name} enabled="{enabled}" host="{host}" port="{port}"/>\n'.format(
-                name=name, enabled=enabled, host=host, port=port
+            '[{name}]\nenabled = {enabled}\nhost = "{host}"\nport = {port}\n'.format(
+                name=name,
+                enabled="true" if enabled in (True, "True", "true") else "false",
+                host=host,
+                port=port,
             )
         )
     return path
@@ -58,8 +61,9 @@ def _write_protocol_xml(root, name, enabled, host="127.0.0.1", port=15020):
 
 def test_start_protocols_enabled_collects_server():
     with tempfile.TemporaryDirectory() as tmp:
-        _write_protocol_xml(tmp, "fakeproto", "True", host="127.0.0.1", port=15020)
+        _write_protocol_toml(tmp, "fakeproto", True, host="127.0.0.1", port=15020)
         args = Namespace(config="/tmp/testing.cfg")
+        fake_schema = MagicMock()
 
         with (
             patch.dict(
@@ -67,21 +71,25 @@ def test_start_protocols_enabled_collects_server():
                 {"fakeproto": FakeServer},
                 clear=True,
             ),
-            patch.object(protocol_startup, "validate_template"),
+            patch.object(
+                protocol_startup.protocol_schemas, "fakeproto", fake_schema, create=True
+            ),
         ):
             servers = protocol_startup.collect_protocols(tmp, "/unused", args)
 
         assert len(servers) == 1
         server, host, port = servers[0]
         assert isinstance(server, FakeServer)
+        assert isinstance(server.template, dict)
         assert host == "127.0.0.1"
         assert port == 15020
 
 
 def test_start_protocols_disabled_skips_spawn():
     with tempfile.TemporaryDirectory() as tmp:
-        _write_protocol_xml(tmp, "fakeproto", "False")
+        _write_protocol_toml(tmp, "fakeproto", False)
         args = Namespace(config="/tmp/testing.cfg")
+        fake_schema = MagicMock()
 
         with (
             patch.dict(
@@ -89,7 +97,9 @@ def test_start_protocols_disabled_skips_spawn():
                 {"fakeproto": FakeServer},
                 clear=True,
             ),
-            patch.object(protocol_startup, "validate_template"),
+            patch.object(
+                protocol_startup.protocol_schemas, "fakeproto", fake_schema, create=True
+            ),
         ):
             servers = protocol_startup.collect_protocols(tmp, "/unused", args)
 
@@ -112,39 +122,33 @@ def test_start_protocols_missing_template_skips():
 
 def test_start_proxy_disabled():
     with tempfile.TemporaryDirectory() as tmp:
-        with open(os.path.join(tmp, "proxy.xml"), "w") as fh:
-            fh.write('<proxies enabled="False"/>\n')
+        with open(os.path.join(tmp, "proxy.toml"), "w") as fh:
+            fh.write("[proxies]\nenabled = false\nproxy = []\n")
 
-        with patch.object(protocol_startup, "validate_template"):
-            servers = protocol_startup.collect_proxies(tmp)
-
+        servers = protocol_startup.collect_proxies(tmp)
         assert servers == []
 
 
 def test_start_proxy_enabled():
     with tempfile.TemporaryDirectory() as tmp:
-        with open(os.path.join(tmp, "proxy.xml"), "w") as fh:
+        with open(os.path.join(tmp, "proxy.toml"), "w") as fh:
             fh.write("""
-                <proxies enabled="True">
-                    <proxy name="test" host="127.0.0.1" port="9999">
-                        <proxy_host>10.0.0.1</proxy_host>
-                        <proxy_port>80</proxy_port>
-                    </proxy>
-                </proxies>
-                """)
+[proxies]
+enabled = true
+
+[[proxies.proxy]]
+name = "test"
+host = "127.0.0.1"
+port = 9999
+proxy_host = "10.0.0.1"
+proxy_port = 80
+""")
 
         fake_proxy = MagicMock()
-        real_proxy_path = protocol_startup.inspect.getfile(protocol_startup.Proxy)
 
-        with (
-            patch.object(protocol_startup, "validate_template"),
-            patch.object(
-                protocol_startup.inspect, "getfile", return_value=real_proxy_path
-            ),
-            patch.object(
-                protocol_startup, "Proxy", return_value=fake_proxy
-            ) as proxy_cls,
-        ):
+        with patch.object(
+            protocol_startup, "Proxy", return_value=fake_proxy
+        ) as proxy_cls:
             servers = protocol_startup.collect_proxies(tmp)
 
         assert len(servers) == 1

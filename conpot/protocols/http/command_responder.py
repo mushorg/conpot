@@ -25,7 +25,6 @@ from datetime import datetime
 
 import aiohttp
 from aiohttp import hdrs, web
-from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
@@ -98,45 +97,49 @@ class HttpServerState:
         self.tarpit = "0"
         self.protocol_version = "HTTP/1.1"
 
-        self.configuration = etree.parse(template)
+        self.configuration = template
+        self._htdocs = {n["name"]: n for n in template.get("htdocs", [])}
+        self._statuscodes = {str(s["name"]): s for s in template.get("statuscodes", [])}
 
-        xml_config = self.configuration.xpath("//http/global/config/*")
-        if xml_config:
-            for entity in xml_config:
-                name = entity.attrib["name"]
-                if name == "protocol_version":
-                    self.protocol_version = entity.text
-                elif name == "update_header_date":
-                    if entity.text.lower() == "false":
-                        self.update_header_date = False
-                    elif entity.text.lower() == "true":
-                        self.update_header_date = True
-                elif name == "disable_method_head":
-                    self.disable_method_head = entity.text.lower() == "true"
-                elif name == "disable_method_trace":
-                    self.disable_method_trace = entity.text.lower() == "true"
-                elif name == "disable_method_options":
-                    self.disable_method_options = entity.text.lower() == "true"
-                elif name == "tarpit":
-                    if entity.text:
-                        self.tarpit = self.config_sanitize_tarpit(entity.text)
+        config = template.get("global", {}).get("config", {})
+        if "protocol_version" in config:
+            self.protocol_version = str(config["protocol_version"])
+        if "update_header_date" in config:
+            self.update_header_date = (
+                str(config["update_header_date"]).lower() == "true"
+            )
+        if "disable_method_head" in config:
+            self.disable_method_head = (
+                str(config["disable_method_head"]).lower() == "true"
+            )
+        if "disable_method_trace" in config:
+            self.disable_method_trace = (
+                str(config["disable_method_trace"]).lower() == "true"
+            )
+        if "disable_method_options" in config:
+            self.disable_method_options = (
+                str(config["disable_method_options"]).lower() == "true"
+            )
+        if config.get("tarpit") is not None:
+            self.tarpit = self.config_sanitize_tarpit(str(config["tarpit"]))
 
         self.global_headers = []
-        xml_headers = self.configuration.xpath("//http/global/headers/*")
-        if xml_headers:
-            for header in xml_headers:
-                if (
-                    header.attrib["name"].lower() == "date"
-                    and self.update_header_date is True
-                ):
-                    self.global_headers.append(
-                        (
-                            header.attrib["name"],
-                            time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()),
-                        )
+        for name, text in template.get("global", {}).get("headers", {}).items():
+            if name.lower() == "date" and self.update_header_date is True:
+                self.global_headers.append(
+                    (
+                        name,
+                        time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()),
                     )
-                else:
-                    self.global_headers.append((header.attrib["name"], header.text))
+                )
+            else:
+                self.global_headers.append((name, text))
+
+    def _htdoc(self, name):
+        return self._htdocs.get(name)
+
+    def _status(self, status):
+        return self._statuscodes.get(str(status))
 
     def config_sanitize_tarpit(self, value):
         if value is not None:
@@ -163,57 +166,47 @@ class HttpServerState:
             await asyncio.sleep(random.uniform(float(lbound), float(ubound)))
 
     def get_entity_headers(self, rqfilename, headers):
-        xml_headers = self.configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/headers/*'
-        )
-        if xml_headers:
-            for header in xml_headers:
-                headers.append((header.attrib["name"], header.text))
+        node = self._htdoc(rqfilename)
+        if node:
+            for name, text in (node.get("headers") or {}).items():
+                headers.append((name, text))
         return headers
 
     def get_trigger_appendix(self, rqfilename, rqparams):
-        xml_triggers = self.configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/triggers/*'
-        )
-        if xml_triggers:
+        node = self._htdoc(rqfilename)
+        if node:
             paramlist = rqparams.split("&")
-            for triggers in xml_triggers:
-                triggerlist = triggers.text.split(";")
+            for triggers in node.get("triggers") or []:
+                triggerlist = str(triggers["value"]).split(";")
                 trigger_missed = False
                 for trigger in triggerlist:
                     if trigger not in paramlist:
                         trigger_missed = True
                 if not trigger_missed:
-                    return triggers.attrib["appendix"]
+                    return triggers["appendix"]
         return None
 
     def get_entity_trailers(self, rqfilename):
         trailers = []
-        xml_trailers = self.configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/trailers/*'
-        )
-        if xml_trailers:
-            for trailer in xml_trailers:
-                trailers.append((trailer.attrib["name"], trailer.text))
+        node = self._htdoc(rqfilename)
+        if node:
+            for name, text in (node.get("trailers") or {}).items():
+                trailers.append((name, text))
         return trailers
 
     def get_status_headers(self, status, headers):
-        xml_headers = self.configuration.xpath(
-            '//http/statuscodes/status[@name="' + str(status) + '"]/headers/*'
-        )
-        if xml_headers:
-            for header in xml_headers:
-                headers.append((header.attrib["name"], header.text))
+        st = self._status(status)
+        if st:
+            for name, text in (st.get("headers") or {}).items():
+                headers.append((name, text))
         return headers
 
     def get_status_trailers(self, status):
         trailers = []
-        xml_trailers = self.configuration.xpath(
-            '//http/statuscodes/status[@name="' + str(status) + '"]/trailers/*'
-        )
-        if xml_trailers:
-            for trailer in xml_trailers:
-                trailers.append((trailer.attrib["name"], trailer.text))
+        st = self._status(status)
+        if st:
+            for name, text in (st.get("trailers") or {}).items():
+                trailers.append((name, text))
         return trailers
 
     async def load_status(
@@ -225,23 +218,17 @@ class HttpServerState:
         method="GET",
         body=None,
     ):
-        configuration = self.configuration
         docpath = self.docpath
+        st = self._status(status)
 
-        entity_proxy = configuration.xpath(
-            '//http/statuscodes/status[@name="' + str(status) + '"]/proxy'
-        )
-        if entity_proxy:
+        if st and st.get("proxy"):
             source = "proxy"
-            target = entity_proxy[0].xpath("./text()")[0]
+            target = st["proxy"]
         else:
             source = "filesystem"
 
-        entity_tarpit = configuration.xpath(
-            '//http/statuscodes/status[@name="' + str(status) + '"]/tarpit'
-        )
-        if entity_tarpit:
-            tarpit = self.config_sanitize_tarpit(entity_tarpit[0].xpath("./text()")[0])
+        if st and st.get("tarpit") is not None:
+            tarpit = self.config_sanitize_tarpit(str(st["tarpit"]))
         else:
             tarpit = None
 
@@ -267,12 +254,10 @@ class HttpServerState:
 
             payload = substitute_template_fields(payload)
 
-            chunked_transfer = configuration.xpath(
-                '//http/htdocs/node[@name="' + str(status) + '"]/chunks'
-            )
-            if chunked_transfer:
+            node = self._htdoc(str(status))
+            if node and node.get("chunks"):
                 headers.append(("Transfer-Encoding", "chunked"))
-                chunks = str(chunked_transfer[0].xpath("./text()")[0])
+                chunks = str(node["chunks"])
             else:
                 if isinstance(payload, str):
                     payload_len = len(payload.encode())
@@ -320,36 +305,29 @@ class HttpServerState:
             return status, headers, trailers, payload, chunks
 
     async def load_entity(self, requeststring, headers):
-        configuration = self.configuration
         docpath = self.docpath
 
         rqfilename = requeststring.partition("?")[0]
         rqparams = requeststring.partition("?")[2]
 
-        entity_alias = configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/alias'
-        )
-        if entity_alias:
-            rqfilename = entity_alias[0].xpath("./text()")[0]
+        node = self._htdoc(rqfilename)
+        if node and node.get("alias"):
+            rqfilename = node["alias"]
+            node = self._htdoc(rqfilename)
 
         rqfilename_appendix = self.get_trigger_appendix(rqfilename, rqparams)
         if rqfilename_appendix:
             rqfilename += "_" + rqfilename_appendix
+            node = self._htdoc(rqfilename)
 
-        entity_proxy = configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/proxy'
-        )
-        if entity_proxy:
+        if node and node.get("proxy"):
             source = "proxy"
-            target = entity_proxy[0].xpath("./text()")[0]
+            target = node["proxy"]
         else:
             source = "filesystem"
 
-        entity_tarpit = configuration.xpath(
-            '//http/htdocs/node[@name="' + rqfilename + '"]/tarpit'
-        )
-        if entity_tarpit:
-            tarpit = self.config_sanitize_tarpit(entity_tarpit[0].xpath("./text()")[0])
+        if node and node.get("tarpit") is not None:
+            tarpit = self.config_sanitize_tarpit(str(node["tarpit"]))
         else:
             tarpit = None
 
@@ -359,11 +337,8 @@ class HttpServerState:
             await self.do_tarpit(self.tarpit)
 
         if source == "filesystem":
-            entity_status = configuration.xpath(
-                '//http/htdocs/node[@name="' + rqfilename + '"]/status'
-            )
-            if entity_status:
-                status = int(entity_status[0].xpath("./text()")[0])
+            if node and node.get("status") is not None:
+                status = int(node["status"])
             else:
                 status = 200
 
@@ -393,12 +368,9 @@ class HttpServerState:
             if templated:
                 payload = substitute_template_fields(payload)
 
-            chunked_transfer = configuration.xpath(
-                '//http/htdocs/node[@name="' + rqfilename + '"]/chunks'
-            )
-            if chunked_transfer:
+            if node and node.get("chunks"):
                 headers.append(("Transfer-Encoding", "chunked"))
-                chunks = str(chunked_transfer[0].xpath("./text()")[0])
+                chunks = str(node["chunks"])
             else:
                 if isinstance(payload, str):
                     payload_len = len(payload.encode())
@@ -643,18 +615,7 @@ def create_app(state):
                 request, status, headers, trailers, payload, chunks, head_only=True
             )
 
-        try:
-            entity_xml = state.configuration.xpath(
-                '//http/htdocs/node[@name="' + path.partition("?")[0] + '"]'
-            )
-        except etree.XPathEvalError:
-            entity_xml = None
-            logger.debug(
-                "Malformed HTTP:%s URN. Failed to handle <%s>. (Client: %s)",
-                method,
-                path,
-                peername,
-            )
+        entity_xml = state._htdoc(path.partition("?")[0])
 
         if entity_xml:
             status, headers, trailers, payload, chunks = await state.load_entity(

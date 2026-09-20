@@ -1,0 +1,43 @@
+[bacnet]
+enabled = true
+host = "0.0.0.0"
+port = 47808
+
+[bacnet.device_info]
+device_name = "SystemName"
+device_identifier = 36113
+vendor_name = "Alerton Technologies, Inc."
+vendor_identifier = 15
+max_apdu_length_accepted = 1024
+segmentation_supported = "segmentedBoth"
+model_name = "VAV-DD Controller"
+firmware_revision = "1.0.0"
+application_software_version = "1.0.0"
+description = "VAV Dual Duct Controller"
+location = "Building 1"
+protocol_version = 1
+
+[[bacnet.object_list]]
+name = "objectBinary"
+[bacnet.object_list.properties]
+object_identifier = 12
+object_name = "BI 01"
+object_type = "Binary Input"
+
+[[bacnet.object_list]]
+name = "objectAnalog"
+[bacnet.object_list.properties]
+object_identifier = 14
+object_name = "AI 01"
+object_type = "Analog Input"
+present_value = 68.0
+
+[[bacnet.object_list]]
+name = "objectDoor"
+[bacnet.object_list.properties]
+object_identifier = 16
+object_name = "Door 01"
+object_type = "Access Door"
+present_value = 0
+out_of_service = true
+maintenance_required = 2

@@ -1,0 +1,42 @@
+[ipmi]
+enabled = true
+host = "0.0.0.0"
+port = 623
+
+[ipmi.device_info]
+device_name = "SystemName"
+
+[[ipmi.user_list]]
+user_name = "Administrator"
+password = "Password"
+privilege = 4
+active = true
+fixed = true
+
+[[ipmi.user_list]]
+user_name = "Operator"
+password = "OpPassword"
+privilege = 3
+active = false
+fixed = true
+
+[[ipmi.user_list]]
+user_name = "User1"
+password = "U1Password"
+privilege = 2
+active = true
+fixed = true
+
+[[ipmi.user_list]]
+user_name = "User2"
+password = "U2Password"
+privilege = 2
+active = false
+fixed = true
+
+[[ipmi.user_list]]
+user_name = "User3"
+password = "U3Password"
+privilege = 1
+active = true
+fixed = true

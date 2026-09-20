@@ -67,26 +67,22 @@ class BACnetApp(object):
         self.datagram_server = datagram_server
         self.deviceIdentifier = device.objectIdentifier
 
-    def get_objects_and_properties(self, dom):
+    def get_objects_and_properties(self, template):
         """
         parse the bacnet template for objects and their properties
         """
-        device_property_list = dom.xpath("//bacnet/device_info/*")
-        for prop in device_property_list:
-            prop_key = self._property_key(prop.tag)
+        for prop_tag, prop_text in template.get("device_info", {}).items():
+            prop_key = self._property_key(prop_tag)
             if prop_key in ["deviceIdentifier", "deviceName"]:
                 continue
-            self.add_property(prop_key, prop.text)
+            self.add_property(prop_key, str(prop_text))
 
-        object_list = dom.xpath("//bacnet/object_list/object/@name")
-        for obj in object_list:
-            property_list = dom.xpath(
-                '//bacnet/object_list/object[@name="%s"]/properties/*' % obj
-            )
+        for obj in template.get("object_list", []):
+            properties = obj.get("properties", {})
             object_type = None
-            for prop in property_list:
-                if prop.tag == "object_type":
-                    object_type = re.sub("-", " ", prop.text).lower().title()
+            for prop_tag, prop_text in properties.items():
+                if prop_tag == "object_type":
+                    object_type = re.sub("-", " ", str(prop_text)).lower().title()
                     object_type = re.sub(" ", "", object_type) + "Object"
             try:
                 object_class = getattr(bacpypes3.object, object_type)
@@ -98,9 +94,9 @@ class BACnetApp(object):
             except Exception:
                 logger.critical("Non-existent BACnet object type")
                 sys.exit(3)
-            for prop in property_list:
-                prop_key = self._property_key(prop.tag)
-                prop_val = prop.text
+            for prop_tag, prop_val in properties.items():
+                prop_key = self._property_key(prop_tag)
+                prop_val = str(prop_val)
                 if prop_key == "objectType":
                     prop_val = prop_val.lower().title()
                     prop_val = re.sub(" ", "", prop_val)

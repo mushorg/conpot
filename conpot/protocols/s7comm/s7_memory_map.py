@@ -61,13 +61,13 @@ class S7MemoryMap(object):
             size,
         )
 
-    def load_xml(self, dom):
-        """Load ``//s7comm/memory_areas/area`` entries from a parsed template."""
-        for area in dom.xpath("//s7comm/memory_areas/area"):
-            area_type = area.attrib.get("type", "")
-            number = area.attrib.get("number")
-            name = area.attrib.get("name")
-            size = area.attrib.get("size")
+    def load_config(self, areas):
+        """Load memory area entries from a TOML template list."""
+        for area in areas:
+            area_type = area.get("type", "")
+            number = area.get("number")
+            name = area.get("name")
+            size = area.get("size")
             if not name:
                 raise ValueError("s7comm memory area missing name (databus key)")
             size_int = int(size) if size is not None else None

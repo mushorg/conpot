@@ -2,7 +2,6 @@ import codecs
 import logging
 import struct
 
-from lxml import etree
 from pymodbus.constants import ExcCodes
 
 from conpot.protocols.modbus.slave import MBSlave, ModbusInvalidRequestError
@@ -15,14 +14,14 @@ class SlaveBase(object):
 
     def __init__(self, template):
         self._slaves = {}
-        self.dom = etree.parse(template)
+        self.template = template
 
     def add_slave(self, slave_id):
         if (slave_id < 0) or (slave_id > 255):
             raise ValueError("Invalid slave id %d" % slave_id)
         if slave_id in self._slaves:
             raise ValueError("Slave %d already exists" % slave_id)
-        self._slaves[slave_id] = MBSlave(slave_id, self.dom)
+        self._slaves[slave_id] = MBSlave(slave_id, self.template)
         return self._slaves[slave_id]
 
     def get_slave(self, slave_id):

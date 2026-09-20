@@ -7,20 +7,16 @@
 
 """Start protocol servers, LogWorker, and proxy from a template directory."""
 
-import ast
 import asyncio
-import inspect
 import logging
 import os
 import sys
 
-from lxml import etree
 from schema import SchemaError
 
 from conpot import protocols
 import conpot.protocols.schemas as protocol_schemas
 from conpot.core.log_worker import LogWorker
-from conpot.core.templates import validate_template
 from conpot.protocols.proxy.proxy import Proxy
 from conpot.templates import parse as template_parse
 from conpot.templates import validate as template_validate
@@ -62,42 +58,6 @@ def _create_protocol_from_toml(
     return server, host, port
 
 
-def _create_protocol_from_xml(
-    protocol_name,
-    server_class,
-    protocol_template,
-    root_template_directory,
-    package_directory,
-    args,
-):
-    """Build a protocol server from an XML template. Returns (server, host, port) or None."""
-    xsd_file = os.path.join(
-        package_directory,
-        "protocols",
-        protocol_name,
-        "{0}.xsd".format(protocol_name),
-    )
-    validate_template(protocol_template, xsd_file)
-    dom_protocol = etree.parse(protocol_template)
-    if not dom_protocol.xpath("//{0}".format(protocol_name)):
-        logger.info("%s available but disabled by configuration.", protocol_name)
-        return None
-
-    if not ast.literal_eval(
-        dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
-    ):
-        logger.info("%s available but disabled by configuration.", protocol_name)
-        return None
-
-    host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[0]
-    if "testing.cfg" in args.config and "127." not in host:
-        logger.warning("Running on non-local interface: %s", host)
-    port = ast.literal_eval(dom_protocol.xpath("//{0}/@port".format(protocol_name))[0])
-    server = server_class(protocol_template, root_template_directory, args)
-    logger.info("Found and enabled %s protocol.", protocol_name)
-    return server, host, port
-
-
 def collect_protocols(root_template_directory, package_directory, args):
     """Instantiate enabled protocol servers. Returns list of (server, host, port)."""
     servers = []
@@ -106,11 +66,7 @@ def collect_protocols(root_template_directory, package_directory, args):
         protocol_toml = os.path.join(
             root_template_directory, "{0}.toml".format(protocol_name)
         )
-        protocol_xml = os.path.join(
-            root_template_directory, "{0}.xml".format(protocol_name)
-        )
 
-        started = None
         if os.path.isfile(protocol_toml):
             started = _create_protocol_from_toml(
                 protocol_name,
@@ -119,23 +75,13 @@ def collect_protocols(root_template_directory, package_directory, args):
                 root_template_directory,
                 args,
             )
-        elif os.path.isfile(protocol_xml):
-            started = _create_protocol_from_xml(
-                protocol_name,
-                server_class,
-                protocol_xml,
-                root_template_directory,
-                package_directory,
-                args,
-            )
+            if started:
+                servers.append(started)
         else:
             logger.debug(
                 "No %s template found. Service will remain unconfigured/stopped.",
                 protocol_name,
             )
-
-        if started is not None:
-            servers.append(started)
 
     return servers
 
@@ -143,7 +89,7 @@ def collect_protocols(root_template_directory, package_directory, args):
 def create_log_worker(
     config, template, session_manager, public_ip, template_directory=None
 ):
-    """Create LogWorker instance (not yet started)."""
+    """Create the LogWorker (not started)."""
     return LogWorker(
         config,
         template,
@@ -156,53 +102,49 @@ def create_log_worker(
 def collect_proxies(root_template_directory):
     """Instantiate proxy services if enabled. Returns list of (proxy_instance, host, port)."""
     servers = []
-    template_proxy = os.path.join(root_template_directory, "proxy.xml")
-    if os.path.isfile(template_proxy):
-        xsd_file = os.path.join(os.path.dirname(inspect.getfile(Proxy)), "proxy.xsd")
-        validate_template(template_proxy, xsd_file)
-        dom_proxy = etree.parse(template_proxy)
-        if dom_proxy.xpath("//proxies"):
-            if ast.literal_eval(dom_proxy.xpath("//proxies/@enabled")[0]):
-                proxies = dom_proxy.xpath("//proxies/*")
-                for p in proxies:
-                    name = p.attrib["name"]
-                    host = p.attrib["host"]
-                    keyfile = None
-                    certfile = None
-                    if "keyfile" in p.attrib and "certfile" in p.attrib:
-                        keyfile = p.attrib["keyfile"]
-                        certfile = p.attrib["certfile"]
-                        if not os.path.isabs(keyfile):
-                            keyfile = os.path.join(
-                                os.path.dirname(root_template_directory),
-                                "ssl",
-                                keyfile,
-                            )
-                            certfile = os.path.join(
-                                os.path.dirname(root_template_directory),
-                                "ssl",
-                                certfile,
-                            )
-                    port = ast.literal_eval(p.attrib["port"])
-                    proxy_host = p.xpath("./proxy_host/text()")[0]
-                    proxy_port = ast.literal_eval(p.xpath("./proxy_port/text()")[0])
-                    decoder = p.xpath("./decoder/text()")
-                    if len(decoder) > 0:
-                        decoder = decoder[0]
-                    else:
-                        decoder = None
-                    proxy_instance = Proxy(
-                        name, proxy_host, proxy_port, decoder, keyfile, certfile
-                    )
-                    # Proxy.start(host, port) binds the listen socket.
-                    servers.append((proxy_instance, host, port))
-            else:
-                logger.info("Proxy available but disabled by template.")
-    else:
+    template_proxy_toml = os.path.join(root_template_directory, "proxy.toml")
+
+    if not os.path.isfile(template_proxy_toml):
         logger.info(
             "No proxy template found. Service will remain unconfigured/stopped."
         )
+        return servers
 
+    try:
+        protocol = template_parse.parse_toml_config(template_proxy_toml)
+        schema = getattr(protocol_schemas, "proxies")
+        template_validate.validate_toml_template(protocol, schema)
+    except (AttributeError, SchemaError, OSError, ValueError) as exc:
+        logger.error("Failed to load proxy TOML template: %s", exc)
+        sys.exit(1)
+
+    proxies_cfg = protocol["proxies"]
+    if not proxies_cfg.get("enabled"):
+        logger.info("Proxy available but disabled by template.")
+        return servers
+
+    for p in proxies_cfg.get("proxy", []):
+        name = p["name"]
+        host = p["host"]
+        keyfile = p.get("keyfile")
+        certfile = p.get("certfile")
+        if keyfile and certfile and not os.path.isabs(keyfile):
+            keyfile = os.path.join(
+                os.path.dirname(root_template_directory),
+                "ssl",
+                keyfile,
+            )
+            certfile = os.path.join(
+                os.path.dirname(root_template_directory),
+                "ssl",
+                certfile,
+            )
+        port = int(p["port"])
+        proxy_host = p["proxy_host"]
+        proxy_port = int(p["proxy_port"])
+        decoder = p.get("decoder") or None
+        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
+        servers.append((proxy_instance, host, port))
     return servers
 
 

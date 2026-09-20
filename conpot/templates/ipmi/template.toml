@@ -1,0 +1,9 @@
+[core.template]
+unit = "371"
+vendor = "IPMI"
+description = "Creates a simple IPMI device"
+protocols = ["ipmi"]
+creator = "Lukas Rist"
+
+[core.databus.key_value_mappings]
+SystemName = { value = "\"Technodrome\"" }

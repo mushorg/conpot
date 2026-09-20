@@ -1,0 +1,873 @@
+[kamstrup_meter]
+enabled = true
+host = "0.0.0.0"
+port = 1025
+communication_address = 63
+
+[[kamstrup_meter.registers]]
+name = 1
+length = 4
+units = 2
+unknown = 65
+value = "register_1"
+
+[[kamstrup_meter.registers]]
+name = 2
+length = 4
+units = 2
+unknown = 65
+value = "register_2"
+
+[[kamstrup_meter.registers]]
+name = 13
+length = 4
+units = 2
+unknown = 68
+value = "register_13"
+
+[[kamstrup_meter.registers]]
+name = 14
+length = 4
+units = 2
+unknown = 68
+value = "register_14"
+
+[[kamstrup_meter.registers]]
+name = 1054
+length = 2
+units = 33
+unknown = 0
+value = "register_1054"
+
+[[kamstrup_meter.registers]]
+name = 1055
+length = 2
+units = 33
+unknown = 0
+value = "register_1055"
+
+[[kamstrup_meter.registers]]
+name = 1056
+length = 2
+units = 33
+unknown = 0
+value = "register_1056"
+
+[[kamstrup_meter.registers]]
+name = 1076
+length = 4
+units = 34
+unknown = 66
+value = "register_1076"
+
+[[kamstrup_meter.registers]]
+name = 1077
+length = 4
+units = 34
+unknown = 66
+value = "register_1077"
+
+[[kamstrup_meter.registers]]
+name = 1078
+length = 4
+units = 34
+unknown = 66
+value = "register_1078"
+
+[[kamstrup_meter.registers]]
+name = 1080
+length = 2
+units = 22
+unknown = 67
+value = "register_1080"
+
+[[kamstrup_meter.registers]]
+name = 1081
+length = 2
+units = 22
+unknown = 67
+value = "register_1081"
+
+[[kamstrup_meter.registers]]
+name = 1082
+length = 2
+units = 22
+unknown = 67
+value = "register_1082"
+
+[[kamstrup_meter.registers]]
+name = 3
+length = 4
+units = 14
+unknown = 65
+value = "register_3"
+
+[[kamstrup_meter.registers]]
+name = 4
+length = 4
+units = 14
+unknown = 65
+value = "register_4"
+
+[[kamstrup_meter.registers]]
+name = 5
+length = 4
+units = 14
+unknown = 65
+value = "register_5"
+
+[[kamstrup_meter.registers]]
+name = 6
+length = 4
+units = 14
+unknown = 65
+value = "register_6"
+
+[[kamstrup_meter.registers]]
+name = 1024
+length = 4
+units = 22
+unknown = 67
+value = "register_1024"
+
+[[kamstrup_meter.registers]]
+name = 1025
+length = 4
+units = 26
+unknown = 67
+value = "register_1025"
+
+[[kamstrup_meter.registers]]
+name = 1033
+length = 4
+units = 22
+unknown = 67
+value = "register_1033"
+
+[[kamstrup_meter.registers]]
+name = 1034
+length = 4
+units = 47
+unknown = 0
+value = "register_1034"
+
+[[kamstrup_meter.registers]]
+name = 1035
+length = 4
+units = 48
+unknown = 0
+value = "register_1035"
+
+[[kamstrup_meter.registers]]
+name = 1036
+length = 4
+units = 22
+unknown = 67
+value = "register_1036"
+
+[[kamstrup_meter.registers]]
+name = 15
+length = 4
+units = 14
+unknown = 68
+value = "register_15"
+
+[[kamstrup_meter.registers]]
+name = 16
+length = 4
+units = 14
+unknown = 68
+value = "register_16"
+
+[[kamstrup_meter.registers]]
+name = 17
+length = 4
+units = 2
+unknown = 65
+value = "register_17"
+
+[[kamstrup_meter.registers]]
+name = 18
+length = 4
+units = 2
+unknown = 65
+value = "register_18"
+
+[[kamstrup_meter.registers]]
+name = 1027
+length = 4
+units = 47
+unknown = 0
+value = "register_1027"
+
+[[kamstrup_meter.registers]]
+name = 20
+length = 4
+units = 2
+unknown = 65
+value = "register_20"
+
+[[kamstrup_meter.registers]]
+name = 21
+length = 4
+units = 14
+unknown = 65
+value = "register_21"
+
+[[kamstrup_meter.registers]]
+name = 22
+length = 4
+units = 14
+unknown = 65
+value = "register_22"
+
+[[kamstrup_meter.registers]]
+name = 23
+length = 4
+units = 2
+unknown = 65
+value = "register_23"
+
+[[kamstrup_meter.registers]]
+name = 24
+length = 4
+units = 2
+unknown = 65
+value = "register_24"
+
+[[kamstrup_meter.registers]]
+name = 25
+length = 4
+units = 14
+unknown = 65
+value = "register_25"
+
+[[kamstrup_meter.registers]]
+name = 26
+length = 4
+units = 14
+unknown = 65
+value = "register_26"
+
+[[kamstrup_meter.registers]]
+name = 27
+length = 4
+units = 2
+unknown = 65
+value = "register_27"
+
+[[kamstrup_meter.registers]]
+name = 28
+length = 4
+units = 2
+unknown = 65
+value = "register_28"
+
+[[kamstrup_meter.registers]]
+name = 29
+length = 4
+units = 14
+unknown = 65
+value = "register_29"
+
+[[kamstrup_meter.registers]]
+name = 30
+length = 4
+units = 14
+unknown = 65
+value = "register_30"
+
+[[kamstrup_meter.registers]]
+name = 31
+length = 4
+units = 2
+unknown = 65
+value = "register_31"
+
+[[kamstrup_meter.registers]]
+name = 32
+length = 4
+units = 2
+unknown = 65
+value = "register_32"
+
+[[kamstrup_meter.registers]]
+name = 33
+length = 4
+units = 14
+unknown = 65
+value = "register_33"
+
+[[kamstrup_meter.registers]]
+name = 34
+length = 4
+units = 14
+unknown = 65
+value = "register_34"
+
+[[kamstrup_meter.registers]]
+name = 35
+length = 4
+units = 22
+unknown = 67
+value = "register_35"
+
+[[kamstrup_meter.registers]]
+name = 36
+length = 4
+units = 22
+unknown = 67
+value = "register_36"
+
+[[kamstrup_meter.registers]]
+name = 37
+length = 4
+units = 26
+unknown = 67
+value = "register_37"
+
+[[kamstrup_meter.registers]]
+name = 38
+length = 4
+units = 26
+unknown = 67
+value = "register_38"
+
+[[kamstrup_meter.registers]]
+name = 39
+length = 4
+units = 22
+unknown = 67
+value = "register_39"
+
+[[kamstrup_meter.registers]]
+name = 40
+length = 4
+units = 22
+unknown = 67
+value = "register_40"
+
+[[kamstrup_meter.registers]]
+name = 41
+length = 4
+units = 26
+unknown = 67
+value = "register_41"
+
+[[kamstrup_meter.registers]]
+name = 42
+length = 4
+units = 26
+unknown = 67
+value = "register_42"
+
+[[kamstrup_meter.registers]]
+name = 43
+length = 4
+units = 22
+unknown = 67
+value = "register_43"
+
+[[kamstrup_meter.registers]]
+name = 44
+length = 4
+units = 22
+unknown = 67
+value = "register_44"
+
+[[kamstrup_meter.registers]]
+name = 45
+length = 4
+units = 26
+unknown = 67
+value = "register_45"
+
+[[kamstrup_meter.registers]]
+name = 46
+length = 4
+units = 26
+unknown = 67
+value = "register_46"
+
+[[kamstrup_meter.registers]]
+name = 1071
+length = 4
+units = 14
+unknown = 65
+value = "register_1071"
+
+[[kamstrup_meter.registers]]
+name = 1072
+length = 4
+units = 14
+unknown = 65
+value = "register_1072"
+
+[[kamstrup_meter.registers]]
+name = 1073
+length = 4
+units = 14
+unknown = 65
+value = "register_1073"
+
+[[kamstrup_meter.registers]]
+name = 50
+length = 4
+units = 51
+unknown = 0
+value = "register_50"
+
+[[kamstrup_meter.registers]]
+name = 51
+length = 4
+units = 51
+unknown = 0
+value = "register_51"
+
+[[kamstrup_meter.registers]]
+name = 52
+length = 4
+units = 51
+unknown = 0
+value = "register_52"
+
+[[kamstrup_meter.registers]]
+name = 53
+length = 4
+units = 51
+unknown = 0
+value = "register_53"
+
+[[kamstrup_meter.registers]]
+name = 54
+length = 4
+units = 51
+unknown = 0
+value = "register_54"
+
+[[kamstrup_meter.registers]]
+name = 55
+length = 4
+units = 51
+unknown = 0
+value = "register_55"
+
+[[kamstrup_meter.registers]]
+name = 56
+length = 4
+units = 51
+unknown = 0
+value = "register_56"
+
+[[kamstrup_meter.registers]]
+name = 57
+length = 4
+units = 51
+unknown = 0
+value = "register_57"
+
+[[kamstrup_meter.registers]]
+name = 58
+length = 4
+units = 0
+unknown = 0
+value = "register_58"
+
+[[kamstrup_meter.registers]]
+name = 1083
+length = 2
+units = 51
+unknown = 0
+value = "register_1083"
+
+[[kamstrup_meter.registers]]
+name = 1084
+length = 2
+units = 0
+unknown = 0
+value = "register_1084"
+
+[[kamstrup_meter.registers]]
+name = 1086
+length = 4
+units = 51
+unknown = 0
+value = "register_1086"
+
+[[kamstrup_meter.registers]]
+name = 1205
+length = 16
+units = 0
+unknown = 0
+value = "register_1205"
+
+[[kamstrup_meter.registers]]
+name = 1092
+length = 2
+units = 51
+unknown = 0
+value = "register_1092"
+
+[[kamstrup_meter.registers]]
+name = 1037
+length = 4
+units = 47
+unknown = 0
+value = "register_1037"
+
+[[kamstrup_meter.registers]]
+name = 1038
+length = 4
+units = 48
+unknown = 0
+value = "register_1038"
+
+[[kamstrup_meter.registers]]
+name = 1112
+length = 2
+units = 60
+unknown = 0
+value = "register_1112"
+
+[[kamstrup_meter.registers]]
+name = 1113
+length = 2
+units = 60
+unknown = 0
+value = "register_1113"
+
+[[kamstrup_meter.registers]]
+name = 1114
+length = 2
+units = 60
+unknown = 0
+value = "register_1114"
+
+[[kamstrup_meter.registers]]
+name = 1039
+length = 4
+units = 22
+unknown = 67
+value = "register_1039"
+
+[[kamstrup_meter.registers]]
+name = 1121
+length = 4
+units = 2
+unknown = 65
+value = "register_1121"
+
+[[kamstrup_meter.registers]]
+name = 1026
+length = 4
+units = 26
+unknown = 67
+value = "register_1026"
+
+[[kamstrup_meter.registers]]
+name = 1126
+length = 13
+units = 54
+unknown = 0
+value = "register_1126"
+
+[[kamstrup_meter.registers]]
+name = 19
+length = 4
+units = 2
+unknown = 65
+value = "register_19"
+
+[[kamstrup_meter.registers]]
+name = 1047
+length = 8
+units = 53
+unknown = 0
+value = "register_1047"
+
+[[kamstrup_meter.registers]]
+name = 1049
+length = 8
+units = 53
+unknown = 0
+value = "register_1049"
+
+[[kamstrup_meter.registers]]
+name = 1050
+length = 8
+units = 53
+unknown = 0
+value = "register_1050"
+
+[[kamstrup_meter.registers]]
+name = 1028
+length = 4
+units = 48
+unknown = 0
+value = "register_1028"
+
+[[kamstrup_meter.registers]]
+name = 1051
+length = 8
+units = 53
+unknown = 0
+value = "register_1051"
+
+[[kamstrup_meter.registers]]
+name = 1189
+length = 2
+units = 0
+unknown = 0
+value = "register_1189"
+
+[[kamstrup_meter.registers]]
+name = 1202
+length = 16
+units = 0
+unknown = 0
+value = "register_1202"
+
+[[kamstrup_meter.registers]]
+name = 1203
+length = 16
+units = 0
+unknown = 0
+value = "register_1203"
+
+[[kamstrup_meter.registers]]
+name = 1204
+length = 16
+units = 0
+unknown = 0
+value = "register_1204"
+
+[[kamstrup_meter.registers]]
+name = 1206
+length = 16
+units = 0
+unknown = 0
+value = "register_1206"
+
+[[kamstrup_meter.registers]]
+name = 1207
+length = 16
+units = 0
+unknown = 0
+value = "register_1207"
+
+[[kamstrup_meter.registers]]
+name = 1208
+length = 16
+units = 0
+unknown = 0
+value = "register_1208"
+
+[[kamstrup_meter.registers]]
+name = 1209
+length = 16
+units = 0
+unknown = 0
+value = "register_1209"
+
+[[kamstrup_meter.registers]]
+name = 1029
+length = 4
+units = 51
+unknown = 0
+value = "register_1029"
+
+[[kamstrup_meter.registers]]
+name = 1058
+length = 10
+units = 54
+unknown = 0
+value = "register_1058"
+
+[[kamstrup_meter.registers]]
+name = 1115
+length = 2
+units = 60
+unknown = 0
+value = "register_1115"
+
+[[kamstrup_meter.registers]]
+name = 1059
+length = 4
+units = 2
+unknown = 65
+value = "register_1059"
+
+[[kamstrup_meter.registers]]
+name = 1060
+length = 4
+units = 2
+unknown = 65
+value = "register_1060"
+
+[[kamstrup_meter.registers]]
+name = 1030
+length = 4
+units = 51
+unknown = 0
+value = "register_1030"
+
+[[kamstrup_meter.registers]]
+name = 1061
+length = 4
+units = 2
+unknown = 65
+value = "register_1061"
+
+[[kamstrup_meter.registers]]
+name = 1062
+length = 4
+units = 2
+unknown = 65
+value = "register_1062"
+
+[[kamstrup_meter.registers]]
+name = 1063
+length = 4
+units = 2
+unknown = 65
+value = "register_1063"
+
+[[kamstrup_meter.registers]]
+name = 1064
+length = 4
+units = 2
+unknown = 65
+value = "register_1064"
+
+[[kamstrup_meter.registers]]
+name = 1065
+length = 4
+units = 2
+unknown = 65
+value = "register_1065"
+
+[[kamstrup_meter.registers]]
+name = 1031
+length = 4
+units = 2
+unknown = 65
+value = "register_1031"
+
+[[kamstrup_meter.registers]]
+name = 1066
+length = 4
+units = 2
+unknown = 65
+value = "register_1066"
+
+[[kamstrup_meter.registers]]
+name = 1067
+length = 4
+units = 14
+unknown = 65
+value = "register_1067"
+
+[[kamstrup_meter.registers]]
+name = 1068
+length = 4
+units = 14
+unknown = 65
+value = "register_1068"
+
+[[kamstrup_meter.registers]]
+name = 1069
+length = 4
+units = 14
+unknown = 65
+value = "register_1069"
+
+[[kamstrup_meter.registers]]
+name = 1070
+length = 4
+units = 14
+unknown = 65
+value = "register_1070"
+
+[[kamstrup_meter.registers]]
+name = 1074
+length = 4
+units = 14
+unknown = 65
+value = "register_1074"
+
+[[kamstrup_meter.registers]]
+name = 1075
+length = 4
+units = 51
+unknown = 0
+value = "register_1075"
+
+[[kamstrup_meter.registers]]
+name = 1079
+length = 2
+units = 38
+unknown = 0
+value = "register_1079"
+
+[[kamstrup_meter.registers]]
+name = 1181
+length = 8
+units = 53
+unknown = 0
+value = "register_1181"
+
+[[kamstrup_meter.registers]]
+name = 1001
+length = 4
+units = 51
+unknown = 0
+value = "register_1001"
+
+[[kamstrup_meter.registers]]
+name = 1002
+length = 4
+units = 47
+unknown = 0
+value = "register_1002"
+
+[[kamstrup_meter.registers]]
+name = 1003
+length = 4
+units = 48
+unknown = 0
+value = "register_1003"
+
+[[kamstrup_meter.registers]]
+name = 1004
+length = 4
+units = 46
+unknown = 0
+value = "register_1004"
+
+[[kamstrup_meter.registers]]
+name = 1005
+length = 4
+units = 51
+unknown = 0
+value = "register_1005"
+
+[[kamstrup_meter.registers]]
+name = 1010
+length = 10
+units = 51
+unknown = 0
+value = "register_1010"
+
+[[kamstrup_meter.registers]]
+name = 1021
+length = 4
+units = 51
+unknown = 0
+value = "register_1021"
+
+[[kamstrup_meter.registers]]
+name = 1023
+length = 4
+units = 22
+unknown = 67
+value = "register_1023"

@@ -1,0 +1,40 @@
+[modbus]
+enabled = true
+host = "0.0.0.0"
+port = 5020
+mode = "serial"
+delay = 100
+umas_enabled = false
+
+[modbus.device_info]
+VendorName = "Siemens"
+ProductCode = "SIMATIC"
+MajorMinorRevision = "S7-200"
+
+[[modbus.slaves]]
+id = 0
+blocks = [
+  { name = "memoryModbusSlave0BlockA", type = "COILS", starting_address = 1, size = 128, content = "memoryModbusSlave0BlockA" },
+  { name = "memoryModbusSlave0BlockB", type = "DISCRETE_INPUTS", starting_address = 10001, size = 32, content = "memoryModbusSlave0BlockB" },
+]
+
+[[modbus.slaves]]
+id = 255
+blocks = [
+  { name = "memoryModbusSlave255BlockA", type = "COILS", starting_address = 1, size = 128, content = "memoryModbusSlave255BlockA" },
+  { name = "memoryModbusSlave255BlockB", type = "DISCRETE_INPUTS", starting_address = 10001, size = 32, content = "memoryModbusSlave255BlockB" },
+]
+
+[[modbus.slaves]]
+id = 1
+blocks = [
+  { name = "memoryModbusSlave1BlockA", type = "COILS", starting_address = 1, size = 128, content = "memoryModbusSlave1BlockA" },
+  { name = "memoryModbusSlave1BlockB", type = "DISCRETE_INPUTS", starting_address = 10001, size = 32, content = "memoryModbusSlave1BlockB" },
+]
+
+[[modbus.slaves]]
+id = 2
+blocks = [
+  { name = "memoryModbusSlave2BlockC", type = "ANALOG_INPUTS", starting_address = 30001, size = 8, content = "memoryModbusSlave2BlockC" },
+  { name = "memoryModbusSlave2BlockD", type = "HOLDING_REGISTERS", starting_address = 40001, size = 8, content = "memoryModbusSlave2BlockD" },
+]

@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 @conpot_protocol
 class KamstrupManagementServer(object):
     def __init__(self, template, template_directory, args):
+        # template is a dict from kamstrup_management.toml (enabled/host/port).
         self.command_responder = CommandResponder()
         self.banner = "\r\nWelcome...\r\nConnected to [{0}]\r\n"
         logger.info("Kamstrup management protocol server initialized.")
