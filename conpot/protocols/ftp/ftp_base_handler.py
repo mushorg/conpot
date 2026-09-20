@@ -242,7 +242,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 self.client_address[0], self.client_address[1], self.session.id
             )
         )
-        self.session.add_event({"type": "NEW_CONNECTION"})
+        self.session.log_event(event_type="NEW_CONNECTION")
         # send 220 + banner -- new client has connected! (RFC 959 greeting code)
         self.respond(b"220 " + self.config.banner.encode())
         return socketserver.BaseRequestHandler.setup(self)
@@ -341,7 +341,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.log_event(event_type="CONNECTION_LOST")
                 self.finish()
                 return
             socket_read, socket_write, _ = select.select(
@@ -356,7 +356,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                             self.client_address, self.session.id
                         )
                     )
-                    self.session.add_event({"type": "CONNECTION_LOST"})
+                    self.session.log_event(event_type="CONNECTION_LOST")
                     self.finish()
                     return
                 # Frame on CRLF before enqueue so pipelined commands stay separate.
@@ -387,7 +387,10 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, log_data, self.session.id
                     )
                 )
-                self.session.add_event(log_data)
+                self.session.log_event(
+                    request=log_data.get("request"),
+                    response=log_data.get("response"),
+                )
         except (ValueError, OSError, socket.error) as se:
             err_no = getattr(se, "errno", None)
             if err_no == errno.EWOULDBLOCK:
@@ -398,7 +401,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                         self.client_address, self.session.id, se
                     )
                 )
-                self.session.add_event({"type": "CONNECTION_LOST"})
+                self.session.log_event(event_type="CONNECTION_LOST")
                 self.finish()
 
     def respond(self, response):

@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from freezegun import freeze_time
 
 from conpot.core.attack_session import AttackSession
+from conpot.core.loggers.event import SCHEMA_VERSION
 
 
 class LogQueueFake:
@@ -34,19 +35,18 @@ def test_add_event_is_logged():
     session.add_event(event)
 
     logged = log_queue.events[0]
+    assert logged["schema_version"] == SCHEMA_VERSION
     assert logged["data"] == event
-    assert logged["data_type"] == protocol
+    assert logged["protocol"] == protocol
+    assert logged["session_id"] == str(session.id)
 
     assert logged["src_ip"] == source_ip
     assert logged["src_port"] == source_port
-    assert logged["remote"] == (source_ip, source_port)
-
     assert logged["dst_ip"] == destination_ip
     assert logged["dst_port"] == destination_port
-    assert logged["local"] == (destination_ip, destination_port)
-
-    # TODO should this even include public_ip if it's always None?
     assert logged["public_ip"] is None
+    assert "remote" not in logged
+    assert "local" not in logged
 
 
 def test_add_event_same_id():
@@ -64,7 +64,7 @@ def test_add_event_same_id():
     session.add_event({"foo": "bar"})
     session.add_event({"bar": "baz"})
 
-    assert log_queue.events[0]["id"] == log_queue.events[1]["id"]
+    assert log_queue.events[0]["session_id"] == log_queue.events[1]["session_id"]
 
 
 def test_add_event_sessions_have_unique_ids():
@@ -91,12 +91,12 @@ def test_add_event_sessions_have_unique_ids():
     session_1.add_event({"foo": "bar"})
     session_2.add_event({"bar": "baz"})
 
-    assert log_queue.events[0]["id"] != log_queue.events[1]["id"]
+    assert log_queue.events[0]["session_id"] != log_queue.events[1]["session_id"]
 
 
-def test_add_event_uses_session_timestamp():
+def test_add_event_uses_distinct_event_time():
     log_queue = LogQueueFake()
-    session_start = datetime(2000, 1, 1)
+    session_start = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
     with freeze_time(session_start) as frozen_time:
         session = AttackSession(
@@ -112,10 +112,36 @@ def test_add_event_uses_session_timestamp():
         session.add_event({"foo": "bar"})
         session.add_event({"bar": "baz"})
 
-        # timestamp is always the time the session started,
-        # not the time the event occurred
-        assert log_queue.events[0]["timestamp"] == session_start
-        assert log_queue.events[1]["timestamp"] == session_start
+        assert log_queue.events[0]["session_time"] == session_start.isoformat()
+        assert log_queue.events[1]["session_time"] == session_start.isoformat()
+        assert log_queue.events[0]["event_time"] != log_queue.events[0]["session_time"]
+        assert log_queue.events[0]["event_type"] is None
+        assert log_queue.events[0]["data"] == {"foo": "bar"}
+
+
+def test_log_event_lifts_known_fields():
+    log_queue = LogQueueFake()
+    session = AttackSession(
+        protocol="http",
+        source_ip="1.2.3.4",
+        source_port=11,
+        destination_ip="5.6.7.8",
+        destination_port=80,
+        log_queue=log_queue,
+    )
+
+    session.log_event(
+        event_type="GET",
+        request="ping",
+        response="pong",
+        path="/",
+    )
+
+    logged = log_queue.events[0]
+    assert logged["event_type"] == "GET"
+    assert logged["request"] == "ping"
+    assert logged["response"] == "pong"
+    assert logged["data"] == {"path": "/"}
 
 
 @freeze_time("2000-01-01", auto_tick_seconds=2)
@@ -145,17 +171,13 @@ def test_dump_collects_events():
 
     dump = session.dump()
 
-    assert dump["data_type"] == protocol
+    assert dump["protocol"] == protocol
+    assert dump["session_id"] == str(session.id)
     assert list(dump["data"].keys()) == [2000, 4000, 6000]
-    assert list(dump["data"].values()) == [event_1, event_2, event_1]
+    assert [v["data"] for v in dump["data"].values()] == [event_1, event_2, event_1]
 
     assert dump["src_ip"] == source_ip
     assert dump["src_port"] == source_port
-    assert dump["remote"] == (source_ip, source_port)
-
     assert dump["dst_ip"] == destination_ip
     assert dump["dst_port"] == destination_port
-    assert dump["local"] == (destination_ip, destination_port)
-
-    # TODO should this even include public_ip if it's always None?
     assert dump["public_ip"] is None

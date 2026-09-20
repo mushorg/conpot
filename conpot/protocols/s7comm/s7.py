@@ -218,15 +218,13 @@ class S7(object):
     def _log_var_event(self, event_type, item, length, success):
         if self._session is None:
             return
-        self._session.add_event(
-            {
-                "type": event_type,
-                "area": item["area"],
-                "db": item["db_number"],
-                "offset": item["byte_offset"],
-                "length": length,
-                "success": success,
-            }
+        self._session.log_event(
+            event_type=event_type,
+            area=item["area"],
+            db=item["db_number"],
+            offset=item["byte_offset"],
+            length=length,
+            success=success,
         )
 
     def request_read_var(self):
@@ -362,7 +360,7 @@ class S7(object):
         logger.info("Stop signal received from %s", current_client)
         S7.cpu_running = False
         if self._session is not None:
-            self._session.add_event({"type": "PLC_STOP"})
+            self._session.log_event(event_type="PLC_STOP")
         return b"\x29", b""
 
     def plc_control(self):
@@ -380,7 +378,7 @@ class S7(object):
         ):
             S7.cpu_running = True
             if self._session is not None:
-                self._session.add_event({"type": "PLC_START"})
+                self._session.log_event(event_type="PLC_START")
             return b"\x28", b""
         return self.request_not_implemented()
 

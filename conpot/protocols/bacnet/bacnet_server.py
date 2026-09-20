@@ -90,11 +90,12 @@ class BacnetServer(object):
         logger.info(
             "New Bacnet connection from %s:%d. (%s)", address[0], address[1], session.id
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
         try:
             apdu = decode_bacnet_ip(data, address)
         except DecodingError:
             logger.warning("DecodingError - BACnet/IP PDU: %s", data.hex())
+            session.log_event(error="DecodingError")
             return
         except Exception:
             logger.exception("Failed to decode BACnet/IP datagram")
@@ -102,9 +103,11 @@ class BacnetServer(object):
         self.bacnet_app.indication(apdu, address, self.thisDevice)
         # send an appropriate response from BACnet app to the attacker
         self.bacnet_app.response(self.bacnet_app._response, address)
+        session.log_event(request=data.hex())
         logger.info(
             "Bacnet client disconnected %s:%d. (%s)", address[0], address[1], session.id
         )
+        session.log_event(event_type="CONNECTION_LOST")
 
     async def start(self, host, port):
         self._stop = asyncio.Event()

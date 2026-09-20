@@ -15,12 +15,16 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import shutil
 import unittest
 from subprocess import PIPE, STDOUT, Popen
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
+_HAS_IPMITOOL = shutil.which("ipmitool") is not None
 
+
+@unittest.skipUnless(_HAS_IPMITOOL, "ipmitool is not installed")
 class TestIPMI(unittest.TestCase):
     def setUp(self):
         self.ipmi_server, self.greenlet = spawn_test_server(

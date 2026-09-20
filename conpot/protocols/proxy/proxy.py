@@ -121,6 +121,7 @@ class Proxy(object):
             self.proxy_id,
             session.id,
         )
+        session.log_event(event_type="NEW_CONNECTION")
         proxy_socket = socket.socket()
 
         if self.keyfile and self.certfile:
@@ -134,6 +135,7 @@ class Proxy(object):
                     self.proxy_host, self.proxy_port
                 )
             )
+            session.log_event(event_type="CONNECTION_FAILED")
             self._close([proxy_socket, sock])
             return
 
@@ -195,6 +197,7 @@ class Proxy(object):
                     sockets = []
                     break
 
+        session.log_event(event_type="CONNECTION_LOST")
         session.set_ended()
         proxy_socket.close()
         sock.close()
@@ -202,7 +205,7 @@ class Proxy(object):
     def handle_in_data(self, data, sock, session):
         # convert the data from bytes to hex string
         hex_data = codecs.encode(data, "hex_codec")
-        session.add_event({"raw_request": hex_data, "raw_response": ""})
+        session.log_event(raw_request=hex_data, raw_response="")
         logger.debug(
             "Received %s bytes from outside to proxied service: %s", len(data), hex_data
         )
@@ -210,18 +213,18 @@ class Proxy(object):
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_in(data)
             logger.debug("Decoded request: %s", decoded)
-            session.add_event({"request": decoded, "raw_response": ""})
+            session.log_event(request=decoded)
         sock.send(data)
 
     def handle_out_data(self, data, sock, session):
         hex_data = codecs.encode(data, "hex_codec")
-        session.add_event({"raw_request": "", "raw_response": hex_data})
+        session.log_event(raw_request="", raw_response=hex_data)
         logger.debug("Received %s bytes from proxied service: %s", len(data), hex_data)
         if self.decoder:
             # TODO: data could be chunked, proxy needs to handle this
             decoded = self.decoder.decode_out(data)
             logger.debug("Decoded response: %s", decoded)
-            session.add_event({"request": "", "raw_response": decoded})
+            session.log_event(response=decoded)
         sock.send(data)
 
     def _close(self, sockets):

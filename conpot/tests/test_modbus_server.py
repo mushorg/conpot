@@ -19,8 +19,6 @@ import socket
 import struct
 import unittest
 
-from datetime import datetime
-
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
 from conpot.protocols.modbus.slave import ModbusInvalidRequestError
@@ -155,16 +153,17 @@ class TestModbusServer(unittest.TestCase):
 
         # extract the generated log entries
         conn_log_item = get_log_event(self.greenlet, timeout=2)
-        conn_expected_payload = {"type": "NEW_CONNECTION"}
-        self.assertDictEqual(conn_expected_payload, conn_log_item["data"])
+        self.assertEqual("NEW_CONNECTION", conn_log_item["event_type"])
+        self.assertEqual({}, conn_log_item["data"])
 
         modbus_log_item = get_log_event(self.greenlet, timeout=2)
-        self.assertIsInstance(modbus_log_item["timestamp"], datetime)
+        self.assertIsNotNone(modbus_log_item["event_time"])
+        self.assertIsNotNone(modbus_log_item["session_time"])
         self.assertTrue("data" in modbus_log_item)
         # we expect session_id to be 36 characters long (32 x char, 4 x dashes)
-        self.assertTrue(len(str(modbus_log_item["id"])), modbus_log_item)
-        self.assertEqual("127.0.0.1", modbus_log_item["remote"][0])
-        self.assertEqual("modbus", modbus_log_item["data_type"])
+        self.assertEqual(36, len(str(modbus_log_item["session_id"])))
+        self.assertEqual("127.0.0.1", modbus_log_item["src_ip"])
+        self.assertEqual("modbus", modbus_log_item["protocol"])
 
         req_suffix = (
             "000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
@@ -174,12 +173,12 @@ class TestModbusServer(unittest.TestCase):
         self.assertEqual(1, modbus_log_item["data"]["function_code"])
         self.assertEqual(self.target_slave_id, modbus_log_item["data"]["slave_id"])
         self.assertTrue(
-            modbus_log_item["data"]["request"].endswith(req_suffix),
-            modbus_log_item["data"]["request"],
+            modbus_log_item["request"].endswith(req_suffix),
+            modbus_log_item["request"],
         )
         self.assertEqual(
             b"0110ffffffffffffffffffffffffffffffff",
-            modbus_log_item["data"]["response"],
+            modbus_log_item["response"],
         )
 
     def test_report_slave_id(self):
@@ -385,7 +384,7 @@ class TestModbusUmas(unittest.TestCase):
 
         types = []
         for item in drain_log_queue(self.greenlet):
-            event_type = item["data"].get("type")
+            event_type = item.get("event_type")
             if event_type:
                 types.append(event_type)
         self.assertIn("UMAS_STOP", types)

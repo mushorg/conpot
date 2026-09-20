@@ -16,25 +16,32 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 from logging.handlers import SysLogHandler
+import json
 import logging
 import socket
+
+from .helpers import json_default
 
 
 class SysLogger(object):
     def __init__(self, host, port, facility, logdevice, logsocket):
-        logger = logging.getLogger()
+        self.logger = logging.getLogger("conpot.attack")
+        self.logger.setLevel(logging.INFO)
+        self.logger.propagate = False
+
+        facility_const = getattr(SysLogHandler, "LOG_" + str(facility).upper())
 
         if str(logsocket).lower() == "udp":
-            logger.addHandler(
-                SysLogHandler(
-                    address=(host, port),
-                    facility=getattr(SysLogHandler, "LOG_" + str(facility).upper()),
-                    socktype=socket.SOCK_DGRAM,
-                )
+            handler = SysLogHandler(
+                address=(host, port),
+                facility=facility_const,
+                socktype=socket.SOCK_DGRAM,
             )
-        elif str(logsocket).lower() == "dev":
-            logger.addHandler(SysLogHandler(logdevice))
+        else:
+            handler = SysLogHandler(logdevice, facility=facility_const)
 
-    def log(self, data):
-        # stub function since the additional handler has been added to the root loggers instance.
-        pass
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        self.logger.addHandler(handler)
+
+    def log(self, event):
+        self.logger.info(json.dumps(event, default=json_default))

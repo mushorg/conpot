@@ -226,8 +226,8 @@ class TestIEC104Server(unittest.TestCase):
         con_new_event = self._get_log_event()
         con_lost_event = self._get_log_event(timeout=1)
 
-        self.assertEqual("NEW_CONNECTION", con_new_event["data"]["type"])
-        self.assertEqual("CONNECTION_LOST", con_lost_event["data"]["type"])
+        self.assertEqual("NEW_CONNECTION", con_new_event["event_type"])
+        self.assertEqual("CONNECTION_LOST", con_lost_event["event_type"])
 
         s.close()
 

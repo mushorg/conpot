@@ -78,7 +78,7 @@ class IEC104Server(object):
             address[1],
             session.id,
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
         iec104_handler = IEC104(self.device_data_controller, sock, address, session.id)
         try:
             while True:
@@ -95,7 +95,7 @@ class IEC104Server(object):
                             )
                         if not request:
                             logger.info("IEC104 Station disconnected. (%s)", session.id)
-                            session.add_event({"type": "CONNECTION_LOST"})
+                            session.log_event(event_type="CONNECTION_LOST")
                             iec104_handler.disconnect()
                             break
                         # Gather start + length bytes. An empty recv is EOF; without
@@ -116,7 +116,7 @@ class IEC104Server(object):
                                 "header. (%s)",
                                 session.id,
                             )
-                            session.add_event({"type": "CONNECTION_LOST"})
+                            session.log_event(event_type="CONNECTION_LOST")
                             iec104_handler.disconnect()
                             break
 
@@ -137,7 +137,7 @@ class IEC104Server(object):
                                 "APDU. (%s)",
                                 session.id,
                             )
-                            session.add_event({"type": "CONNECTION_LOST"})
+                            session.log_event(event_type="CONNECTION_LOST")
                             iec104_handler.disconnect()
                             break
 
@@ -184,19 +184,19 @@ class IEC104Server(object):
                 except Timeout_t1:
                     logger.warning("T1 timed out. (%s)", session.id)
                     logger.info("IEC104 Station disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                     iec104_handler.disconnect()
                     break
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.add_event({"type": "CONNECTION_LOST"})
+            session.log_event(event_type="CONNECTION_LOST")
             iec104_handler.disconnect()
         except socket.error as err:
             if isinstance(err.args, tuple):
                 if err.errno == errno.EPIPE:
                     # remote peer disconnected
                     logger.info("IEC104 Station disconnected. (%s)", session.id)
-                    session.add_event({"type": "CONNECTION_LOST"})
+                    session.log_event(event_type="CONNECTION_LOST")
                 else:
                     # determine and handle different error
                     pass

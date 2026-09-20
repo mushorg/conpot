@@ -471,9 +471,9 @@ def _log_request(state, version, request_type, addr, local, request, response=No
     )
     if response is not None:
         logger.info("%s response to %s: %s. %s", version, addr, response, session.id)
-        session.add_event({"request": str(request), "response": str(response)})
+        session.log_event(request=str(request), response=str(response))
     else:
-        session.add_event({"request": str(request)})
+        session.log_event(request=str(request))
 
 
 def _peer_addrs(request):

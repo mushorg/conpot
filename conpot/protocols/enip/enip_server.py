@@ -115,7 +115,7 @@ class EnipServer(object):
         logger.info(
             "New ENIP connection from %s:%s. (%s)", address[0], address[1], session.id
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
 
         protocol = self.protocol
         session_handle = 0
@@ -144,7 +144,7 @@ class EnipServer(object):
                         msg, session_handle, local[0]
                     )
                     if is_nop:
-                        session.add_event({"type": "ENIP_NOP"})
+                        session.log_event(event_type="ENIP_NOP")
                         logger.info("Discarded EtherNet/IP NOP from %s", address)
                     if response is not None:
                         try:
@@ -157,7 +157,7 @@ class EnipServer(object):
                                 exc,
                             )
                             return
-                        session.add_event({"type": "CONNECTION_CLOSED"})
+                        session.log_event(event_type="CONNECTION_CLOSED")
         finally:
             sock.close()
 
@@ -174,7 +174,7 @@ class EnipServer(object):
         session = conpot_core.get_session(
             "enip", address[0], address[1], local_addr, local_port
         )
-        session.add_event({"type": "NEW_CONNECTION"})
+        session.log_event(event_type="NEW_CONNECTION")
 
         session_handle = 0
         accum = bytearray(data)
@@ -183,22 +183,22 @@ class EnipServer(object):
                 msg, consumed = protocol.try_parse(bytes(accum), address)
                 if msg is None:
                     # Incomplete / garbage datagram — drop remainder.
-                    session.add_event({"type": "CONNECTION_FAILED"})
+                    session.log_event(event_type="CONNECTION_FAILED")
                     return
                 del accum[:consumed]
                 response, session_handle, is_nop = protocol.dispatch_message(
                     msg, session_handle, local_addr
                 )
                 if is_nop:
-                    session.add_event({"type": "ENIP_NOP"})
+                    session.log_event(event_type="ENIP_NOP")
                     logger.info("Discarded EtherNet/IP NOP from %s", address)
                     continue
                 if response is not None:
                     self.server.sendto(response, address)
-                    session.add_event({"type": "CONNECTION_CLOSED"})
+                    session.log_event(event_type="CONNECTION_CLOSED")
         except Exception:
             logger.exception("ENIP UDP handling failed for %s", address)
-            session.add_event({"type": "CONNECTION_FAILED"})
+            session.log_event(event_type="CONNECTION_FAILED")
 
     def handle(self, *args):
         if getattr(self, "_mode", None) == "udp":

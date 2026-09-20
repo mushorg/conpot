@@ -8,12 +8,14 @@
 import asyncio
 import json
 import logging
+import os
 import time
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import configparser
 
+import conpot
 from conpot.core.loggers.sqlite_log import SQLiteLogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
@@ -37,14 +39,22 @@ class LogWorker(object):
         self.syslog_client = None
         self.public_ip = public_ip
         self.taxii_logger = None
+        self.template = template
+        if template_directory:
+            self.template_name = os.path.basename(os.path.normpath(template_directory))
+        else:
+            self.template_name = None
+        try:
+            self.sensorid = config.get("common", "sensorid")
+        except configparser.NoSectionError, configparser.NoOptionError:
+            self.sensorid = "default"
 
         if config.getboolean("sqlite", "enabled"):
             self.sqlite_logger = SQLiteLogger()
 
         if config.getboolean("json", "enabled"):
             filename = config.get("json", "filename")
-            sensorid = config.get("common", "sensorid")
-            self.json_logger = JsonLogger(filename, sensorid, public_ip)
+            self.json_logger = JsonLogger(filename)
 
         if config.getboolean("hpfriends", "enabled"):
             host = config.get("hpfriends", "host")
@@ -87,8 +97,8 @@ class LogWorker(object):
                 sec_last_event = max(session.data) / 1000
             else:
                 sec_last_event = 0
-            sec_session_start = time.mktime(session.timestamp.timetuple())
-            sec_now = time.mktime(datetime.utcnow().timetuple())
+            sec_session_start = session.timestamp.timestamp()
+            sec_now = datetime.now(timezone.utc).timestamp()
             if (sec_now - (sec_session_start + sec_last_event)) >= float(
                 session_timeout
             ):
@@ -125,6 +135,9 @@ class LogWorker(object):
             except asyncio.TimeoutError:
                 self._process_sessions()
             else:
+                event["sensorid"] = self.sensorid
+                event["template"] = self.template_name
+                event["conpot_version"] = conpot.__version__
                 await asyncio.get_running_loop().run_in_executor(
                     None, self._dispatch, event
                 )
