@@ -14,9 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from gevent import monkey
 
-monkey.patch_all()
+import queue
 import unittest
 import os
 from datetime import datetime
@@ -135,7 +134,6 @@ class TestFTPServer(unittest.TestCase):
     def test_command_channel_framing(self):
         """Pipelined and split writes must be framed on CRLF before dispatch."""
         from conpot.protocols.ftp.ftp_base_handler import FTPHandlerBase
-        import gevent.queue
 
         handler = object.__new__(FTPHandlerBase)
         handler.terminator = b"\r\n"
@@ -143,7 +141,7 @@ class TestFTPServer(unittest.TestCase):
         handler.client_address = ("127.0.0.1", 1234)
         handler.disconnect_client = True
         handler._cmd_channel_remainder = b""
-        handler._command_channel_input_q = gevent.queue.Queue()
+        handler._command_channel_input_q = queue.Queue()
         handler.respond = lambda response: None
 
         # Two commands in one write (the CI failure mode for PORT+LIST).

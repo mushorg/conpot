@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -14,10 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-from gevent import monkey
-
-monkey.patch_all()
 
 import shutil
 import tempfile

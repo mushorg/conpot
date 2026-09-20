@@ -15,23 +15,26 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
-
+import socket
 import struct
 import unittest
-import gevent
-import modbus_tk.defines as cst
-import modbus_tk.modbus_tcp as modbus_tcp
-
-from datetime import datetime
-from modbus_tk.exceptions import ModbusError
-from gevent import socket
 
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.protocols.modbus.slave import ModbusInvalidRequestError
+from conpot.tests.helpers.modbus_client import (
+    READ_COILS,
+    SLAVE_DEVICE_FAILURE,
+    WRITE_MULTIPLE_COILS,
+    ModbusError,
+    TcpMaster,
+)
+from conpot.utils.greenlet import (
+    drain_log_queue,
+    get_log_event,
+    spawn_test_server,
+    teardown_test_server,
+)
 
 
 class TestModbusServer(unittest.TestCase):
@@ -46,9 +49,10 @@ class TestModbusServer(unittest.TestCase):
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port
 
-        # We have to use different slave IDs under different modes. In tcp mode,
-        # only 255 and 0 make sense. However, modbus_tcp.TcpMaster explicitly
-        # ignores slave ID 0. Therefore we can only use 255 in tcp mode.
+        # We have to use different slave IDs under different modes. In tcp mode
+        # any configured internal unit id works (including 255). In serial mode
+        # the default template is exercised via slave id 1. TcpMaster
+        # ignores slave ID 0, so tcp-mode tests that need a single id use 255.
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
@@ -64,11 +68,11 @@ class TestModbusServer(unittest.TestCase):
         )
 
         # create READ_COILS request
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         actual_bits = master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=128,
         )
@@ -81,21 +85,21 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if we can change values using the modbus protocol.
         """
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         set_bits = [1, 0, 0, 1, 0, 0, 1, 1]
 
         # write 8 bits
         master.execute(
             slave=self.target_slave_id,
-            function_code=cst.WRITE_MULTIPLE_COILS,
+            function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=set_bits,
         )
         # read 8 bit
         actual_bit = master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=8,
         )
@@ -106,16 +110,16 @@ class TestModbusServer(unittest.TestCase):
         """
         Objective: Test if the correct exception is raised when trying to read from nonexistent slave.
         """
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
         with self.assertRaises(ModbusError) as cm:
             master.execute(
                 slave=5,
-                function_code=cst.READ_COILS,
+                function_code=READ_COILS,
                 starting_address=1,
                 quantity_of_x=1,
             )
-        self.assertEqual(cm.exception.get_exception_code(), cst.SLAVE_DEVICE_FAILURE)
+        self.assertEqual(cm.exception.get_exception_code(), SLAVE_DEVICE_FAILURE)
 
     def test_modbus_logging(self):
         """
@@ -136,25 +140,23 @@ class TestModbusServer(unittest.TestCase):
             [1 for b in range(0, 128)],
         )
 
-        master = modbus_tcp.TcpMaster(host=self.host, port=self.port)
+        master = TcpMaster(host=self.host, port=self.port)
         master.set_timeout(1.0)
 
         # issue request to modbus server
         master.execute(
             slave=self.target_slave_id,
-            function_code=cst.READ_COILS,
+            function_code=READ_COILS,
             starting_address=1,
             quantity_of_x=128,
         )
 
         # extract the generated log entries
-        log_queue = conpot_core.get_sessionManager().log_queue
-
-        conn_log_item = log_queue.get(True, 2)
+        conn_log_item = get_log_event(self.greenlet, timeout=2)
         self.assertEqual("NEW_CONNECTION", conn_log_item["event_type"])
         self.assertEqual({}, conn_log_item["data"])
 
-        modbus_log_item = log_queue.get(True, 2)
+        modbus_log_item = get_log_event(self.greenlet, timeout=2)
         self.assertIsNotNone(modbus_log_item["event_time"])
         self.assertIsNotNone(modbus_log_item["session_time"])
         self.assertTrue("data" in modbus_log_item)
@@ -163,22 +165,27 @@ class TestModbusServer(unittest.TestCase):
         self.assertEqual("127.0.0.1", modbus_log_item["src_ip"])
         self.assertEqual("modbus", modbus_log_item["protocol"])
 
-        req = (
-            "000100000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
+        req_suffix = (
+            "000006%s0100010080" % ("01" if self.target_slave_id == 1 else "ff")
         ).encode()
-        # testing the actual modbus data
+        # testing the actual modbus data (transaction id is chosen by the
+        # test client, so do not assert a fixed MBAP tid)
         self.assertEqual(1, modbus_log_item["data"]["function_code"])
         self.assertEqual(self.target_slave_id, modbus_log_item["data"]["slave_id"])
-        self.assertEqual(req, modbus_log_item["request"])
+        self.assertTrue(
+            modbus_log_item["request"].endswith(req_suffix),
+            modbus_log_item["request"],
+        )
         self.assertEqual(
-            b"0110ffffffffffffffffffffffffffffffff", modbus_log_item["response"]
+            b"0110ffffffffffffffffffffffffffffffff",
+            modbus_log_item["response"],
         )
 
     def test_report_slave_id(self):
         """
         Objective: Test conpot for function code 17.
         """
-        # Function 17 is not currently supported by modbus_tk
+        # Function 17 is not a stock read/write; Conpot answers it directly.
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
         s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
@@ -205,21 +212,17 @@ class TestModbusServer(unittest.TestCase):
         the peer's write side is closed, recv(1) returns b'' *immediately*
         on every call instead of raising, so `request` never grows and the
         loop never terminates: a single such connection pins one CPU core
-        forever and, since Conpot runs every protocol as greenlets on one
-        shared event loop, starves every other protocol Conpot serves.
+        forever and starves other protocol handlers on the same process.
 
         This is deliberately not a wall-clock timing assertion - the
         underlying bug is a genuine infinite loop, not merely a slow one.
-        Note the gevent.Timeout below is best-effort, not a real safety net:
+        The socket timeout below is best-effort, not a real safety net:
         against the pre-fix code this test doesn't cleanly fail, it hangs
-        the whole process. A tight CPU-bound loop that never calls anything
-        which yields never gives gevent's hub a chance to run *any* other
-        callback, including the timer backing this very Timeout - confirmed
-        manually with a 15s wall-clock timeout (`timeout 15 python3 ...`)
-        that had to kill the process from the outside. If this test ever
-        hangs your test run instead of failing, that itself is the bug.
+        the whole process. If this test ever hangs your test run instead
+        of failing, that itself is the bug.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         length = 0xFFFF
         # 7-byte MBAP header: transaction id, protocol id, length, unit id.
@@ -227,8 +230,10 @@ class TestModbusServer(unittest.TestCase):
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
@@ -237,27 +242,85 @@ class TestModbusServer(unittest.TestCase):
         """
         nmap modbus probes often send an MBAP header with length 0.
         That must close the connection cleanly instead of raising
-        ModbusInvalidMbapError and killing the handler greenlet.
+        ModbusInvalidMbapError and killing the handler.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         # 7-byte MBAP: tid, pid, length=0, unit id
         header = struct.pack(">HHHB", 0, 0, 0, 1)
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
 
+    def test_empty_pdu_is_discarded(self):
+        """
+        Regression test for issue #511.
+
+        MBAP length 1 is unit id only (empty PDU). Real Modbus servers send
+        no exception response for framing errors; Conpot must discard without
+        crashing the handler on struct.unpack of the missing FC.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        # length=1: only unit id follows, no function code
+        header = struct.pack(">HHHB", 0, 0, 1, 1)
+        s.sendall(header)
+        s.shutdown(socket.SHUT_WR)
+
+        try:
+            data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
+        s.close()
+
+        self.assertEqual(data, b"")
+
+        # Handler must still accept a valid request on a new connection.
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        s.sendall(b"\x00\x00\x00\x00\x00\x02\x01\x11")
+        try:
+            data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server did not answer valid request")
+        s.close()
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
+
+    def test_empty_pdu_databank_discards_without_response(self):
+        """
+        Databank must return no response for an empty PDU (serial broadcast
+        was the original #511 crash path) instead of unpacking a missing FC.
+        """
+        # length=1, unit id 0 → empty PDU; serial mode would broadcast.
+        request = struct.pack(">HHHB", 0, 0, 1, 0)
+        response, logdata = self.modbus._databank.handle_request(request, "serial")
+        self.assertIsNone(response)
+        self.assertEqual(logdata["slave_id"], 0)
+        self.assertIsNone(logdata["function_code"])
+        self.assertEqual(logdata["response"], b"")
+
+        with self.assertRaises(ModbusInvalidRequestError):
+            self.modbus._databank.get_slave(self.target_slave_id).handle_request(
+                b"", broadcast=True
+            )
+
     def test_incomplete_request_is_rejected(self):
         """
         A client that declares a valid length then half-closes before the
-        body arrives must be dropped without crashing the greenlet.
+        body arrives must be dropped without crashing the handler.
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
         s.connect((self.host, self.port))
         # length=5 means 5 bytes after the 6-byte prefix (unit id + 4 PDU),
         # but we only send the 7-byte header then close the write side.
@@ -265,8 +328,82 @@ class TestModbusServer(unittest.TestCase):
         s.sendall(header)
         s.shutdown(socket.SHUT_WR)
 
-        with gevent.Timeout(2.0, TimeoutError("server never closed the connection")):
+        try:
             data = s.recv(1024)
+        except socket.timeout:
+            raise TimeoutError("server never closed the connection")
         s.close()
 
         self.assertEqual(data, b"")
+
+    def test_umas_disabled_is_illegal_function(self):
+        """Default template is Siemens and does not speak UMAS."""
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        # unit 1, function 0x5A, session 0x00, UMAS stop 0x41
+        s.sendall(b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\x41")
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x03\x01\xda\x01")
+
+
+class TestModbusUmas(unittest.TestCase):
+    def setUp(self):
+        conpot_core.get_sessionManager().purge_sessions()
+        self.modbus, self.greenlet = spawn_test_server(
+            modbus_server.ModbusServer, "plc_modbus", "modbus"
+        )
+        self.host = self.modbus.server.server_host
+        self.port = self.modbus.server.server_port
+
+    def tearDown(self):
+        teardown_test_server(self.modbus, self.greenlet)
+
+    def _exchange(self, pdu):
+        header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        s.sendall(header + pdu)
+        data = s.recv(1024)
+        s.close()
+        return data
+
+    def test_stop_and_start(self):
+        slave = self.modbus._databank.get_slave(1)
+        self.assertTrue(slave.running)
+
+        stop = self._exchange(b"\x5a\x01\x41\xff\x00")
+        self.assertEqual(stop, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x01\xfe")
+        self.assertFalse(slave.running)
+
+        start = self._exchange(b"\x5a\x00\x40")
+        self.assertEqual(start, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+        self.assertTrue(slave.running)
+
+        types = []
+        for item in drain_log_queue(self.greenlet):
+            event_type = item.get("event_type")
+            if event_type:
+                types.append(event_type)
+        self.assertIn("UMAS_STOP", types)
+        self.assertIn("UMAS_START", types)
+
+    def test_other_umas_code_is_rejected(self):
+        data = self._exchange(b"\x5a\x00\x02")
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfd")
+
+    def test_short_umas_is_illegal_value(self):
+        data = self._exchange(b"\x5a")
+        self.assertEqual(data, b"\x00\x00\x00\x00\x00\x03\x01\xda\x03")
+
+    def test_device_info_matches_umas(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(2.0)
+        s.connect((self.host, self.port))
+        s.sendall(b"\x00\x01\x00\x00\x00\x05\x01\x2b\x0e\x01\x02")
+        data = s.recv(1024)
+        s.close()
+        self.assertIn(b"Schneider Electric", data)
+        self.assertIn(b"Modicon M340", data)

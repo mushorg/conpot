@@ -15,16 +15,56 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 import logging
+import threading
+import time
 
-import gevent
 import natsort
 
 from conpot.protocols.IEC104.DeviceDataController import addr_in_hex, inro_response
 from conpot.protocols.IEC104.i_frames_check import *
 import conpot.core as conpot_core
+from .errors import Timeout_t1
 from .frames import *
 
 logger = logging.getLogger(__name__)
+
+
+class ProtocolTimeout:
+    """Deadline-based replacement for gevent.Timeout (T1 / T3).
+
+    handle() runs in a worker thread, so this cannot raise into recv();
+    the server polls remaining() / expired() and uses socket timeouts.
+    """
+
+    def __init__(self, seconds, exc_type=None):
+        self.seconds = float(seconds)
+        self.exc_type = exc_type
+        self._deadline = None
+        self._active = False
+
+    def start(self):
+        self._active = True
+        self._deadline = time.monotonic() + self.seconds
+
+    def cancel(self):
+        self._active = False
+        self._deadline = None
+
+    def expired(self):
+        return (
+            self._active
+            and self._deadline is not None
+            and time.monotonic() >= self._deadline
+        )
+
+    def remaining(self):
+        if not self._active or self._deadline is None:
+            return None
+        return max(0.0, self._deadline - time.monotonic())
+
+    def raise_if_expired(self):
+        if self.expired() and self.exc_type is not None:
+            raise self.exc_type()
 
 
 class IEC104(object):
@@ -33,7 +73,7 @@ class IEC104(object):
         self.address = address
         self.session_id = session_id
         self.T_1 = conpot_core.get_databus().get_value("T_1")
-        self.timeout_t1 = gevent.Timeout(self.T_1, gevent.Timeout)
+        self.timeout_t1 = ProtocolTimeout(self.T_1, Timeout_t1)
         self.T_2 = conpot_core.get_databus().get_value("T_2")
         self.w = conpot_core.get_databus().get_value("w")
         self.device_data_controller = device_data_controller
@@ -219,9 +259,10 @@ class IEC104(object):
                     self.session_id,
                 )
                 # Better solution exists..
-                if self.t2_caller:
-                    gevent.kill(self.t2_caller)
-                gevent.Greenlet.spawn_later(1, self.disconnect())
+                self._cancel_t2()
+                # Original code evaluated disconnect() immediately (spawn_later
+                # was given the return value). Keep that disconnect timing.
+                self.disconnect()
                 return self.send_104frame(s_frame(RecvSeq=self.rsn))
 
             # All packets up to recv_snr-1 are acknowledged
@@ -241,9 +282,11 @@ class IEC104(object):
         # Send S_Frame at w telegrams or (re)start timer T2
         resp_frame = s_frame()
         if not self.t2_caller:
-            self.t2_caller = gevent.Greenlet.spawn_later(
-                self.T_2, self.send_frame_imm, resp_frame
+            self.t2_caller = threading.Timer(
+                self.T_2, self.send_frame_imm, args=(resp_frame,)
             )
+            self.t2_caller.daemon = True
+            self.t2_caller.start()
         if self.telegram_count >= self.w:
             return self.send_104frame(resp_frame)
 
@@ -284,8 +327,7 @@ class IEC104(object):
         # send s_frame
         if frame.name == "s_frame":
             frame.RecvSeq = self.rsn
-            if self.t2_caller:
-                gevent.kill(self.t2_caller)
+            self._cancel_t2()
             self.telegram_count = 0
             response_string = " ".join(hex(n) for n in frame.build())
             logger.info(
@@ -299,8 +341,7 @@ class IEC104(object):
         # send i_frame
         elif frame.name == "i_frame":
             if self.allow_DT:
-                if self.t2_caller:
-                    gevent.kill(self.t2_caller)
+                self._cancel_t2()
                 frame.SendSeq = self.ssn
                 frame.RecvSeq = self.rsn
                 frame.COA = self.device_data_controller.common_address
@@ -349,8 +390,7 @@ class IEC104(object):
         # send s_frame
         if frame.name == "s_frame":
             frame.RecvSeq = self.rsn
-            if self.t2_caller:
-                gevent.kill(self.t2_caller)
+            self._cancel_t2()
             self.telegram_count = 0
             response_string = " ".join(hex(n) for n in frame.build())
             logger.info(
@@ -725,9 +765,35 @@ class IEC104(object):
                 "Allocation for field %s not possible.  (%s)", ex, self.session_id
             )
 
+    def _cancel_t2(self):
+        timer = self.t2_caller
+        self.t2_caller = None
+        if timer is not None:
+            timer.cancel()
+
+    def earliest_t1_remaining(self):
+        waits = []
+        remaining = self.timeout_t1.remaining()
+        if remaining is not None:
+            waits.append(remaining)
+        for frm in self.sentmsgs:
+            if isinstance(frm, frame_object_with_timer):
+                frm_remaining = frm.t1_remaining()
+                if frm_remaining is not None:
+                    waits.append(frm_remaining)
+        if not waits:
+            return None
+        return min(waits)
+
+    def raise_if_t1_expired(self):
+        self.timeout_t1.raise_if_expired()
+        for frm in self.sentmsgs:
+            if isinstance(frm, frame_object_with_timer):
+                frm.raise_if_t1_expired()
+
     def restart_t1(self):
         self.timeout_t1.cancel()
-        self.timeout_t1 = gevent.Timeout(self.T_1, gevent.Timeout)
+        self.timeout_t1 = ProtocolTimeout(self.T_1, Timeout_t1)
         self.timeout_t1.start()
 
     def show_send_list(self):
@@ -747,8 +813,7 @@ class IEC104(object):
 
     def disconnect(self):
         self.timeout_t1.cancel()
-        if self.t2_caller:
-            gevent.kill(self.t2_caller)
+        self._cancel_t2()
         self.sock.close()
         self.ssn = 0
         self.rsn = 0
@@ -782,15 +847,21 @@ class frame_object_with_timer:
         self.frame = frame
         self.name = frame.name
         self.T_1 = conpot_core.get_databus().get_value("T_1")
-        self.__timeout_t1 = gevent.Timeout(self.T_1, gevent.Timeout)
+        self.__timeout_t1 = ProtocolTimeout(self.T_1, Timeout_t1)
 
     def restart_t1(self):
         self.__timeout_t1.cancel()
-        self.__timeout_t1 = gevent.Timeout(self.T_1, gevent.Timeout)
+        self.__timeout_t1 = ProtocolTimeout(self.T_1, Timeout_t1)
         self.__timeout_t1.start()
 
     def cancel_t1(self):
         self.__timeout_t1.cancel()
+
+    def t1_remaining(self):
+        return self.__timeout_t1.remaining()
+
+    def raise_if_t1_expired(self):
+        self.__timeout_t1.raise_if_expired()
 
     def getfieldval(self, fieldval):
         return self.frame.getfieldval(fieldval)

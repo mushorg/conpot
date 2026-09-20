@@ -23,29 +23,32 @@ requires-python = ">=3.14"
 dynamic = ["version"]
 dependencies = [
     "setuptools>=83.0.0,<84",
-    "gevent>=1.0",
     "pysnmp>=7.1.22,<8",
     "pysnmp-mibs",
     "pysmi>=1.6.1",
     "pyasn1==0.6.4",
     "lxml",
+    "schema",
     "requests",
     "sphinx",
-    "libtaxii>=1.1.0",
+    # PyPI 1.1.119 emits SyntaxWarning (invalid escapes) on Python 3.12+;
+    # use fork with raw-string regexes (TAXIIProject/libtaxii#256).
+    "libtaxii @ git+https://github.com/ilia-eiq/libtaxii.git@3bc1c15d9162c0e32bcde2e300056f3db9fd558a",
     "legacy-cgi; python_version >= '3.13'",
     "crc16",
     "natsort",
     "scapy>=2.6.0,<3",
     "hpfeeds3",
-    "modbus-tk",
+    "pymodbus==3.11.4",
     "stix-validator",
     "stix",
     "cybox",
-    "bacpypes==0.17.0",
-    "pyasyncore>=1.0.2",
-    "pyghmi==1.4.1",
+    "bacpypes3==0.0.108",
+    # 1.4.1 emits SyntaxWarning (invalid escapes in lenovo/imm.py) on Python 3.12+;
+    # 1.6.x uses raw-string regexes.
+    "pyghmi>=1.6.19,<2",
     "mixbox",
-    "cpppo",
+    "cm-ethernetip==0.1.0",
     # Official fs (pyfilesystem2) last release still imports removed pkg_resources
     # under setuptools>=82; use community fork with that dependency dropped.
     "fs @ git+https://github.com/ihaveamac/pyfilesystem2.git@266dff7984b66425d38cbd6cf7c5f18a8a98d369",
@@ -55,13 +58,16 @@ dependencies = [
     "cryptography==50.0.0",
     "sphinx_rtd_theme",
     "psutil",
+    "aiohttp==3.14.3",
 ]
 
 [project.urls]
 Homepage = "http://conpot.org"
 
+[project.scripts]
+conpot = "conpot.cli:main"
+
 [tool.setuptools]
-script-files = ["bin/conpot"]
 include-package-data = false
 
 [tool.setuptools.dynamic]
@@ -90,7 +96,6 @@ conpot = ["**/__pycache__/*", "**/*.py", "**/*.pyc", "ConpotTempFS/**"]
 dev = [
     "black==26.5.1",
     "pytest",
-    "pytest-cov",
 ]
 
 [tool.black]

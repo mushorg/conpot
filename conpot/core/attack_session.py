@@ -1,20 +1,12 @@
 # Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2026 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 import uuid
 
@@ -23,9 +15,6 @@ from datetime import datetime, timezone
 from conpot.core.loggers.event import SCHEMA_VERSION, normalize_event
 
 logger = logging.getLogger(__name__)
-
-
-# one instance per connection
 
 
 class AttackSession(object):
@@ -37,8 +26,10 @@ class AttackSession(object):
         destination_ip,
         destination_port,
         log_queue,
+        loop=None,
     ):
         self.log_queue = log_queue
+        self._loop = loop
         self.id = uuid.uuid4()
         logger.info("New %s session from %s (%s)", protocol, source_ip, self.id)
         self.protocol = protocol
@@ -76,7 +67,7 @@ class AttackSession(object):
             elapse_ms += 1
         event = self._dump_data(event_data, event_time=event_time)
         self.data[elapse_ms] = event
-        self.log_queue.put(event)
+        self._enqueue(event)
 
     def log_event(
         self, event_type=None, request=None, response=None, error=None, **extra
@@ -91,6 +82,29 @@ class AttackSession(object):
         if error is not None:
             event_data["error"] = error
         self.add_event(event_data)
+
+    def _enqueue(self, payload):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = self._loop
+        if loop is not None and loop.is_running():
+            try:
+                if asyncio.get_running_loop() is loop:
+                    self.log_queue.put_nowait(payload)
+                    return
+            except RuntimeError:
+                pass
+            asyncio.run_coroutine_threadsafe(self.log_queue.put(payload), loop)
+            return
+        # No running loop (unit tests with fakes / before supervisor start).
+        if hasattr(self.log_queue, "put_nowait"):
+            try:
+                self.log_queue.put_nowait(payload)
+                return
+            except Exception:
+                pass
+        self.log_queue.put(payload)
 
     def dump(self):
         return {

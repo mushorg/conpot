@@ -1,6 +1,5 @@
 .github
 .vscode
-.coveragerc
 .gitignore
 .landscape.yaml
 .travis.yaml

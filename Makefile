@@ -14,7 +14,7 @@ install:
 
 .PHONY: test
 test:
-	uv run pytest --junitxml=junit/test-results.xml --cov=conpot --cov-report=xml --cov-report=html
+	uv run pytest --junitxml=junit/test-results.xml
 
 .PHONY: lint
 lint:
@@ -23,3 +23,15 @@ lint:
 .PHONY: docs
 docs:
 	uv run sphinx-build -b html docs/source docs/build
+
+.PHONY: clean
+clean:
+	rm -rf .venv .pytest_cache .cache .tox .mypy_cache .ruff_cache
+	rm -rf .coverage htmlcov coverage.xml nosetests.xml junit
+	rm -rf dist build eggs parts sdist develop-eggs
+	rm -rf *.egg *.egg-info
+	rm -rf docs/build
+	rm -rf log fs_test ConpotTempFS
+	rm -f .coverage.* docs/source/conpot_version.py conpot.db *.log
+	find . -type d -name '__pycache__' -exec rm -rf {} +
+	find . -type f \( -name '*.py[cod]' -o -name '*.so' -o -name '*.bak' \) -delete

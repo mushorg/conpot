@@ -14,9 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-from gevent import monkey
-
-monkey.patch_all()
+import asyncio
 import socket
 import time
 import unittest
@@ -204,22 +202,87 @@ class TestIEC104Server(unittest.TestCase):
         )
         self.assertSequenceEqual(data, act_conf.build())
 
-    @patch("conpot.protocols.IEC104.IEC104_server.gevent._socket3.socket.recv")
+    def _get_log_event(self, timeout=2.0):
+        loop = self.greenlet._loop
+        log_queue = conpot_core.get_sessionManager().log_queue
+
+        async def _get():
+            return await asyncio.wait_for(log_queue.get(), timeout=timeout)
+
+        return asyncio.run_coroutine_threadsafe(_get(), loop).result(
+            timeout=timeout + 1
+        )
+
+    @patch.object(socket.socket, "recv", side_effect=OSError(32, "Socket Error"))
     def test_failing_connection_connection_lost_event(self, mock_timeout):
         """
         Objective: Test if correct exception is executed when a socket.error
         with EPIPE occurs
         """
-        mock_timeout.side_effect = OSError(32, "Socket Error")
         conpot_core.get_sessionManager().purge_sessions()
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", 2404))
-        time.sleep(0.1)
-        log_queue = conpot_core.get_sessionManager().log_queue
-        con_new_event = log_queue.get()
-        con_lost_event = log_queue.get(timeout=1)
+        time.sleep(0.2)
+        con_new_event = self._get_log_event()
+        con_lost_event = self._get_log_event(timeout=1)
 
         self.assertEqual("NEW_CONNECTION", con_new_event["event_type"])
         self.assertEqual("CONNECTION_LOST", con_lost_event["event_type"])
 
         s.close()
+
+    def test_single_byte_then_close_does_not_hang(self):
+        """
+        Regression test for issue #482.
+
+        A client that sends one byte then half-closes used to busy-loop in
+        the header gather while (CPU DoS). The handler must drop the
+        connection promptly and still serve later clients.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", 2404))
+        s.sendall(b"\x68")
+        s.shutdown(socket.SHUT_WR)
+
+        s.settimeout(2.0)
+        try:
+            data = s.recv(1024)
+        except socket.timeout:
+            self.fail("server never closed the connection")
+        s.close()
+        self.assertEqual(data, b"")
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(1)
+        s.connect(("127.0.0.1", 2404))
+        s.send(frames.STARTDT_act.build())
+        data = s.recv(6)
+        s.close()
+        self.assertSequenceEqual(data, frames.STARTDT_con.build())
+
+    def test_trailing_byte_then_close_does_not_hang(self):
+        """
+        Regression test for issue #482.
+
+        A valid APDU plus one trailing byte left in the TCP buffer, followed
+        by a half-close, must not busy-loop when the leftover byte is read as
+        an incomplete next header.
+        """
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", 2404))
+        # STARTDT act (6 bytes) + one stray byte
+        s.sendall(frames.STARTDT_act.build() + b"\x00")
+        s.settimeout(2.0)
+        try:
+            data = s.recv(6)
+        except socket.timeout:
+            self.fail("server did not answer STARTDT")
+        self.assertSequenceEqual(data, frames.STARTDT_con.build())
+
+        s.shutdown(socket.SHUT_WR)
+        try:
+            data = s.recv(1024)
+        except socket.timeout:
+            self.fail("server never closed the connection")
+        s.close()
+        self.assertEqual(data, b"")

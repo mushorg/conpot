@@ -15,38 +15,33 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 import socket
-import cpppo
-import contextlib
-import time
-import sys
-import traceback
 
 from lxml import etree
-from cpppo.server import network
-from cpppo.server.enip import logix
-from cpppo.server.enip import parser
-from cpppo.server.enip import device
-from conpot.core.protocol_wrapper import conpot_protocol
+
 import conpot.core as conpot_core
+from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.protocols.enip.enip_protocol import (
+    EnipProtocol,
+    build_dispatcher,
+    identity_from_config,
+)
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler, serve_udp_datagram
 
 logger = logging.getLogger(__name__)
 
 
 class EnipConfig(object):
-    """
-    Configurations parsed from template
-    """
+    """Configurations parsed from template."""
 
     def __init__(self, template):
         self.template = template
         self.parse_template()
 
     class Tag(object):
-        """
-        Represents device tag setting parsed from template
-        """
+        """Device tag setting parsed from template."""
 
         def __init__(self, name, type, size, value, addr=None):
             self.name = name
@@ -71,598 +66,175 @@ class EnipConfig(object):
         self.timeout = float(dom.xpath("//enip/timeout/text()")[0])
         self.latency = float(dom.xpath("//enip/latency/text()")[0])
 
-        # parse device tags, these tags will be further processed by the ENIP server
         self.dtags = []
         for t in dom.xpath("//enip/tags/tag"):
             name = t.xpath("@name")[0]
             type = t.xpath("type/text()")[0]
             value = t.xpath("value/text()")[0]
             addr = t.xpath("addr/text()")[0]
-            size = 1
             try:
                 size = int(t.xpath("size/text()")[0])
-            except:
-                raise AssertionError("Invalid tag size: %r" % size)
-
+            except Exception:
+                raise AssertionError("Invalid tag size")
             self.dtags.append(self.Tag(name, type, size, value, addr))
 
 
 @conpot_protocol
 class EnipServer(object):
-    """
-    Ethernet/IP server
-    """
+    """Ethernet/IP server (Conpot-owned I/O; cm-ethernetip CIP/encapsulation)."""
 
     def __init__(self, template, template_directory, args):
         self.config = EnipConfig(template)
         self.addr = self.config.server_addr
         self.port = self.config.server_port
-        self.connections = cpppo.dotdict()
-        self.control = None
+        self.server = None
+        self.protocol = None
+        logger.debug("ENIP server serial number: %s", self.config.serial_number)
+        logger.debug("ENIP server product name: %s", self.config.product_name)
 
-        # all known tags
-        self.tags = cpppo.dotdict()
-        self.set_tags()
+    def _build_protocol(self, port):
+        identity = identity_from_config(self.config)
+        dispatcher = build_dispatcher(identity, self.config.dtags)
+        return EnipProtocol(dispatcher, identity, port)
 
-        logger.debug("ENIP server serial number: " + self.config.serial_number)
-        logger.debug("ENIP server product name: " + self.config.product_name)
+    def handle_tcp(self, sock, address):
+        sock.settimeout(self.config.timeout)
+        try:
+            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError as exc:
+            logger.error("Unable to set TCP_NODELAY for %r: %s", address, exc)
+        try:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        except OSError as exc:
+            logger.error("Unable to set SO_KEEPALIVE for %r: %s", address, exc)
 
-    def _apply_device_info(self, identity):
-        """Overwrite CIP Identity attributes with values from the template."""
-        cfg = self.config
-        identity.attribute["1"] = device.Attribute(
-            "Vendor Number", device.INT, default=cfg.vendor_id
-        )
-        identity.attribute["2"] = device.Attribute(
-            "Device Type", device.INT, default=cfg.device_type
-        )
-        identity.attribute["3"] = device.Attribute(
-            "Product Code Number", device.INT, default=cfg.product_code
-        )
-        identity.attribute["4"] = device.Attribute(
-            "Product Revision", device.INT, default=cfg.product_rev
-        )
-        identity.attribute["6"] = device.Attribute(
-            "Serial Number", device.UDINT, default=int(cfg.serial_number)
-        )
-        identity.attribute["7"] = device.Attribute(
-            "Product Name", device.SSTRING, default=cfg.product_name
-        )
-
-    def _install_device_identity(self):
-        """Ensure CIP Identity instance 1 reflects template device_info.
-
-        cpppo's logix.setup() creates a default Rockwell Identity when none
-        exists. We install (or update) instance 1 before serving so List
-        Identity / Get Attribute responses use the template values. Updating
-        an existing instance also covers the shared global Object registry
-        when multiple ENIP servers run in one process.
-        """
-        identity = device.lookup(0x01, 1)
-        if identity is None:
-            identity = device.Identity(instance_id=1)
-        self._apply_device_info(identity)
-
-    def stats_for(self, peer):
-        if peer is None:
-            return None, None
-        connkey = "%s_%d" % (peer[0].replace(".", "_"), peer[1])
-        stats = self.connections.get(connkey)
-        if stats is not None:
-            return stats, connkey
-        stats = cpppo.apidict(timeout=self.config.timeout)
-        self.connections[connkey] = stats
-        stats["requests"] = 0
-        stats["received"] = 0
-        stats["eof"] = False
-        stats["interface"] = peer[0]
-        stats["port"] = peer[1]
-        return stats, connkey
-
-    def handle(self, conn, address, enip_process=None, delay=None, **kwds):
-        """
-        Handle an incoming connection
-        """
-        host, port = address if address else ("UDP", "UDP")
-        name = "ENIP_%s" % port
+        local = sock.getsockname()
         session = conpot_core.get_session(
-            "enip", host, port, conn.getsockname()[0], conn.getsockname()[1]
+            "enip", address[0], address[1], local[0], local[1]
         )
-        logger.debug("ENIP server %s begins serving client %s", name, address)
+        logger.info(
+            "New ENIP connection from %s:%s. (%s)", address[0], address[1], session.id
+        )
         session.log_event(event_type="NEW_CONNECTION")
 
-        tcp = conn.family == socket.AF_INET and conn.type == socket.SOCK_STREAM
-        udp = conn.family == socket.AF_INET and conn.type == socket.SOCK_DGRAM
+        protocol = self.protocol
+        session_handle = 0
+        accum = bytearray()
+        try:
+            while True:
+                try:
+                    chunk = sock.recv(4096)
+                except socket.timeout:
+                    logger.debug("ENIP TCP timeout from %s:%s", address[0], address[1])
+                    break
+                except OSError as exc:
+                    logger.debug(
+                        "ENIP TCP error from %s:%s: %s", address[0], address[1], exc
+                    )
+                    break
+                if not chunk:
+                    break
+                accum.extend(chunk)
+                while True:
+                    msg, consumed = protocol.try_parse(bytes(accum), address)
+                    if msg is None:
+                        break
+                    del accum[:consumed]
+                    response, session_handle, is_nop = protocol.dispatch_message(
+                        msg, session_handle, local[0]
+                    )
+                    if is_nop:
+                        session.log_event(event_type="ENIP_NOP")
+                        logger.info("Discarded EtherNet/IP NOP from %s", address)
+                    if response is not None:
+                        try:
+                            sock.sendall(response)
+                        except OSError as exc:
+                            logger.debug(
+                                "ENIP send failed to %s:%s: %s",
+                                address[0],
+                                address[1],
+                                exc,
+                            )
+                            return
+                        session.log_event(event_type="CONNECTION_CLOSED")
+        finally:
+            sock.close()
 
-        if tcp:
-            try:
-                conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            except Exception as e:
-                logger.error(
-                    "%s unable to set TCP_NODELAY for client %r: %s", name, address, e
+    def handle_udp(self, data, address):
+        protocol = self.protocol
+        local_addr = self.addr if self.addr not in ("0.0.0.0", "") else "127.0.0.1"
+        try:
+            sockname = self.server.socket.getsockname()
+            local_addr = sockname[0]
+            local_port = sockname[1]
+        except Exception:
+            local_port = self.port
+
+        session = conpot_core.get_session(
+            "enip", address[0], address[1], local_addr, local_port
+        )
+        session.log_event(event_type="NEW_CONNECTION")
+
+        session_handle = 0
+        accum = bytearray(data)
+        try:
+            while accum:
+                msg, consumed = protocol.try_parse(bytes(accum), address)
+                if msg is None:
+                    # Incomplete / garbage datagram — drop remainder.
+                    session.log_event(event_type="CONNECTION_FAILED")
+                    return
+                del accum[:consumed]
+                response, session_handle, is_nop = protocol.dispatch_message(
+                    msg, session_handle, local_addr
                 )
-            try:
-                conn.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            except Exception as e:
-                logger.error(
-                    "%s unable to set SO_KEEPALIVE for client %r: %s", name, address, e
-                )
-            self.handle_tcp(
-                conn,
-                address,
-                session,
-                name=name,
-                enip_process=enip_process,
-                delay=delay,
-                **kwds,
-            )
-        elif udp:
-            self.handle_udp(
-                conn, name=name, enip_process=enip_process, session=session, **kwds
+                if is_nop:
+                    session.log_event(event_type="ENIP_NOP")
+                    logger.info("Discarded EtherNet/IP NOP from %s", address)
+                    continue
+                if response is not None:
+                    self.server.sendto(response, address)
+                    session.log_event(event_type="CONNECTION_CLOSED")
+        except Exception:
+            logger.exception("ENIP UDP handling failed for %s", address)
+            session.log_event(event_type="CONNECTION_FAILED")
+
+    def handle(self, *args):
+        if getattr(self, "_mode", None) == "udp":
+            return self.handle_udp(*args)
+        return self.handle_tcp(*args)
+
+    async def start(self, host, port):
+        self.addr = host
+        self.port = port
+        self.protocol = self._build_protocol(port)
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+
+        mode = (self.config.mode or "tcp").lower()
+        self._mode = mode
+        logger.info("ENIP server started on: %s:%d, mode: %s", host, port, mode)
+        if mode == "udp":
+            await serve_udp_datagram(
+                host,
+                port,
+                self,
+                stop_event=self._stop,
+                ready_event=self._ready,
+                name="EnipServer",
             )
         else:
-            raise NotImplementedError("Unknown socket protocol for EtherNet/IP CIP")
-
-    def handle_tcp(
-        self, conn, address, session, name, enip_process, delay=None, **kwds
-    ):
-        """
-        Handle a TCP client
-        """
-        source = cpppo.rememberable()
-        with parser.enip_machine(name=name, context="enip") as machine:
-            try:
-                assert (
-                    address
-                ), "EtherNet/IP CIP server for TCP/IP must be provided a peer address"
-                stats, connkey = self.stats_for(address)
-                while not stats.eof:
-                    data = cpppo.dotdict()
-                    source.forget()
-                    # If no/partial EtherNet/IP header received, parsing will fail with a NonTerminal
-                    # Exception (dfa exits in non-terminal state).  Build data.request.enip:
-                    begun = cpppo.timer()
-                    with contextlib.closing(
-                        machine.run(path="request", source=source, data=data)
-                    ) as engine:
-                        # PyPy compatibility; avoid deferred destruction of generators
-                        for _, sta in engine:
-                            if sta is not None:
-                                continue
-                            # No more transitions available.  Wait for input.  EOF (b'') will lead to
-                            # termination.  We will simulate non-blocking by looping on None (so we can
-                            # check our options, in case they've been changed).  If we still have input
-                            # available to process right now in 'source', we'll just check (0 timeout);
-                            # otherwise, use the specified server.control.latency.
-                            msg = None
-                            while msg is None and not stats.eof:
-                                wait = (
-                                    kwds["server"]["control"]["latency"]
-                                    if source.peek() is None
-                                    else 0
-                                )
-                                brx = cpppo.timer()
-                                msg = network.recv(conn, timeout=wait)
-                                now = cpppo.timer()
-                                (logger.info if msg else logger.debug)(
-                                    "Transaction receive after %7.3fs (%5s bytes in %7.3f/%7.3fs)",
-                                    now - begun,
-                                    len(msg) if msg is not None else "None",
-                                    now - brx,
-                                    wait,
-                                )
-
-                                # After each block of input (or None), check if the server is being
-                                # signalled done/disabled; we need to shut down so signal eof.  Assumes
-                                # that (shared) server.control.{done,disable} dotdict be in kwds.  We do
-                                # *not* read using attributes here, to avoid reporting completion to
-                                # external APIs (eg. web) awaiting reception of these signals.
-                                if (
-                                    kwds["server"]["control"]["done"]
-                                    or kwds["server"]["control"]["disable"]
-                                ):
-                                    logger.info(
-                                        "%s done, due to server done/disable",
-                                        machine.name_centered(),
-                                    )
-                                    stats["eof"] = True
-                                if msg is not None:
-                                    stats["received"] += len(msg)
-                                    stats["eof"] = stats["eof"] or not len(msg)
-                                    if logger.getEffectiveLevel() <= logging.INFO:
-                                        logger.info(
-                                            "%s recv: %5d: %s",
-                                            machine.name_centered(),
-                                            len(msg),
-                                            cpppo.reprlib.repr(msg),
-                                        )
-                                    source.chain(msg)
-                                else:
-                                    # No input.  If we have symbols available, no problem; continue.
-                                    # This can occur if the state machine cannot make a transition on
-                                    # the input symbol, indicating an unacceptable sentence for the
-                                    # grammar.  If it cannot make progress, the machine will terminate
-                                    # in a non-terminal state, rejecting the sentence.
-                                    if source.peek() is not None:
-                                        break
-                                        # We're at a None (can't proceed), and no input is available.  This
-                                        # is where we implement "Blocking"; just loop.
-
-                    logger.info(
-                        "Transaction parsed  after %7.3fs", cpppo.timer() - begun
-                    )
-                    # Terminal state and EtherNet/IP header recognized, or clean EOF (no partial
-                    # message); process and return response
-                    if "request" in data:
-                        stats["requests"] += 1
-                    try:
-                        # enip_process must be able to handle no request (empty data), indicating the
-                        # clean termination of the session if closed from this end (not required if
-                        # enip_process returned False, indicating the connection was terminated by
-                        # request.)
-                        delayseconds = 0  # response delay (if any)
-                        if enip_process(address, data=data, **kwds):
-                            # Produce an EtherNet/IP response carrying the encapsulated response data.
-                            # If no encapsulated data, ensure we also return a non-zero EtherNet/IP
-                            # status.  A non-zero status indicates the end of the session.
-                            assert (
-                                "response.enip" in data
-                            ), "Expected EtherNet/IP response; none found"
-                            if (
-                                "input" not in data.response.enip
-                                or not data.response.enip.input
-                            ):
-                                logger.warning(
-                                    "Expected EtherNet/IP response encapsulated message; none found"
-                                )
-                                assert (
-                                    data.response.enip.status
-                                ), "If no/empty response payload, expected non-zero EtherNet/IP status"
-
-                            rpy = parser.enip_encode(data.response.enip)
-                            if logger.getEffectiveLevel() <= logging.INFO:
-                                logger.info(
-                                    "%s send: %5d: %s %s",
-                                    machine.name_centered(),
-                                    len(rpy),
-                                    cpppo.reprlib.repr(rpy),
-                                    ("delay: %r" % delay) if delay else "",
-                                )
-                            if delay:
-                                # A delay (anything with a delay.value attribute) == #[.#] (converible
-                                # to float) is ok; may be changed via web interface.
-                                try:
-                                    delayseconds = float(
-                                        delay.value
-                                        if hasattr(delay, "value")
-                                        else delay
-                                    )
-                                    if delayseconds > 0:
-                                        time.sleep(delayseconds)
-                                except Exception as exc:
-                                    logger.info(
-                                        "Unable to delay; invalid seconds: %r", delay
-                                    )
-                            try:
-                                conn.send(rpy)
-                            except socket.error as exc:
-                                logger.info("Session ended (client abandoned): %s", exc)
-                                stats["eof"] = True
-                            if data.response.enip.status:
-                                logger.warning(
-                                    "Session ended (server EtherNet/IP status: 0x%02x == %d)",
-                                    data.response.enip.status,
-                                    data.response.enip.status,
-                                )
-                                stats["eof"] = True
-                        else:
-                            # Session terminated.  No response, just drop connection.
-                            if logger.getEffectiveLevel() <= logging.INFO:
-                                logger.info(
-                                    "Session ended (client initiated): %s",
-                                    parser.enip_format(data),
-                                )
-                            stats["eof"] = True
-                        logger.info(
-                            "Transaction complete after %7.3fs (w/ %7.3fs delay)",
-                            cpppo.timer() - begun,
-                            delayseconds,
-                        )
-                        session.log_event(event_type="CONNECTION_CLOSED")
-                    except:
-                        logger.error("Failed request: %s", parser.enip_format(data))
-                        enip_process(address, data=cpppo.dotdict())  # Terminate.
-                        raise
-
-                stats["processed"] = source.sent
-            except:
-                # Parsing failure.
-                stats["processed"] = source.sent
-                memory = bytes(bytearray(source.memory))
-                pos = len(source.memory)
-                future = bytes(bytearray(b for b in source))
-                where = "at %d total bytes:\n%s\n%s (byte %d)" % (
-                    stats.processed,
-                    repr(memory + future),
-                    "-" * (len(repr(memory)) - 1) + "^",
-                    pos,
-                )
-                logger.error(
-                    "EtherNet/IP error %s\n\nFailed with exception:\n%s\n",
-                    where,
-                    "".join(traceback.format_exception(*sys.exc_info())),
-                )
-                raise
-            finally:
-                # Not strictly necessary to close (network.server_main will discard the socket,
-                # implicitly closing it), but we'll do it explicitly here in case the thread doesn't die
-                # for some other reason.  Clean up the connections entry for this connection address.
-                self.connections.pop(connkey, None)
-                logger.info(
-                    "%s done; processed %3d request%s over %5d byte%s/%5d received (%d connections remain)",
-                    name,
-                    stats.requests,
-                    " " if stats.requests == 1 else "s",
-                    stats.processed,
-                    " " if stats.processed == 1 else "s",
-                    stats.received,
-                    len(self.connections),
-                )
-                sys.stdout.flush()
-                conn.close()
-
-    def handle_udp(self, conn, name, enip_process, session, **kwds):
-        """
-        Process UDP packets from multiple clients
-        """
-        with parser.enip_machine(name=name, context="enip") as machine:
-            while (
-                not kwds["server"]["control"]["done"]
-                and not kwds["server"]["control"]["disable"]
-            ):
-                try:
-                    source = cpppo.rememberable()
-                    data = cpppo.dotdict()
-
-                    # If no/partial EtherNet/IP header received, parsing will fail with a NonTerminal
-                    # Exception (dfa exits in non-terminal state).  Build data.request.enip:
-                    begun = cpppo.timer()  # waiting for next transaction
-                    addr, stats = None, None
-                    with contextlib.closing(
-                        machine.run(path="request", source=source, data=data)
-                    ) as engine:
-                        # PyPy compatibility; avoid deferred destruction of generators
-                        for _, sta in engine:
-                            if sta is not None:
-                                # No more transitions available.  Wait for input.
-                                continue
-                            assert not addr, "Incomplete UDP request from client %r" % (
-                                addr
-                            )
-                            msg = None
-                            while msg is None:
-                                # For UDP, we'll allow no input only at the start of a new request parse
-                                # (addr is None); anything else will be considered a failed request Back
-                                # to the trough for more symbols, after having already received a packet
-                                # from a peer?  No go!
-                                wait = (
-                                    kwds["server"]["control"]["latency"]
-                                    if source.peek() is None
-                                    else 0
-                                )
-                                brx = cpppo.timer()
-                                msg, frm = network.recvfrom(conn, timeout=wait)
-                                now = cpppo.timer()
-                                if not msg:
-                                    if (
-                                        kwds["server"]["control"]["done"]
-                                        or kwds["server"]["control"]["disable"]
-                                    ):
-                                        return
-                                (logger.info if msg else logger.debug)(
-                                    "Transaction receive after %7.3fs (%5s bytes in %7.3f/%7.3fs): %r",
-                                    now - begun,
-                                    len(msg) if msg is not None else "None",
-                                    now - brx,
-                                    wait,
-                                    self.stats_for(frm)[0],
-                                )
-                                # If we're at a None (can't proceed), and we haven't yet received input,
-                                # then this is where we implement "Blocking"; we just loop for input.
-
-                            # We have received exactly one packet from an identified peer!
-                            begun = now
-                            addr = frm
-                            stats, _ = self.stats_for(addr)
-                            # For UDP, we don't ever receive incoming EOF, or set stats['eof'].
-                            # However, we can respond to a manual eof (eg. from web interface) by
-                            # ignoring the peer's packets.
-                            assert stats and not stats.get(
-                                "eof"
-                            ), "Ignoring UDP request from client %r: %r" % (addr, msg)
-                            stats["received"] += len(msg)
-                            logger.debug(
-                                "%s recv: %5d: %s",
-                                machine.name_centered(),
-                                len(msg),
-                                cpppo.reprlib.repr(msg),
-                            )
-                            source.chain(msg)
-
-                    # Terminal state and EtherNet/IP header recognized; process and return response
-                    assert stats
-                    if "request" in data:
-                        stats["requests"] += 1
-                    # enip_process must be able to handle no request (empty data), indicating the
-                    # clean termination of the session if closed from this end (not required if
-                    # enip_process returned False, indicating the connection was terminated by
-                    # request.)
-                    if enip_process(addr, data=data, **kwds):
-                        # Produce an EtherNet/IP response carrying the encapsulated response data.
-                        # If no encapsulated data, ensure we also return a non-zero EtherNet/IP
-                        # status.  A non-zero status indicates the end of the session.
-                        assert (
-                            "response.enip" in data
-                        ), "Expected EtherNet/IP response; none found"
-                        if (
-                            "input" not in data.response.enip
-                            or not data.response.enip.input
-                        ):
-                            logger.warning(
-                                "Expected EtherNet/IP response encapsulated message; none found"
-                            )
-                            assert (
-                                data.response.enip.status
-                            ), "If no/empty response payload, expected non-zero EtherNet/IP status"
-
-                        rpy = parser.enip_encode(data.response.enip)
-                        logger.debug(
-                            "%s send: %5d: %s",
-                            machine.name_centered(),
-                            len(rpy),
-                            cpppo.reprlib.repr(rpy),
-                        )
-                        conn.sendto(rpy, addr)
-
-                    logger.debug(
-                        "Transaction complete after %7.3fs", cpppo.timer() - begun
-                    )
-                    session.log_event(event_type="CONNECTION_CLOSED")
-                    stats["processed"] = source.sent
-                except:
-                    # Parsing failure.  Suck out some remaining input to give us some context, but don't re-raise
-                    if stats:
-                        stats["processed"] = source.sent
-                    memory = bytes(bytearray(source.memory))
-                    pos = len(source.memory)
-                    future = bytes(bytearray(b for b in source))
-                    where = "at %d total bytes:\n%s\n%s (byte %d)" % (
-                        stats.get("processed", 0) if stats else 0,
-                        repr(memory + future),
-                        "-" * (len(repr(memory)) - 1) + "^",
-                        pos,
-                    )
-                    logger.error(
-                        "Client %r EtherNet/IP error %s\n\nFailed with exception:\n%s\n",
-                        addr,
-                        where,
-                        "".join(traceback.format_exception(*sys.exc_info())),
-                    )
-                    session.log_event(event_type="CONNECTION_FAILED")
-
-    def set_tags(self):
-        typenames = {
-            "BOOL": (parser.BOOL, 0, lambda v: bool(v)),
-            "INT": (parser.INT, 0, lambda v: int(v)),
-            "DINT": (parser.DINT, 0, lambda v: int(v)),
-            "SINT": (parser.SINT, 0, lambda v: int(v)),
-            "REAL": (parser.REAL, 0.0, lambda v: float(v)),
-            "SSTRING": (parser.SSTRING, "", lambda v: str(v)),
-            "STRING": (parser.STRING, "", lambda v: str(v)),
-        }
-
-        for t in self.config.dtags:
-            tag_name = t.name
-            tag_type = t.type
-            tag_size = t.size
-
-            assert tag_type in typenames, "Invalid tag type; must be one of %r" % list(
-                typenames
-            )
-            tag_class, _, f = typenames[tag_type]
-            tag_value = f(t.value)
-
-            tag_address = t.addr
-            logger.debug("tag address: %s", tag_address)
-
-            path, attribute = None, None
-            if tag_address:
-                # Resolve the @cls/ins/att, and optionally [elm] or /elm
-                segments, _, cnt = device.parse_path_elements("@" + tag_address)
-                assert (
-                    not cnt or cnt == 1
-                ), "A Tag may be specified to indicate a single element: %s" % (
-                    tag_address
-                )
-                path = {"segment": segments}
-                cls, ins, att = device.resolve(path, attribute=True)
-                assert ins > 0, "Cannot specify the Class' instance for a tag's address"
-                elm = device.resolve_element(path)
-                # Look thru defined tags for one assigned to same cls/ins/att (maybe different elm);
-                # must be same type/size.
-                for tn, te in dict.items(self.tags):
-                    if not te["path"]:
-                        continue  # Ignore tags w/o pre-defined path...
-                    if device.resolve(te["path"], attribute=True) == (cls, ins, att):
-                        assert (
-                            te.attribute.parser.__class__ is tag_class
-                            and len(te.attribute) == tag_size
-                        ), "Incompatible Attribute types for tags %r and %r" % (
-                            tn,
-                            tag_name,
-                        )
-                        attribute = te.attribute
-                        break
-
-            if not attribute:
-                # No Attribute found
-                attribute = device.Attribute(
-                    tag_name,
-                    tag_class,
-                    default=(tag_value if tag_size == 1 else [tag_value] * tag_size),
-                )
-
-            # Ready to create the tag and its Attribute (and error code to return, if any).  If tag_size
-            # is 1, it will be a scalar Attribute.  Since the tag_name may contain '.', we don't want
-            # the normal dotdict.__setitem__ resolution to parse it; use plain dict.__setitem__.
-            logger.debug(
-                "Creating tag: %-14s%-10s %10s[%4d]",
-                tag_name,
-                "@" + tag_address if tag_address else "",
-                attribute.parser.__class__.__name__,
-                len(attribute),
-            )
-            tag_entry = cpppo.dotdict()
-            tag_entry.attribute = (
-                attribute  # The Attribute (may be shared by multiple tags)
-            )
-            tag_entry.path = (
-                path  # Desired Attribute path (may include element), or None
-            )
-            tag_entry.error = 0x00
-            dict.__setitem__(self.tags, tag_name, tag_entry)
-
-    def start(self, host, port):
-        self._install_device_identity()
-
-        srv_ctl = cpppo.dotdict()
-        srv_ctl.control = cpppo.apidict(timeout=self.config.timeout)
-        srv_ctl.control["done"] = False
-        srv_ctl.control["disable"] = False
-        srv_ctl.control.setdefault("latency", self.config.latency)
-
-        options = cpppo.dotdict()
-        options.setdefault("enip_process", logix.process)
-        # identity_class=None: Identity was installed above from the template
-        kwargs = dict(options, tags=self.tags, server=srv_ctl, identity_class=None)
-
-        tcp_mode = True if self.config.mode == "tcp" else False
-        udp_mode = True if self.config.mode == "udp" else False
-
-        self.control = srv_ctl.control
-
-        logger.debug(
-            "ENIP server started on: %s:%d, mode: %s" % (host, port, self.config.mode)
-        )
-        while not self.control["done"]:
-            network.server_main(
-                address=(host, port),
-                target=self.handle,
-                kwargs=kwargs,
-                udp=udp_mode,
-                tcp=tcp_mode,
+            await serve_tcp_sync_handler(
+                host,
+                port,
+                self,
+                stop_event=self._stop,
+                ready_event=self._ready,
+                name="EnipServer",
             )
 
     def stop(self):
         logger.debug("Stopping ENIP server")
-        self.control["done"] = True
+        if hasattr(self, "_stop"):
+            self._stop.set()

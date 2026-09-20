@@ -15,17 +15,14 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
 import conpot
 from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
 from conpot.protocols.kamstrup_meter.request_parser import KamstrupRequestParser
 from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 from conpot.utils.networking import chr_py3
-from gevent import socket
 import os
+import socket
 import unittest
 
 
@@ -35,7 +32,7 @@ class TestKamstrup(unittest.TestCase):
         self.dir_name = os.path.dirname(conpot.__file__)
         self.request_parser = KamstrupRequestParser()
         self.command_responder = CommandResponder(
-            self.dir_name + "/templates/kamstrup_382/kamstrup_meter/kamstrup_meter.xml"
+            self.dir_name + "/templates/kamstrup_382/kamstrup_meter.xml"
         )
 
         self.kamstrup_management_server, self.server_greenlet = spawn_test_server(

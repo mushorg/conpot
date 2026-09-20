@@ -15,8 +15,11 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import queue
+import select
+import socket
 import socketserver
-import gevent
+import threading
 import conpot.core as conpot_core
 from conpot.core.filesystem import FilesystemError
 import logging
@@ -27,16 +30,13 @@ from datetime import datetime
 import os
 from conpot.protocols.ftp.ftp_utils import FTPPrivilegeException
 from conpot.utils.networking import sanitize_file_name
-from gevent import socket
 
 logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------
 # Implementation Note: DTP channel that would have two queues for Input and Output (separate for producer and consumer.)
-# There would be 3 threads (greenlets) in place. One for handling the command_channel, one for handling the input/
+# There would be 3 threads in place. One for handling the command_channel, one for handling the input/
 # output of the data_channel and one that would run the command processor.
-# Commands class inheriting this base handler is independent of the **green drama** and may be considered on as is basis
-# when migrating to async/io.
 # -----------------------------------------------------------
 
 
@@ -166,9 +166,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self._data_channel = False  # check whether the data channel is running or not. This would trigger
         # the start and end of the data channel.
         self._data_channel_send = (
-            gevent.event.Event()
+            threading.Event()
         )  # Event when we are trying to send a file.
-        self._data_channel_recv = gevent.event.Event()  # Event for receiving a file.
+        self._data_channel_recv = threading.Event()  # Event for receiving a file.
         self.cli_ip, self.cli_port = (
             None,
             None,
@@ -181,13 +181,14 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self.metrics = FTPMetrics()  # track session related metrics.
 
         # Input and output queues.
-        self._command_channel_input_q = gevent.queue.Queue()
-        self._command_channel_output_q = gevent.queue.Queue()
-        self._data_channel_output_q = gevent.queue.Queue()
-        self._data_channel_input_q = gevent.queue.Queue()
+        self._command_channel_input_q = queue.Queue()
+        self._command_channel_output_q = queue.Queue()
+        self._data_channel_output_q = queue.Queue()
+        self._data_channel_input_q = queue.Queue()
         # Incomplete command-channel bytes waiting for a CRLF terminator.
         self._cmd_channel_remainder = b""
-        self.ftp_greenlets = None  # Keep track of all greenlets
+        self.ftp_threads = None  # Keep track of command/data worker threads
+        self._finish_lock = threading.Lock()
         socketserver.BaseRequestHandler.__init__(
             self, request=request, client_address=client_address, server=server
         )
@@ -198,7 +199,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         _path = _path.replace(self.root, "/")
         return _path
 
-    # -- Wrappers for gevent StreamServer -------
+    # -- Wrappers for serve_tcp_sync_handler -------
 
     class false_request(object):
         def __init__(self):
@@ -212,7 +213,11 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     @classmethod
     def stream_server_handle(cls, sock, address):
-        """Translate this class for use in a StreamServer"""
+        """Translate this class for use with serve_tcp_sync_handler."""
+        try:
+            sock.setblocking(True)
+        except Exception:
+            pass
         request = cls.false_request()
         request._sock = sock
         server = None
@@ -240,42 +245,52 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         self.session.log_event(event_type="NEW_CONNECTION")
         # send 220 + banner -- new client has connected! (RFC 959 greeting code)
         self.respond(b"220 " + self.config.banner.encode())
-        #  Is there a delay in command response? < gevent.sleep(0.5) ?
         return socketserver.BaseRequestHandler.setup(self)
 
     def finish(self):
         """End this client session"""
-        if self.disconnect_client is False:
-            logger.info(
-                "FTP client {} disconnected. ({})".format(
-                    self.client_address, self.session.id
-                )
-            )
-            self.stop_data_channel(
-                abort=True,
-                purge=True,
-                reason="Closing connection to {}. "
-                "Client disconnected".format(self.client_address),
-            )
-            if self._data_listener_sock:
-                if self._data_listener_sock.fileno() != -1:
-                    self._data_sock.close()
-            socketserver.BaseRequestHandler.finish(self)
-            self.client_sock.close()
-            logger.info(
-                "{}".format(
-                    self.metrics.get_metrics(
-                        client_address=self.client_address,
-                        user_name=self.username,
-                        uid=self._uid,
-                        failed_login_attempts=self.invalid_login_attempt,
-                        max_login_attempts=self.max_login_attempts,
+        with getattr(self, "_finish_lock", threading.Lock()):
+            if self.disconnect_client is False:
+                logger.info(
+                    "FTP client {} disconnected. ({})".format(
+                        self.client_address, self.session.id
                     )
                 )
-            )
-            self.disconnect_client = True
-        else:
-            logger.debug("Client {} already disconnected.".format(self.client_address))
+                self.stop_data_channel(
+                    abort=True,
+                    purge=True,
+                    reason="Closing connection to {}. "
+                    "Client disconnected".format(self.client_address),
+                )
+                if self._data_listener_sock:
+                    if self._data_listener_sock.fileno() != -1:
+                        self._data_sock.close()
+                # Flush any pending command replies (e.g. 221 Bye) before close.
+                while not self._command_channel_output_q.empty():
+                    try:
+                        pending = self._command_channel_output_q.get_nowait()
+                        if pending:
+                            self.client_sock.send(pending)
+                    except Exception:
+                        break
+                socketserver.BaseRequestHandler.finish(self)
+                self.client_sock.close()
+                logger.info(
+                    "{}".format(
+                        self.metrics.get_metrics(
+                            client_address=self.client_address,
+                            user_name=self.username,
+                            uid=self._uid,
+                            failed_login_attempts=self.invalid_login_attempt,
+                            max_login_attempts=self.max_login_attempts,
+                        )
+                    )
+                )
+                self.disconnect_client = True
+            else:
+                logger.debug(
+                    "Client {} already disconnected.".format(self.client_address)
+                )
 
     def __del__(self):
         if self.disconnect_client is False:
@@ -320,7 +335,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
         """Read data from the socket and add it to the _command_channel_input_q for processing"""
         log_data = dict()
         try:
-            if self.client_sock.closed:
+            if self._sock_closed(self.client_sock):
                 logger.info(
                     "FTP socket is closed, connection lost. Remote: {} ({}).".format(
                         self.client_address, self.session.id
@@ -329,12 +344,21 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 self.session.log_event(event_type="CONNECTION_LOST")
                 self.finish()
                 return
-            socket_read, socket_write, _ = gevent.select.select(
+            socket_read, socket_write, _ = select.select(
                 [self.client_sock], [self.client_sock], [], 1
             )
             # make sure the socket is ready to read - we would read from the command channel.
             if self.client_sock in socket_read:
                 data = self.client_sock.recv(self.buffer_limit)
+                if not data:
+                    logger.info(
+                        "FTP client disconnected. Remote: {} ({}).".format(
+                            self.client_address, self.session.id
+                        )
+                    )
+                    self.session.log_event(event_type="CONNECTION_LOST")
+                    self.finish()
+                    return
                 # Frame on CRLF before enqueue so pipelined commands stay separate.
                 if data and data != b"":
                     log_data["request"] = data
@@ -367,9 +391,10 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                     request=log_data.get("request"),
                     response=log_data.get("response"),
                 )
-        except socket.error as se:
-            if se.errno == errno.EWOULDBLOCK:
-                gevent.sleep(0.1)
+        except (ValueError, OSError, socket.error) as se:
+            err_no = getattr(se, "errno", None)
+            if err_no == errno.EWOULDBLOCK:
+                time.sleep(0.1)
             else:
                 logger.info(
                     "Socket error, remote: {}. ({}). Error {}".format(
@@ -396,7 +421,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     def start_data_channel(self, send_recv="send"):
         """
-        Starts the data channel. To be called from the command process greenlet.
+        Starts the data channel. To be called from the command-processing path.
         :param send_recv: Whether the event is a send event or recv event. When set to 'send' data channel's socket
         writes data in the output queues else when set to 'read' data channel's socket reads data into the input queue.
         :type send_recv: str
@@ -451,6 +476,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                 _ = self._data_channel_output_q.get()
 
     def handle_data_channel(self):
+        if not self._data_channel:
+            time.sleep(0.05)
+            return
         if self._data_channel:
             try:
                 # Need to know what kind of event are we expecting.
@@ -472,7 +500,7 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                                 )
                             )
                             self.metrics.last_active = time.time()
-                            self._data_sock.send(data=data["data"])
+                            self._data_sock.send(data["data"])
                             self.metrics.data_channel_bytes_send += len(data)
                         elif data["type"] == "file":
                             file_name = data["file"]
@@ -529,10 +557,9 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
                             )
                             self.metrics.data_channel_bytes_recv += len(data)
                             self._data_channel_input_q.put(data)
-                    # we have received all data. Time to finish this process.
-                    # set the writing event to set - so that we can write this data to files.
+                    # Data is in the input queue. recv_file() writes it and
+                    # sends 226 after VFS metadata is updated.
                     self._data_channel_recv.set()
-                    self.respond(b"226 Transfer complete.")
                 else:
                     # assume that the read/write event has finished
                     # send a nice resp to the client saying everything has finished.
@@ -682,20 +709,58 @@ class FTPHandlerBase(socketserver.BaseRequestHandler):
 
     # -- Actual FTP Handler -----------
 
+    @staticmethod
+    def _sock_closed(sock):
+        if sock is None:
+            return True
+        if getattr(sock, "closed", False):
+            return True
+        try:
+            return sock.fileno() == -1
+        except Exception:
+            return True
+
     def handle(self):
         """Actual FTP service to which the user has connected."""
-        while not self.disconnect_client:
-            try:
-                # These greenlets would be running forever. During the connection.
-                # first two are for duplex command channel. Final one is for storing files on file-system.
-                self.ftp_greenlets = [
-                    gevent.spawn(self.handle_cmd_channel),
-                    gevent.spawn(self.process_ftp_command),
-                    gevent.spawn(self.handle_data_channel),
-                ]
-                gevent.joinall(self.ftp_greenlets)
-                # Block till all jobs are not finished
-            except KeyboardInterrupt:
-                logger.info("Shutting FTP server.")
-            finally:
-                gevent.killall(self.ftp_greenlets)
+
+        def _loop(fn):
+            while not self.disconnect_client:
+                try:
+                    fn()
+                except Exception:
+                    logger.exception(
+                        "FTP worker %s crashed for %s",
+                        fn.__name__,
+                        self.client_address,
+                    )
+                    self.finish()
+                    break
+
+        try:
+            self.ftp_threads = [
+                threading.Thread(
+                    target=_loop,
+                    args=(self.handle_cmd_channel,),
+                    name="ftp-cmd-channel",
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_loop,
+                    args=(self.process_ftp_command,),
+                    name="ftp-cmd-processor",
+                    daemon=True,
+                ),
+                threading.Thread(
+                    target=_loop,
+                    args=(self.handle_data_channel,),
+                    name="ftp-data-channel",
+                    daemon=True,
+                ),
+            ]
+            for thread in self.ftp_threads:
+                thread.start()
+            for thread in self.ftp_threads:
+                thread.join()
+        except KeyboardInterrupt:
+            logger.info("Shutting FTP server.")
+            self.finish()

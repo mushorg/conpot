@@ -16,8 +16,9 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
+import threading
+import time
 
-import gevent
 import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 class UsageSimulator(object):
     def __init__(self, *args):
         self._enabled = True
-        self.stopped = gevent.event.Event()
+        self.stopped = threading.Event()
         # both highres, lowres will be calculated on the fly
         self.energy_in = 0
         self.energy_out = 0
@@ -35,13 +36,11 @@ class UsageSimulator(object):
         self.voltage = [0, 0, 0]
         self.current = [0, 0, 0]
         self.power = [0, 0, 0]
-        gevent.spawn(self.initialize)
+        threading.Thread(target=self.initialize, daemon=True).start()
 
     def usage_counter(self):
         while self._enabled:
-            # since this is gevent, this actually sleep for _at least_ 1 second
-            # TODO: measure last entry and figure it out < jkv: Figure what out?!?
-            gevent.sleep(1)
+            time.sleep(1)
             for x in [0, 1, 2]:
                 self.energy_in += int(self.power[x] * 0.0036)
         # ready for shutdown!
@@ -103,7 +102,7 @@ class UsageSimulator(object):
         self.power[2] = databus.get_value(power_3_register)
         databus.set_value(power_3_register, self._get_power_3)
 
-        gevent.spawn(self.usage_counter)
+        threading.Thread(target=self.usage_counter, daemon=True).start()
 
     def _get_energy_in(self):
         return self.energy_in
@@ -112,10 +111,10 @@ class UsageSimulator(object):
         return self.energy_out
 
     def _get_energy_in_lowres(self):
-        return self.energy_in / 1000
+        return self.energy_in // 1000
 
     def _get_energy_out_lowres(self):
-        return self.energy_out / 1000
+        return self.energy_out // 1000
 
     def _get_voltage_1(self):
         return self.voltage[0]

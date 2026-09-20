@@ -1,0 +1,42 @@
+<modbus enabled="True" host="0.0.0.0" port="5020">
+    <device_info>
+        <VendorName>Schneider Electric</VendorName>
+        <ProductCode>Modicon M340</ProductCode>
+        <MajorMinorRevision>BMXP342020</MajorMinorRevision>
+    </device_info>
+    <mode>serial</mode>
+    <delay>0</delay>
+    <umas enabled="true"/>
+    <slaves>
+        <slave id="1">
+            <blocks>
+                <block name="memoryModbusSlave1BlockA">
+                    <!-- Writable commands: address 1 start, address 2 stop. -->
+                    <type>COILS</type>
+                    <starting_address>1</starting_address>
+                    <size>8</size>
+                    <content>memoryModbusSlave1BlockA</content>
+                </block>
+                <block name="memoryModbusSlave1BlockB">
+                    <!-- Status bits written by the scan cycle (discrete 0 = running). -->
+                    <type>DISCRETE_INPUTS</type>
+                    <starting_address>10001</starting_address>
+                    <size>8</size>
+                    <content>memoryModbusSlave1BlockB</content>
+                </block>
+                <block name="memoryModbusSlave1BlockC">
+                    <type>ANALOG_INPUTS</type>
+                    <starting_address>30001</starting_address>
+                    <size>8</size>
+                    <content>memoryModbusSlave1BlockC</content>
+                </block>
+                <block name="memoryModbusSlave1BlockD">
+                    <type>HOLDING_REGISTERS</type>
+                    <starting_address>40001</starting_address>
+                    <size>8</size>
+                    <content>memoryModbusSlave1BlockD</content>
+                </block>
+            </blocks>
+        </slave>
+    </slaves>
+</modbus>

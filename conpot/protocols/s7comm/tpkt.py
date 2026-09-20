@@ -24,7 +24,6 @@ class TPKT:
         ) + str_to_bytes(self.payload)
 
     def parse(self, packet):
-        # packet = cleanse_byte_string(packet)
         try:
             # try to extract the header by pattern to find malformed header data
             header = unpack("!BBH", packet[:4])

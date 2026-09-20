@@ -18,68 +18,57 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
+import asyncio
 import logging
-import socket
-from copy import deepcopy
 
-from bacpypes import bvll
-from bacpypes.apdu import APDU
-from bacpypes.errors import DecodingError
-from bacpypes.local.device import LocalDeviceObject
-from bacpypes.npdu import NPDU
-from bacpypes.pdu import Address as PduAddress
-from bacpypes.pdu import PDU
-from gevent.server import DatagramServer
+from bacpypes3.errors import DecodingError
+from bacpypes3.object import DeviceObject
 from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
+from conpot.protocols.bacnet.bacnet_ip import decode_bacnet_ip
+from conpot.utils.asyncio_serve import serve_udp_datagram
 from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
 
 
-def decode_bacnet_ip(data, address):
-    """Decode a BACnet/IP datagram (BVLC + NPDU + APDU) into an APDU."""
-    pdu = PDU(bytearray(data), source=PduAddress(address))
-    bvlpdu = bvll.BVLPDU()
-    bvlpdu.decode(pdu)
-    rpdu = bvll.bvl_pdu_types[bvlpdu.bvlciFunction]()
-    rpdu.decode(bvlpdu)
-    npdu = NPDU(user_data=rpdu.pduUserData)
-    npdu.decode(rpdu)
-    apdu = APDU()
-    apdu.decode(deepcopy(npdu))
-    return apdu
+def build_device_object(dom):
+    """Build the local device object from a BACnet template DOM."""
+    device_info_root = dom.xpath("//bacnet/device_info")[0]
+    name_key = device_info_root.xpath("./device_name/text()")[0]
+    id_key = device_info_root.xpath("./device_identifier/text()")[0]
+    vendor_name_key = device_info_root.xpath("./vendor_name/text()")[0]
+    vendor_identifier_key = device_info_root.xpath("./vendor_identifier/text()")[0]
+    apdu_length_key = device_info_root.xpath("./max_apdu_length_accepted/text()")[0]
+    segmentation_key = device_info_root.xpath("./segmentation_supported/text()")[0]
+    return DeviceObject(
+        objectName=name_key,
+        objectIdentifier=("device", int(id_key)),
+        maxApduLengthAccepted=int(apdu_length_key),
+        segmentationSupported=segmentation_key,
+        vendorName=vendor_name_key,
+        vendorIdentifier=int(vendor_identifier_key),
+    )
 
 
 @conpot_protocol
 class BacnetServer(object):
     def __init__(self, template, template_directory, args):
         self.dom = etree.parse(template)
-        device_info_root = self.dom.xpath("//bacnet/device_info")[0]
-        name_key = device_info_root.xpath("./device_name/text()")[0]
-        id_key = device_info_root.xpath("./device_identifier/text()")[0]
-        vendor_name_key = device_info_root.xpath("./vendor_name/text()")[0]
-        vendor_identifier_key = device_info_root.xpath("./vendor_identifier/text()")[0]
-        apdu_length_key = device_info_root.xpath("./max_apdu_length_accepted/text()")[0]
-        segmentation_key = device_info_root.xpath("./segmentation_supported/text()")[0]
-
-        self.thisDevice = LocalDeviceObject(
-            objectName=name_key,
-            objectIdentifier=int(id_key),
-            maxApduLengthAccepted=int(apdu_length_key),
-            segmentationSupported=segmentation_key,
-            vendorName=vendor_name_key,
-            vendorIdentifier=int(vendor_identifier_key),
-        )
+        self.thisDevice = build_device_object(self.dom)
         self.bacnet_app = None
         self.server = None  # Initialize later
         logger.info("Conpot Bacnet initialized using the %s template.", template)
 
+    def sendto(self, data, address):
+        """BACnetApp sends replies through the bound UDP facade."""
+        self.server.sendto(data, address)
+
     def handle(self, data, address):
-        # I'm not sure if gevent DatagramServer handles issues where the
+        # I'm not sure if the UDP server handles issues where the
         # received data is over the MTU -> fragmentation
         if not data or data[0] != 0x81:
             # Ignore non-BACnet/IP traffic (empty UDP probes, unrelated scanners)
@@ -120,28 +109,28 @@ class BacnetServer(object):
         )
         session.log_event(event_type="CONNECTION_LOST")
 
-    def start(self, host, port):
-        connection = (host, port)
-        self.server = DatagramServer(connection, self.handle)
-        # start to init the socket
-        self.server.start()
-        # Drop SO_REUSEADDR that gevent enables by default. Otherwise scanners
-        # (notably nmap bacnet-info) can also bind UDP/47808; on localhost that
-        # makes the scanner read its own probes as "responses".
-        self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
-        self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.host = self.server.server_host
-        self.port = self.server.server_port
-        # create application instance
-        # not too beautiful, but the BACnetApp needs access to the socket's sendto method
-        # this could properly be refactored in a way such that sending operates on it's own
-        # (non-bound) socket.
-        self.bacnet_app = BACnetApp(self.thisDevice, self.server)
-        # get object_list and properties
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self.ready = asyncio.Event()
+        self._ready = self.ready
+        # BACnetApp needs .sendto on its datagram_server; we expose it on self
+        # and the UDP facade (self.server) is assigned before ready is set.
+        self.bacnet_app = BACnetApp(self.thisDevice, self)
         self.bacnet_app.get_objects_and_properties(self.dom)
-
-        logger.info("Bacnet server started on: %s", (self.host, self.port))
-        self.server.serve_forever()
+        logger.info("Bacnet server started on: %s", (host, port))
+        # Exclusive bind (reuse_address=False) so scanners such as nmap
+        # bacnet-info cannot also bind UDP/47808 and read their own probes.
+        await serve_udp_datagram(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="BacnetServer",
+            reuse_address=False,
+            broadcast=True,
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

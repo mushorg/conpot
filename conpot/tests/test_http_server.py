@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,16 +15,13 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
 import unittest
 import datetime
+import socket
 import conpot
 import os
 from lxml import etree
 import requests
-from gevent import socket, sleep
 from conpot.protocols.http import web_server
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 import conpot.core as conpot_core
@@ -35,7 +32,6 @@ class TestHTTPServer(unittest.TestCase):
         self.http_server, self.http_worker = spawn_test_server(
             web_server.HTTPServer, "default", "http"
         )
-        sleep(0.5)
 
     def tearDown(self):
         teardown_test_server(self.http_server, self.http_worker)
@@ -83,7 +79,7 @@ class TestHTTPServer(unittest.TestCase):
         """
         # retrieve configuration from xml
         dir_name = os.path.dirname(conpot.__file__)
-        dom = etree.parse(dir_name + "/templates/default/http/http.xml")
+        dom = etree.parse(dir_name + "/templates/default/http.xml")
 
         # check for proper tarpit support
         tarpit = dom.xpath(
@@ -137,10 +133,14 @@ class TestHTTPServer(unittest.TestCase):
         s.connect(("127.0.0.1", self.http_server.server_port))
         s.sendall(b"TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
+        s.close()
         # FIXME: Omitting the time etc from data - mechanism to check them needed as well?
         self.assertIn(b"HTTP/1.1 200 OK", data)
-        # test for 501 - Disable TRACE method
+        # test for 501 - Disable TRACE method (new connection so TRACE echo
+        # from the first response cannot be mistaken for the 501 body)
         self.http_server.cmd_responder.httpd.disable_method_trace = True
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.http_server.server_port))
         s.sendall(b"TRACE /index.html HTTP/1.1\r\nHost: localhost\r\n\r\n")
         data = s.recv(1024)
         s.close()

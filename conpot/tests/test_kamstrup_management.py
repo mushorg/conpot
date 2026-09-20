@@ -15,11 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
+import socket
 import unittest
-from gevent import socket
 from conpot.protocols.kamstrup_management.kamstrup_management_server import (
     KamstrupManagementServer,
 )

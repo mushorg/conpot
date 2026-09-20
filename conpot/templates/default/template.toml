@@ -1,0 +1,47 @@
+[core.template]
+unit = "multi-protocol sample"
+vendor = "Conpot"
+description = "Sample profile enabling most Conpot protocols (Siemens-flavored identity strings for deception)"
+protocols = [
+    "bacnet",
+    "enip",
+    "ftp",
+    "http",
+    "ipmi",
+    "modbus",
+    "s7comm",
+    "snmp",
+    "tftp",
+]
+creator = "the conpot team"
+
+# Databus keys: plain scalars are stored as-is.
+# Expressions use { value = "..." } (eval'd like XML type="value").
+# Emulators use { function = "module.Class" [, params = [...]] }.
+[core.databus.key_value_mappings]
+FacilityName = "Mouser Factory"
+SystemName = "Technodrome"
+SystemDescription = "Siemens, SIMATIC, S7-200"
+Uptime = { function = "conpot.emulators.misc.uptime.Uptime" }
+sysObjectID = "0.0"
+sysContact = "Siemens AG"
+sysName = "CP 443-1 EX40"
+sysLocation = "Venus"
+sysServices = "72"
+memoryModbusSlave0BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
+memoryModbusSlave0BlockB = { value = "[random.randint(0,1) for b in range(0,32)]" }
+memoryModbusSlave255BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
+memoryModbusSlave255BlockB = { value = "[random.randint(0,1) for b in range(0,32)]" }
+memoryModbusSlave1BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
+memoryModbusSlave1BlockB = { value = "[random.randint(0,1) for b in range(0,32)]" }
+memoryModbusSlave2BlockC = { value = "[random.randint(0,1) for b in range(0,8)]" }
+memoryModbusSlave2BlockD = { value = "[0 for b in range(0,32)]" }
+Copyright = "Original Siemens Equipment"
+s7_id = "88111222"
+s7_module_type = "IM151-8 PN/DP CPU"
+empty = ""
+# S7 process images (bytearray); wired from s7comm.xml memory_areas
+s7_db1 = { value = "bytearray(256)" }
+s7_merkers = { value = "bytearray(128)" }
+s7_inputs = { value = "bytearray(32)" }
+s7_outputs = { value = "bytearray(32)" }

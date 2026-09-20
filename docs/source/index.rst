@@ -27,6 +27,16 @@ Conpot concepts
 
    concepts/*
 
+Protocols
+---------
+
+Overview of available handlers and per-protocol configuration / testing notes:
+
+.. toctree::
+   :maxdepth: 2
+
+   protocols/index
+
 Developmental guidelines
 -------------------------
 <todo: add some data here>
@@ -43,6 +53,7 @@ Usage and Frequently asked questions
 .. toctree::
    :maxdepth: 2
 
+   usage/index
    faq
 
 

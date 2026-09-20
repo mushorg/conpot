@@ -23,7 +23,7 @@ Dependencies are declared in ``pyproject.toml`` and locked in ``uv.lock``. Insta
 
   uv sync --group dev
 
-That creates ``.venv`` and installs the project plus development tools (pytest, pytest-cov, etc.). Typical commands:
+That creates ``.venv`` and installs the project plus development tools (pytest, etc.). Typical commands:
 
 ::
 
@@ -36,6 +36,25 @@ The root ``Makefile`` exposes ``make install``, ``make test``, and ``make format
 When you add or change a dependency, update ``pyproject.toml``, run ``uv lock``, and commit ``uv.lock`` together with your change.
 
 Read the Docs builds use the root ``.readthedocs.yaml``: the ``install`` job runs ``uv sync --frozen --link-mode=copy`` into ``$READTHEDOCS_VIRTUALENV_PATH`` so published docs match the lockfile. Commit ``uv.lock`` whenever dependencies change or doc builds on Read the Docs will fail.
+
+Running the test suite
+----------------------
+
+1. Install system packages for your distribution. On Debian/Ubuntu, besides the build
+   dependencies listed in :doc:`../installation/install`, install ``ipmitool`` (required
+   by the IPMI tests; not needed to run Conpot itself)::
+
+     sudo apt-get install ipmitool
+
+2. Sync the project and the ``dev`` dependency group, then run pytest::
+
+     uv sync --group dev
+     uv run pytest
+
+   Equivalent: ``make install`` then ``make test``.
+
+CI (``.github/workflows/python.yml``) installs ``gcc`` and ``ipmitool``, runs
+``uv sync --frozen --group dev``, then ``uv run pytest``.
 
 Copyright
 ---------

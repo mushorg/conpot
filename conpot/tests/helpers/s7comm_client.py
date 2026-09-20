@@ -319,24 +319,31 @@ class s7:
         return response.data[4:]
 
     def plc_stop_function(self):
+        """Send CPU STOP (0x29) and return the unpacked Ack-Data packet."""
+        return self._plc_job(struct.pack("!B5x10p", 0x29, str_to_bytes("P_PROGRAM")))
+
+    def plc_start_function(self, mode=b"WARM_START"):
+        """Send a PI-Service warm/cold/hot start (0x28) and return the reply."""
+        mode = str_to_bytes(mode)
+        parameter = (
+            struct.pack("!B7x", 0x28) + bytes((len(b"P_PROGRAM"),)) + b"P_PROGRAM"
+        )
+        data = bytes((len(mode),)) + mode
+        return self._plc_job(parameter, data)
+
+    def _plc_job(self, parameters, data=b""):
         pdu_type = 1
         request_id = 256
-        stop_func_parameter = struct.pack(
-            "!B5x10p", 0x29, str_to_bytes("P_PROGRAM")  # function code  # Function Name
-        )
-        s7packet = S7Packet(pdu_type, request_id, stop_func_parameter).pack()
+        s7packet = S7Packet(pdu_type, request_id, parameters, data).pack()
         cotp_packet = COTPDataPacket(s7packet).pack()
         tpkt_packet = TPKTPacket(cotp_packet).pack()
         self.s.send(tpkt_packet)
         reply = self.s.recv(1024)
-        if reply:
-            return (
-                S7Packet()
-                .unpack(COTPDataPacket().unpack(TPKTPacket().unpack(reply).data).data)
-                .data
-            )
-        else:
+        if not reply:
             return None
+        return S7Packet().unpack(
+            COTPDataPacket().unpack(TPKTPacket().unpack(reply).data).data
+        )
 
     def ReadSZL(self, szl_id):
         szl_data = self.Function(
@@ -349,6 +356,49 @@ class s7:
         szl_id, _, element_size, _ = unpack("!HHHH", szl_data[:8])
 
         return Split(szl_data[8:], element_size)
+
+    @staticmethod
+    def _var_item(area, db_number, start, size, word_len=0x02):
+        """Build a 12-byte S7-Any request item (BYTE addressing by default)."""
+        bit_addr = start * 8
+        return pack(
+            "!BBBBHHBBBB",
+            0x12,  # variable specification
+            0x0A,  # remaining length
+            0x10,  # S7ANY syntax
+            word_len,
+            size,
+            db_number,
+            area,
+            (bit_addr >> 16) & 0xFF,
+            (bit_addr >> 8) & 0xFF,
+            bit_addr & 0xFF,
+        )
+
+    def ReadVar(self, area, db_number, start, size):
+        """Read ``size`` bytes from S7 memory (function 0x04)."""
+        params = pack("!BB", 0x04, 1) + self._var_item(area, db_number, start, size)
+        response = self.Request(0x01, params, b"")
+        if not response.data or response.data[0] != 0xFF:
+            code = response.data[0] if response.data else 0
+            raise S7Error(code)
+        # return_code, transport, bit_length, then payload
+        _, _, bit_len = unpack("!BBH", response.data[:4])
+        byte_len = (bit_len + 7) // 8
+        return response.data[4 : 4 + byte_len]
+
+    def WriteVar(self, area, db_number, start, data):
+        """Write bytes into S7 memory (function 0x05)."""
+        data = str_to_bytes(data)
+        params = pack("!BB", 0x05, 1) + self._var_item(
+            area, db_number, start, len(data)
+        )
+        data_item = pack("!BBH", 0x00, 0x04, len(data) * 8) + data
+        response = self.Request(0x01, params, data_item)
+        if not response.data or response.data[0] != 0xFF:
+            code = response.data[0] if response.data else 0
+            raise S7Error(code)
+        return response.data[0]
 
 
 def BruteTsap(ip, port, src_tsaps=(0x100, 0x200), dst_tsaps=(0x102, 0x200, 0x201)):

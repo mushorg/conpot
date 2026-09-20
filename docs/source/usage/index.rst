@@ -9,3 +9,5 @@ Conpot usage
 
     usage
     customization
+    plc_emulator
+    stop_restart

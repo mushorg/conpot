@@ -14,6 +14,11 @@
                 </xs:element>
                 <xs:element type="xs:string" name="mode"/>
                 <xs:element type="xs:byte" name="delay"/>
+                <xs:element name="umas" minOccurs="0">
+                    <xs:complexType>
+                        <xs:attribute name="enabled" type="xs:boolean" use="required"/>
+                    </xs:complexType>
+                </xs:element>
                 <xs:element name="slaves">
                     <xs:complexType>
                         <xs:sequence>

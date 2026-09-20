@@ -1,9 +1,9 @@
 import fs
 import os
 import logging
+import socket
 import tftpy
 import time
-from gevent import socket
 from tftpy import TftpException, TftpErrors
 from tftpy.TftpStates import TftpStateExpectACK, TftpStateExpectDAT
 from tftpy.TftpPacketTypes import TftpPacketRRQ, TftpPacketWRQ

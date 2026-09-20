@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,6 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 import os
 
@@ -170,19 +171,25 @@ class SNMPServer(object):
         else:
             return "0;0"
 
-    def start(self, host, port):
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
         self.cmd_responder = CommandResponder(
             host, port, self.raw_mibs, self.compiled_mibs
         )
+        await self.cmd_responder.start()
         self.xml_general_config(self.dom)
         self.xml_mib_config()
 
         logger.info("SNMP server started on: %s", (host, self.get_port()))
-        self.cmd_responder.serve_forever()
+        self._ready.set()
+        await self.cmd_responder.serve_forever()
 
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()
 
     def get_port(self):
         if self.cmd_responder:

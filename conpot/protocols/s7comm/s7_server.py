@@ -17,7 +17,6 @@
 
 import time
 
-from gevent.server import StreamServer
 import codecs
 import socket
 from struct import unpack
@@ -26,18 +25,16 @@ from conpot.protocols.s7comm.cotp import COTP as COTP_BASE_packet
 from conpot.protocols.s7comm.cotp import COTP_ConnectionRequest
 from conpot.protocols.s7comm.cotp import COTP_ConnectionConfirm
 from conpot.protocols.s7comm.s7 import S7
+from conpot.protocols.s7comm.s7_memory_map import S7MemoryMap
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 from lxml import etree
 
+import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-def cleanse_byte_string(packet):
-    new_packet = packet.decode("latin-1").replace("b", "")
-    return new_packet.encode("latin-1")
 
 
 @conpot_protocol
@@ -45,8 +42,10 @@ class S7Server(object):
     def __init__(self, template, template_directory, args):
         self.timeout = 5
         self.ssl_lists = {}
+        self.memory_map = S7MemoryMap()
         self.server = None
         S7.ssl_lists = self.ssl_lists
+        S7.memory_map = self.memory_map
         self.start_time = None  # Initialize later
         dom = etree.parse(template)
 
@@ -62,6 +61,8 @@ class S7Server(object):
                     item.xpath("./text()")[0] if len(item.xpath("./text()")) else ""
                 )
                 ssl_dict[item_id] = databus_key
+
+        self.memory_map.load_xml(dom)
 
         logger.debug("Conpot debug info: S7 SSL/SZL: {0}".format(self.ssl_lists))
         logger.info("Conpot S7Comm initialized")
@@ -98,7 +99,7 @@ class S7Server(object):
                     break
                 data += sock.recv(length - 4, socket.MSG_WAITALL)
 
-                tpkt_packet = TPKT().parse(cleanse_byte_string(data))
+                tpkt_packet = TPKT().parse(data)
                 cotp_base_packet = COTP_BASE_packet().parse(tpkt_packet.payload)
                 if cotp_base_packet.tpdu_type == 0xE0:
                     # connection request
@@ -217,20 +218,28 @@ class S7Server(object):
                                         (
                                             response_param,
                                             response_data,
-                                        ) = S7_packet.handle(address[0])
-                                        s7_resp_ssl_packet = S7(
-                                            7,
+                                        ) = S7_packet.handle(
+                                            address[0], session=session
+                                        )
+                                        # Job read/write and CPU stop/start → Ack-Data (0x03);
+                                        # SZL/userdata → 0x07
+                                        if S7_packet.param in (0x04, 0x05, 0x28, 0x29):
+                                            resp_pdu_type = 3
+                                        else:
+                                            resp_pdu_type = 7
+                                        s7_resp_packet = S7(
+                                            resp_pdu_type,
                                             0,
                                             S7_packet.request_id,
                                             0,
                                             response_param,
                                             response_data,
                                         ).pack()
-                                        cotp_resp_ssl_packet = COTP_BASE_packet(
-                                            0xF0, 0x80, s7_resp_ssl_packet
+                                        cotp_resp_packet = COTP_BASE_packet(
+                                            0xF0, 0x80, s7_resp_packet
                                         ).pack()
                                         tpkt_resp_packet = TPKT(
-                                            3, cotp_resp_ssl_packet
+                                            3, cotp_resp_packet
                                         ).pack()
                                         sock.send(tpkt_resp_packet)
 
@@ -284,13 +293,21 @@ class S7Server(object):
                 )
             )
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("S7Comm server started on: {0}".format(connection))
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("S7Comm server started on: {0}".format((host, port)))
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="S7Server",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

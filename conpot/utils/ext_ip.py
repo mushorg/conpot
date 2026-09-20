@@ -1,4 +1,4 @@
-# Copyright (C) 2014  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2014 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,12 +15,13 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import json
 import logging
 import socket
+from asyncio import events
 
-import requests
-from requests.exceptions import Timeout, ConnectionError
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +34,32 @@ def _verify_address(addr):
         return False
 
 
-def _fetch_data(urls):
-    # we only want warning+ messages from the requests module
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    for url in urls:
-        try:
-            req = requests.get(url, timeout=5)
-            if req.status_code == 200:
-                data = req.text.strip()
-                if data is None or not _verify_address(data):
-                    continue
-                else:
-                    return data
-            else:
-                raise ConnectionError
-        except Timeout, ConnectionError:
-            logger.warning("Could not fetch public ip from %s", url)
+async def _fetch_data_async(urls):
+    logging.getLogger("aiohttp").setLevel(logging.WARNING)
+    timeout = aiohttp.ClientTimeout(total=5)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for url in urls:
+            try:
+                async with session.get(url) as resp:
+                    if resp.status == 200:
+                        data = (await resp.text()).strip()
+                        if data is None or not _verify_address(data):
+                            continue
+                        return data
+                    logger.warning("Could not fetch public ip from %s", url)
+            except asyncio.TimeoutError, aiohttp.ClientError:
+                logger.warning("Could not fetch public ip from %s", url)
     return None
+
+
+def _fetch_data(urls):
+    """Fetch via aiohttp on the running loop, or start a short-lived one."""
+    existing = events._get_running_loop()
+    if existing is not None:
+        future = asyncio.run_coroutine_threadsafe(_fetch_data_async(urls), existing)
+        return future.result(timeout=60)
+
+    return asyncio.run(_fetch_data_async(urls))
 
 
 def get_ext_ip(config=None, urls=None):

@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Lukas Rist <glaslos@gmail.com>
+# Copyright (C) 2013 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -15,6 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import os
 import logging
 
@@ -32,15 +33,21 @@ class HTTPServer(object):
         self.server_port = None
         self.cmd_responder = None
 
-    def start(self, host, port):
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
         logger.info("HTTP server started on: %s", (host, port))
         self.cmd_responder = CommandResponder(
             host, port, self.template, os.path.join(self.template_directory, "http")
         )
         self.cmd_responder.httpd.allow_reuse_address = True
+        await self.cmd_responder.start()
         self.server_port = self.cmd_responder.server_port
-        self.cmd_responder.serve_forever()
+        self._ready.set()
+        await self.cmd_responder.serve_forever()
 
     def stop(self):
         if self.cmd_responder:
             self.cmd_responder.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

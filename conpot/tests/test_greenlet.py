@@ -15,14 +15,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from contextlib import redirect_stderr
+import asyncio
 
 import pytest
-from gevent import Greenlet, sleep
 
 from conpot import core
 from conpot.utils.greenlet import (
+    AsyncioTaskHandle,
     spawn_startable_greenlet,
+    spawn_startable_task,
     spawn_test_server,
     teardown_test_server,
 )
@@ -31,38 +32,64 @@ from conpot.utils.greenlet import (
 class StartableStub:
     def __init__(self):
         self.args = None
+        self._ready = asyncio.Event()
+        self._stop = asyncio.Event()
 
-    def start(self, *args):
+    async def start(self, *args):
         self.args = args
+        self._ready.set()
+        await self._stop.wait()
 
 
 @pytest.mark.parametrize("args", ((), ("127.0.0.1", 8080), (1, 2, 3, 4)))
 def test_spawn_startable_greenlet_passes_args(args):
-    instance = StartableStub()
+    async def _run():
+        instance = StartableStub()
+        handle = await spawn_startable_greenlet(instance, *args)
+        instance._stop.set()
+        await handle._task
+        return instance
 
-    greenlet = spawn_startable_greenlet(instance, *args)
-    greenlet.get()
-
+    instance = asyncio.run(_run())
     assert instance.args == args
 
 
 def test_spawn_startable_greenlet_sets_name():
-    greenlet = spawn_startable_greenlet(StartableStub())
+    async def _run():
+        instance = StartableStub()
+        handle = await spawn_startable_greenlet(instance)
+        instance._stop.set()
+        await handle._task
+        return handle
 
-    assert str(greenlet).startswith('<ServiceGreenlet "StartableStub"')
+    handle = asyncio.run(_run())
+    assert handle.name == "StartableStub"
 
 
 def test_spawn_startable_greenlet_not_scheduled():
-    greenlet = spawn_startable_greenlet(StartableStub())
+    async def _run():
+        instance = StartableStub()
+        # create_task without yielding so start() has not set _ready yet
+        handle = spawn_startable_task(instance)
+        scheduled = handle.scheduled_once
+        instance._stop.set()
+        await handle._task
+        return scheduled
 
-    assert not greenlet.scheduled_once.is_set()
+    assert asyncio.run(_run()) is False
 
 
 def test_spawn_startable_greenlet_can_observe_scheduling():
-    greenlet = spawn_startable_greenlet(StartableStub())
-    greenlet.scheduled_once.wait()
+    async def _run():
+        instance = StartableStub()
+        handle = await spawn_startable_greenlet(instance)
+        await instance._ready.wait()
+        scheduled = handle.scheduled_once
+        instance._stop.set()
+        await handle._task
+        return scheduled
 
-    assert greenlet.scheduled_once.is_set()
+    assert asyncio.run(_run()) is True
 
 
 class ServerStub:
@@ -72,83 +99,113 @@ class ServerStub:
         self.args = args
         self.host = None
         self.port = None
+        self._ready = None
+        self._stop = None
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        self._ready.set()
+        await self._stop.wait()
+
+    def stop(self):
+        if self._stop is not None:
+            self._stop.set()
 
 
 def test_spawn_test_server_returns_server_and_greenlet():
-    server, greenlet = spawn_test_server(
-        ServerStub, "default", "Fake", args="arbitrary"
-    )
+    server, handle = spawn_test_server(ServerStub, "default", "Fake", args="arbitrary")
+    try:
+        assert isinstance(server, ServerStub)
+        assert isinstance(handle, AsyncioTaskHandle)
 
-    assert isinstance(server, ServerStub)
-    assert isinstance(greenlet, Greenlet)
-
-    assert server.template.endswith("/conpot/templates/default/Fake/Fake.xml")
-    assert server.template_directory.endswith("/conpot/templates/default")
-    assert server.args == "arbitrary"
+        assert server.template.endswith("/conpot/templates/default/Fake.xml")
+        assert server.template_directory.endswith("/conpot/templates/default")
+        assert server.args == "arbitrary"
+    finally:
+        teardown_test_server(server, handle)
 
 
 def test_spawn_test_server_initializes_databus():
-    spawn_test_server(ServerStub, "default", "Fake")
-
-    assert core.get_databus().initialized.is_set()
+    server, handle = spawn_test_server(ServerStub, "default", "Fake")
+    try:
+        assert core.get_databus().initialized.is_set()
+    finally:
+        teardown_test_server(server, handle)
 
 
 def test_spawn_test_server_runs_at_least_once():
-    _, greenlet = spawn_test_server(ServerStub, "default", "Fake")
-
-    assert greenlet.scheduled_once.is_set()
+    server, handle = spawn_test_server(ServerStub, "default", "Fake")
+    try:
+        assert handle.scheduled_once is True
+    finally:
+        teardown_test_server(server, handle)
 
 
 def test_spawn_test_server_starts_on_localhost_any_port():
-    server, _ = spawn_test_server(ServerStub, "default", "Fake")
-
-    assert server.host == "127.0.0.1"
-    assert server.port == 0
+    server, handle = spawn_test_server(ServerStub, "default", "Fake")
+    try:
+        assert server.host == "127.0.0.1"
+        assert server.port == 0
+    finally:
+        teardown_test_server(server, handle)
 
 
 def test_spawn_test_server_can_set_port():
-    server, _ = spawn_test_server(ServerStub, "default", "Fake", port=42)
-
-    assert server.port == 42
+    server, handle = spawn_test_server(ServerStub, "default", "Fake", port=42)
+    try:
+        assert server.port == 42
+    finally:
+        teardown_test_server(server, handle)
 
 
 class LoopingServer:
     def __init__(self, *_, **__):
         self.stopped = False
+        self._stop = None
+        self._ready = None
 
-    def start(self, _, __):
-        while not self.stopped:
-            sleep()
+    async def start(self, _, __):
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        self._ready.set()
+        await self._stop.wait()
 
     def stop(self):
         self.stopped = True
+        if self._stop is not None:
+            self._stop.set()
 
 
 def test_teardown_test_server_stops_instance():
-    server, greenlet = spawn_test_server(LoopingServer, "default", "Fake")
+    server, handle = spawn_test_server(LoopingServer, "default", "Fake")
 
-    teardown_test_server(server, greenlet)
+    teardown_test_server(server, handle)
 
     assert server.stopped
-    assert greenlet.dead
+    assert handle.dead
 
 
-class RaisingServer(LoopingServer):
-    def start(self, host, port):
-        super().start(host, port)
+class RaisingServer:
+    def __init__(self, *_, **__):
+        self._ready = None
+        self._stop = None
+
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        self._ready.set()
         raise RuntimeError("Test Error")
 
+    def stop(self):
+        if self._stop is not None:
+            self._stop.set()
 
-def test_teardown_test_server_propagates_exception():
-    server, greenlet = spawn_test_server(RaisingServer, "default", "Fake")
 
-    with pytest.raises(RuntimeError) as exc_info:
-        # Greenlets print exception tracebacks to stderr, suppress that in this test
-        with redirect_stderr(None):
-            teardown_test_server(server, greenlet)
-
-    assert str(exc_info.value) == "Test Error"
+def test_teardown_test_server_does_not_raise_from_serve_task():
+    # Shutdown cancels / awaits the serve task and swallows its exception.
+    server, handle = spawn_test_server(RaisingServer, "default", "Fake")
+    teardown_test_server(server, handle)
+    assert handle.dead

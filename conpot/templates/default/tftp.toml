@@ -1,0 +1,7 @@
+[tftp]
+enabled = true
+host = "0.0.0.0"
+port = 6969
+tftp_root_path = "/data/tftp/"
+add_src = ""
+data_fs_subdir = "tftp"

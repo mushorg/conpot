@@ -6,13 +6,19 @@ This guide covers running Conpot directly on your machine (outside Docker). Conp
 System packages (Debian / Ubuntu)
 ---------------------------------
 
-Install build dependencies for lxml, gevent, and cryptography:
+Install build dependencies for lxml and cryptography:
 
 ::
 
-    $ sudo apt-get install gcc libxslt1-dev python3-dev libevent-dev libffi-dev libssl-dev
+    $ sudo apt-get install gcc libxslt1-dev python3-dev libffi-dev libssl-dev
 
-Other distributions need the equivalent development headers and a compiler.
+To run the full test suite you also need ``ipmitool`` (used by the IPMI tests; not required at runtime):
+
+::
+
+    $ sudo apt-get install ipmitool
+
+Other distributions need the equivalent development headers, a compiler, and ``ipmitool`` for tests.
 
 Install uv (recommended for development)
 ------------------------------------------
@@ -36,13 +42,13 @@ Run Conpot:
 
     $ uv run conpot --template default -f
 
-Run tests:
+Run tests (after installing ``ipmitool`` as above):
 
 ::
 
     $ uv run pytest
 
-The project ``Makefile`` targets ``install``, ``test``, and ``format`` call uv the same way.
+Or ``make test``. The project ``Makefile`` targets ``install``, ``test``, and ``format`` call uv the same way. See :doc:`../development/guidelines` for more contributor notes.
 
 Updating dependencies (maintainers and contributors): edit ``pyproject.toml``, run ``uv lock``, and commit the updated ``uv.lock`` so CI stays reproducible.
 
@@ -68,7 +74,7 @@ If you prefer not to install uv, you can build from a git clone using a PEP 517â
     $ source conpot-env/bin/activate
     $ pip install ./path/to/conpot
 
-Optional test dependencies (pytest, pytest-cov) are listed in the ``dev`` dependency group in ``pyproject.toml``; with uv, use ``uv sync --group dev``. With pip alone, install those packages manually if you need them.
+Optional test dependencies (pytest) are listed in the ``dev`` dependency group in ``pyproject.toml``; with uv, use ``uv sync --group dev``. With pip alone, install those packages manually if you need them.
 
 Classic virtualenv workflow
 ---------------------------
