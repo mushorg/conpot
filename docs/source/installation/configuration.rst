@@ -52,13 +52,15 @@ Each event is a JSON object with these fields:
 
 * ``schema_version`` — integer schema version (currently ``1``)
 * ``sensorid`` — value from ``[common] sensorid``
+* ``template`` — deployment template name (directory basename), stamped by the log worker
+* ``conpot_version`` — running Conpot package version (``conpot.__version__``)
 * ``session_id`` — UUID string for the connection session
 * ``protocol`` — protocol name (for example ``modbus``, ``http``)
 * ``session_time`` / ``event_time`` — ISO-8601 UTC timestamps for session start and this event
 * ``src_ip``, ``src_port``, ``dst_ip``, ``dst_port`` — connection endpoints
 * ``public_ip`` — honeypot public IP when ``fetch_public_ip`` is enabled
 * ``event_type`` — high-level event label when provided (for example ``NEW_CONNECTION``)
-* ``request``, ``response``, ``error`` — lifted protocol payload fields when present
+* ``request``, ``response``, ``error`` — optional payload fields; omitted when unset (lifecycle events such as ``NEW_CONNECTION`` / ``CONNECTION_LOST`` do not carry nulls)
 * ``data`` — remaining protocol-specific fields
 
 Enabled sinks all receive the same event object:

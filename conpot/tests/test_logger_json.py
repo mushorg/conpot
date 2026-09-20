@@ -48,6 +48,8 @@ class TestJsonLogger(unittest.TestCase):
         event = {
             "schema_version": SCHEMA_VERSION,
             "sensorid": sensorid,
+            "template": "default",
+            "conpot_version": "0.6.0",
             "session_id": event_id,
             "protocol": protocol,
             "session_time": "2000-01-01T00:00:00+00:00",
@@ -60,7 +62,6 @@ class TestJsonLogger(unittest.TestCase):
             "event_type": None,
             "request": request,
             "response": response,
-            "error": None,
             "data": {"extra": True},
         }
 

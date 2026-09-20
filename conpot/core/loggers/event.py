@@ -35,6 +35,7 @@ def normalize_event(session_fields: dict, event_data: dict | None) -> dict:
 
     Known payload keys are lifted to the top level:
     ``type`` -> ``event_type``, plus ``request``, ``response``, ``error``.
+    ``request`` / ``response`` / ``error`` are omitted when unset.
     Remaining keys are kept under ``data``.
     """
     payload = dict(event_data or {})
@@ -52,7 +53,7 @@ def normalize_event(session_fields: dict, event_data: dict | None) -> dict:
     if session_time is None:
         session_time = session_fields.get("timestamp")
 
-    return {
+    event = {
         "schema_version": SCHEMA_VERSION,
         "sensorid": session_fields.get("sensorid"),
         "session_id": _session_id_str(session_fields["session_id"]),
@@ -65,8 +66,14 @@ def normalize_event(session_fields: dict, event_data: dict | None) -> dict:
         "dst_port": session_fields.get("dst_port"),
         "public_ip": session_fields.get("public_ip"),
         "event_type": event_type,
-        "request": request,
-        "response": response,
-        "error": error,
         "data": payload,
     }
+    # Optional payload fields are sparse: omit when unset so lifecycle
+    # events (NEW_CONNECTION / CONNECTION_LOST) do not look broken.
+    if request is not None:
+        event["request"] = request
+    if response is not None:
+        event["response"] = response
+    if error is not None:
+        event["error"] = error
+    return event

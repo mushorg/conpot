@@ -8,12 +8,14 @@
 import asyncio
 import json
 import logging
+import os
 import time
 
 from datetime import datetime, timezone
 
 import configparser
 
+import conpot
 from conpot.core.loggers.sqlite_log import SQLiteLogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
@@ -37,6 +39,11 @@ class LogWorker(object):
         self.syslog_client = None
         self.public_ip = public_ip
         self.taxii_logger = None
+        self.template = template
+        if template_directory:
+            self.template_name = os.path.basename(os.path.normpath(template_directory))
+        else:
+            self.template_name = None
         try:
             self.sensorid = config.get("common", "sensorid")
         except configparser.NoSectionError, configparser.NoOptionError:
@@ -129,6 +136,8 @@ class LogWorker(object):
                 self._process_sessions()
             else:
                 event["sensorid"] = self.sensorid
+                event["template"] = self.template_name
+                event["conpot_version"] = conpot.__version__
                 await asyncio.get_running_loop().run_in_executor(
                     None, self._dispatch, event
                 )

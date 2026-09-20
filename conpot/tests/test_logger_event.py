@@ -35,9 +35,9 @@ def test_normalize_connection_only_event():
     assert event["session_id"] == "12345678-1234-5678-1234-567812345678"
     assert event["protocol"] == "modbus"
     assert event["event_type"] == "NEW_CONNECTION"
-    assert event["request"] is None
-    assert event["response"] is None
-    assert event["error"] is None
+    assert "request" not in event
+    assert "response" not in event
+    assert "error" not in event
     assert event["data"] == {}
     assert "remote" not in event
     assert "local" not in event
@@ -55,6 +55,7 @@ def test_normalize_request_response():
     assert event["event_type"] is None
     assert event["request"] == "ping"
     assert event["response"] == "pong"
+    assert "error" not in event
     assert event["data"] == {}
 
 
@@ -70,8 +71,8 @@ def test_normalize_preserves_extra_keys_in_data():
     )
 
     assert event["event_type"] == "PROXY"
-    assert event["request"] is None
-    assert event["response"] is None
+    assert "request" not in event
+    assert "response" not in event
     assert event["data"] == {
         "raw_request": "aabb",
         "raw_response": "ccdd",

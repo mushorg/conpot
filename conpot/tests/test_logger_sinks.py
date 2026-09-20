@@ -18,6 +18,8 @@ def _v1_event(**overrides):
     event = {
         "schema_version": SCHEMA_VERSION,
         "sensorid": "default",
+        "template": "default",
+        "conpot_version": "0.6.0",
         "session_id": "abc-123",
         "protocol": "modbus",
         "session_time": "2000-01-01T00:00:00+00:00",
@@ -30,7 +32,6 @@ def _v1_event(**overrides):
         "event_type": "NEW_CONNECTION",
         "request": "ping",
         "response": "pong",
-        "error": None,
         "data": {"slave_id": 1},
     }
     event.update(overrides)
