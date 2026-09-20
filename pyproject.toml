@@ -32,7 +32,9 @@ dependencies = [
     "schema",
     "requests",
     "sphinx",
-    "libtaxii>=1.1.0",
+    # PyPI 1.1.119 emits SyntaxWarning (invalid escapes) on Python 3.12+;
+    # use fork with raw-string regexes (TAXIIProject/libtaxii#256).
+    "libtaxii @ git+https://github.com/ilia-eiq/libtaxii.git@3bc1c15d9162c0e32bcde2e300056f3db9fd558a",
     "legacy-cgi; python_version >= '3.13'",
     "crc16",
     "natsort",
