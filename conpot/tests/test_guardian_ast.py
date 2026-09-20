@@ -15,14 +15,12 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
 import re
+import time
 import unittest
+import socket
 
 import pytest
-from gevent import sleep, socket
 
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -122,7 +120,7 @@ class TestGuardianAST(unittest.TestCase):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", self.guardian_ast_server.server.server_port))
         s.send(rename_cmd)
-        sleep(0.01)
+        time.sleep(0.01)
         s.send(b"\x01I20100\r\n")
         data = s.recv(1024)
         s.close()

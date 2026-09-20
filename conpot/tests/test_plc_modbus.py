@@ -15,12 +15,9 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
+import time
 
 import pytest
-from gevent import sleep
 
 import conpot.core as conpot_core
 from conpot.tests.helpers.modbus_client import (
@@ -67,7 +64,7 @@ class TestPlcModbus:
             starting_address=1,
             output_value=[1, 0],
         )
-        sleep(SCAN_WAIT)
+        time.sleep(SCAN_WAIT)
         running = master.execute(
             slave=1,
             function_code=READ_DISCRETE_INPUTS,
@@ -82,7 +79,7 @@ class TestPlcModbus:
             starting_address=40001,
             quantity_of_x=1,
         )[0]
-        sleep(SCAN_WAIT)
+        time.sleep(SCAN_WAIT)
         second = master.execute(
             slave=1,
             function_code=READ_HOLDING_REGISTERS,
@@ -110,14 +107,14 @@ class TestPlcModbus:
             starting_address=1,
             output_value=[1, 0],
         )
-        sleep(SCAN_WAIT)
+        time.sleep(SCAN_WAIT)
         master.execute(
             slave=1,
             function_code=WRITE_MULTIPLE_COILS,
             starting_address=1,
             output_value=[0, 1],
         )
-        sleep(SCAN_WAIT)
+        time.sleep(SCAN_WAIT)
         running = master.execute(
             slave=1,
             function_code=READ_DISCRETE_INPUTS,
@@ -132,7 +129,7 @@ class TestPlcModbus:
             starting_address=40001,
             quantity_of_x=1,
         )[0]
-        sleep(SCAN_WAIT)
+        time.sleep(SCAN_WAIT)
         later = master.execute(
             slave=1,
             function_code=READ_HOLDING_REGISTERS,

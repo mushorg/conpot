@@ -7,12 +7,10 @@
 
 """Tests for template-backed internal Modbus slaves (issue #353)."""
 
-from gevent import monkey
-
-monkey.patch_all()
-
+import asyncio
 import os
 import tempfile
+import threading
 import unittest
 
 import conpot
@@ -27,7 +25,7 @@ from conpot.tests.helpers.modbus_client import (
     ModbusError,
     TcpMaster,
 )
-from conpot.utils.greenlet import spawn_startable_greenlet, teardown_test_server
+from conpot.utils.greenlet import AsyncioTaskHandle, teardown_test_server
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(conpot.__file__))
 
@@ -94,8 +92,42 @@ class TestModbusInternalSlaves(unittest.TestCase):
         self.modbus = modbus_server.ModbusServer(
             template=self.tmp.name, template_directory=template_dir, args=None
         )
-        self.greenlet = spawn_startable_greenlet(self.modbus, "127.0.0.1", 0)
-        self.greenlet.scheduled_once.wait()
+
+        loop = asyncio.new_event_loop()
+        conpot_core.get_sessionManager().attach_event_loop(loop)
+        serve_task_ref = {}
+
+        async def _serve():
+            serve_task_ref["task"] = asyncio.current_task()
+            await self.modbus.start("127.0.0.1", 0)
+
+        loop_ready = threading.Event()
+
+        def loop_worker():
+            asyncio.set_event_loop(loop)
+            loop.create_task(_serve())
+            loop_ready.set()
+            loop.run_forever()
+
+        th = threading.Thread(target=loop_worker, daemon=True)
+        th.start()
+        if not loop_ready.wait(timeout=15.0):
+            raise RuntimeError("asyncio test loop thread failed to start")
+
+        async def _wait_ready():
+            for _ in range(300):
+                ready = getattr(self.modbus, "_ready", None)
+                if ready is not None:
+                    await asyncio.wait_for(ready.wait(), timeout=30.0)
+                    return
+                await asyncio.sleep(0.01)
+            raise RuntimeError("Modbus server never became ready")
+
+        asyncio.run_coroutine_threadsafe(_wait_ready(), loop).result(timeout=35.0)
+        task = serve_task_ref.get("task")
+        if task is None:
+            raise RuntimeError("protocol serve task was not registered")
+        self.greenlet = AsyncioTaskHandle(loop, task, self.modbus, th)
 
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port

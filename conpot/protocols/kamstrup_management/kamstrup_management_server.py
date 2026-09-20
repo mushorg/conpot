@@ -13,14 +13,15 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 import socket
+import time
 
-import gevent
-from gevent.server import StreamServer
 import conpot.core as conpot_core
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 from conpot.utils.networking import str_to_bytes
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class KamstrupManagementServer(object):
         self.server = None
 
     def handle(self, sock, address):
+        sock.settimeout(5)
         session = conpot_core.get_session(
             "kamstrup_management_protocol",
             address[0],
@@ -76,7 +78,7 @@ class KamstrupManagementServer(object):
                     session.id,
                 )
                 session.add_event(logdata)
-                gevent.sleep(0.25)  # TODO measure delay and/or RTT
+                time.sleep(0.25)  # TODO measure delay and/or RTT
 
                 if response is None:
                     session.add_event({"type": "CONNECTION_LOST"})
@@ -91,13 +93,23 @@ class KamstrupManagementServer(object):
 
         sock.close()
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("Kamstrup management protocol server started on: %s", connection)
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info(
+            "Kamstrup management protocol server started on: {0}".format((host, port))
+        )
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="KamstrupManagementServer",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

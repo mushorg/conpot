@@ -14,19 +14,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+import asyncio
 import errno
 import logging
 import socket
 import struct
 
 import conpot.core as conpot_core
-import gevent
-from gevent.server import StreamServer
 
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.IEC104.DeviceDataController import DeviceDataController
-from conpot.protocols.IEC104.IEC104 import IEC104
-from .errors import Timeout_t3
+from conpot.protocols.IEC104.IEC104 import IEC104, ProtocolTimeout
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
+from .errors import Timeout_t1, Timeout_t3
 from .frames import TESTFR_act
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,27 @@ class IEC104Server(object):
         self.server = None
         logger.info("IEC 104 Server up")
         self.template = template
+
+    def _next_recv_timeout(self, iec104_handler, timeout_t3):
+        waits = [float(self.timeout)]
+        if timeout_t3 is not None:
+            remaining = timeout_t3.remaining()
+            if remaining is not None:
+                waits.append(remaining)
+        t1_remaining = iec104_handler.earliest_t1_remaining()
+        if t1_remaining is not None:
+            waits.append(t1_remaining)
+        return max(0.01, min(waits))
+
+    def _recv_or_timeout(self, sock, nbytes, iec104_handler, timeout_t3):
+        sock.settimeout(self._next_recv_timeout(iec104_handler, timeout_t3))
+        try:
+            return sock.recv(nbytes)
+        except socket.timeout:
+            iec104_handler.raise_if_t1_expired()
+            if timeout_t3 is not None and timeout_t3.expired():
+                raise Timeout_t3()
+            return None
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)
@@ -61,13 +82,17 @@ class IEC104Server(object):
         iec104_handler = IEC104(self.device_data_controller, sock, address, session.id)
         try:
             while True:
-                timeout_t3 = gevent.Timeout(
+                timeout_t3 = ProtocolTimeout(
                     conpot_core.get_databus().get_value("T_3"), Timeout_t3
                 )
                 timeout_t3.start()
                 try:
                     try:
-                        request = sock.recv(6)
+                        request = None
+                        while request is None:
+                            request = self._recv_or_timeout(
+                                sock, 6, iec104_handler, timeout_t3
+                            )
                         if not request:
                             logger.info("IEC104 Station disconnected. (%s)", session.id)
                             session.add_event({"type": "CONNECTION_LOST"})
@@ -77,7 +102,11 @@ class IEC104Server(object):
                         # this check a single-byte write followed by close busy-loops
                         # (issue #482) and never yields to T_3.
                         while len(request) < 2:
-                            new_byte = sock.recv(1)
+                            new_byte = self._recv_or_timeout(
+                                sock, 1, iec104_handler, timeout_t3
+                            )
+                            if new_byte is None:
+                                continue
                             if not new_byte:
                                 break
                             request += new_byte
@@ -93,7 +122,11 @@ class IEC104Server(object):
 
                         _, length = struct.unpack(">BB", request[:2])
                         while len(request) < (length + 2):
-                            new_byte = sock.recv(1)
+                            new_byte = self._recv_or_timeout(
+                                sock, 1, iec104_handler, timeout_t3
+                            )
+                            if new_byte is None:
+                                continue
                             if not new_byte:
                                 break
                             request += new_byte
@@ -148,7 +181,7 @@ class IEC104Server(object):
                             sock.send(pkt)
                     finally:
                         timeout_t3.cancel()
-                except gevent.Timeout:
+                except Timeout_t1:
                     logger.warning("T1 timed out. (%s)", session.id)
                     logger.info("IEC104 Station disconnected. (%s)", session.id)
                     session.add_event({"type": "CONNECTION_LOST"})
@@ -157,6 +190,7 @@ class IEC104Server(object):
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
             session.add_event({"type": "CONNECTION_LOST"})
+            iec104_handler.disconnect()
         except socket.error as err:
             if isinstance(err.args, tuple):
                 if err.errno == errno.EPIPE:
@@ -169,12 +203,27 @@ class IEC104Server(object):
             else:
                 print(("socket error ", err))
             iec104_handler.disconnect()
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
 
-    def start(self, host, port):
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("IEC 60870-5-104 protocol server started on: %s", connection)
-        self.server.serve_forever()
+    async def start(self, host, port):
+        self.host = host
+        self.port = port
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("IEC 60870-5-104 protocol server started on: %s", (host, port))
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="IEC104Server",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

@@ -1,5 +1,6 @@
 # modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
 # Brno University of Technology, Faculty of Information Technology
+import asyncio
 import codecs
 import logging
 import socket
@@ -7,13 +8,13 @@ import struct
 import sys
 import time
 
-from gevent.server import StreamServer
 from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.modbus import slave_db
 from conpot.protocols.modbus.slave import BLOCK_TYPES, ModbusInvalidRequestError
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,8 @@ logger = logging.getLogger(__name__)
 class ModbusServer(object):
     """Modbus/TCP honeypot.
 
-    pymodbus decodes and encodes PDUs. The socket stays a gevent StreamServer:
-    pymodbus' own TCP server needs a running asyncio loop, which fights
-    ``monkey.patch_all()`` and would hide the session and MBAP checks below.
+    pymodbus decodes and encodes PDUs. Accept / session / MBAP checks stay in
+    Conpot (stock ModbusTcpServer would hide unit-id 255 and address layout).
     """
 
     def __init__(self, template, template_directory, args):
@@ -243,13 +243,21 @@ class ModbusServer(object):
             except Exception:
                 pass
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("Modbus server started on: %s", connection)
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("Modbus server starting on: %s:%s", host, port)
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="ModbusServer",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

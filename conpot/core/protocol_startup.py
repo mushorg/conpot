@@ -4,20 +4,11 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """Start protocol servers, LogWorker, and proxy from a template directory."""
 
 import ast
+import asyncio
 import inspect
 import logging
 import os
@@ -33,47 +24,45 @@ from conpot.core.templates import validate_template
 from conpot.protocols.proxy.proxy import Proxy
 from conpot.templates import parse as template_parse
 from conpot.templates import validate as template_validate
-from conpot.utils.greenlet import spawn_startable_greenlet
+from conpot.utils.greenlet import AsyncioTaskHandle, spawn_startable_task
 
 logger = logging.getLogger(__name__)
 
 
-def on_unhandled_greenlet_exception(dead_greenlet):
+def on_unhandled_task_exception(dead):
     logger.exception(
-        "Stopping because {} died: {}".format(dead_greenlet, dead_greenlet.exception)
+        "Stopping because %s died: %s", dead, getattr(dead, "exception", dead)
     )
     sys.exit(1)
 
 
-def _start_protocol_from_toml(
+def _create_protocol_from_toml(
     protocol_name, server_class, protocol_template, root_template_directory, args
 ):
-    """Start a protocol server from a TOML template. Returns (server, greenlet) or None."""
+    """Build a protocol server from a TOML template. Returns (server, host, port) or None."""
     try:
         protocol = template_parse.parse_toml_config(protocol_template)
         schema = getattr(protocol_schemas, protocol_name)
         template_validate.validate_toml_template(protocol, schema)
     except (AttributeError, SchemaError, OSError, ValueError) as exc:
-        logger.error("Failed to load {} TOML template: {}".format(protocol_name, exc))
+        logger.error("Failed to load %s TOML template: %s", protocol_name, exc)
         sys.exit(1)
 
     protocol_cfg = protocol[protocol_name]
     if not protocol_cfg.get("enabled"):
-        logger.info("{} available but disabled by configuration.".format(protocol_name))
+        logger.info("%s available but disabled by configuration.", protocol_name)
         return None
 
     host = protocol_cfg["host"]
     if "testing.cfg" in args.config and "127." not in host:
-        logger.warning("Running on non-local interface: {}".format(host))
+        logger.warning("Running on non-local interface: %s", host)
     port = protocol_cfg["port"]
     server = server_class(protocol_cfg, root_template_directory, args)
-    greenlet = spawn_startable_greenlet(server, host, port)
-    greenlet.link_exception(on_unhandled_greenlet_exception)
-    logger.info("Found and enabled {} protocol.".format(protocol_name, server))
-    return server, greenlet
+    logger.info("Found and enabled %s protocol.", protocol_name)
+    return server, host, port
 
 
-def _start_protocol_from_xml(
+def _create_protocol_from_xml(
     protocol_name,
     server_class,
     protocol_template,
@@ -81,7 +70,7 @@ def _start_protocol_from_xml(
     package_directory,
     args,
 ):
-    """Start a protocol server from an XML template. Returns (server, greenlet) or None."""
+    """Build a protocol server from an XML template. Returns (server, host, port) or None."""
     xsd_file = os.path.join(
         package_directory,
         "protocols",
@@ -91,33 +80,26 @@ def _start_protocol_from_xml(
     validate_template(protocol_template, xsd_file)
     dom_protocol = etree.parse(protocol_template)
     if not dom_protocol.xpath("//{0}".format(protocol_name)):
-        logger.info("{} available but disabled by configuration.".format(protocol_name))
+        logger.info("%s available but disabled by configuration.", protocol_name)
         return None
 
     if not ast.literal_eval(
         dom_protocol.xpath("//{0}/@enabled".format(protocol_name))[0]
     ):
-        logger.info("{} available but disabled by configuration.".format(protocol_name))
+        logger.info("%s available but disabled by configuration.", protocol_name)
         return None
 
     host = dom_protocol.xpath("//{0}/@host".format(protocol_name))[0]
     if "testing.cfg" in args.config and "127." not in host:
-        logger.warning("Running on non-local interface: {}".format(host))
+        logger.warning("Running on non-local interface: %s", host)
     port = ast.literal_eval(dom_protocol.xpath("//{0}/@port".format(protocol_name))[0])
     server = server_class(protocol_template, root_template_directory, args)
-    greenlet = spawn_startable_greenlet(server, host, port)
-    greenlet.link_exception(on_unhandled_greenlet_exception)
-    logger.info("Found and enabled {} protocol.".format(protocol_name, server))
-    return server, greenlet
+    logger.info("Found and enabled %s protocol.", protocol_name)
+    return server, host, port
 
 
-def start_protocols(root_template_directory, package_directory, args):
-    """Start enabled protocol servers from name_mapping.
-
-    Prefers ``<protocol>.toml`` when present, otherwise falls back to XML.
-
-    Returns a list of (server, greenlet) tuples.
-    """
+def collect_protocols(root_template_directory, package_directory, args):
+    """Instantiate enabled protocol servers. Returns list of (server, host, port)."""
     servers = []
 
     for protocol_name, server_class in protocols.name_mapping.items():
@@ -130,7 +112,7 @@ def start_protocols(root_template_directory, package_directory, args):
 
         started = None
         if os.path.isfile(protocol_toml):
-            started = _start_protocol_from_toml(
+            started = _create_protocol_from_toml(
                 protocol_name,
                 server_class,
                 protocol_toml,
@@ -138,7 +120,7 @@ def start_protocols(root_template_directory, package_directory, args):
                 args,
             )
         elif os.path.isfile(protocol_xml):
-            started = _start_protocol_from_xml(
+            started = _create_protocol_from_xml(
                 protocol_name,
                 server_class,
                 protocol_xml,
@@ -148,9 +130,8 @@ def start_protocols(root_template_directory, package_directory, args):
             )
         else:
             logger.debug(
-                "No {} template found. Service will remain unconfigured/stopped.".format(
-                    protocol_name
-                )
+                "No %s template found. Service will remain unconfigured/stopped.",
+                protocol_name,
             )
 
         if started is not None:
@@ -159,27 +140,21 @@ def start_protocols(root_template_directory, package_directory, args):
     return servers
 
 
-def start_log_worker(
+def create_log_worker(
     config, template, session_manager, public_ip, template_directory=None
 ):
-    """Spawn LogWorker greenlet. Returns (log_worker, greenlet)."""
-    log_worker = LogWorker(
+    """Create LogWorker instance (not yet started)."""
+    return LogWorker(
         config,
         template,
         session_manager,
         public_ip,
         template_directory=template_directory,
     )
-    greenlet = spawn_startable_greenlet(log_worker)
-    greenlet.link_exception(on_unhandled_greenlet_exception)
-    return log_worker, greenlet
 
 
-def start_proxy(root_template_directory):
-    """Start proxy services if enabled in the template.
-
-    Returns a list of (proxy_instance, greenlet) tuples.
-    """
+def collect_proxies(root_template_directory):
+    """Instantiate proxy services if enabled. Returns list of (proxy_instance, host, port)."""
     servers = []
     template_proxy = os.path.join(root_template_directory, "proxy.xml")
     if os.path.isfile(template_proxy):
@@ -197,10 +172,6 @@ def start_proxy(root_template_directory):
                     if "keyfile" in p.attrib and "certfile" in p.attrib:
                         keyfile = p.attrib["keyfile"]
                         certfile = p.attrib["certfile"]
-
-                        # if path is absolute we assert that the cert and key is located in
-                        # the templates ssl standard location
-
                         if not os.path.isabs(keyfile):
                             keyfile = os.path.join(
                                 os.path.dirname(root_template_directory),
@@ -223,10 +194,8 @@ def start_proxy(root_template_directory):
                     proxy_instance = Proxy(
                         name, proxy_host, proxy_port, decoder, keyfile, certfile
                     )
-                    proxy_server = proxy_instance.get_server(host, port)
-                    proxy_greenlet = spawn_startable_greenlet(proxy_server)
-                    proxy_greenlet.link_exception(on_unhandled_greenlet_exception)
-                    servers.append((proxy_instance, proxy_greenlet))
+                    # Proxy.start(host, port) binds the listen socket.
+                    servers.append((proxy_instance, host, port))
             else:
                 logger.info("Proxy available but disabled by template.")
     else:
@@ -237,7 +206,7 @@ def start_proxy(root_template_directory):
     return servers
 
 
-def start_services(
+async def start_services(
     root_template_directory,
     package_directory,
     config,
@@ -246,15 +215,52 @@ def start_services(
     session_manager,
     public_ip,
 ):
-    """Start protocols, LogWorker, and proxy. Returns list of (server, greenlet)."""
-    servers = start_protocols(root_template_directory, package_directory, args)
-    log_worker, greenlet = start_log_worker(
+    """Start protocols, LogWorker, and proxy as asyncio tasks.
+
+    Returns a list of (server, AsyncioTaskHandle) for shutdown.
+    """
+    handles = []
+
+    for server, host, port in collect_protocols(
+        root_template_directory, package_directory, args
+    ):
+        handle = spawn_startable_task(server, host, port)
+        handle.link_exception(on_unhandled_task_exception)
+        # Wait until listening so bind failures surface early.
+        if hasattr(server, "_ready"):
+            try:
+                await asyncio.wait_for(server._ready.wait(), timeout=30.0)
+            except asyncio.TimeoutError:
+                logger.error("%s did not become ready in time", type(server).__name__)
+                sys.exit(1)
+        handles.append((server, handle))
+
+    log_worker = create_log_worker(
         config,
         template,
         session_manager,
         public_ip,
         template_directory=root_template_directory,
     )
-    servers.append((log_worker, greenlet))
-    servers.extend(start_proxy(root_template_directory))
-    return servers
+    log_handle = spawn_startable_task(log_worker)
+    log_handle.link_exception(on_unhandled_task_exception)
+    handles.append((log_worker, log_handle))
+
+    for proxy_instance, host, port in collect_proxies(root_template_directory):
+        handle = spawn_startable_task(proxy_instance, host, port)
+        handle.link_exception(on_unhandled_task_exception)
+        if hasattr(proxy_instance, "_ready"):
+            try:
+                await asyncio.wait_for(proxy_instance._ready.wait(), timeout=30.0)
+            except asyncio.TimeoutError:
+                logger.error("Proxy did not become ready in time")
+                sys.exit(1)
+        handles.append((proxy_instance, handle))
+
+    return handles
+
+
+# Back-compat aliases used by older call sites / docs.
+start_protocols = collect_protocols
+start_log_worker = create_log_worker
+start_proxy = collect_proxies

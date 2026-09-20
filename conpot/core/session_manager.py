@@ -1,21 +1,12 @@
 # Copyright (C) 2014 Johnny Vestergaard <jkv@unixcluster.dk>
+# Copyright (C) 2026 MushMush Foundation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent.queue import Queue
+import asyncio
 
 from conpot.core.attack_session import AttackSession
 
@@ -24,7 +15,12 @@ from conpot.core.attack_session import AttackSession
 class SessionManager:
     def __init__(self):
         self._sessions = []
-        self.log_queue = Queue()
+        self.log_queue = asyncio.Queue()
+        self._loop = None
+
+    def attach_event_loop(self, loop):
+        """Bind the supervisor / test event loop used for thread-safe puts."""
+        self._loop = loop
 
     def _find_sessions(self, protocol, source_ip):
         for session in self._sessions:
@@ -41,7 +37,6 @@ class SessionManager:
         destination_ip=None,
         destination_port=None,
     ):
-        # around here we would inject dependencies into the attack session
         attack_session = self._find_sessions(protocol, source_ip)
         if not attack_session:
             attack_session = AttackSession(
@@ -51,6 +46,7 @@ class SessionManager:
                 destination_ip,
                 destination_port,
                 self.log_queue,
+                self._loop,
             )
             self._sessions.append(attack_session)
         return attack_session
@@ -62,10 +58,5 @@ class SessionManager:
                 break
 
     def purge_sessions(self):
-        # Drop session objects so the next get_session() creates a fresh
-        # AttackSession bound to the new queue. Replacing only log_queue left
-        # stale sessions writing into the discarded queue (and tests that
-        # read sessionManager.log_queue then saw nothing).
         self._sessions = []
-        # there is no native purge/clear mechanism for gevent queues, so...
-        self.log_queue = Queue()
+        self.log_queue = asyncio.Queue()

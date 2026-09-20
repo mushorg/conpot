@@ -18,19 +18,18 @@
 # Author: Peter Sooky <xsooky00@stud.fit.vubtr.cz>
 # Brno University of Technology, Faculty of Information Technology
 
+import asyncio
 import logging
-import socket
 
 from bacpypes3.errors import DecodingError
 from bacpypes3.object import DeviceObject
-from gevent.event import Event
-from gevent.server import DatagramServer
 from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
 from conpot.protocols.bacnet.bacnet_ip import decode_bacnet_ip
+from conpot.utils.asyncio_serve import serve_udp_datagram
 from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
@@ -62,12 +61,14 @@ class BacnetServer(object):
         self.thisDevice = build_device_object(self.dom)
         self.bacnet_app = None
         self.server = None  # Initialize later
-        # Set once host/port are bound, before serve_forever blocks.
-        self.ready = Event()
         logger.info("Conpot Bacnet initialized using the %s template.", template)
 
+    def sendto(self, data, address):
+        """BACnetApp sends replies through the bound UDP facade."""
+        self.server.sendto(data, address)
+
     def handle(self, data, address):
-        # I'm not sure if gevent DatagramServer handles issues where the
+        # I'm not sure if the UDP server handles issues where the
         # received data is over the MTU -> fragmentation
         if not data or data[0] != 0x81:
             # Ignore non-BACnet/IP traffic (empty UDP probes, unrelated scanners)
@@ -105,29 +106,28 @@ class BacnetServer(object):
             "Bacnet client disconnected %s:%d. (%s)", address[0], address[1], session.id
         )
 
-    def start(self, host, port):
-        connection = (host, port)
-        self.server = DatagramServer(connection, self.handle)
-        # start to init the socket
-        self.server.start()
-        # Drop SO_REUSEADDR that gevent enables by default. Otherwise scanners
-        # (notably nmap bacnet-info) can also bind UDP/47808; on localhost that
-        # makes the scanner read its own probes as "responses".
-        self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
-        self.server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.host = self.server.server_host
-        self.port = self.server.server_port
-        # create application instance
-        # not too beautiful, but the BACnetApp needs access to the socket's sendto method
-        # this could properly be refactored in a way such that sending operates on it's own
-        # (non-bound) socket.
-        self.bacnet_app = BACnetApp(self.thisDevice, self.server)
-        # get object_list and properties
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self.ready = asyncio.Event()
+        self._ready = self.ready
+        # BACnetApp needs .sendto on its datagram_server; we expose it on self
+        # and the UDP facade (self.server) is assigned before ready is set.
+        self.bacnet_app = BACnetApp(self.thisDevice, self)
         self.bacnet_app.get_objects_and_properties(self.dom)
-
-        logger.info("Bacnet server started on: %s", (self.host, self.port))
-        self.ready.set()
-        self.server.serve_forever()
+        logger.info("Bacnet server started on: %s", (host, port))
+        # Exclusive bind (reuse_address=False) so scanners such as nmap
+        # bacnet-info cannot also bind UDP/47808 and read their own probes.
+        await serve_udp_datagram(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="BacnetServer",
+            reuse_address=False,
+            broadcast=True,
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

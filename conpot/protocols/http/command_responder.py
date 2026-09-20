@@ -20,7 +20,6 @@ import logging
 import os
 import random
 import re
-import threading
 import time
 from datetime import datetime
 
@@ -710,43 +709,17 @@ class CommandResponder(object):
         self._host = host
         self._port = port
         self.server_port = None
-        self._loop = None
-        self._thread = None
         self._runner = None
         self._site = None
-        self._ready = threading.Event()
-        self._stopped = threading.Event()
-        self._error = None
+        self._ready = None
+        self._stop = None
 
-        self._thread = threading.Thread(
-            target=self._run_server, name="conpot-http-aiohttp", daemon=True
-        )
-        self._thread.start()
-        if not self._ready.wait(timeout=15):
-            raise RuntimeError("HTTP aiohttp server failed to start in time")
-        if self._error is not None:
-            raise RuntimeError(f"HTTP aiohttp server failed to start: {self._error}")
-
-    def _run_server(self):
-        try:
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
-            self._loop.run_until_complete(self._start())
-            self._ready.set()
-            self._loop.run_forever()
-            self._loop.run_until_complete(self._cleanup())
-        except Exception as exc:
-            self._error = exc
-            logger.exception("HTTP server thread crashed")
-            self._ready.set()
-        finally:
-            if self._loop is not None:
-                self._loop.close()
-            self._stopped.set()
-
-    async def _start(self):
+    async def start(self):
+        """Create AppRunner/TCPSite on the current (supervisor) event loop."""
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
         app = create_app(self.httpd)
-        self._runner = web.AppRunner(app, access_log=None)
+        self._runner = web.AppRunner(app, access_log=None, shutdown_timeout=5.0)
         await self._runner.setup()
         self._site = web.TCPSite(
             self._runner,
@@ -759,6 +732,13 @@ class CommandResponder(object):
         if sockets:
             self.server_port = sockets[0].getsockname()[1]
             self.httpd.server_port = self.server_port
+        self._ready.set()
+
+    async def serve_forever(self):
+        if self._stop is None:
+            self._stop = asyncio.Event()
+        await self._stop.wait()
+        await self._cleanup()
 
     async def _cleanup(self):
         if self._runner is not None:
@@ -766,15 +746,9 @@ class CommandResponder(object):
             self._runner = None
             self._site = None
 
-    def serve_forever(self):
-        self._stopped.wait()
-
     def stop(self):
         logging.info(
             "HTTP server will shut down gracefully as soon as all connections are closed."
         )
-        if self._loop is not None and self._loop.is_running():
-            self._loop.call_soon_threadsafe(self._loop.stop)
-        if self._thread is not None:
-            self._thread.join(timeout=15)
-        self._stopped.set()
+        if self._stop is not None:
+            self._stop.set()

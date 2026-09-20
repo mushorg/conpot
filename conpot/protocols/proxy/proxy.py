@@ -15,16 +15,16 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import logging
-from gevent import select
-from gevent import socket as _socket
-import codecs
-import gevent
-from gevent.socket import socket
-from gevent.ssl import wrap_socket
-from gevent.server import StreamServer
 import abc
+import asyncio
+import codecs
+import logging
+import select
+import socket
+import ssl
+
 import conpot.core as conpot_core
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ class Proxy(object):
         self.proxy_id = self.name.lower().replace(" ", "_")
         self.host = None
         self.port = None
+        self.server = None
         self.keyfile = keyfile
         self.certfile = certfile
         if decoder:
@@ -65,27 +66,47 @@ class Proxy(object):
         else:
             self.decoder = None
 
-    def get_server(self, host, port):
+    def _ssl_wrap(self, sock, *, server_side):
+        if server_side:
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            ctx.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
+            return ctx.wrap_socket(sock, server_side=True)
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        ctx.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
+        return ctx.wrap_socket(sock)
+
+    async def start(self, host, port):
         self.host = host
-        connection = (host, port)
-        if self.keyfile and self.certfile:
-            server = StreamServer(
-                connection, self.handle, keyfile=self.keyfile, certfile=self.certfile
-            )
-        else:
-            server = StreamServer(connection, self.handle)
-        self.port = server.server_port
+        self.port = port
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
         logger.info(
             "%s proxy server started, listening on %s, proxy for: (%s, %s) using %s decoder.",
             self.name,
-            connection,
+            (host, port),
             self.proxy_host,
             self.proxy_port,
             self.decoder,
         )
-        return server
+        # Incoming TLS is wrapped in handle() (same as StreamServer keyfile/certfile),
+        # not via asyncio.start_server(ssl=...), so the sync handler owns the fd.
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name=self.name or "Proxy",
+        )
 
     def handle(self, sock, address):
+        # asyncio start_server hands over a non-blocking fd; SSL wrap and
+        # blocking recv/select in this worker thread need a blocking socket.
+        sock.setblocking(True)
+        if self.keyfile and self.certfile:
+            sock = self._ssl_wrap(sock, server_side=True)
         session = conpot_core.get_session(
             self.proxy_id,
             address[0],
@@ -100,16 +121,14 @@ class Proxy(object):
             self.proxy_id,
             session.id,
         )
-        proxy_socket = socket()
+        proxy_socket = socket.socket()
 
         if self.keyfile and self.certfile:
-            proxy_socket = wrap_socket(
-                proxy_socket, keyfile=self.keyfile, certfile=self.certfile
-            )
+            proxy_socket = self._ssl_wrap(proxy_socket, server_side=False)
 
         try:
             proxy_socket.connect((self.proxy_host, self.proxy_port))
-        except _socket.error:
+        except OSError:
             logger.exception(
                 "Error while connecting to proxied service at ({}, {})".format(
                     self.proxy_host, self.proxy_port
@@ -120,7 +139,6 @@ class Proxy(object):
 
         sockets = [proxy_socket, sock]
         while len(sockets) == 2:
-            gevent.sleep(0)
             sockets_read, _, sockets_err = select.select(sockets, [], sockets, 10)
 
             if len(sockets_err) > 0:
@@ -131,7 +149,7 @@ class Proxy(object):
                 socket_close_reason = "socket closed"
                 try:
                     data = s.recv(1024)
-                except _socket.error as socket_err:
+                except OSError as socket_err:
                     data = []
                     socket_close_reason = str(socket_err)
                 if len(data) == 0:
@@ -164,7 +182,7 @@ class Proxy(object):
                         self.handle_in_data(data, proxy_socket, session)
                     else:
                         assert False
-                except _socket.error as socket_err:
+                except OSError as socket_err:
                     if s is proxy_socket:
                         destination = "proxied socket"
                     else:
@@ -211,5 +229,5 @@ class Proxy(object):
             s.close()
 
     def stop(self):
-        # TODO: Keep active sockets in list and close them on stop()
-        return
+        if hasattr(self, "_stop"):
+            self._stop.set()

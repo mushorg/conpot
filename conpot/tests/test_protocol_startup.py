@@ -15,10 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
-
+import asyncio
 import os
 import tempfile
 from argparse import Namespace
@@ -33,13 +30,19 @@ class FakeServer:
         self.template_directory = template_directory
         self.args = args
         self.stopped = False
+        self._ready = asyncio.Event()
+        self._stop = asyncio.Event()
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
+        self._ready.set()
+        await self._stop.wait()
 
     def stop(self):
         self.stopped = True
+        if hasattr(self, "_stop"):
+            self._stop.set()
 
 
 def _write_protocol_xml(root, name, enabled, host="127.0.0.1", port=15020):
@@ -53,11 +56,10 @@ def _write_protocol_xml(root, name, enabled, host="127.0.0.1", port=15020):
     return path
 
 
-def test_start_protocols_enabled_spawns_server():
+def test_start_protocols_enabled_collects_server():
     with tempfile.TemporaryDirectory() as tmp:
         _write_protocol_xml(tmp, "fakeproto", "True", host="127.0.0.1", port=15020)
         args = Namespace(config="/tmp/testing.cfg")
-        fake_greenlet = MagicMock()
 
         with (
             patch.dict(
@@ -66,20 +68,14 @@ def test_start_protocols_enabled_spawns_server():
                 clear=True,
             ),
             patch.object(protocol_startup, "validate_template"),
-            patch.object(
-                protocol_startup,
-                "spawn_startable_greenlet",
-                return_value=fake_greenlet,
-            ) as spawn_mock,
         ):
-            servers = protocol_startup.start_protocols(tmp, "/unused", args)
+            servers = protocol_startup.collect_protocols(tmp, "/unused", args)
 
         assert len(servers) == 1
-        server, greenlet = servers[0]
+        server, host, port = servers[0]
         assert isinstance(server, FakeServer)
-        assert greenlet is fake_greenlet
-        spawn_mock.assert_called_once_with(server, "127.0.0.1", 15020)
-        fake_greenlet.link_exception.assert_called_once()
+        assert host == "127.0.0.1"
+        assert port == 15020
 
 
 def test_start_protocols_disabled_skips_spawn():
@@ -94,30 +90,24 @@ def test_start_protocols_disabled_skips_spawn():
                 clear=True,
             ),
             patch.object(protocol_startup, "validate_template"),
-            patch.object(protocol_startup, "spawn_startable_greenlet") as spawn_mock,
         ):
-            servers = protocol_startup.start_protocols(tmp, "/unused", args)
+            servers = protocol_startup.collect_protocols(tmp, "/unused", args)
 
         assert servers == []
-        spawn_mock.assert_not_called()
 
 
 def test_start_protocols_missing_template_skips():
     with tempfile.TemporaryDirectory() as tmp:
         args = Namespace(config="/tmp/testing.cfg")
 
-        with (
-            patch.dict(
-                protocol_startup.protocols.name_mapping,
-                {"fakeproto": FakeServer},
-                clear=True,
-            ),
-            patch.object(protocol_startup, "spawn_startable_greenlet") as spawn_mock,
+        with patch.dict(
+            protocol_startup.protocols.name_mapping,
+            {"fakeproto": FakeServer},
+            clear=True,
         ):
-            servers = protocol_startup.start_protocols(tmp, "/unused", args)
+            servers = protocol_startup.collect_protocols(tmp, "/unused", args)
 
         assert servers == []
-        spawn_mock.assert_not_called()
 
 
 def test_start_proxy_disabled():
@@ -125,14 +115,10 @@ def test_start_proxy_disabled():
         with open(os.path.join(tmp, "proxy.xml"), "w") as fh:
             fh.write('<proxies enabled="False"/>\n')
 
-        with (
-            patch.object(protocol_startup, "validate_template"),
-            patch.object(protocol_startup, "spawn_startable_greenlet") as spawn_mock,
-        ):
-            servers = protocol_startup.start_proxy(tmp)
+        with patch.object(protocol_startup, "validate_template"):
+            servers = protocol_startup.collect_proxies(tmp)
 
         assert servers == []
-        spawn_mock.assert_not_called()
 
 
 def test_start_proxy_enabled():
@@ -148,10 +134,6 @@ def test_start_proxy_enabled():
                 """)
 
         fake_proxy = MagicMock()
-        fake_server = MagicMock()
-        fake_proxy.get_server.return_value = fake_server
-        fake_greenlet = MagicMock()
-        # Preserve real Proxy path for inspect.getfile(Proxy) before mocking
         real_proxy_path = protocol_startup.inspect.getfile(protocol_startup.Proxy)
 
         with (
@@ -162,43 +144,31 @@ def test_start_proxy_enabled():
             patch.object(
                 protocol_startup, "Proxy", return_value=fake_proxy
             ) as proxy_cls,
-            patch.object(
-                protocol_startup,
-                "spawn_startable_greenlet",
-                return_value=fake_greenlet,
-            ) as spawn_mock,
         ):
-            servers = protocol_startup.start_proxy(tmp)
+            servers = protocol_startup.collect_proxies(tmp)
 
         assert len(servers) == 1
-        assert servers[0] == (fake_proxy, fake_greenlet)
+        assert servers[0] == (fake_proxy, "127.0.0.1", 9999)
         proxy_cls.assert_called_once_with("test", "10.0.0.1", 80, None, None, None)
-        fake_proxy.get_server.assert_called_once_with("127.0.0.1", 9999)
-        spawn_mock.assert_called_once_with(fake_server)
 
 
 def test_start_proxy_missing_template():
     with tempfile.TemporaryDirectory() as tmp:
-        servers = protocol_startup.start_proxy(tmp)
+        servers = protocol_startup.collect_proxies(tmp)
         assert servers == []
 
 
-def test_start_log_worker():
-    fake_greenlet = MagicMock()
+def test_create_log_worker():
     fake_worker = MagicMock()
 
-    with (
-        patch.object(protocol_startup, "LogWorker", return_value=fake_worker) as lw_cls,
-        patch.object(
-            protocol_startup, "spawn_startable_greenlet", return_value=fake_greenlet
-        ),
-    ):
-        worker, greenlet = protocol_startup.start_log_worker(
+    with patch.object(
+        protocol_startup, "LogWorker", return_value=fake_worker
+    ) as lw_cls:
+        worker = protocol_startup.create_log_worker(
             "config", "dom", "session", "1.2.3.4", template_directory="/tmpl"
         )
 
     assert worker is fake_worker
-    assert greenlet is fake_greenlet
     lw_cls.assert_called_once_with(
         "config", "dom", "session", "1.2.3.4", template_directory="/tmpl"
     )
@@ -206,27 +176,44 @@ def test_start_log_worker():
 
 def test_start_services_combines_all():
     args = Namespace(config="/tmp/testing.cfg")
-    fake_greenlet = MagicMock()
+    fake_handle = MagicMock()
+    ready = asyncio.Event()
+    ready.set()
+    fake_server = MagicMock()
+    fake_server._ready = ready
+    fake_proxy = MagicMock()
+    fake_proxy._ready = ready
+    fake_log = MagicMock()
+    fake_log._ready = ready
 
-    with (
-        patch.object(
-            protocol_startup, "start_protocols", return_value=[("proto", fake_greenlet)]
-        ),
-        patch.object(
-            protocol_startup,
-            "start_log_worker",
-            return_value=("log", fake_greenlet),
-        ),
-        patch.object(
-            protocol_startup, "start_proxy", return_value=[("proxy", fake_greenlet)]
-        ),
-    ):
-        servers = protocol_startup.start_services(
-            "/tmpl", "/pkg", "cfg", args, "dom", "sess", None
-        )
+    async def _run():
+        with (
+            patch.object(
+                protocol_startup,
+                "collect_protocols",
+                return_value=[(fake_server, "127.0.0.1", 1)],
+            ),
+            patch.object(protocol_startup, "create_log_worker", return_value=fake_log),
+            patch.object(
+                protocol_startup,
+                "collect_proxies",
+                return_value=[(fake_proxy, "127.0.0.1", 2)],
+            ),
+            patch.object(
+                protocol_startup, "spawn_startable_task", return_value=fake_handle
+            ) as spawn_mock,
+        ):
+            return (
+                await protocol_startup.start_services(
+                    "/tmpl", "/pkg", "cfg", args, "dom", "sess", None
+                ),
+                spawn_mock,
+            )
 
-    assert servers == [
-        ("proto", fake_greenlet),
-        ("log", fake_greenlet),
-        ("proxy", fake_greenlet),
+    handles, spawn_mock = asyncio.run(_run())
+    assert handles == [
+        (fake_server, fake_handle),
+        (fake_log, fake_handle),
+        (fake_proxy, fake_handle),
     ]
+    assert spawn_mock.call_count == 3

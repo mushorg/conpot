@@ -15,17 +15,18 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 
 from os import R_OK, W_OK
 from datetime import datetime
 
 from lxml import etree
-from gevent.server import StreamServer
 
 from conpot.protocols.ftp.ftp_utils import ftp_commands, FTPException
 from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 import conpot.core as conpot_core
 
 logger = logging.getLogger(__name__)
@@ -304,14 +305,27 @@ class FTPServer(object):
         self.handler = FTPCommandChannel
         self.handler.config = FTPConfig(self.template)
 
-    def start(self, host, port):
+    def handle(self, sock, address):
+        self.handler.stream_server_handle(sock, address)
+
+    async def start(self, host, port):
+        self.host = host
+        self.port = port
         self.handler.host, self.handler.port = host, port
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
         connection = (self.handler.host, self.handler.port)
-        self.server = StreamServer(connection, self.handler.stream_server_handle)
         logger.info("FTP server started on: {}".format(connection))
-        self.server.serve_forever()
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="FTPServer",
+        )
 
     def stop(self):
         logger.debug("Stopping FTP server")
-        self.server.stop()
-        del self.handler
+        if hasattr(self, "_stop"):
+            self._stop.set()

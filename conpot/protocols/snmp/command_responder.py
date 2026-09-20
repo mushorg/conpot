@@ -1,18 +1,18 @@
 # Command Responder (GET/GETNEXT)
 # Based on examples from http://pysnmp.sourceforge.net/
 
+import asyncio
 import logging
+import socket
 
 from pysmi.reader import FileReader, HttpReader
 from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import config, engine
 from pysnmp.entity.rfc3413 import context
 from pysnmp.smi.compiler import add_mib_compiler
-import gevent
 
 from conpot.protocols.snmp import conpot_cmdrsp
 from conpot.protocols.snmp.databus_mediator import DatabusMediator
-from conpot.protocols.snmp.gevent_transport import GeventUdpTransport
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,11 @@ class CommandResponder(object):
     def __init__(self, host, port, raw_mibs, compiled_mibs):
         self.oid_mapping = {}
         self.databus_mediator = DatabusMediator(self.oid_mapping)
-        # mapping between OID and databus keys
+        self.host = host
+        self.port = port
+        self.server_port = None
+        self._stop = None
+        self._udp_sock = None
 
         # Create SNMP engine
         self.snmpEngine = engine.SnmpEngine()
@@ -33,15 +37,6 @@ class CommandResponder(object):
         compiler.add_sources(FileReader(raw_mibs))
         # Standard MIB ASN.1 (SNMPv2-SMI, …) for compiling custom MIBs
         compiler.add_sources(HttpReader("https://mibs.pysnmp.com/asn1/@mib@"))
-
-        # Transport setup
-        udp_sock = gevent.socket.socket(gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM)
-        udp_sock.setsockopt(gevent.socket.SOL_SOCKET, gevent.socket.SO_BROADCAST, 1)
-        udp_sock.bind((host, port))
-        self.server_port = udp_sock.getsockname()[1]
-        config.add_transport(
-            self.snmpEngine, udp.SNMP_UDP_DOMAIN, GeventUdpTransport(udp_sock)
-        )
 
         # SNMPv1
         config.add_v1_system(self.snmpEngine, "public-read", "public")
@@ -132,6 +127,50 @@ class CommandResponder(object):
             self.snmpEngine, snmpContext, self.databus_mediator, host, port
         )
 
+    async def start(self):
+        """Bind UDP and attach PySNMP's asyncio transport to the running loop."""
+        loop = asyncio.get_running_loop()
+        self._stop = asyncio.Event()
+
+        udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        udp_sock.bind((self.host, self.port))
+        udp_sock.setblocking(False)
+        self._udp_sock = udp_sock
+        self.server_port = udp_sock.getsockname()[1]
+        self.port = self.server_port
+        for app in (
+            self.resp_app_get,
+            self.resp_app_set,
+            self.resp_app_next,
+            self.resp_app_bulk,
+        ):
+            app.port = self.server_port
+
+        transport = udp.UdpTransport(loop=loop)
+        transport.open_server_mode(sock=udp_sock)
+        if transport._lport is not None:
+            await transport._lport
+        config.add_transport(self.snmpEngine, udp.SNMP_UDP_DOMAIN, transport)
+
+    async def serve_forever(self):
+        if self._stop is None:
+            self._stop = asyncio.Event()
+        await self._stop.wait()
+
+    def stop(self):
+        if self._stop is not None:
+            self._stop.set()
+        try:
+            self.snmpEngine.transport_dispatcher.close_dispatcher()
+        except Exception:
+            pass
+        if self._udp_sock is not None:
+            try:
+                self._udp_sock.close()
+            except OSError:
+                pass
+
     def register(self, mibname, symbolname, instance, value, profile_map_name):
         """Register OID"""
         mib = self.snmpEngine.get_mib_builder()
@@ -164,9 +203,3 @@ class CommandResponder(object):
         if mibname in modules:
             if symbolname in modules[mibname]:
                 return modules[mibname][symbolname]
-
-    def serve_forever(self):
-        self.snmpEngine.transport_dispatcher.run_dispatcher()
-
-    def stop(self):
-        self.snmpEngine.transport_dispatcher.stop()

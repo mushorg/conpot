@@ -1,8 +1,7 @@
 """Blocking Modbus/TCP client for tests.
 
 pymodbus' sync ``ModbusTcpClient`` sets the socket non-blocking and drives it
-with ``select``. Under ``monkey.patch_all()`` that fights the gevent hub, so
-tests build PDUs with pymodbus and send them on a normal (patched) socket.
+with ``select``. Tests build PDUs with pymodbus and send them on a stdlib socket.
 """
 
 import socket

@@ -15,66 +15,160 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import unittest
+import asyncio
 import os
-import gevent
-from gevent.server import StreamServer
-from gevent.socket import socket
-from gevent.ssl import wrap_socket
+import socket
+import ssl
+import threading
+import unittest
+
 import conpot
+import conpot.core as conpot_core
 from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
 from conpot.protocols.proxy.proxy import Proxy
+from conpot.utils.greenlet import AsyncioTaskHandle, teardown_test_server
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
+def _start_echo_backend(ssl_files=None):
+    """Threaded stdlib echo server. Returns (host, port, stop_event, thread)."""
+    ready = threading.Event()
+    stop = threading.Event()
+    holder = {}
+
+    def run():
+        srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(5)
+        srv.settimeout(0.2)
+        holder["port"] = srv.getsockname()[1]
+        ready.set()
+        while not stop.is_set():
+            try:
+                conn, _addr = srv.accept()
+            except socket.timeout:
+                continue
+            try:
+                if ssl_files is not None:
+                    keyfile, certfile = ssl_files
+                    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                    ctx.load_cert_chain(certfile=certfile, keyfile=keyfile)
+                    conn = ctx.wrap_socket(conn, server_side=True)
+                data = conn.recv(1024)
+                if data:
+                    conn.sendall(data)
+            except Exception:
+                pass
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+        srv.close()
+
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+    if not ready.wait(5):
+        raise RuntimeError("echo backend failed to start")
+    return "127.0.0.1", holder["port"], stop, thread
+
+
+def _start_proxy(proxy, host="127.0.0.1", port=0):
+    loop = asyncio.new_event_loop()
+    conpot_core.get_sessionManager().attach_event_loop(loop)
+    serve_task_ref = {}
+
+    async def _serve():
+        serve_task_ref["task"] = asyncio.current_task()
+        await proxy.start(host, port)
+
+    loop_ready = threading.Event()
+
+    def worker():
+        asyncio.set_event_loop(loop)
+        loop.create_task(_serve())
+        loop_ready.set()
+        loop.run_forever()
+
+    thread = threading.Thread(target=worker, daemon=True, name="conpot-proxy-test")
+    thread.start()
+    if not loop_ready.wait(5):
+        raise RuntimeError("proxy loop failed to start")
+
+    async def _wait_ready():
+        await asyncio.wait_for(proxy._ready.wait(), timeout=10.0)
+
+    asyncio.run_coroutine_threadsafe(_wait_ready(), loop).result(timeout=15)
+    task = serve_task_ref.get("task")
+    if task is None:
+        for _ in range(50):
+            task = serve_task_ref.get("task")
+            if task is not None:
+                break
+            threading.Event().wait(0.02)
+    if task is None:
+        raise RuntimeError("proxy serve task was not registered")
+    return AsyncioTaskHandle(loop, task, proxy, thread)
+
+
 class TestProxy(unittest.TestCase):
+    def _exchange(self, proxy, payload, ssl_files=None):
+        sock = socket.socket()
+        sock.settimeout(5)
+        if ssl_files is not None:
+            keyfile, certfile = ssl_files
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            ctx.load_cert_chain(certfile=certfile, keyfile=keyfile)
+            sock = ctx.wrap_socket(sock)
+        sock.connect(("127.0.0.1", proxy.server.server_port))
+        sock.sendall(payload)
+        received = sock.recv(len(payload))
+        sock.close()
+        return received
+
     def test_proxy(self):
         self.test_input = "Hiya, this is a test".encode("utf-8")
-        mock_service = StreamServer(("127.0.0.1", 0), self.echo_server)
-        gevent.spawn(mock_service.start)
-        gevent.sleep(1)
-
-        proxy = Proxy("proxy", "127.0.0.1", mock_service.server_port)
-        server = proxy.get_server("127.0.0.1", 0)
-        gevent.spawn(server.start)
-        gevent.sleep(1)
-
-        s = socket()
-        s.connect(("127.0.0.1", server.server_port))
-        s.sendall(self.test_input)
-        received = s.recv(len(self.test_input))
-        self.assertEqual(self.test_input, received)
-        mock_service.stop(1)
+        _host, backend_port, stop, thread = _start_echo_backend()
+        try:
+            proxy = Proxy("proxy", "127.0.0.1", backend_port)
+            handle = _start_proxy(proxy)
+            try:
+                received = self._exchange(proxy, self.test_input)
+                self.assertEqual(self.test_input, received)
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
 
     def test_ssl_proxy(self):
         self.test_input = "Hiya, this is a test".encode("utf-8")
         keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
         certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
+        ssl_files = (keyfile, certfile)
 
-        mock_service = StreamServer(
-            ("127.0.0.1", 0), self.echo_server, keyfile=keyfile, certfile=certfile
-        )
-        gevent.spawn(mock_service.start)
-        gevent.sleep(1)
-
-        proxy = Proxy(
-            "proxy",
-            "127.0.0.1",
-            mock_service.server_port,
-            keyfile=keyfile,
-            certfile=certfile,
-        )
-        server = proxy.get_server("127.0.0.1", 0)
-        gevent.spawn(server.start)
-        gevent.sleep(1)
-
-        s = wrap_socket(socket(), keyfile=keyfile, certfile=certfile)
-        s.connect(("127.0.0.1", server.server_port))
-        s.sendall(self.test_input)
-        received = s.recv(len(self.test_input))
-        self.assertEqual(self.test_input, received)
-        mock_service.stop(1)
+        _host, backend_port, stop, thread = _start_echo_backend(ssl_files=ssl_files)
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend_port,
+                keyfile=keyfile,
+                certfile=certfile,
+            )
+            handle = _start_proxy(proxy)
+            try:
+                received = self._exchange(proxy, self.test_input, ssl_files=ssl_files)
+                self.assertEqual(self.test_input, received)
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
 
     def test_ascii_decoder(self):
         test_decoder = AsciiDecoder()
@@ -86,57 +180,46 @@ class TestProxy(unittest.TestCase):
 
     def test_proxy_with_decoder(self):
         self.test_input = "Hiya, this is a test".encode("utf-8")
-        mock_service = StreamServer(("127.0.0.1", 0), self.echo_server)
-        gevent.spawn(mock_service.start)
-        gevent.sleep(1)
-
-        proxy = Proxy(
-            "proxy",
-            "127.0.0.1",
-            mock_service.server_port,
-            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
-        )
-        server = proxy.get_server("127.0.0.1", 0)
-        gevent.spawn(server.start)
-        gevent.sleep(1)
-
-        s = socket()
-        s.connect(("127.0.0.1", server.server_port))
-        s.sendall(self.test_input)
-        received = s.recv(len(self.test_input))
-        self.assertEqual(self.test_input, received)
-        mock_service.stop(1)
+        _host, backend_port, stop, thread = _start_echo_backend()
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend_port,
+                decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
+            )
+            handle = _start_proxy(proxy)
+            try:
+                received = self._exchange(proxy, self.test_input)
+                self.assertEqual(self.test_input, received)
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
 
     def test_ssl_proxy_with_decoder(self):
         self.test_input = "Hiya, this is a test".encode("utf-8")
         keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
         certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
+        ssl_files = (keyfile, certfile)
 
-        mock_service = StreamServer(
-            ("127.0.0.1", 0), self.echo_server, keyfile=keyfile, certfile=certfile
-        )
-        gevent.spawn(mock_service.start)
-        gevent.sleep(1)
-
-        proxy = Proxy(
-            "proxy",
-            "127.0.0.1",
-            mock_service.server_port,
-            decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
-            keyfile=keyfile,
-            certfile=certfile,
-        )
-        server = proxy.get_server("127.0.0.1", 0)
-        gevent.spawn(server.start)
-        gevent.sleep(1)
-
-        s = wrap_socket(socket(), keyfile=keyfile, certfile=certfile)
-        s.connect(("127.0.0.1", server.server_port))
-        s.sendall(self.test_input)
-        received = s.recv(len(self.test_input))
-        self.assertEqual(self.test_input, received)
-        mock_service.stop(1)
-
-    def echo_server(self, sock, address):
-        r = sock.recv(len(self.test_input))
-        sock.send(r)
+        _host, backend_port, stop, thread = _start_echo_backend(ssl_files=ssl_files)
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend_port,
+                decoder="conpot.protocols.proxy.ascii_decoder.AsciiDecoder",
+                keyfile=keyfile,
+                certfile=certfile,
+            )
+            handle = _start_proxy(proxy)
+            try:
+                received = self._exchange(proxy, self.test_input, ssl_files=ssl_files)
+                self.assertEqual(self.test_input, received)
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)

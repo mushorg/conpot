@@ -17,7 +17,6 @@
 
 import time
 
-from gevent.server import StreamServer
 import codecs
 import socket
 from struct import unpack
@@ -29,8 +28,10 @@ from conpot.protocols.s7comm.s7 import S7
 from conpot.protocols.s7comm.s7_memory_map import S7MemoryMap
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 from lxml import etree
 
+import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
@@ -304,13 +305,21 @@ class S7Server(object):
                 )
             )
 
-    def start(self, host, port):
+    async def start(self, host, port):
         self.host = host
         self.port = port
-        connection = (host, port)
-        self.server = StreamServer(connection, self.handle)
-        logger.info("S7Comm server started on: {0}".format(connection))
-        self.server.serve_forever()
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("S7Comm server started on: {0}".format((host, port)))
+        await serve_tcp_sync_handler(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="S7Server",
+        )
 
     def stop(self):
-        self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

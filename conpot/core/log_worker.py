@@ -4,17 +4,8 @@
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import json
 import logging
 import time
@@ -22,7 +13,6 @@ import time
 from datetime import datetime
 
 import configparser
-from gevent.queue import Empty
 
 from conpot.core.loggers.sqlite_log import SQLiteLogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
@@ -79,12 +69,12 @@ class LogWorker(object):
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
         if config.getboolean("taxii", "enabled"):
-            # TODO: support for certificates
             self.taxii_logger = TaxiiLogger(
                 config, template, template_directory=template_directory
             )
 
         self.enabled = True
+        self._stop = asyncio.Event()
 
     def _process_sessions(self):
         sessions = self.session_manager._sessions
@@ -92,7 +82,7 @@ class LogWorker(object):
             session_timeout = self.config.get("session", "timeout")
         except configparser.NoSectionError, configparser.NoOptionError:
             session_timeout = 5
-        for session in sessions:
+        for session in list(sessions):
             if len(session.data) > 0:
                 sec_last_event = max(session.data) / 1000
             else:
@@ -102,36 +92,43 @@ class LogWorker(object):
             if (sec_now - (sec_session_start + sec_last_event)) >= float(
                 session_timeout
             ):
-                # TODO: We need to close sockets in this case
                 logger.info("Session timed out: %s", session.id)
                 session.set_ended()
                 sessions.remove(session)
 
-    def start(self):
+    def _dispatch(self, event):
+        if self.public_ip:
+            event["public_ip"] = self.public_ip
+
+        if self.friends_feeder:
+            self.friends_feeder.log(json.dumps(event, default=json_default))
+
+        if self.sqlite_logger:
+            self.sqlite_logger.log(event)
+
+        if self.syslog_client:
+            self.syslog_client.log(event)
+
+        if self.taxii_logger:
+            self.taxii_logger.log(event)
+
+        if self.json_logger:
+            self.json_logger.log(event)
+
+    async def start(self):
+        """Async consumer loop (supervisor TaskGroup entrypoint)."""
         self.enabled = True
-        while self.enabled:
+        self._stop.clear()
+        while self.enabled and not self._stop.is_set():
             try:
-                event = self.log_queue.get(timeout=2)
-            except Empty:
+                event = await asyncio.wait_for(self.log_queue.get(), timeout=2.0)
+            except asyncio.TimeoutError:
                 self._process_sessions()
             else:
-                if self.public_ip:
-                    event["public_ip"] = self.public_ip
-
-                if self.friends_feeder:
-                    self.friends_feeder.log(json.dumps(event, default=json_default))
-
-                if self.sqlite_logger:
-                    self.sqlite_logger.log(event)
-
-                if self.syslog_client:
-                    self.syslog_client.log(event)
-
-                if self.taxii_logger:
-                    self.taxii_logger.log(event)
-
-                if self.json_logger:
-                    self.json_logger.log(event)
+                await asyncio.get_running_loop().run_in_executor(
+                    None, self._dispatch, event
+                )
 
     def stop(self):
         self.enabled = False
+        self._stop.set()

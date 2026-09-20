@@ -15,10 +15,10 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import asyncio
 import logging
 import socket
 
-from gevent.server import DatagramServer, StreamServer
 from lxml import etree
 
 import conpot.core as conpot_core
@@ -28,6 +28,7 @@ from conpot.protocols.enip.enip_protocol import (
     build_dispatcher,
     identity_from_config,
 )
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler, serve_udp_datagram
 
 logger = logging.getLogger(__name__)
 
@@ -199,20 +200,41 @@ class EnipServer(object):
             logger.exception("ENIP UDP handling failed for %s", address)
             session.add_event({"type": "CONNECTION_FAILED"})
 
-    def start(self, host, port):
+    def handle(self, *args):
+        if getattr(self, "_mode", None) == "udp":
+            return self.handle_udp(*args)
+        return self.handle_tcp(*args)
+
+    async def start(self, host, port):
         self.addr = host
         self.port = port
         self.protocol = self._build_protocol(port)
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
 
         mode = (self.config.mode or "tcp").lower()
+        self._mode = mode
         logger.info("ENIP server started on: %s:%d, mode: %s", host, port, mode)
         if mode == "udp":
-            self.server = DatagramServer((host, port), self.handle_udp)
+            await serve_udp_datagram(
+                host,
+                port,
+                self,
+                stop_event=self._stop,
+                ready_event=self._ready,
+                name="EnipServer",
+            )
         else:
-            self.server = StreamServer((host, port), self.handle_tcp)
-        self.server.serve_forever()
+            await serve_tcp_sync_handler(
+                host,
+                port,
+                self,
+                stop_event=self._stop,
+                ready_event=self._ready,
+                name="EnipServer",
+            )
 
     def stop(self):
         logger.debug("Stopping ENIP server")
-        if self.server is not None:
-            self.server.stop()
+        if hasattr(self, "_stop"):
+            self._stop.set()

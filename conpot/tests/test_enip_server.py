@@ -15,14 +15,12 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
+import socket
 import struct
+import time
 import unittest
 
 import pytest
-from gevent import sleep, socket
 
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.tests.helpers.enip_client import EnipClient
@@ -198,7 +196,7 @@ class TestENIPServer(unittest.TestCase):
                 udp.recvfrom(1024)
         finally:
             udp.close()
-        sleep(0.2)
+        time.sleep(0.2)
         with EnipClient(
             self.enip_server_udp.addr,
             self.enip_server_udp.port,

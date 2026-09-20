@@ -19,8 +19,6 @@ import asyncio
 import json
 import logging
 import socket
-import subprocess
-import sys
 from asyncio import events
 
 import aiohttp
@@ -33,15 +31,6 @@ def _verify_address(addr):
         socket.inet_aton(addr)
         return True
     except socket.error, UnicodeEncodeError, TypeError:
-        return False
-
-
-def _gevent_socket_patched():
-    try:
-        from gevent import monkey
-
-        return monkey.is_module_patched("socket")
-    except ImportError:
         return False
 
 
@@ -63,51 +52,12 @@ async def _fetch_data_async(urls):
     return None
 
 
-def _fetch_data_subprocess(urls):
-    """Run aiohttp fetch in a clean interpreter (avoids gevent+asyncio DNS hangs)."""
-    script = (
-        "import asyncio, json, sys\n"
-        "from conpot.utils.ext_ip import _fetch_data_async\n"
-        "urls = json.loads(sys.argv[1])\n"
-        "print(asyncio.run(_fetch_data_async(urls)) or '')\n"
-    )
-    try:
-        completed = subprocess.run(
-            [sys.executable, "-c", script, json.dumps(list(urls))],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        logger.warning("Could not fetch public ip via subprocess: %s", exc)
-        return None
-    if completed.returncode != 0:
-        logger.warning(
-            "Could not fetch public ip via subprocess: %s",
-            completed.stderr.strip() or completed.returncode,
-        )
-        return None
-    data = completed.stdout.strip()
-    if data and _verify_address(data):
-        return data
-    return None
-
-
 def _fetch_data(urls):
-    """Fetch via aiohttp.
-
-    Under gevent monkey-patching, greenlets share an OS thread and asyncio DNS
-    over patched sockets hangs. Prefer an existing loop when present; otherwise
-    use a clean subprocess when gevent has patched ``socket``.
-    """
+    """Fetch via aiohttp on the running loop, or start a short-lived one."""
     existing = events._get_running_loop()
     if existing is not None:
         future = asyncio.run_coroutine_threadsafe(_fetch_data_async(urls), existing)
         return future.result(timeout=60)
-
-    if _gevent_socket_patched():
-        return _fetch_data_subprocess(urls)
 
     return asyncio.run(_fetch_data_async(urls))
 

@@ -18,16 +18,16 @@
 # Author: Abhinav Saxena <xandfury@gmail.com>
 # Institute of Informatics and Communication, University of Delhi, South Campus.
 
-import gevent
+import asyncio
 import os
 import logging
 
 from tftpy import TftpException, TftpTimeout
-from gevent.server import DatagramServer
 
 import conpot.core as conpot_core
 from conpot.protocols.tftp import tftp_handler
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.utils.asyncio_serve import serve_udp_datagram
 from conpot.utils.networking import get_interface_ip
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ class TftpServer(object):
         # A dict of sessions, where each session is keyed by a string like
         # ip:tid for the remote end.
         self.sessions = {}
-        # A threading event to help threads synchronize with the server is_running state.
-        self.is_running = gevent.event.Event()
+        # Event to help threads synchronize with the server is_running state.
+        self.is_running = asyncio.Event()
 
         self.shutdown = False
         self._init_vfs(template)
@@ -103,13 +103,13 @@ class TftpServer(object):
                 "The TFTP root {} is not writable".format(self.vfs.getcwd() + self.root)
             )
 
-    def handle(self, buffer, client_addr):
+    def _serve_client(self, buffer, client_addr):
         session = conpot_core.get_session(
             "tftp",
             client_addr[0],
             client_addr[1],
             get_interface_ip(client_addr[0]),
-            self.server._socket.getsockname()[1],
+            self.server.server_port,
         )
         logger.info(
             "New TFTP client has connected. Connection from {}:{}. ".format(
@@ -166,17 +166,34 @@ class TftpServer(object):
         logger.info("%d duplicate packets" % metrics.dupcount)
         del context
 
-    def start(self, host, port):
-        conn = (host, port)
-        # FIXME - sockets should be non-blocking
-        self.listener = gevent.socket.socket(
-            gevent.socket.AF_INET, gevent.socket.SOCK_DGRAM
+    def handle(self, buffer, client_addr):
+        # tftpy cycle() blocks on a TID socket; run it off the event loop.
+        # serve_udp_datagram schedules returned coroutines on the loop.
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            self._serve_client(buffer, client_addr)
+            return None
+        return self._handle_async(buffer, client_addr)
+
+    async def _handle_async(self, buffer, client_addr):
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self._serve_client, buffer, client_addr)
+
+    async def start(self, host, port):
+        self._stop = asyncio.Event()
+        self._ready = asyncio.Event()
+        logger.info("Starting TFTP server at {}".format((host, port)))
+        await serve_udp_datagram(
+            host,
+            port,
+            self,
+            stop_event=self._stop,
+            ready_event=self._ready,
+            name="TftpServer",
         )
-        self.listener.bind(conn)
-        self.listener.settimeout(self.timeout)
-        self.server = DatagramServer(self.listener, self.handle)
-        logger.info("Starting TFTP server at {}".format(conn))
-        self.server.serve_forever()
 
     def stop(self):
-        self.server.close()
+        self.shutdown = True
+        if hasattr(self, "_stop"):
+            self._stop.set()

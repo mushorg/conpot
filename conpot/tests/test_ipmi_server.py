@@ -15,11 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from gevent import monkey
-
-monkey.patch_all()
-from gevent.subprocess import Popen, PIPE, STDOUT
 import unittest
+from subprocess import PIPE, STDOUT, Popen
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
@@ -139,8 +136,9 @@ class TestIPMI(unittest.TestCase):
 
 
 class TestFakeSession(unittest.TestCase):
-    def test_init_sets_maxtimeout(self):
+    def test_init_sets_session_defaults(self):
         from conpot.protocols.ipmi.fakesession import FakeSession
 
         session = FakeSession("127.0.0.1", "", "", 6230)
         self.assertEqual(session.maxtimeout, 3)
+        self.assertEqual(session.logontries, 1)
