@@ -33,6 +33,8 @@ from conpot.utils.greenlet import spawn_test_server, teardown_test_server
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 default_dir = os.path.join(package_directory, "templates", "default")
+guardian_ast_dir = os.path.join(package_directory, "templates", "guardian_ast")
+kamstrup_382_dir = os.path.join(package_directory, "templates", "kamstrup_382")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -47,6 +49,37 @@ def test_parse_and_validate_tftp_toml():
     protocol_schemas.tftp.validate(protocol)
     assert protocol["tftp"]["enabled"] is True
     assert isinstance(protocol["tftp"]["port"], int)
+
+
+def test_parse_and_validate_guardian_ast_toml():
+    protocol = parse_toml_config(os.path.join(guardian_ast_dir, "guardian_ast.toml"))
+    protocol_schemas.guardian_ast.validate(protocol)
+    assert protocol["guardian_ast"]["port"] == 10001
+    template = parse_toml_config(os.path.join(guardian_ast_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+
+
+def test_parse_and_validate_kamstrup_management_toml():
+    protocol = parse_toml_config(
+        os.path.join(kamstrup_382_dir, "kamstrup_management.toml")
+    )
+    protocol_schemas.kamstrup_management.validate(protocol)
+    assert protocol["kamstrup_management"]["port"] == 50100
+
+
+def test_parse_and_validate_ipmi_enip_kamstrup_meter_toml():
+    protocol_schemas.ipmi.validate(
+        parse_toml_config(os.path.join(default_dir, "ipmi.toml"))
+    )
+    protocol_schemas.enip.validate(
+        parse_toml_config(os.path.join(default_dir, "enip.toml"))
+    )
+    protocol_schemas.kamstrup_meter.validate(
+        parse_toml_config(os.path.join(kamstrup_382_dir, "kamstrup_meter.toml"))
+    )
+    validate_toml_template(
+        parse_toml_config(os.path.join(kamstrup_382_dir, "template.toml")), base_schema
+    )
 
 
 def test_load_base_template_prefers_toml():
@@ -77,7 +110,7 @@ def test_get_template_metadata_from_toml():
     assert "tftp" in meta["protocols"]
 
 
-def test_discover_protocol_ports_from_xml_and_toml():
+def test_discover_protocol_ports_from_toml():
     ports = discover_protocol_ports(default_dir, ["http", "tftp", "modbus"])
     assert ports["tftp"] == 6969
     assert "http" in ports

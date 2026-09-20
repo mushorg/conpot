@@ -1,0 +1,55 @@
+[snmp]
+enabled = true
+host = "0.0.0.0"
+port = 16100
+
+[[snmp.config]]
+name = "tarpit"
+command = "get"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "set"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "next"
+value = "0.0;0.1"
+
+[[snmp.config]]
+name = "tarpit"
+command = "bulk"
+value = "0.2;0.4"
+
+[[snmp.config]]
+name = "evasion"
+command = "get"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "set"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "next"
+value = "240;600"
+
+[[snmp.config]]
+name = "evasion"
+command = "bulk"
+value = "120;240"
+
+[[snmp.mibs]]
+name = "SNMPv2-MIB"
+symbols = [
+    { "name" = "sysDescr", "value" = "SystemDescription" },
+    { "name" = "sysUpTime", "value" = "Uptime" },
+    { "name" = "sysContact", "value" = "sysContact" },
+    { "name" = "sysName", "value" = "sysName" },
+    { "name" = "sysLocation", "value" = "sysLocation" },
+    { "name" = "sysServices", "value" = "sysServices" },
+]

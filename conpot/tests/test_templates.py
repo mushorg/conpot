@@ -28,32 +28,23 @@ from conpot.core.templates import (
     get_template_metadata,
     list_available_templates,
     resolve_template_directory,
-    validate_template,
 )
+from conpot.templates.parse import parse_toml_config
+from conpot.templates.validate import base_schema, validate_toml_template
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
 def test_validate_default_template():
-    template_xml = os.path.join(
-        package_directory, "templates", "default", "template.xml"
+    template_toml = os.path.join(
+        package_directory, "templates", "default", "template.toml"
     )
-    xsd = os.path.join(package_directory, "template.xsd")
-    validate_template(template_xml, xsd)
+    validate_toml_template(parse_toml_config(template_toml), base_schema)
 
 
-def test_validate_invalid_template_exits():
-    xsd = os.path.join(package_directory, "template.xsd")
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as fh:
-        fh.write("<not-a-valid-template/>")
-        fh.flush()
-        invalid_path = fh.name
-    try:
-        with pytest.raises(SystemExit) as exc:
-            validate_template(invalid_path, xsd)
-        assert exc.value.code == 1
-    finally:
-        os.unlink(invalid_path)
+def test_validate_invalid_template_raises():
+    with pytest.raises(Exception):
+        validate_toml_template({"not": "valid"}, base_schema)
 
 
 def test_resolve_packaged_default():
@@ -63,7 +54,7 @@ def test_resolve_packaged_default():
 
 def test_resolve_custom_template_dir():
     with tempfile.TemporaryDirectory() as tmp:
-        open(os.path.join(tmp, "template.xml"), "w").close()
+        open(os.path.join(tmp, "template.toml"), "w").close()
         assert resolve_template_directory(tmp, package_directory) == tmp
 
 
@@ -89,13 +80,10 @@ def test_default_protocols_match_filesystem():
     expected = sorted(
         name
         for name in known
-        if os.path.isfile(os.path.join(default_dir, "{0}.xml".format(name)))
-        or os.path.isfile(os.path.join(default_dir, "{0}.toml".format(name)))
+        if os.path.isfile(os.path.join(default_dir, "{0}.toml".format(name)))
     )
     assert discover_template_protocols(default_dir) == ", ".join(expected)
     template_base = os.path.join(default_dir, "template.toml")
-    if not os.path.isfile(template_base):
-        template_base = os.path.join(default_dir, "template.xml")
     meta = get_template_metadata(template_base)
     assert meta["protocols"] == ", ".join(expected)
 

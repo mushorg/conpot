@@ -15,42 +15,28 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""Template discovery, resolution, and XSD/TOML validation."""
+"""Template discovery, resolution, and TOML validation."""
 
 import logging
 import os
 import sys
-
-from lxml import etree
 
 from conpot.templates import parse as template_parse
 from conpot.templates import validate as template_validate
 
 logger = logging.getLogger(__name__)
 
-_TEMPLATE_BASENAMES = ("template.toml", "template.xml")
-
-
-def validate_template(xml_file, xsd_file):
-    xml_schema = etree.parse(xsd_file)
-    xsd = etree.XMLSchema(xml_schema)
-    xml = etree.parse(xml_file)
-    xsd.validate(xml)
-    if xsd.error_log:
-        logger.error("Error parsing XML template: {}".format(xsd.error_log))
-        sys.exit(1)
+_TEMPLATE_BASENAME = "template.toml"
 
 
 def _has_template_base(directory):
-    return any(
-        os.path.isfile(os.path.join(directory, name)) for name in _TEMPLATE_BASENAMES
-    )
+    return os.path.isfile(os.path.join(directory, _TEMPLATE_BASENAME))
 
 
 def discover_template_protocols(template_dir):
     """Return comma-separated protocol names present under a template directory.
 
-    Includes top-level ``<name>.xml`` / ``<name>.toml`` files that are registered in
+    Includes top-level ``<name>.toml`` files that are registered in
     ``protocols.name_mapping`` (plus ``proxy``). Auxiliary protocol directories
     (e.g. ``http/htdocs``) may still exist alongside the config files.
     """
@@ -63,45 +49,36 @@ def discover_template_protocols(template_dir):
     found = sorted(
         name
         for name in known
-        if os.path.isfile(os.path.join(template_dir, "{0}.xml".format(name)))
-        or os.path.isfile(os.path.join(template_dir, "{0}.toml".format(name)))
+        if os.path.isfile(os.path.join(template_dir, "{0}.toml".format(name)))
     )
     return ", ".join(found) if found else "N/A"
 
 
 def discover_protocol_ports(template_dir, protocol_names):
-    """Read listen ports for ``protocol_names`` from TOML/XML protocol templates.
+    """Read listen ports for ``protocol_names`` from TOML protocol templates.
 
     Returns a dict of protocol name to int port for entries that could be resolved.
-    TOML is preferred when both formats exist. Missing or unreadable files are skipped.
+    Missing or unreadable files are skipped.
     """
-    import ast
-
     ports = {}
     if not os.path.isdir(template_dir):
         return ports
 
     for name in protocol_names:
         toml_path = os.path.join(template_dir, "{0}.toml".format(name))
-        xml_path = os.path.join(template_dir, "{0}.xml".format(name))
         try:
             if os.path.isfile(toml_path):
                 cfg = template_parse.parse_toml_config(toml_path)
                 port = cfg.get(name, {}).get("port")
                 if port is not None:
                     ports[name] = int(port)
-            elif os.path.isfile(xml_path):
-                dom = etree.parse(xml_path)
-                attrs = dom.xpath("//{0}/@port".format(name))
-                if attrs:
-                    ports[name] = int(ast.literal_eval(attrs[0]))
-        except (OSError, ValueError, TypeError, etree.XMLSyntaxError) as exc:
+        except (OSError, ValueError, TypeError) as exc:
             logger.debug("Could not resolve port for %s: %s", name, exc)
     return ports
 
 
 def get_template_metadata(template_path):
-    """Parse core template metadata from a template.xml or template.toml path.
+    """Parse core template metadata from a template.toml path.
 
     Returns a dict with keys unit, vendor, description, protocols, creator.
     Missing fields default to "N/A". Protocols are derived from the template
@@ -116,20 +93,11 @@ def get_template_metadata(template_path):
     }
     template_dir = os.path.dirname(template_path)
 
-    if template_path.endswith(".toml"):
-        template = template_parse.parse_toml_config(template_path)
-        core_template = template.get("core", {}).get("template", {})
-        for name in metadata:
-            if name in core_template and name != "protocols":
-                metadata[name] = core_template[name]
-    else:
-        dom_template = etree.parse(template_path)
-        template_details = dom_template.xpath("//core/template/*")
-        if template_details:
-            for entity in template_details:
-                name = entity.attrib.get("name")
-                if name in metadata:
-                    metadata[name] = entity.text
+    template = template_parse.parse_toml_config(template_path)
+    core_template = template.get("core", {}).get("template", {})
+    for name in metadata:
+        if name in core_template and name != "protocols":
+            metadata[name] = core_template[name]
 
     metadata["protocols"] = discover_template_protocols(template_dir)
     return metadata
@@ -144,13 +112,8 @@ def list_available_templates(package_directory):
 
     for folder in os.listdir(templates_root):
         template_dir = os.path.join(templates_root, folder)
-        template_base = None
-        for name in _TEMPLATE_BASENAMES:
-            candidate = os.path.join(template_dir, name)
-            if os.path.isfile(candidate):
-                template_base = candidate
-                break
-        if template_base:
+        template_base = os.path.join(template_dir, _TEMPLATE_BASENAME)
+        if os.path.isfile(template_base):
             available.append((folder, get_template_metadata(template_base)))
     return available
 
@@ -191,15 +154,14 @@ def resolve_template_directory(template_arg, package_directory):
 
 
 def load_base_template(root_template_directory, package_directory):
-    """Load and validate the base template (TOML preferred, XML fallback).
+    """Load and validate the base template.toml.
 
     Returns ``(template, template_base_path)`` where ``template`` is a parsed TOML
-    dict or an lxml ElementTree for XML.
+    dict.
     """
     from schema import SchemaError
 
     template_toml = os.path.join(root_template_directory, "template.toml")
-    template_xml = os.path.join(root_template_directory, "template.xml")
 
     if os.path.isfile(template_toml):
         try:
@@ -211,10 +173,6 @@ def load_base_template(root_template_directory, package_directory):
             logger.error("Template validation error: {}".format(se))
             sys.exit(1)
         return template, template_toml
-
-    if os.path.isfile(template_xml):
-        validate_template(template_xml, os.path.join(package_directory, "template.xsd"))
-        return etree.parse(template_xml), template_xml
 
     logger.error("Could not access template configuration")
     sys.exit(1)

@@ -183,10 +183,14 @@ class TestBACnetTemplate(unittest.TestCase):
     def test_objects_load_without_binding(self):
         conpot_dir = os.path.dirname(conpot.__file__)
         template_dir = os.path.join(conpot_dir, "templates", "default")
-        protocol_xml = os.path.join(template_dir, "bacnet.xml")
-        server = bacnet_server.BacnetServer(protocol_xml, template_dir, None)
+        from conpot.templates.parse import parse_toml_config
+
+        protocol_cfg = parse_toml_config(os.path.join(template_dir, "bacnet.toml"))[
+            "bacnet"
+        ]
+        server = bacnet_server.BacnetServer(protocol_cfg, template_dir, None)
         app = BACnetApp(server.thisDevice, None)
-        app.get_objects_and_properties(server.dom)
+        app.get_objects_and_properties(server.template)
 
         self.assertEqual(str(server.thisDevice.objectName), "SystemName")
         self.assertEqual(int(server.thisDevice.objectIdentifier[1]), 36113)

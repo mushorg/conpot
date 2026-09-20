@@ -29,7 +29,6 @@ from conpot.protocols.s7comm.s7_memory_map import S7MemoryMap
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.asyncio_serve import serve_tcp_sync_handler
-from lxml import etree
 
 import asyncio
 import logging
@@ -47,22 +46,15 @@ class S7Server(object):
         S7.ssl_lists = self.ssl_lists
         S7.memory_map = self.memory_map
         self.start_time = None  # Initialize later
-        dom = etree.parse(template)
 
-        system_status_lists = dom.xpath("//s7comm/system_status_lists/*")
-        for ssl in system_status_lists:
-            ssl_id = ssl.attrib["id"]
+        for ssl in template.get("system_status_lists", []):
+            ssl_id = ssl["id"]
             ssl_dict = {}
             self.ssl_lists[ssl_id] = ssl_dict
-            items = ssl.xpath("./*")
-            for item in items:
-                item_id = item.attrib["id"]
-                databus_key = (
-                    item.xpath("./text()")[0] if len(item.xpath("./text()")) else ""
-                )
-                ssl_dict[item_id] = databus_key
+            for item in ssl.get("items", []):
+                ssl_dict[item["id"]] = item.get("value", "")
 
-        self.memory_map.load_xml(dom)
+        self.memory_map.load_config(template.get("memory_areas", []))
 
         logger.debug("Conpot debug info: S7 SSL/SZL: {0}".format(self.ssl_lists))
         logger.info("Conpot S7Comm initialized")

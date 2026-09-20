@@ -22,10 +22,9 @@ Lifecycle
 
 1. Conpot creates one ``Databus`` instance at import time (see ``conpot.core``).
 2. At startup, ``cli`` (and the test helpers) call ``get_databus().initialize(...)``
-   with either a parsed ``template.toml`` dict or a legacy ``template.xml`` path.
-3. ``initialize`` loads every key from ``core.databus.key_value_mappings`` (TOML) or
-   ``//core/databus/key_value_mappings/*`` (XML), then sets ``databus.initialized``
-   (a ``threading.Event``).
+   with a parsed ``template.toml`` dict.
+3. ``initialize`` loads every key from ``core.databus.key_value_mappings``, then sets
+   ``databus.initialized`` (a ``threading.Event``).
 4. Protocol servers start after that and resolve template references to databus keys.
 5. ``reset()`` clears keys and observers; any stored object with a ``stop()`` method
    is stopped first (used by long-running emulators).
@@ -38,7 +37,7 @@ Emulators that start their own background threads should wait until the bus is r
 Template configuration
 ----------------------
 
-**TOML (preferred).** Keys are declared in ``template.toml``:
+Keys are declared in ``template.toml``:
 
 .. code-block:: toml
 
@@ -48,41 +47,13 @@ Template configuration
     memoryModbusSlave0BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
 
 * Plain scalars are stored as-is.
-* ``{ value = "..." }`` — the string is passed to ``eval()`` (same trust model as XML
-  ``type="value"``). ``random`` is available in that evaluation context.
+* ``{ value = "..." }`` — the string is passed to ``eval()``. ``random`` is available
+  in that evaluation context.
 * ``{ function = "module.Class" [, params = [...]] }`` — import path of a class;
   Conpot stores an instance (optional ``params`` list for the constructor).
 
-**XML (legacy).** Keys are declared in the profile's ``template.xml`` under
-``<core><databus>``:
 
-.. code-block:: xml
-
-    <databus>
-        <key_value_mappings>
-            <key name="SystemDescription">
-                <value type="value">"Siemens, SIMATIC, S7-200"</value>
-            </key>
-            <key name="Uptime">
-                <value type="function">conpot.emulators.misc.uptime.Uptime</value>
-            </key>
-            <key name="memoryModbusSlave0BlockA">
-                <value type="value">[random.randint(0,1) for b in range(0,128)]</value>
-            </key>
-        </key_value_mappings>
-    </databus>
-
-``type`` must be one of:
-
-* ``value`` — the text of ``<value>`` is passed to ``eval()`` and stored as-is.
-  Strings need quotes; lists and expressions are allowed. ``random`` is available
-  in that evaluation context (imported in ``databus.py`` for template use).
-* ``function`` — the text is an import path ``module.ClassName``. Conpot imports
-  the class and stores an instance. Optional constructor arguments can be supplied
-  with a ``param`` attribute on ``<value>`` (a Python list literal evaluated at load
-  time).
-
-Protocol config files (for example ``snmp.xml`` / ``tftp.toml``, ``modbus.xml``)
+Protocol config files (for example ``snmp.toml``, ``tftp.toml``, ``modbus.toml``)
 usually store a **databus key name**, not the payload itself. Missing keys raise
 ``AssertionError`` when a handler calls ``get_value``.
 

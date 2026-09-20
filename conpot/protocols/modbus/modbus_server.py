@@ -1,5 +1,3 @@
-# modified by Sooky Peter <xsooky00@stud.fit.vutbr.cz>
-# Brno University of Technology, Faculty of Information Technology
 import asyncio
 import codecs
 import logging
@@ -7,8 +5,6 @@ import socket
 import struct
 import sys
 import time
-
-from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
@@ -40,8 +36,7 @@ class ModbusServer(object):
         self._configure_slaves(template)
 
     def _get_mode_and_delay(self, template):
-        dom = etree.parse(template)
-        self.mode = dom.xpath("//modbus/mode/text()")[0].lower()
+        self.mode = str(template["mode"]).lower()
         if self.mode not in ["tcp", "serial"]:
             logger.error(
                 "Conpot modbus initialization failed due to incorrect"
@@ -49,8 +44,8 @@ class ModbusServer(object):
             )
             sys.exit(3)
         try:
-            self.delay = int(dom.xpath("//modbus/delay/text()")[0])
-        except ValueError:
+            self.delay = int(template["delay"])
+        except ValueError, KeyError, TypeError:
             logger.error(
                 "Conpot modbus initialization failed due to incorrect"
                 " settings. Check the modbus template file"
@@ -58,19 +53,18 @@ class ModbusServer(object):
             sys.exit(3)
 
     def _configure_slaves(self, template):
-        dom = etree.parse(template)
-        slaves = dom.xpath("//modbus/slaves/*")
+        slaves = template.get("slaves", [])
         try:
-            for slave_xml in slaves:
-                slave_id = int(slave_xml.attrib["id"])
+            for slave_cfg in slaves:
+                slave_id = int(slave_cfg["id"])
                 slave = self._databank.add_slave(slave_id)
                 logger.debug("Added slave with id %s.", slave_id)
-                for block in slave_xml.xpath("./blocks/*"):
-                    name = block.attrib["name"]
-                    block_type_name = block.xpath("./type/text()")[0]
+                for block in slave_cfg.get("blocks", []):
+                    name = block["name"]
+                    block_type_name = block["type"]
                     request_type = BLOCK_TYPES[block_type_name]
-                    start_addr = int(block.xpath("./starting_address/text()")[0])
-                    size = int(block.xpath("./size/text()")[0])
+                    start_addr = int(block["starting_address"])
+                    size = int(block["size"])
                     slave.add_block(name, request_type, start_addr, size)
                     logger.debug(
                         "Added block %s to slave %s. (type=%s, start=%s, size=%s)",

@@ -15,7 +15,6 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from lxml import etree
 import logging
 
 from conpot.protocols.IEC104.frames import *
@@ -34,24 +33,18 @@ class DeviceDataController(object):
             conpot_core.get_databus().get_value("CommonAddress"), 0
         )
 
-        dom = etree.parse(template)
-        categories = dom.xpath("//IEC104/categories/*")
-
-        for category in categories:
-            categ_id = int(category.attrib["id"])
-            for register in category:
-                address = register.attrib["name"]
+        for category in template.get("categories", []):
+            categ_id = int(category["id"])
+            for register in category.get("registers", []):
+                address = register["name"]
                 splt_addr1, splt_addr2 = address.split("_")
                 assert 0 <= int(splt_addr1) <= 65535 and 0 <= int(splt_addr2) <= 255, (
                     "Address %s not allowed. 0..65535_0..255" % address
                 )
-                databuskey = register.xpath("./value/text()")[0]
-                if register.get("rel"):
-                    rel = register.attrib["rel"]
-                else:
-                    rel = ""
+                databuskey = register["value"]
+                rel = register.get("rel") or ""
 
-                # checks if a value for that key exists in xml file
+                # checks if a value for that key exists
                 try:
                     val = conpot_core.get_databus().get_value(databuskey)
                 except AssertionError as err:

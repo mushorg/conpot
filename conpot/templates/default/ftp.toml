@@ -1,0 +1,75 @@
+[ftp]
+enabled = true
+host = "0.0.0.0"
+port = 2121
+
+[ftp.device_info]
+enabled_commands = [
+  "USER",
+  "PASS",
+  "HELP",
+  "NOOP",
+  "QUIT",
+  "SITE HELP",
+  "SITE",
+  "SYST",
+  "TYPE",
+  "PASV",
+  "PORT",
+  "ALLO",
+  "MODE",
+  "SIZE",
+  "PWD",
+  "MKD",
+  "RMD",
+  "CWD",
+  "CDUP",
+  "MDTM",
+  "DELE",
+  "SITE CHMOD",
+  "RNFR",
+  "RNTO",
+  "STAT",
+  "LIST",
+  "NLST",
+  "RETR",
+  "REIN",
+  "ABOR",
+  "STOR",
+  "APPE",
+  "REST",
+  "STRU",
+  "STOU",
+]
+device_type = "Siemens"
+banner = "FTP server ready."
+max_login_attempts = 3
+sever_timeout = 40
+motd = "Technodrome - Mouser Factory. Authorized personnel only"
+stou_suffix = "conpot_test"
+stou_prefix = "conpot_test"
+
+[ftp.ftp_users]
+group = "45:ftp"
+users = [
+  { uid = 13, uname = "nobody", password = "nobody" },
+  { uid = 10, uname = "test_user", password = "test" },
+]
+anon_enabled = true
+anon_uid = 32
+anon_uname = "ftp"
+
+[ftp.ftp_vfs]
+path = "/data/ftp/"
+add_src = ""
+data_fs_subdir = "ftp"
+default_owner = 13
+default_perms = "0o777"
+upload_file_perms = "0o755"
+mkdir_directory_perms = "0o766"
+files = [
+  { path = "/data/ftp/ftp_data.txt", owner_uid = 13, perms = "0o777", last_accessed = 1533152352.517261, last_modified = 1533152352.517261 },
+]
+dirs = [
+  { path = "/", recursive = true, owner_uid = 13, perms = "0o777", last_accessed = 1533148068.517261, last_modified = 1533148068.517261 },
+]

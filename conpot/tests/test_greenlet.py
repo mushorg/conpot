@@ -121,7 +121,7 @@ def test_spawn_test_server_returns_server_and_greenlet():
         assert isinstance(server, ServerStub)
         assert isinstance(handle, AsyncioTaskHandle)
 
-        assert server.template.endswith("/conpot/templates/default/Fake.xml")
+        assert server.template == {}
         assert server.template_directory.endswith("/conpot/templates/default")
         assert server.args == "arbitrary"
     finally:

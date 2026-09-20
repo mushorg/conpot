@@ -20,7 +20,6 @@ import datetime
 import socket
 import conpot
 import os
-from lxml import etree
 import requests
 from conpot.protocols.http import web_server
 from conpot.utils.greenlet import spawn_test_server, teardown_test_server
@@ -77,18 +76,20 @@ class TestHTTPServer(unittest.TestCase):
         """
         Objective: Test if http tarpit delays responses properly
         """
-        # retrieve configuration from xml
+        # retrieve configuration from toml
         dir_name = os.path.dirname(conpot.__file__)
-        dom = etree.parse(dir_name + "/templates/default/http.xml")
+        from conpot.templates.parse import parse_toml_config
+
+        http_cfg = parse_toml_config(dir_name + "/templates/default/http.toml")["http"]
 
         # check for proper tarpit support
-        tarpit = dom.xpath(
-            '//http/htdocs/node[@name="/tests/unittest_tarpit.html"]/tarpit'
-        )
+        tarpit_delay = None
+        for node in http_cfg.get("htdocs", []):
+            if node.get("name") == "/tests/unittest_tarpit.html":
+                tarpit_delay = node.get("tarpit")
+                break
 
-        if tarpit:
-            tarpit_delay = tarpit[0].xpath("./text()")[0]
-
+        if tarpit_delay:
             # requesting file via HTTP along with measuring the timedelta
             dt_req_start = datetime.datetime.now()
             requests.get(

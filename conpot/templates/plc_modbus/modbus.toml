@@ -1,0 +1,21 @@
+[modbus]
+enabled = true
+host = "0.0.0.0"
+port = 5020
+mode = "serial"
+delay = 0
+umas_enabled = true
+
+[modbus.device_info]
+VendorName = "Schneider Electric"
+ProductCode = "Modicon M340"
+MajorMinorRevision = "BMXP342020"
+
+[[modbus.slaves]]
+id = 1
+blocks = [
+  { name = "memoryModbusSlave1BlockA", type = "COILS", starting_address = 1, size = 8, content = "memoryModbusSlave1BlockA" },
+  { name = "memoryModbusSlave1BlockB", type = "DISCRETE_INPUTS", starting_address = 10001, size = 8, content = "memoryModbusSlave1BlockB" },
+  { name = "memoryModbusSlave1BlockC", type = "ANALOG_INPUTS", starting_address = 30001, size = 8, content = "memoryModbusSlave1BlockC" },
+  { name = "memoryModbusSlave1BlockD", type = "HOLDING_REGISTERS", starting_address = 40001, size = 8, content = "memoryModbusSlave1BlockD" },
+]

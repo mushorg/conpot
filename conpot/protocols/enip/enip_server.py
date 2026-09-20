@@ -19,8 +19,6 @@ import asyncio
 import logging
 import socket
 
-from lxml import etree
-
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.enip.enip_protocol import (
@@ -51,29 +49,28 @@ class EnipConfig(object):
             self.addr = addr
 
     def parse_template(self):
-        dom = etree.parse(self.template)
-        self.server_addr = dom.xpath("//enip/@host")[0]
-        self.server_port = int(dom.xpath("//enip/@port")[0])
-        self.vendor_id = int(dom.xpath("//enip/device_info/VendorId/text()")[0])
-        self.device_type = int(dom.xpath("//enip/device_info/DeviceType/text()")[0])
-        self.product_rev = int(
-            dom.xpath("//enip/device_info/ProductRevision/text()")[0]
-        )
-        self.product_code = int(dom.xpath("//enip/device_info/ProductCode/text()")[0])
-        self.product_name = dom.xpath("//enip/device_info/ProductName/text()")[0]
-        self.serial_number = dom.xpath("//enip/device_info/SerialNumber/text()")[0]
-        self.mode = dom.xpath("//enip/mode/text()")[0]
-        self.timeout = float(dom.xpath("//enip/timeout/text()")[0])
-        self.latency = float(dom.xpath("//enip/latency/text()")[0])
+        cfg = self.template
+        self.server_addr = cfg["host"]
+        self.server_port = int(cfg["port"])
+        info = cfg["device_info"]
+        self.vendor_id = int(info["VendorId"])
+        self.device_type = int(info["DeviceType"])
+        self.product_rev = int(info["ProductRevision"])
+        self.product_code = int(info["ProductCode"])
+        self.product_name = info["ProductName"]
+        self.serial_number = str(info["SerialNumber"])
+        self.mode = cfg["mode"]
+        self.timeout = float(cfg["timeout"])
+        self.latency = float(cfg["latency"])
 
         self.dtags = []
-        for t in dom.xpath("//enip/tags/tag"):
-            name = t.xpath("@name")[0]
-            type = t.xpath("type/text()")[0]
-            value = t.xpath("value/text()")[0]
-            addr = t.xpath("addr/text()")[0]
+        for t in cfg.get("tags", []):
+            name = t["name"]
+            type = t["type"]
+            value = t["value"]
+            addr = t["addr"]
             try:
-                size = int(t.xpath("size/text()")[0])
+                size = int(t["size"])
             except Exception:
                 raise AssertionError("Invalid tag size")
             self.dtags.append(self.Tag(name, type, size, value, addr))

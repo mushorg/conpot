@@ -1,0 +1,321 @@
+[snmp]
+enabled = true
+host = "0.0.0.0"
+port = 16100
+
+[[snmp.config]]
+name = "tarpit"
+command = "get"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "set"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "next"
+value = "0.0;0.1"
+
+[[snmp.config]]
+name = "tarpit"
+command = "bulk"
+value = "0.2;0.4"
+
+[[snmp.config]]
+name = "evasion"
+command = "get"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "set"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "next"
+value = "600;1200"
+
+[[snmp.config]]
+name = "evasion"
+command = "bulk"
+value = "120;240"
+
+[[snmp.mibs]]
+name = "SNMPv2-MIB"
+symbols = [
+    { "name" = "sysDescr", "value" = "SystemDescription" },
+    { "name" = "sysObjectID", "value" = "sysObjectID" },
+    { "name" = "sysUpTime", "value" = "Uptime" },
+    { "name" = "sysContact", "value" = "sysContact" },
+    { "name" = "sysLocation", "value" = "sysLocation" },
+    { "name" = "sysServices", "value" = "sysServices" },
+]
+
+[[snmp.mibs]]
+name = "IF-MIB"
+symbols = [
+    { "name" = "ifNumber", "value" = "1", "instance" = "0" },
+    { "name" = "ifIndex", "value" = "1", "instance" = "1" },
+    { "name" = "ifDescr", "value" = "ifDescr", "instance" = "1" },
+    { "name" = "ifType", "value" = "ifType", "instance" = "1" },
+    { "name" = "ifMtu", "value" = "ifMtu", "instance" = "1" },
+    { "name" = "ifSpeed", "value" = "ifSpeed", "instance" = "1" },
+    { "name" = "ifPhysAddress", "value" = "ifPhysAddress", "instance" = "1" },
+    { "name" = "ifAdminStatus", "value" = "ifAdminStatus", "instance" = "1" },
+    { "name" = "ifOperStatus", "value" = "ifOperStatus", "instance" = "1" },
+    { "name" = "ifLastChange", "value" = "ifLastChange", "instance" = "1" },
+    { "name" = "ifInOctets", "value" = "ifInOctets", "instance" = "1" },
+    { "name" = "ifInUcastPkts", "value" = "ifInUcastPkts", "instance" = "1" },
+    { "name" = "ifInNUcastPkts", "value" = "ifInNUcastPkts", "instance" = "1" },
+    { "name" = "ifInDiscards", "value" = "0", "instance" = "1" },
+    { "name" = "ifInErrors", "value" = "0", "instance" = "1" },
+    { "name" = "ifInUnknownProtos", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutOctets", "value" = "ifOutOctets", "instance" = "1" },
+    { "name" = "ifOutUcastPkts", "value" = "ifOutUcastPkts", "instance" = "1" },
+    { "name" = "ifOutUNcastPkts", "value" = "ifOutUNcastPkts", "instance" = "1" },
+    { "name" = "ifOutDiscards", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutErrors", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutQLen", "value" = "1", "instance" = "1" },
+    { "name" = "ifSpecific", "value" = "sysObjectID", "instance" = "1" },
+]
+
+[[snmp.mibs]]
+name = "IP-MIB"
+symbols = [
+    { "name" = "ipForwarding", "value" = "ipForwarding" },
+    { "name" = "ipDefaultTTL", "value" = "ipDefaultTTL" },
+    { "name" = "ipInReceives", "value" = "ipInReceives" },
+    { "name" = "ipInHdrErrors", "value" = "ipInHdrErrors" },
+    { "name" = "ipInAddrErrors", "value" = "ipInAddrErrors" },
+    { "name" = "ipForwDatagrams", "value" = "ipForwDatagrams" },
+    { "name" = "ipInUnknownProtos", "value" = "ipInUnknownProtos" },
+    { "name" = "ipInDiscards", "value" = "ipInDiscards" },
+    { "name" = "ipInDelivers", "value" = "ipInDelivers" },
+    { "name" = "ipOutRequests", "value" = "ipOutRequests" },
+    { "name" = "ipOutDiscards", "value" = "ipOutDiscards" },
+    { "name" = "ipOutNoRoutes", "value" = "ipOutNoRoutes" },
+    { "name" = "ipReasmTimeout", "value" = "ipReasmTimeout" },
+    { "name" = "ipReasmReqds", "value" = "ipReasmReqds" },
+    { "name" = "ipReasmOKs", "value" = "ipReasmOKs" },
+    { "name" = "ipReasmFails", "value" = "ipReasmFails" },
+    { "name" = "ipFragOKs", "value" = "ipFragOKs" },
+    { "name" = "ipFragFails", "value" = "ipFragFails" },
+    { "name" = "ipFragCreates", "value" = "ipFragCreates" },
+    { "name" = "ipAdEntAddr", "value" = "ipAdEntAddr", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntIfIndex", "value" = "ipAdEntIfIndex", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntNetMask", "value" = "ipAdEntNetMask", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntBcastAddr", "value" = "ipAdEntBcastAddr", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntReasmMaxSize", "value" = "ipAdEntReasmMaxSize", "instance" = "163.172.189.137" },
+    { "name" = "icmpInMsgs", "value" = "icmpInMsgs" },
+    { "name" = "icmpInErrors", "value" = "icmpInErrors" },
+    { "name" = "icmpInDestUnreachs", "value" = "icmpInDestUnreachs" },
+    { "name" = "icmpInTimeExcds", "value" = "icmpInTimeExcds" },
+    { "name" = "icmpInParmProbs", "value" = "icmpInParmProbs" },
+    { "name" = "icmpInSrcQuenchs", "value" = "icmpInSrcQuenchs" },
+    { "name" = "icmpInRedirects", "value" = "icmpInRedirects" },
+    { "name" = "icmpInEchos", "value" = "icmpInEchos" },
+    { "name" = "icmpInEchoReps", "value" = "icmpInEchoReps" },
+    { "name" = "icmpInTimestamps", "value" = "icmpInTimestamps" },
+    { "name" = "icmpInTimestampReps", "value" = "icmpInTimestampReps" },
+    { "name" = "icmpInAddrMasks", "value" = "icmpInAddrMasks" },
+    { "name" = "icmpInAddrMaskReps", "value" = "icmpInAddrMaskReps" },
+    { "name" = "icmpOutMsgs", "value" = "icmpOutMsgs" },
+    { "name" = "icmpOutErrors", "value" = "icmpOutErrors" },
+    { "name" = "icmpOutDestUnreachs", "value" = "icmpOutDestUnreachs" },
+    { "name" = "icmpOutTimeExcds", "value" = "icmpOutTimeExcds" },
+    { "name" = "icmpOutParmProbs", "value" = "icmpOutParmProbs" },
+    { "name" = "icmpOutSrcQuenchs", "value" = "icmpOutSrcQuenchs" },
+    { "name" = "icmpOutRedirects", "value" = "icmpOutRedirects" },
+    { "name" = "icmpOutEchos", "value" = "icmpOutEchos" },
+    { "name" = "icmpOutEchoReps", "value" = "icmpOutEchoReps" },
+    { "name" = "icmpOutTimestamps", "value" = "icmpOutTimestamps" },
+    { "name" = "icmpOutTimestampReps", "value" = "icmpOutTimestampReps" },
+    { "name" = "icmpOutAddrMasks", "value" = "icmpOutAddrMasks" },
+    { "name" = "icmpOutAddrMaskReps", "value" = "icmpOutAddrMaskReps" },
+]
+
+[[snmp.mibs]]
+name = "TCP-MIB"
+symbols = [
+    { "name" = "tcpRtoAlgorithm", "value" = "tcpRtoAlgorithm" },
+    { "name" = "tcpRtoMin", "value" = "tcpRtoMin" },
+    { "name" = "tcpRtoMax", "value" = "tcpRtoMax" },
+    { "name" = "tcpMaxConn", "value" = "tcpMaxConn" },
+    { "name" = "tcpActiveOpens", "value" = "tcpActiveOpens" },
+    { "name" = "tcpPassiveOpens", "value" = "tcpPassiveOpens" },
+    { "name" = "tcpAttemptFails", "value" = "tcpAttemptFails" },
+    { "name" = "tcpEstabResets", "value" = "tcpEstabResets" },
+    { "name" = "tcpCurrEstab", "value" = "tcpCurrEstab" },
+    { "name" = "tcpInSegs", "value" = "tcpInSegs" },
+    { "name" = "tcpOutSegs", "value" = "tcpOutSegs" },
+    { "name" = "tcpRetransSegs", "value" = "tcpRetransSegs" },
+    { "name" = "tcpConnState", "value" = "tcpConnState", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnLocalAddress", "value" = "tcpConnLocalAddress", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnLocalPort", "value" = "tcpConnLocalPort", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnRemAddress", "value" = "tcpConnRemAddress", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnRemPort", "value" = "tcpConnRemPort", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+]
+
+[[snmp.mibs]]
+name = "UDP-MIB"
+symbols = [
+    { "name" = "udpInDatagrams", "value" = "udpInDatagrams" },
+    { "name" = "udpNoPorts", "value" = "udpNoPorts" },
+    { "name" = "udpInErrors", "value" = "udpInErrors" },
+    { "name" = "udpOutDatagrams", "value" = "udpOutDatagrams" },
+    { "name" = "udpLocalAddress", "value" = "udpLocalAddress", "instance" = "163.172.189.137.161" },
+    { "name" = "udpLocalPort", "value" = "udpLocalPort", "instance" = "163.172.189.137.161" },
+]
+
+[[snmp.mibs]]
+name = "HOST-RESOURCES-MIB"
+symbols = [
+    { "name" = "hrSystemUptime", "value" = "hrSystemUptime" },
+    { "name" = "hrSystemDate", "value" = "hrSystemDate" },
+    { "name" = "hrSystemInitialLoadDevice", "value" = "hrSystemInitialLoadDevice" },
+    { "name" = "hrSystemInitialLoadParameters", "value" = "hrSystemInitialLoadParameters" },
+    { "name" = "hrSystemNumUsers", "value" = "hrSystemNumUsers" },
+    { "name" = "hrSystemProcesses", "value" = "hrSystemProcesses" },
+    { "name" = "hrSystemMaxProcesses", "value" = "hrSystemMaxProcesses" },
+    { "name" = "hrMemorySize", "value" = "hrMemorySize" },
+    { "name" = "hrStorageIndex", "value" = "hrStorageIndex0", "instance" = "0" },
+    { "name" = "hrStorageIndex", "value" = "hrStorageIndex1", "instance" = "1" },
+    { "name" = "hrStorageDescr", "value" = "hrStorageDescr0", "instance" = "0" },
+    { "name" = "hrStorageDescr", "value" = "hrStorageDescr1", "instance" = "1" },
+    { "name" = "hrStorageAllocationUnits", "value" = "hrStorageAllocationUnits0", "instance" = "0" },
+    { "name" = "hrStorageAllocationUnits", "value" = "hrStorageAllocationUnits1", "instance" = "1" },
+    { "name" = "hrStorageSize", "value" = "hrStorageSize0", "instance" = "0" },
+    { "name" = "hrStorageSize", "value" = "hrStorageSize1", "instance" = "1" },
+    { "name" = "hrStorageUsed", "value" = "hrStorageUsed0", "instance" = "0" },
+    { "name" = "hrStorageUsed", "value" = "hrStorageUsed1", "instance" = "1" },
+    { "name" = "hrStorageAllocationFailures", "value" = "hrStorageAllocationFailures0", "instance" = "0" },
+    { "name" = "hrStorageAllocationFailures", "value" = "hrStorageAllocationFailures1", "instance" = "1" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex1", "instance" = "1" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex2", "instance" = "2" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex3", "instance" = "3" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex4", "instance" = "4" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex5", "instance" = "5" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex6", "instance" = "6" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex7", "instance" = "7" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex8", "instance" = "8" },
+    { "name" = "hrDeviceIndex", "value" = "hrDeviceIndex9", "instance" = "9" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr1", "instance" = "1" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr2", "instance" = "2" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr3", "instance" = "3" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr4", "instance" = "4" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr5", "instance" = "5" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr6", "instance" = "6" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr7", "instance" = "7" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr8", "instance" = "8" },
+    { "name" = "hrDeviceDescr", "value" = "hrDeviceDescr9", "instance" = "9" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus1", "instance" = "1" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus2", "instance" = "2" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus3", "instance" = "3" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus4", "instance" = "4" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus5", "instance" = "5" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus6", "instance" = "6" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus7", "instance" = "7" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus8", "instance" = "8" },
+    { "name" = "hrDeviceStatus", "value" = "hrDeviceStatus9", "instance" = "9" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors1", "instance" = "1" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors2", "instance" = "2" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors3", "instance" = "3" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors4", "instance" = "4" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors5", "instance" = "5" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors6", "instance" = "6" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors7", "instance" = "7" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors8", "instance" = "8" },
+    { "name" = "hrDeviceErrors", "value" = "hrDeviceErrors9", "instance" = "9" },
+    { "name" = "hrProcessorLoad", "value" = "hrProcessorLoad" },
+    { "name" = "hrNetworkIfIndex", "value" = "hrNetworkIfIndex2", "instance" = "2" },
+    { "name" = "hrNetworkIfIndex", "value" = "hrNetworkIfIndex3", "instance" = "3" },
+    { "name" = "hrNetworkIfIndex", "value" = "hrNetworkIfIndex4", "instance" = "4" },
+    { "name" = "hrNetworkIfIndex", "value" = "hrNetworkIfIndex5", "instance" = "5" },
+    { "name" = "hrNetworkIfIndex", "value" = "hrNetworkIfIndex6", "instance" = "6" },
+    { "name" = "hrDiskStorageAccess", "value" = "hrDiskStorageAccess7", "instance" = "7" },
+    { "name" = "hrDiskStorageMedia", "value" = "hrDiskStorageMedia7", "instance" = "7" },
+    { "name" = "hrDiskStorageRemoveble", "value" = "hrDiskStorageRemoveble7", "instance" = "7" },
+    { "name" = "hrDiskStorageCapacity", "value" = "hrDiskStorageCapacity7", "instance" = "7" },
+    { "name" = "hrFSIndex", "value" = "hrFSIndex1", "instance" = "1" },
+    { "name" = "hrFSMountPoint", "value" = "hrFSMountPoint1", "instance" = "1" },
+    { "name" = "hrFSRemoteMountPoint", "value" = "hrFSRemoteMountPoint1", "instance" = "1" },
+    { "name" = "hrFSAccess", "value" = "hrFSAccess1", "instance" = "1" },
+    { "name" = "hrFSBootable", "value" = "hrFSBootable1", "instance" = "1" },
+    { "name" = "hrFSStorageIndex", "value" = "hrFSStorageIndex1", "instance" = "1" },
+    { "name" = "hrFSLastFullBackupDate", "value" = "hrFSLastFullBackupDate1", "instance" = "1" },
+    { "name" = "hrFSLastPartialBackupDate", "value" = "hrFSLastPartialBackupDate1", "instance" = "1" },
+    { "name" = "hrSWOSIndex", "value" = "hrSWOSIndex0", "instance" = "0" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunIndex", "value" = "hrSWRunIndex97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunPath", "value" = "hrSWRunPath97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunParameters", "value" = "hrSWRunParameters97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunType", "value" = "hrSWRunType97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunStatus", "value" = "hrSWRunStatus97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunPerfCPU", "value" = "hrSWRunPerfCPU97058862", "instance" = "97058862" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem4194306", "instance" = "4194306" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem8126482", "instance" = "8126482" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem17891378", "instance" = "17891378" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem73728034", "instance" = "73728034" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem76939274", "instance" = "76939274" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem77201418", "instance" = "77201418" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem78446594", "instance" = "78446594" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem88211530", "instance" = "88211530" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem93782086", "instance" = "93782086" },
+    { "name" = "hrSWRunPerfMem", "value" = "hrSWRunPerfMem97058862", "instance" = "97058862" },
+]

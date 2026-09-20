@@ -23,7 +23,6 @@ import logging
 
 from bacpypes3.errors import DecodingError
 from bacpypes3.object import DeviceObject
-from lxml import etree
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
@@ -35,33 +34,27 @@ from conpot.utils.networking import get_interface_ip
 logger = logging.getLogger(__name__)
 
 
-def build_device_object(dom):
-    """Build the local device object from a BACnet template DOM."""
-    device_info_root = dom.xpath("//bacnet/device_info")[0]
-    name_key = device_info_root.xpath("./device_name/text()")[0]
-    id_key = device_info_root.xpath("./device_identifier/text()")[0]
-    vendor_name_key = device_info_root.xpath("./vendor_name/text()")[0]
-    vendor_identifier_key = device_info_root.xpath("./vendor_identifier/text()")[0]
-    apdu_length_key = device_info_root.xpath("./max_apdu_length_accepted/text()")[0]
-    segmentation_key = device_info_root.xpath("./segmentation_supported/text()")[0]
+def build_device_object(template):
+    """Build the local device object from a BACnet template dict."""
+    device_info = template["device_info"]
     return DeviceObject(
-        objectName=name_key,
-        objectIdentifier=("device", int(id_key)),
-        maxApduLengthAccepted=int(apdu_length_key),
-        segmentationSupported=segmentation_key,
-        vendorName=vendor_name_key,
-        vendorIdentifier=int(vendor_identifier_key),
+        objectName=str(device_info["device_name"]),
+        objectIdentifier=("device", int(device_info["device_identifier"])),
+        maxApduLengthAccepted=int(device_info["max_apdu_length_accepted"]),
+        segmentationSupported=str(device_info["segmentation_supported"]),
+        vendorName=str(device_info["vendor_name"]),
+        vendorIdentifier=int(device_info["vendor_identifier"]),
     )
 
 
 @conpot_protocol
 class BacnetServer(object):
     def __init__(self, template, template_directory, args):
-        self.dom = etree.parse(template)
-        self.thisDevice = build_device_object(self.dom)
+        self.template = template
+        self.thisDevice = build_device_object(template)
         self.bacnet_app = None
         self.server = None  # Initialize later
-        logger.info("Conpot Bacnet initialized using the %s template.", template)
+        logger.info("Conpot Bacnet initialized")
 
     def sendto(self, data, address):
         """BACnetApp sends replies through the bound UDP facade."""
@@ -116,7 +109,7 @@ class BacnetServer(object):
         # BACnetApp needs .sendto on its datagram_server; we expose it on self
         # and the UDP facade (self.server) is assigned before ready is set.
         self.bacnet_app = BACnetApp(self.thisDevice, self)
-        self.bacnet_app.get_objects_and_properties(self.dom)
+        self.bacnet_app.get_objects_and_properties(self.template)
         logger.info("Bacnet server started on: %s", (host, port))
         # Exclusive bind (reuse_address=False) so scanners such as nmap
         # bacnet-info cannot also bind UDP/47808 and read their own probes.

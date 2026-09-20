@@ -89,10 +89,7 @@ async def _async_main(args, config, root_template_directory, template, template_
     session_manager = conpot_core.get_sessionManager()
     session_manager.attach_event_loop(loop)
 
-    if isinstance(template, dict):
-        conpot_core.get_databus().initialize(template)
-    else:
-        conpot_core.get_databus().initialize(template_base)
+    conpot_core.get_databus().initialize(template)
 
     fs_url = config.get("virtual_file_system", "fs_url")
     data_fs_url = config.get("virtual_file_system", "data_fs_url")

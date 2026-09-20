@@ -1,0 +1,171 @@
+[snmp]
+enabled = true
+host = "0.0.0.0"
+port = 16100
+
+[[snmp.config]]
+name = "tarpit"
+command = "get"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "set"
+value = "0.1;0.2"
+
+[[snmp.config]]
+name = "tarpit"
+command = "next"
+value = "0.0;0.1"
+
+[[snmp.config]]
+name = "tarpit"
+command = "bulk"
+value = "0.2;0.4"
+
+[[snmp.config]]
+name = "evasion"
+command = "get"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "set"
+value = "120;240"
+
+[[snmp.config]]
+name = "evasion"
+command = "next"
+value = "240;600"
+
+[[snmp.config]]
+name = "evasion"
+command = "bulk"
+value = "120;240"
+
+[[snmp.mibs]]
+name = "SNMPv2-MIB"
+symbols = [
+    { "name" = "sysDescr", "value" = "SystemDescription" },
+    { "name" = "sysObjectID", "value" = "sysObjectID" },
+    { "name" = "sysUpTime", "value" = "Uptime" },
+    { "name" = "sysContact", "value" = "sysContact" },
+    { "name" = "sysLocation", "value" = "sysLocation" },
+    { "name" = "sysServices", "value" = "sysServices" },
+]
+
+[[snmp.mibs]]
+name = "IF-MIB"
+symbols = [
+    { "name" = "ifNumber", "value" = "1", "instance" = "0" },
+    { "name" = "ifIndex", "value" = "1", "instance" = "1" },
+    { "name" = "ifDescr", "value" = "ifDescr", "instance" = "1" },
+    { "name" = "ifType", "value" = "ifType", "instance" = "1" },
+    { "name" = "ifMtu", "value" = "ifMtu", "instance" = "1" },
+    { "name" = "ifSpeed", "value" = "ifSpeed", "instance" = "1" },
+    { "name" = "ifPhysAddress", "value" = "ifPhysAddress", "instance" = "1" },
+    { "name" = "ifAdminStatus", "value" = "ifAdminStatus", "instance" = "1" },
+    { "name" = "ifOperStatus", "value" = "ifOperStatus", "instance" = "1" },
+    { "name" = "ifLastChange", "value" = "ifLastChange", "instance" = "1" },
+    { "name" = "ifInOctets", "value" = "ifInOctets", "instance" = "1" },
+    { "name" = "ifInUcastPkts", "value" = "ifInUcastPkts", "instance" = "1" },
+    { "name" = "ifInNUcastPkts", "value" = "ifInNUcastPkts", "instance" = "1" },
+    { "name" = "ifInDiscards", "value" = "0", "instance" = "1" },
+    { "name" = "ifInErrors", "value" = "0", "instance" = "1" },
+    { "name" = "ifInUnknownProtos", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutOctets", "value" = "ifOutOctets", "instance" = "1" },
+    { "name" = "ifOutUcastPkts", "value" = "ifOutUcastPkts", "instance" = "1" },
+    { "name" = "ifOutUNcastPkts", "value" = "ifOutUNcastPkts", "instance" = "1" },
+    { "name" = "ifOutDiscards", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutErrors", "value" = "0", "instance" = "1" },
+    { "name" = "ifOutQLen", "value" = "1", "instance" = "1" },
+    { "name" = "ifSpecific", "value" = "sysObjectID", "instance" = "1" },
+]
+
+[[snmp.mibs]]
+name = "IP-MIB"
+symbols = [
+    { "name" = "ipForwarding", "value" = "ipForwarding" },
+    { "name" = "ipDefaultTTL", "value" = "ipDefaultTTL" },
+    { "name" = "ipInReceives", "value" = "ipInReceives" },
+    { "name" = "ipInHdrErrors", "value" = "ipInHdrErrors" },
+    { "name" = "ipInAddrErrors", "value" = "ipInAddrErrors" },
+    { "name" = "ipForwDatagrams", "value" = "ipForwDatagrams" },
+    { "name" = "ipInUnknownProtos", "value" = "ipInUnknownProtos" },
+    { "name" = "ipInDiscards", "value" = "ipInDiscards" },
+    { "name" = "ipInDelivers", "value" = "ipInDelivers" },
+    { "name" = "ipOutRequests", "value" = "ipOutRequests" },
+    { "name" = "ipOutDiscards", "value" = "ipOutDiscards" },
+    { "name" = "ipOutNoRoutes", "value" = "ipOutNoRoutes" },
+    { "name" = "ipReasmTimeout", "value" = "ipReasmTimeout" },
+    { "name" = "ipReasmReqds", "value" = "ipReasmReqds" },
+    { "name" = "ipReasmOKs", "value" = "ipReasmOKs" },
+    { "name" = "ipReasmFails", "value" = "ipReasmFails" },
+    { "name" = "ipFragOKs", "value" = "ipFragOKs" },
+    { "name" = "ipFragFails", "value" = "ipFragFails" },
+    { "name" = "ipFragCreates", "value" = "ipFragCreates" },
+    { "name" = "ipAdEntAddr", "value" = "ipAdEntAddr", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntIfIndex", "value" = "ipAdEntIfIndex", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntNetMask", "value" = "ipAdEntNetMask", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntBcastAddr", "value" = "ipAdEntBcastAddr", "instance" = "163.172.189.137" },
+    { "name" = "ipAdEntReasmMaxSize", "value" = "ipAdEntReasmMaxSize", "instance" = "163.172.189.137" },
+    { "name" = "icmpInMsgs", "value" = "icmpInMsgs" },
+    { "name" = "icmpInErrors", "value" = "icmpInErrors" },
+    { "name" = "icmpInDestUnreachs", "value" = "icmpInDestUnreachs" },
+    { "name" = "icmpInTimeExcds", "value" = "icmpInTimeExcds" },
+    { "name" = "icmpInParmProbs", "value" = "icmpInParmProbs" },
+    { "name" = "icmpInSrcQuenchs", "value" = "icmpInSrcQuenchs" },
+    { "name" = "icmpInRedirects", "value" = "icmpInRedirects" },
+    { "name" = "icmpInEchos", "value" = "icmpInEchos" },
+    { "name" = "icmpInEchoReps", "value" = "icmpInEchoReps" },
+    { "name" = "icmpInTimestamps", "value" = "icmpInTimestamps" },
+    { "name" = "icmpInTimestampReps", "value" = "icmpInTimestampReps" },
+    { "name" = "icmpInAddrMasks", "value" = "icmpInAddrMasks" },
+    { "name" = "icmpInAddrMaskReps", "value" = "icmpInAddrMaskReps" },
+    { "name" = "icmpOutMsgs", "value" = "icmpOutMsgs" },
+    { "name" = "icmpOutErrors", "value" = "icmpOutErrors" },
+    { "name" = "icmpOutDestUnreachs", "value" = "icmpOutDestUnreachs" },
+    { "name" = "icmpOutTimeExcds", "value" = "icmpOutTimeExcds" },
+    { "name" = "icmpOutParmProbs", "value" = "icmpOutParmProbs" },
+    { "name" = "icmpOutSrcQuenchs", "value" = "icmpOutSrcQuenchs" },
+    { "name" = "icmpOutRedirects", "value" = "icmpOutRedirects" },
+    { "name" = "icmpOutEchos", "value" = "icmpOutEchos" },
+    { "name" = "icmpOutEchoReps", "value" = "icmpOutEchoReps" },
+    { "name" = "icmpOutTimestamps", "value" = "icmpOutTimestamps" },
+    { "name" = "icmpOutTimestampReps", "value" = "icmpOutTimestampReps" },
+    { "name" = "icmpOutAddrMasks", "value" = "icmpOutAddrMasks" },
+    { "name" = "icmpOutAddrMaskReps", "value" = "icmpOutAddrMaskReps" },
+]
+
+[[snmp.mibs]]
+name = "TCP-MIB"
+symbols = [
+    { "name" = "tcpRtoAlgorithm", "value" = "tcpRtoAlgorithm" },
+    { "name" = "tcpRtoMin", "value" = "tcpRtoMin" },
+    { "name" = "tcpRtoMax", "value" = "tcpRtoMax" },
+    { "name" = "tcpMaxConn", "value" = "tcpMaxConn" },
+    { "name" = "tcpActiveOpens", "value" = "tcpActiveOpens" },
+    { "name" = "tcpPassiveOpens", "value" = "tcpPassiveOpens" },
+    { "name" = "tcpAttemptFails", "value" = "tcpAttemptFails" },
+    { "name" = "tcpEstabResets", "value" = "tcpEstabResets" },
+    { "name" = "tcpCurrEstab", "value" = "tcpCurrEstab" },
+    { "name" = "tcpInSegs", "value" = "tcpInSegs" },
+    { "name" = "tcpOutSegs", "value" = "tcpOutSegs" },
+    { "name" = "tcpRetransSegs", "value" = "tcpRetransSegs" },
+    { "name" = "tcpConnState", "value" = "tcpConnState", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnLocalAddress", "value" = "tcpConnLocalAddress", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnLocalPort", "value" = "tcpConnLocalPort", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnRemAddress", "value" = "tcpConnRemAddress", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+    { "name" = "tcpConnRemPort", "value" = "tcpConnRemPort", "instance" = "163.172.189.137.2404.0.0.0.0.0" },
+]
+
+[[snmp.mibs]]
+name = "UDP-MIB"
+symbols = [
+    { "name" = "udpInDatagrams", "value" = "udpInDatagrams" },
+    { "name" = "udpNoPorts", "value" = "udpNoPorts" },
+    { "name" = "udpInErrors", "value" = "udpInErrors" },
+    { "name" = "udpOutDatagrams", "value" = "udpOutDatagrams" },
+    { "name" = "udpLocalAddress", "value" = "udpLocalAddress", "instance" = "163.172.189.137.161" },
+    { "name" = "udpLocalPort", "value" = "udpLocalPort", "instance" = "163.172.189.137.161" },
+]

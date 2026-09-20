@@ -11,7 +11,7 @@ attribute and a ``<value>`` child. The text of ``<value>`` is a **databus key**,
 Conpot resolves that key from the template's ``<databus>`` / ``<key_value_mappings>`` section at startup.
 If the key is missing, SNMP fails to start with an ``AssertionError``.
 
-Define the payload on the databus first (in ``template.toml`` or legacy ``template.xml``):
+Define the payload on the databus first (in ``template.toml`` ):
 
 .. code-block:: toml
 

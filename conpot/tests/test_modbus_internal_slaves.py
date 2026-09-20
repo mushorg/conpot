@@ -9,7 +9,6 @@
 
 import asyncio
 import os
-import tempfile
 import threading
 import unittest
 
@@ -30,67 +29,73 @@ from conpot.utils.greenlet import AsyncioTaskHandle, teardown_test_server
 PACKAGE_DIR = os.path.dirname(os.path.abspath(conpot.__file__))
 
 
-def _write_tcp_mode_template(path):
+def _tcp_mode_template():
     """Minimal template: mode=tcp with two distinct internal slaves."""
-    xml = """\
-<modbus enabled="True" host="0.0.0.0" port="0">
-    <device_info>
-        <VendorName>Test</VendorName>
-        <ProductCode>Internal</ProductCode>
-        <MajorMinorRevision>1.0</MajorMinorRevision>
-    </device_info>
-    <mode>tcp</mode>
-    <delay>100</delay>
-    <slaves>
-        <slave id="1">
-            <blocks>
-                <block name="memoryModbusSlave1BlockA">
-                    <type>COILS</type>
-                    <starting_address>1</starting_address>
-                    <size>8</size>
-                    <content>memoryModbusSlave1BlockA</content>
-                </block>
-            </blocks>
-        </slave>
-        <slave id="2">
-            <blocks>
-                <block name="memoryModbusSlave2BlockD">
-                    <type>HOLDING_REGISTERS</type>
-                    <starting_address>40001</starting_address>
-                    <size>8</size>
-                    <content>memoryModbusSlave2BlockD</content>
-                </block>
-            </blocks>
-        </slave>
-        <slave id="255">
-            <blocks>
-                <block name="memoryModbusSlave255BlockA">
-                    <type>COILS</type>
-                    <starting_address>1</starting_address>
-                    <size>8</size>
-                    <content>memoryModbusSlave255BlockA</content>
-                </block>
-            </blocks>
-        </slave>
-    </slaves>
-</modbus>
-"""
-    with open(path, "w") as fh:
-        fh.write(xml)
+    return {
+        "enabled": True,
+        "host": "0.0.0.0",
+        "port": 0,
+        "mode": "tcp",
+        "delay": 100,
+        "umas_enabled": False,
+        "device_info": {
+            "VendorName": "Test",
+            "ProductCode": "Internal",
+            "MajorMinorRevision": "1.0",
+        },
+        "slaves": [
+            {
+                "id": 1,
+                "blocks": [
+                    {
+                        "name": "memoryModbusSlave1BlockA",
+                        "type": "COILS",
+                        "starting_address": 1,
+                        "size": 8,
+                        "content": "memoryModbusSlave1BlockA",
+                    }
+                ],
+            },
+            {
+                "id": 2,
+                "blocks": [
+                    {
+                        "name": "memoryModbusSlave2BlockD",
+                        "type": "HOLDING_REGISTERS",
+                        "starting_address": 40001,
+                        "size": 8,
+                        "content": "memoryModbusSlave2BlockD",
+                    }
+                ],
+            },
+            {
+                "id": 255,
+                "blocks": [
+                    {
+                        "name": "memoryModbusSlave255BlockA",
+                        "type": "COILS",
+                        "starting_address": 1,
+                        "size": 8,
+                        "content": "memoryModbusSlave255BlockA",
+                    }
+                ],
+            },
+        ],
+    }
 
 
 class TestModbusInternalSlaves(unittest.TestCase):
     def setUp(self):
         conpot_core.get_sessionManager().purge_sessions()
         template_dir = os.path.join(PACKAGE_DIR, "templates", "default")
-        conpot_core.get_databus().initialize(os.path.join(template_dir, "template.xml"))
+        from conpot.templates.parse import parse_toml_config
 
-        self.tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False)
-        self.tmp.close()
-        _write_tcp_mode_template(self.tmp.name)
+        conpot_core.get_databus().initialize(
+            parse_toml_config(os.path.join(template_dir, "template.toml"))
+        )
 
         self.modbus = modbus_server.ModbusServer(
-            template=self.tmp.name, template_directory=template_dir, args=None
+            template=_tcp_mode_template(), template_directory=template_dir, args=None
         )
 
         loop = asyncio.new_event_loop()
@@ -135,7 +140,6 @@ class TestModbusInternalSlaves(unittest.TestCase):
 
     def tearDown(self):
         teardown_test_server(self.modbus, self.greenlet)
-        os.unlink(self.tmp.name)
         conpot_core.get_sessionManager().purge_sessions()
 
     def test_tcp_mode_serves_configured_unit_ids(self):

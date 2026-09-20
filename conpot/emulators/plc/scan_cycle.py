@@ -39,7 +39,7 @@ def _make_engine(engine_name):
 class PlcScanCycle:
     """Cyclic PLC scan over databus lists that Modbus already serves.
 
-    Constructor args match ``type="function"`` ``param`` lists in template.xml.
+    Constructor args match ``{ function = "..." [, params = [...]] }`` in template.toml.
     """
 
     def __init__(

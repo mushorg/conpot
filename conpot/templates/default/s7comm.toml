@@ -1,0 +1,48 @@
+[s7comm]
+enabled = true
+host = "0.0.0.0"
+port = 10201
+
+[[s7comm.system_status_lists]]
+id = "W#16#xy1C"
+name = "Component Identification"
+items = [
+  { id = "W#16#0001", name = "system_name", value = "SystemName" },
+  { id = "W#16#0002", name = "module_name", value = "SystemDescription" },
+  { id = "W#16#0003", name = "plant_ident", value = "FacilityName" },
+  { id = "W#16#0004", name = "copyright", value = "Copyright" },
+  { id = "W#16#0005", name = "serial", value = "s7_id" },
+  { id = "W#16#0007", name = "module_type_name", value = "s7_module_type" },
+  { id = "W#16#000A", name = "oem_id", value = "empty" },
+  { id = "W#16#000B", name = "location", value = "empty" },
+]
+
+[[s7comm.system_status_lists]]
+id = "W#16#xy11"
+name = "Module Identification"
+items = [
+  { id = "W#16#0001", name = "module_identification", value = "empty" },
+  { id = "W#16#0006", name = "hardware_identification", value = "empty" },
+  { id = "W#16#0006", name = "firmware_identification", value = "empty" },
+]
+
+[[s7comm.memory_areas]]
+type = "DB"
+number = 1
+name = "s7_db1"
+size = 256
+
+[[s7comm.memory_areas]]
+type = "M"
+name = "s7_merkers"
+size = 128
+
+[[s7comm.memory_areas]]
+type = "I"
+name = "s7_inputs"
+size = 32
+
+[[s7comm.memory_areas]]
+type = "Q"
+name = "s7_outputs"
+size = 32
