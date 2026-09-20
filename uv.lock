@@ -232,6 +232,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cm-ethernetip"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/fc/0efa72432551e719e6493fd31651cb3fdbcd4f21899cf00e0540f5181eff/cm_ethernetip-0.1.0.tar.gz", hash = "sha256:91f0df97cf118f21d0dd70e30a91052fd39dde1e34a222440085c83a571dac2e", size = 105145, upload-time = "2026-07-26T08:36:00.847Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6a/ec/f62ae0b7d467cbe3a5f8181d88752c899e7d9d27ec98e1de7a690c7309fa/cm_ethernetip-0.1.0-py3-none-any.whl", hash = "sha256:483621941d3c0a36919d3f8ccb4bf963629f62a874b09c6c3752358eef365760", size = 124680, upload-time = "2026-07-26T08:35:59.106Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -245,7 +254,7 @@ name = "conpot"
 source = { editable = "." }
 dependencies = [
     { name = "bacpypes3" },
-    { name = "cpppo" },
+    { name = "cm-ethernetip" },
     { name = "crc16" },
     { name = "cryptography" },
     { name = "cybox" },
@@ -286,7 +295,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "bacpypes3", specifier = "==0.0.108" },
-    { name = "cpppo" },
+    { name = "cm-ethernetip", specifier = "==0.1.0" },
     { name = "crc16" },
     { name = "cryptography", specifier = "==50.0.0" },
     { name = "cybox" },
@@ -325,41 +334,10 @@ dev = [
 ]
 
 [[package]]
-name = "cpppo"
-version = "5.2.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "crypto-licensing" },
-    { name = "greenery" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/43/f8bb5715de6f74a3cd5766bf1725a09a2230a8cd742d8333d28a40d65c49/cpppo-5.2.5.tar.gz", hash = "sha256:4b2b86a61e15fce9df865a023dcf839f57d4a7ba2da6ea33dbf300f5ddf7fea2", size = 498091, upload-time = "2025-02-18T17:52:22.982Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/0f/f13562e48b28efdbc418d52a3ab37c25d7d24e4ed461dfd1a61c78cf36c5/cpppo-5.2.5-py3-none-any.whl", hash = "sha256:0257ba393f1e2bdd06ea712cead740e496c802b3e5275c1995ee2df31f29ed1c", size = 472444, upload-time = "2025-02-18T17:52:20.14Z" },
-]
-
-[[package]]
 name = "crc16"
 version = "0.1.1"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/a6/e0/70a44c4385f2b33df82e518005aae16b5c1feaf082c73c0acebe3426fc0a/crc16-0.1.1.tar.gz", hash = "sha256:c1f86aa0390f4baf07d2631b16b979580eae1d9a973a826ce45353a22ee8d396", size = 9631, upload-time = "2011-06-04T23:20:40.62Z" }
-
-[[package]]
-name = "crypto-licensing"
-version = "6.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "dnspython" },
-    { name = "pycryptodome" },
-    { name = "pytz-deprecation-shim" },
-    { name = "requests" },
-    { name = "requests-toolbelt" },
-    { name = "tzlocal" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/49/f9/1cbafde5eca701ba6ff30733fab922b3c04e9fe0b6fb0d20fec22a823a1f/crypto_licensing-6.0.1.tar.gz", hash = "sha256:44beb6811fab410b75a8267afd90f56cb00fa9670eda5dc7f1130b20e5bcf287", size = 151371, upload-time = "2026-01-12T13:43:01.966Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/fb/53c6387edb3b5860e45e3846559706405dfbe53a33eb8df68e3f0aa80ce5/crypto_licensing-6.0.1-py3-none-any.whl", hash = "sha256:4e1eb913d20194b76db880192cdbf3b7967408074339abe70ee2ca0aa53c16f9", size = 156297, upload-time = "2026-01-12T13:43:00.229Z" },
-]
 
 [[package]]
 name = "cryptography"
@@ -426,15 +404,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dnspython"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08bcafa776861060426765fdb422eb10212086fb811d26/dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f", size = 368251, upload-time = "2025-09-07T18:58:00.022Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
-]
-
-[[package]]
 name = "docutils"
 version = "0.22.4"
 source = { registry = "https://pypi.org/simple" }
@@ -495,12 +464,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d4/cb/c2fea129f29ca114dc63f53178337845ba63532e07979c10fd70635a6dde/gevent-26.8.0-cp315-cp315-win_amd64.whl", hash = "sha256:b16931069d0044a23a566d16dc5787122e858fa9d591c81500b6e6ad2148cfec", size = 1716882, upload-time = "2026-08-10T17:00:09.172Z" },
     { url = "https://files.pythonhosted.org/packages/29/f4/b4de17304026cbd6386d427bc5ece10ec65015e9bfd66e14672350ee5dfb/gevent-26.8.0-cp315-cp315-win_arm64.whl", hash = "sha256:42b8ed34f7aff517fac448ab57084e5e39d6a84a2b6c2b709223d5751c85e657", size = 1594517, upload-time = "2026-08-10T17:00:47.046Z" },
 ]
-
-[[package]]
-name = "greenery"
-version = "2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/48/24/7e19b1939370b0b0ed301af37f12124cd9c03db43bfcc2101d88d877e3c8/greenery-2.1.tar.gz", hash = "sha256:759c3bf40b6fe6ef0a6b373230d07470e0e315f32bcdbaf381901b0d8a6f91d1", size = 30087, upload-time = "2014-10-17T22:42:33.049Z" }
 
 [[package]]
 name = "greenlet"
@@ -851,25 +814,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pycryptodome"
-version = "3.23.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8e/a6/8452177684d5e906854776276ddd34eca30d1b1e15aa1ee9cefc289a33f5/pycryptodome-3.23.0.tar.gz", hash = "sha256:447700a657182d60338bab09fdb27518f8856aecd80ae4c6bdddb67ff5da44ef", size = 4921276, upload-time = "2025-05-17T17:21:45.242Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/6c/a1f71542c969912bb0e106f64f60a56cc1f0fabecf9396f45accbe63fa68/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:187058ab80b3281b1de11c2e6842a357a1f71b42cb1e15bce373f3d238135c27", size = 2495627, upload-time = "2025-05-17T17:20:47.139Z" },
-    { url = "https://files.pythonhosted.org/packages/6e/4e/a066527e079fc5002390c8acdd3aca431e6ea0a50ffd7201551175b47323/pycryptodome-3.23.0-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:cfb5cd445280c5b0a4e6187a7ce8de5a07b5f3f897f235caa11f1f435f182843", size = 1640362, upload-time = "2025-05-17T17:20:50.392Z" },
-    { url = "https://files.pythonhosted.org/packages/50/52/adaf4c8c100a8c49d2bd058e5b551f73dfd8cb89eb4911e25a0c469b6b4e/pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:67bd81fcbe34f43ad9422ee8fd4843c8e7198dd88dd3d40e6de42ee65fbe1490", size = 2182625, upload-time = "2025-05-17T17:20:52.866Z" },
-    { url = "https://files.pythonhosted.org/packages/5f/e9/a09476d436d0ff1402ac3867d933c61805ec2326c6ea557aeeac3825604e/pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c8987bd3307a39bc03df5c8e0e3d8be0c4c3518b7f044b0f4c15d1aa78f52575", size = 2268954, upload-time = "2025-05-17T17:20:55.027Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/c5/ffe6474e0c551d54cab931918127c46d70cab8f114e0c2b5a3c071c2f484/pycryptodome-3.23.0-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:aa0698f65e5b570426fc31b8162ed4603b0c2841cbb9088e2b01641e3065915b", size = 2308534, upload-time = "2025-05-17T17:20:57.279Z" },
-    { url = "https://files.pythonhosted.org/packages/18/28/e199677fc15ecf43010f2463fde4c1a53015d1fe95fb03bca2890836603a/pycryptodome-3.23.0-cp37-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:53ecbafc2b55353edcebd64bf5da94a2a2cdf5090a6915bcca6eca6cc452585a", size = 2181853, upload-time = "2025-05-17T17:20:59.322Z" },
-    { url = "https://files.pythonhosted.org/packages/ce/ea/4fdb09f2165ce1365c9eaefef36625583371ee514db58dc9b65d3a255c4c/pycryptodome-3.23.0-cp37-abi3-musllinux_1_2_i686.whl", hash = "sha256:156df9667ad9f2ad26255926524e1c136d6664b741547deb0a86a9acf5ea631f", size = 2342465, upload-time = "2025-05-17T17:21:03.83Z" },
-    { url = "https://files.pythonhosted.org/packages/22/82/6edc3fc42fe9284aead511394bac167693fb2b0e0395b28b8bedaa07ef04/pycryptodome-3.23.0-cp37-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:dea827b4d55ee390dc89b2afe5927d4308a8b538ae91d9c6f7a5090f397af1aa", size = 2267414, upload-time = "2025-05-17T17:21:06.72Z" },
-    { url = "https://files.pythonhosted.org/packages/59/fe/aae679b64363eb78326c7fdc9d06ec3de18bac68be4b612fc1fe8902693c/pycryptodome-3.23.0-cp37-abi3-win32.whl", hash = "sha256:507dbead45474b62b2bbe318eb1c4c8ee641077532067fec9c1aa82c31f84886", size = 1768484, upload-time = "2025-05-17T17:21:08.535Z" },
-    { url = "https://files.pythonhosted.org/packages/54/2f/e97a1b8294db0daaa87012c24a7bb714147c7ade7656973fd6c736b484ff/pycryptodome-3.23.0-cp37-abi3-win_amd64.whl", hash = "sha256:c75b52aacc6c0c260f204cbdd834f76edc9fb0d8e0da9fbf8352ef58202564e2", size = 1799636, upload-time = "2025-05-17T17:21:10.393Z" },
-    { url = "https://files.pythonhosted.org/packages/18/3d/f9441a0d798bf2b1e645adc3265e55706aead1255ccdad3856dbdcffec14/pycryptodome-3.23.0-cp37-abi3-win_arm64.whl", hash = "sha256:11eeeb6917903876f134b56ba11abe95c0b0fd5e3330def218083c7d98bbcb3c", size = 1703675, upload-time = "2025-05-17T17:21:13.146Z" },
-]
-
-[[package]]
 name = "pyghmi"
 version = "1.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -997,18 +941,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytz-deprecation-shim"
-version = "0.1.0.post0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "tzdata" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/94/f0/909f94fea74759654390a3e1a9e4e185b6cd9aa810e533e3586f39da3097/pytz_deprecation_shim-0.1.0.post0.tar.gz", hash = "sha256:af097bae1b616dde5c5744441e2ddc69e74dfdcb0c263129610d85b87445a59d", size = 60190, upload-time = "2020-06-17T16:16:30.062Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/73/3eaab547ca809754e67e06871cff0fc962bafd4b604e15f31896a0f94431/pytz_deprecation_shim-0.1.0.post0-py2.py3-none-any.whl", hash = "sha256:8314c9692a636c8eb3bda879b9f119e350e93223ae83e70e80c31675a0fdc1a6", size = 15734, upload-time = "2020-06-17T16:16:28.849Z" },
-]
-
-[[package]]
 name = "requests"
 version = "2.34.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1021,18 +953,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0", size = 73075, upload-time = "2026-05-14T19:25:26.443Z" },
-]
-
-[[package]]
-name = "requests-toolbelt"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/61/d7545dafb7ac2230c70d38d31cbfe4cc64f7144dc41f6e4e4b78ecd9f5bb/requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6", size = 206888, upload-time = "2023-05-01T04:11:33.229Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/51/d4db610ef29373b879047326cbf6fa98b6c1969d6f6dc423279de2b1be2c/requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06", size = 54481, upload-time = "2023-05-01T04:11:28.427Z" },
 ]
 
 [[package]]
@@ -1245,27 +1165,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/4c/4f/92f31ab66baf5147d3c080d1a0820b68bced08a1fe5d3565868118649c81/tftpy-0.8.7.tar.gz", hash = "sha256:e8a5aa092dab2e1cbb9b94392036827b808dc37eb6cf1b1ab33c81957b3f5fe2", size = 73943, upload-time = "2026-02-04T15:38:37.455Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/11/87/83b028117ecd2d988b10884c78c798d3bffc0a8ecb9645b03aecffe2637f/tftpy-0.8.7-py3-none-any.whl", hash = "sha256:59289b269ed6e0a7c8762301f99b56814026758b3137a90c9c3e677881efc853", size = 28576, upload-time = "2026-02-04T15:38:36.002Z" },
-]
-
-[[package]]
-name = "tzdata"
-version = "2026.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/92/ff/5a28bdfd8c3ebec42564ac7d0e54ca3db65044a9314a97f9564fa7a1e926/tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415", size = 198674, upload-time = "2026-07-10T08:50:37.887Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931", size = 348168, upload-time = "2026-07-10T08:50:36.46Z" },
-]
-
-[[package]]
-name = "tzlocal"
-version = "5.4.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "tzdata", marker = "sys_platform == 'win32'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/81/5b/879b2f932adfa7a053c360d50bc896c977fa6426109185f7c12ebdd0cb9d/tzlocal-5.4.4.tar.gz", hash = "sha256:8dbb8660838688a7b6ba4fed31d18dedf842afb4d47ca050d6d891c2c15f3be4", size = 31170, upload-time = "2026-06-29T08:03:40.026Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9e/a4/017a7a6cbe387d961a688ec31364ae60a5c4e22c96ae9921b79a947c855d/tzlocal-5.4.4-py3-none-any.whl", hash = "sha256:aae09f0126a8a86fa736be266eb4a471380d26a0de3bc14844e7821fee3e2a15", size = 18115, upload-time = "2026-06-29T08:03:38.666Z" },
 ]
 
 [[package]]
