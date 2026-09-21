@@ -1,0 +1,9 @@
+[core.template]
+unit = "OPC UA Server"
+vendor = "Generic"
+description = "Basic OPC UA server for ICS honeypot intelligence collection"
+protocols = ["opcua"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

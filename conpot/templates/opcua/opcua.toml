@@ -1,0 +1,29 @@
+[opcua]
+enabled = true
+host = "0.0.0.0"
+port = 4840
+timeout = 5
+endpoint_path = "/conpot/server/"
+server_name = "Conpot OPC UA Server"
+namespace_uri = "http://conpot.org/OPCUA/"
+application_uri = "urn:conpot:opcua"
+
+[[opcua.variables]]
+name = "Temperature"
+type = "float"
+value = 25.0
+
+[[opcua.variables]]
+name = "Pressure"
+type = "float"
+value = 101.3
+
+[[opcua.variables]]
+name = "PumpRunning"
+type = "boolean"
+value = true
+
+[[opcua.variables]]
+name = "BatchId"
+type = "integer"
+value = 42

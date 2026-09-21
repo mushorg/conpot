@@ -37,6 +37,7 @@ guardian_ast_dir = os.path.join(package_directory, "templates", "guardian_ast")
 kamstrup_382_dir = os.path.join(package_directory, "templates", "kamstrup_382")
 goose_dir = os.path.join(package_directory, "templates", "goose")
 iccp_dir = os.path.join(package_directory, "templates", "iccp")
+opcua_dir = os.path.join(package_directory, "templates", "opcua")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -80,6 +81,18 @@ def test_parse_and_validate_iccp_toml():
     template = parse_toml_config(os.path.join(iccp_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["iccp"]
+
+
+def test_parse_and_validate_opcua_toml():
+    protocol = parse_toml_config(os.path.join(opcua_dir, "opcua.toml"))
+    protocol_schemas.opcua.validate(protocol)
+    assert protocol["opcua"]["port"] == 4840
+    assert protocol["opcua"]["enabled"] is True
+    assert protocol["opcua"]["server_name"] == "Conpot OPC UA Server"
+    assert len(protocol["opcua"]["variables"]) == 4
+    template = parse_toml_config(os.path.join(opcua_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["opcua"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():

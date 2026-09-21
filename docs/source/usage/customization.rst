@@ -29,6 +29,7 @@ Per-protocol template notes
 * DNP3 outstation addresses and point tables — :doc:`../protocols/dnp3`
 * R-GOOSE APPID, gocbRef, and publish destination — :doc:`../protocols/goose`
 * ICCP/TASE.2 Identify strings and VCC domain points — :doc:`../protocols/iccp`
+* OPC UA server name and Plant variables — :doc:`../protocols/opcua`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
 :doc:`plc_emulator`.

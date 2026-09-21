@@ -366,3 +366,25 @@ iccp = Schema(
         }
     }
 )
+
+opcua = Schema(
+    {
+        "opcua": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("timeout"): Or(int, float),
+            Optional("endpoint_path"): str,
+            Optional("server_name"): str,
+            Optional("namespace_uri"): str,
+            Optional("application_uri"): str,
+            Optional("variables"): [
+                {
+                    "name": str,
+                    Optional("type"): Or("boolean", "integer", "float", "string"),
+                    Optional("value"): Or(bool, int, float, str),
+                }
+            ],
+        }
+    }
+)

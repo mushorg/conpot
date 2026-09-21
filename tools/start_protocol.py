@@ -39,6 +39,7 @@ def main():
         "goose": 10200,
         "dnp3": 20000,
         "iccp": 102,
+        "opcua": 4840,
     }
 
     port = ports.get(name, 0)
