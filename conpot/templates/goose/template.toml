@@ -1,0 +1,9 @@
+[core.template]
+unit = "IEC 61850 R-GOOSE IED"
+vendor = "Generic"
+description = "Unsecured IEC 61850-90-5 Routed-GOOSE (R-GOOSE) over UDP"
+protocols = ["goose"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

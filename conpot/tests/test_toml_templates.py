@@ -35,6 +35,7 @@ package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 default_dir = os.path.join(package_directory, "templates", "default")
 guardian_ast_dir = os.path.join(package_directory, "templates", "guardian_ast")
 kamstrup_382_dir = os.path.join(package_directory, "templates", "kamstrup_382")
+goose_dir = os.path.join(package_directory, "templates", "goose")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -57,6 +58,16 @@ def test_parse_and_validate_guardian_ast_toml():
     assert protocol["guardian_ast"]["port"] == 10001
     template = parse_toml_config(os.path.join(guardian_ast_dir, "template.toml"))
     validate_toml_template(template, base_schema)
+
+
+def test_parse_and_validate_goose_toml():
+    protocol = parse_toml_config(os.path.join(goose_dir, "goose.toml"))
+    protocol_schemas.goose.validate(protocol)
+    assert protocol["goose"]["port"] == 10200
+    assert protocol["goose"]["enabled"] is True
+    template = parse_toml_config(os.path.join(goose_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["goose"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():

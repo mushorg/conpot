@@ -1,0 +1,24 @@
+[goose]
+enabled = true
+host = "0.0.0.0"
+port = 10200
+appid = 1
+gocb_ref = "IED1/LLN0$GO$gcb01"
+dat_set = "IED1/LLN0$dataset1"
+go_id = "GOOSE1"
+conf_rev = 1
+time_allowed_to_live = 10000
+st_num = 1
+sq_num = 0
+publish_interval_ms = 200
+# Publish to a separate local UDP port (not the listen socket) so probes and
+# the honeypot publisher do not loop into each other. Set publish_dest_port to
+# 0 to target the bound listen port, or use a multicast group for LAN demos.
+publish_dest = "127.0.0.1"
+publish_dest_port = 10201
+
+[[goose.all_data]]
+boolean = false
+
+[[goose.all_data]]
+integer = 42

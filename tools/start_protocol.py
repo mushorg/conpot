@@ -36,6 +36,8 @@ def main():
         "ipmi": 10002,
         "s7comm": 9999,
         "tftp": 6090,
+        "goose": 10200,
+        "dnp3": 20000,
     }
 
     port = ports.get(name, 0)

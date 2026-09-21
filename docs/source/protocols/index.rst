@@ -29,6 +29,10 @@ shipped templates; override them in your profile.
      - 2121
      - ``default``
      - —
+   * - ``goose``
+     - 10200
+     - ``goose``
+     - :doc:`goose`
    * - ``guardian_ast``
      - 10001
      - ``guardian_ast``
@@ -78,6 +82,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
 
    dnp3
    enip
+   goose
    http
    modbus
    s7comm
