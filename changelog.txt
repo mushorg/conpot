@@ -1,8 +1,22 @@
 Conpot (unreleased)
-    * Structured attack-event logging (schema_version 1) across JSON, SQLite, syslog, and HPFriends sinks
+    * Added DNP3/TCP outstation honeypot (#647)
     * Removed STIX/TAXII reporting sink and related dependencies
-    * Attack events now include event_time distinct from session start; syslog receives attack JSON explicitly
+    * Added unsecured IEC 61850-90-5 R-GOOSE (UDP) honeypot subset (#208)
+
+Conpot 1.0.0 (release 2026-09-20)
+    * Platform rewrite: asyncio runtime (gevent removed), current CPython, GitHub Actions CI
+    * Templates migrated from XML to TOML with a flatter profile layout
+    * Breaking: structured attack-event logging (schema_version 1) across JSON, SQLite, syslog, HPFriends, and TAXII
+    * Attack events include event_time distinct from session start; syslog receives attack JSON explicitly
     * Breaking: HPFriends/JSON attack payloads use session_id/protocol/flat endpoints instead of id/data_type/remote tuples
+    * Protocol library migrations: pymodbus, bacpypes3, aiohttp, cm-ethernetip; cryptography instead of PyCrypto
+    * S7 read/write and PLC-stop; Modbus DoS fix for unbounded oversized reads
+    * IEC 104 IOA/endianness and types 100–103; SNMP default listen port 16100
+    * Removed MAC-address spoofing and custom SNMP MIB compilation
+    * Docker image and published-port overhaul; treat this as a breaking upgrade from 0.5.x/0.6.0
+
+Conpot 0.6.0 (release 2018-08-19)
+    * Python 3 beta
 
 Conpot 0.5.2 (release 2018-08-06)
     * Improved Docker compatibility

@@ -71,3 +71,6 @@ ConpotTempFS/
 docs/source/api/reference
 
 junit/
+
+# agents
+.cursor/*

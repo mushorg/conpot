@@ -315,3 +315,32 @@ proxies = Schema(
         }
     }
 )
+
+goose = Schema(
+    {
+        "goose": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("appid"): int,
+            Optional("gocb_ref"): str,
+            Optional("dat_set"): str,
+            Optional("go_id"): str,
+            Optional("conf_rev"): int,
+            Optional("time_allowed_to_live"): int,
+            Optional("st_num"): int,
+            Optional("sq_num"): int,
+            Optional("spdu_number"): int,
+            Optional("publish_interval_ms"): Or(int, float),
+            Optional("publish_dest"): str,
+            Optional("publish_dest_port"): int,
+            Optional("multicast_group"): str,
+            Optional("all_data"): [
+                Or(
+                    {"boolean": bool},
+                    {"integer": int},
+                )
+            ],
+        }
+    }
+)

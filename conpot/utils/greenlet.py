@@ -280,6 +280,7 @@ def init_test_server_by_name(name, port=0):
         "kamstrup_management": "kamstrup_382",
         "kamstrup_meter": "kamstrup_382",
         "dnp3": "dnp3",
+        "goose": "goose",
     }.get(name, "default")
 
     class Args(SimpleNamespace):
