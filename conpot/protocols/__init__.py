@@ -29,6 +29,7 @@ from .snmp.snmp_server import SNMPServer
 from .tftp.tftp_server import TftpServer
 from .dnp3.dnp3_server import DNP3Server
 from .goose.goose_server import GooseServer
+from .iccp.iccp_server import ICCPServer
 
 # Defines protocol directory names inside template directories
 name_mapping = {
@@ -47,4 +48,5 @@ name_mapping = {
     "tftp": TftpServer,
     "dnp3": DNP3Server,
     "goose": GooseServer,
+    "iccp": ICCPServer,
 }

@@ -344,3 +344,25 @@ goose = Schema(
         }
     }
 )
+
+iccp = Schema(
+    {
+        "iccp": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("timeout"): Or(int, float),
+            Optional("vendor"): str,
+            Optional("model"): str,
+            Optional("revision"): str,
+            Optional("domain"): str,
+            Optional("points"): [
+                {
+                    "name": str,
+                    Optional("type"): Or("boolean", "integer", "float"),
+                    Optional("value"): Or(bool, int, float),
+                }
+            ],
+        }
+    }
+)

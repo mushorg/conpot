@@ -36,6 +36,7 @@ default_dir = os.path.join(package_directory, "templates", "default")
 guardian_ast_dir = os.path.join(package_directory, "templates", "guardian_ast")
 kamstrup_382_dir = os.path.join(package_directory, "templates", "kamstrup_382")
 goose_dir = os.path.join(package_directory, "templates", "goose")
+iccp_dir = os.path.join(package_directory, "templates", "iccp")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -68,6 +69,17 @@ def test_parse_and_validate_goose_toml():
     template = parse_toml_config(os.path.join(goose_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["goose"]
+
+
+def test_parse_and_validate_iccp_toml():
+    protocol = parse_toml_config(os.path.join(iccp_dir, "iccp.toml"))
+    protocol_schemas.iccp.validate(protocol)
+    assert protocol["iccp"]["port"] == 102
+    assert protocol["iccp"]["enabled"] is True
+    assert protocol["iccp"]["domain"] == "VCC"
+    template = parse_toml_config(os.path.join(iccp_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["iccp"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():
@@ -130,9 +142,7 @@ def test_discover_protocol_ports_from_toml():
 
 def test_spawn_test_server_passes_tftp_dict():
     conpot_core.initialize_vfs()
-    server, handle = spawn_test_server(
-        TftpServer, template="default", protocol="tftp"
-    )
+    server, handle = spawn_test_server(TftpServer, template="default", protocol="tftp")
     try:
         assert server.root_path == "/data/tftp/"
         assert server.data_fs_subdir == "tftp"

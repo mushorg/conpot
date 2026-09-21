@@ -1,0 +1,9 @@
+[core.template]
+unit = "ICCP Control Center"
+vendor = "Generic"
+description = "IEC 60870-6 TASE.2 / ICCP called endpoint for ICS honeypot intelligence collection"
+protocols = ["iccp"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

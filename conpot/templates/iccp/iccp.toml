@@ -1,0 +1,24 @@
+[iccp]
+enabled = true
+host = "0.0.0.0"
+port = 102
+timeout = 5
+vendor = "Conpot"
+model = "ICCP-TASE2"
+revision = "1.0"
+domain = "VCC"
+
+[[iccp.points]]
+name = "AnalogMW"
+type = "float"
+value = 125.5
+
+[[iccp.points]]
+name = "BreakerStatus"
+type = "boolean"
+value = true
+
+[[iccp.points]]
+name = "TapPosition"
+type = "integer"
+value = 3
