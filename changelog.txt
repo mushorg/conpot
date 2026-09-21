@@ -3,6 +3,7 @@ Conpot (unreleased)
     * Removed STIX/TAXII reporting sink and related dependencies
     * Added unsecured IEC 61850-90-5 R-GOOSE (UDP) honeypot subset (#208)
     * Added IEC 60870-6 ICCP/TASE.2 (ISO-on-TCP) called-endpoint honeypot subset (#70)
+    * Added OPC UA (opc.tcp) honeypot via asyncua UaProcessor; Conpot owns accept (#82)
 
 Conpot 1.0.0 (release 2026-09-20)
     * Platform rewrite: asyncio runtime (gevent removed), current CPython, GitHub Actions CI

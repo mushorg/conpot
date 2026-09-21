@@ -65,6 +65,10 @@ shipped templates; override them in your profile.
      - 5020
      - ``default``, ``plc_modbus``
      - :doc:`modbus`
+   * - ``opcua``
+     - 4840
+     - ``opcua``
+     - :doc:`opcua`
    * - ``s7comm``
      - 10201
      - ``default``
@@ -90,5 +94,6 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
    http
    iccp
    modbus
+   opcua
    s7comm
    snmp
