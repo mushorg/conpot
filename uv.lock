@@ -347,6 +347,7 @@ dependencies = [
     { name = "crc16" },
     { name = "cryptography" },
     { name = "cybox" },
+    { name = "dnp3py" },
     { name = "freezegun" },
     { name = "fs" },
     { name = "hpfeeds3" },
@@ -388,6 +389,7 @@ requires-dist = [
     { name = "crc16" },
     { name = "cryptography", specifier = "==50.0.0" },
     { name = "cybox" },
+    { name = "dnp3py", specifier = "==0.4.0" },
     { name = "freezegun", specifier = "!=0.3.13" },
     { name = "fs", git = "https://github.com/ihaveamac/pyfilesystem2.git?rev=266dff7984b66425d38cbd6cf7c5f18a8a98d369" },
     { name = "hpfeeds3" },
@@ -489,6 +491,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/16/67/19479c7e065a50795a957f7f6a29eaf4c94fb3910241c9760869a63f8090/cybox-2.1.0.21.tar.gz", hash = "sha256:8b12110180aceed0f85f8d6c1860a32a679c261f097d909384a81b3b73ff9716", size = 510300, upload-time = "2020-03-06T18:02:29.512Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c9/3e/6e3fa450345836dadcbd07793e6429e06c11b5f93dfef28c7a1933d515a0/cybox-2.1.0.21-py2.py3-none-any.whl", hash = "sha256:19a588bcdce8f3a088f7d5edd3e8862c11b701bb3d64257b18f3092deb9c3b7a", size = 780896, upload-time = "2020-03-06T18:02:27.864Z" },
+]
+
+[[package]]
+name = "dnp3py"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/b6/da3685b74a2d414beccbe0fb5ee5bee91adbbadf3de4cf4c4081a0be8b1d/dnp3py-0.4.0.tar.gz", hash = "sha256:1c34c5e598045521e1a9fc7575a689f7f3d19c8589f74ee34ba9c7eb2186973f", size = 434082, upload-time = "2026-08-26T17:32:23.333Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/93/a4a8e58a07b6d49cde48efdd370d2619e67df03c4fbdb9dd92af874b8b3f/dnp3py-0.4.0-py3-none-any.whl", hash = "sha256:ecdca5e92c961e358c53197a4f2a65852ef3c8137c551551020d039e91c44bd3", size = 287448, upload-time = "2026-08-26T17:32:21.666Z" },
 ]
 
 [[package]]

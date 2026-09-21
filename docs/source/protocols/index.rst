@@ -17,6 +17,10 @@ shipped templates; override them in your profile.
      - 47808
      - ``default``
      - —
+   * - ``dnp3``
+     - 20000
+     - ``dnp3``
+     - :doc:`dnp3`
    * - ``enip``
      - 44818
      - ``default``
@@ -72,6 +76,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
 .. toctree::
    :maxdepth: 1
 
+   dnp3
    enip
    http
    modbus

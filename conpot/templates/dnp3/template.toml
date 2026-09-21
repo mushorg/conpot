@@ -1,0 +1,9 @@
+[core.template]
+unit = "DNP3 Outstation RTU"
+vendor = "Generic"
+description = "Basic DNP3 outstation for ICS honeypot intelligence collection"
+protocols = ["dnp3"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }
