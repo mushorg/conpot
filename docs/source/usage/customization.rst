@@ -28,6 +28,7 @@ Per-protocol template notes
 * S7comm CPU stop/start — :doc:`../protocols/s7comm`
 * DNP3 outstation addresses and point tables — :doc:`../protocols/dnp3`
 * R-GOOSE APPID, gocbRef, and publish destination — :doc:`../protocols/goose`
+* ICCP/TASE.2 Identify strings and VCC domain points — :doc:`../protocols/iccp`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
 :doc:`plc_emulator`.

@@ -38,6 +38,7 @@ def main():
         "tftp": 6090,
         "goose": 10200,
         "dnp3": 20000,
+        "iccp": 102,
     }
 
     port = ports.get(name, 0)

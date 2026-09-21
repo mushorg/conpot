@@ -27,9 +27,7 @@ from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 class TestS7Server(unittest.TestCase):
     def setUp(self):
-        self.s7_instance, self.handle = spawn_test_server(
-            S7Server, "default", "s7comm"
-        )
+        self.s7_instance, self.handle = spawn_test_server(S7Server, "default", "s7comm")
 
         self.server_host = self.s7_instance.server.server_host
         self.server_port = self.s7_instance.server.server_port

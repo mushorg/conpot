@@ -27,9 +27,7 @@ _HAS_IPMITOOL = shutil.which("ipmitool") is not None
 @unittest.skipUnless(_HAS_IPMITOOL, "ipmitool is not installed")
 class TestIPMI(unittest.TestCase):
     def setUp(self):
-        self.ipmi_server, self.handle = spawn_test_server(
-            IpmiServer, "default", "ipmi"
-        )
+        self.ipmi_server, self.handle = spawn_test_server(IpmiServer, "default", "ipmi")
 
     def tearDown(self):
         teardown_test_server(self.ipmi_server, self.handle)

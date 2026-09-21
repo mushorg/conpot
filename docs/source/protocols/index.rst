@@ -41,6 +41,10 @@ shipped templates; override them in your profile.
      - 8800
      - ``default``
      - :doc:`http`
+   * - ``iccp``
+     - 102
+     - ``iccp``
+     - :doc:`iccp`
    * - ``IEC104``
      - 2404
      - ``IEC104``
@@ -84,6 +88,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
    enip
    goose
    http
+   iccp
    modbus
    s7comm
    snmp
