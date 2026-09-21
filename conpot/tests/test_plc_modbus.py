@@ -30,22 +30,22 @@ from conpot.tests.helpers.modbus_client import (
 from conpot.emulators.plc.awlsim_engine import AwlsimEngine
 from conpot.emulators.plc.scan_cycle import _make_engine
 from conpot.protocols.modbus import modbus_server
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 SCAN_WAIT = 0.2
 
 
 @pytest.fixture(scope="class")
 def plc_modbus_server(request):
-    server, greenlet = spawn_test_server(
+    server, handle = spawn_test_server(
         modbus_server.ModbusServer, "plc_modbus", "modbus"
     )
     request.cls.modbus = server
-    request.cls.greenlet = greenlet
+    request.cls.handle = handle
     request.cls.host = server.server.server_host
     request.cls.port = server.server.server_port
     yield
-    teardown_test_server(server, greenlet)
+    teardown_test_server(server, handle)
     conpot_core.get_databus().reset()
 
 

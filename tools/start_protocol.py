@@ -18,7 +18,7 @@
 import sys
 import time
 
-from conpot.utils.greenlet import init_test_server_by_name, teardown_test_server
+from conpot.utils.server_tasks import init_test_server_by_name, teardown_test_server
 
 
 def main():

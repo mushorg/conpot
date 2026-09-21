@@ -40,7 +40,7 @@ from bacpypes3.primitivedata import ObjectIdentifier, ObjectType, Real
 from conpot.protocols.bacnet import bacnet_server
 from conpot.protocols.bacnet.bacnet_app import BACnetApp
 from conpot.protocols.bacnet.bacnet_ip import decode_bacnet_ip, encode_bacnet_ip
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 def nmap_read_property_query(property_id):
@@ -70,14 +70,14 @@ class TestBACnetServer(unittest.TestCase):
     """
 
     def setUp(self):
-        self.bacnet_server, self.greenlet = spawn_test_server(
+        self.bacnet_server, self.handle = spawn_test_server(
             bacnet_server.BacnetServer, "default", "bacnet"
         )
         self.assertTrue(self.bacnet_server.ready.is_set())
         self.address = (self.bacnet_server.host, self.bacnet_server.port)
 
     def tearDown(self):
-        teardown_test_server(self.bacnet_server, self.greenlet)
+        teardown_test_server(self.bacnet_server, self.handle)
 
     def _exchange(self, request):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

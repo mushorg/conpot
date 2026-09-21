@@ -19,7 +19,7 @@ import shutil
 import unittest
 from subprocess import PIPE, STDOUT, Popen
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 _HAS_IPMITOOL = shutil.which("ipmitool") is not None
 
@@ -27,12 +27,12 @@ _HAS_IPMITOOL = shutil.which("ipmitool") is not None
 @unittest.skipUnless(_HAS_IPMITOOL, "ipmitool is not installed")
 class TestIPMI(unittest.TestCase):
     def setUp(self):
-        self.ipmi_server, self.greenlet = spawn_test_server(
+        self.ipmi_server, self.handle = spawn_test_server(
             IpmiServer, "default", "ipmi"
         )
 
     def tearDown(self):
-        teardown_test_server(self.ipmi_server, self.greenlet)
+        teardown_test_server(self.ipmi_server, self.handle)
 
     def run_cmd(self, cmd):
         _cmd = [

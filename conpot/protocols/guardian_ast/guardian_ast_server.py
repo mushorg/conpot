@@ -50,7 +50,7 @@ class GuardianASTServer(object):
 
     def handle(self, sock, addr):
         # Idle scanners (e.g. nmap -A) often leave a TCP connection open with no
-        # further data. Without a recv timeout the greenlet blocks forever and
+        # further data. Without a recv timeout the handler blocks forever and
         # the session never finishes (GitHub issue #441).
         sock.settimeout(self.timeout)
         session = conpot_core.get_session(

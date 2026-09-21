@@ -25,7 +25,7 @@ from pysnmp.proto import rfc1902
 import conpot.core as conpot_core
 from conpot.protocols.snmp.snmp_server import SNMPServer
 from conpot.tests.helpers import snmp_client
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 class TestSNMPServer(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestSNMPServer(unittest.TestCase):
         args = namedtuple("FakeArgs", "mibcache")
         args.mibcache = self.tmp_dir
 
-        self.snmp_server, self.greenlet = spawn_test_server(
+        self.snmp_server, self.handle = spawn_test_server(
             SNMPServer, template="default", protocol="snmp", args=args
         )
 
@@ -43,7 +43,7 @@ class TestSNMPServer(unittest.TestCase):
         self.port = self.snmp_server.get_port()
 
     def tearDown(self):
-        teardown_test_server(self.snmp_server, self.greenlet)
+        teardown_test_server(self.snmp_server, self.handle)
         shutil.rmtree(self.tmp_dir)
 
     def test_snmp_get(self):

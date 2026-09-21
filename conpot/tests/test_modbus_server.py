@@ -29,7 +29,7 @@ from conpot.tests.helpers.modbus_client import (
     ModbusError,
     TcpMaster,
 )
-from conpot.utils.greenlet import (
+from conpot.utils.server_tasks import (
     drain_log_queue,
     get_log_event,
     spawn_test_server,
@@ -41,7 +41,7 @@ class TestModbusServer(unittest.TestCase):
     def setUp(self):
         conpot_core.get_sessionManager().purge_sessions()
 
-        self.modbus, self.greenlet = spawn_test_server(
+        self.modbus, self.handle = spawn_test_server(
             modbus_server.ModbusServer, "default", "modbus"
         )
 
@@ -56,7 +56,7 @@ class TestModbusServer(unittest.TestCase):
         self.target_slave_id = 1 if self.modbus.mode == "serial" else 255
 
     def tearDown(self):
-        teardown_test_server(self.modbus, self.greenlet)
+        teardown_test_server(self.modbus, self.handle)
 
     def test_read_coils(self):
         """
@@ -152,11 +152,11 @@ class TestModbusServer(unittest.TestCase):
         )
 
         # extract the generated log entries
-        conn_log_item = get_log_event(self.greenlet, timeout=2)
+        conn_log_item = get_log_event(self.handle, timeout=2)
         self.assertEqual("NEW_CONNECTION", conn_log_item["event_type"])
         self.assertEqual({}, conn_log_item["data"])
 
-        modbus_log_item = get_log_event(self.greenlet, timeout=2)
+        modbus_log_item = get_log_event(self.handle, timeout=2)
         self.assertIsNotNone(modbus_log_item["event_time"])
         self.assertIsNotNone(modbus_log_item["session_time"])
         self.assertTrue("data" in modbus_log_item)
@@ -351,14 +351,14 @@ class TestModbusServer(unittest.TestCase):
 class TestModbusUmas(unittest.TestCase):
     def setUp(self):
         conpot_core.get_sessionManager().purge_sessions()
-        self.modbus, self.greenlet = spawn_test_server(
+        self.modbus, self.handle = spawn_test_server(
             modbus_server.ModbusServer, "plc_modbus", "modbus"
         )
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port
 
     def tearDown(self):
-        teardown_test_server(self.modbus, self.greenlet)
+        teardown_test_server(self.modbus, self.handle)
 
     def _exchange(self, pdu):
         header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
@@ -383,7 +383,7 @@ class TestModbusUmas(unittest.TestCase):
         self.assertTrue(slave.running)
 
         types = []
-        for item in drain_log_queue(self.greenlet):
+        for item in drain_log_queue(self.handle):
             event_type = item.get("event_type")
             if event_type:
                 types.append(event_type)

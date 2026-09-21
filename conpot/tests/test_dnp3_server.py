@@ -24,7 +24,7 @@ from dnp3.master.handler import ResponseInfo, SOEHandler
 from dnp3.transport.segment import TransportSegment
 
 from conpot.protocols.dnp3.dnp3_server import DNP3Server
-from conpot.utils.greenlet import (
+from conpot.utils.server_tasks import (
     drain_log_queue,
     get_log_event,
     spawn_test_server,
@@ -102,11 +102,11 @@ def _run(coro):
 
 @pytest.fixture(scope="class")
 def dnp3_server(request):
-    server, greenlet = spawn_test_server(DNP3Server, "dnp3", "dnp3")
+    server, handle = spawn_test_server(DNP3Server, "dnp3", "dnp3")
     request.cls.dnp3_server = server
-    request.cls.server_greenlet = greenlet
+    request.cls.server_handle = handle
     yield
-    teardown_test_server(server, greenlet)
+    teardown_test_server(server, handle)
 
 
 @pytest.mark.usefixtures("dnp3_server")
@@ -115,18 +115,18 @@ class TestDNP3Server(unittest.TestCase):
         return self.dnp3_server.server.server_port
 
     def test_new_connection_and_lost_events(self):
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         sock = socket.create_connection(("127.0.0.1", self._port()), timeout=2)
         sock.close()
         # Give the handler a moment to finish CONNECTION_LOST.
         time.sleep(0.2)
-        new_event = get_log_event(self.server_greenlet, timeout=2)
+        new_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual("NEW_CONNECTION", new_event["event_type"])
-        lost_event = get_log_event(self.server_greenlet, timeout=2)
+        lost_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual("CONNECTION_LOST", lost_event["event_type"])
 
     def test_integrity_poll_returns_template_points(self):
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         handler = _run(_integrity_poll("127.0.0.1", self._port()))
         self.assertEqual(handler.binary_inputs, {0: False, 1: True})
         self.assertEqual(handler.analog_inputs, {0: 25.0, 1: 100.0})
@@ -135,7 +135,7 @@ class TestDNP3Server(unittest.TestCase):
         events = []
         for _ in range(8):
             try:
-                events.append(get_log_event(self.server_greenlet, timeout=1))
+                events.append(get_log_event(self.server_handle, timeout=1))
             except Exception:
                 break
         types = [e["event_type"] for e in events]
@@ -144,7 +144,7 @@ class TestDNP3Server(unittest.TestCase):
 
     def test_concurrent_connections_stay_alive(self):
         """Regression: Conpot must not drop the first client when a second connects."""
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         port = self._port()
 
         async def _hold_and_second():
@@ -198,12 +198,12 @@ class TestDNP3Server(unittest.TestCase):
 
     def test_peer_rst_is_not_a_session_crash(self):
         """nmap -sV RSTs after a banner wait; that must not traceback."""
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         sock = socket.create_connection(("127.0.0.1", self._port()), timeout=2)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("ii", 1, 0))
         sock.close()
         time.sleep(0.3)
-        new_event = get_log_event(self.server_greenlet, timeout=2)
+        new_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual("NEW_CONNECTION", new_event["event_type"])
-        lost_event = get_log_event(self.server_greenlet, timeout=2)
+        lost_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual("CONNECTION_LOST", lost_event["event_type"])

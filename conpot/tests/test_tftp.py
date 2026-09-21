@@ -6,14 +6,14 @@ from tftpy import TftpClient
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.tftp.tftp_server import TftpServer
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 class TestTFTPServer(unittest.TestCase):
     def setUp(self):
         conpot_core.initialize_vfs()
 
-        self.tftp_server, self.greenlet = spawn_test_server(
+        self.tftp_server, self.handle = spawn_test_server(
             TftpServer, template="default", protocol="tftp"
         )
 
@@ -25,7 +25,7 @@ class TestTFTPServer(unittest.TestCase):
         )
 
     def tearDown(self):
-        teardown_test_server(self.tftp_server, self.greenlet)
+        teardown_test_server(self.tftp_server, self.handle)
 
     def _wait_uploaded(self, data_fs, needle="test-txt", timeout=3.0):
         # Handle runs in a thread-pool executor; context.end() copies to

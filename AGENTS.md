@@ -9,7 +9,7 @@ Human docs: [README.md](README.md), [conpot.readthedocs.io](https://conpot.readt
 - `conpot/core/` — databus, attack sessions, VFS, `@conpot_protocol`
 - `conpot/protocols/` — one directory per protocol; registry in `conpot/protocols/__init__.py` (`name_mapping`)
 - `conpot/templates/` — deployment profiles (`template.toml` + per-protocol `*.toml`)
-- `conpot/tests/` — pytest suite; helpers in `conpot/utils/greenlet.py`
+- `conpot/tests/` — pytest suite; helpers in `conpot/utils/server_tasks.py`
 - `conpot/cli.py` — asyncio entrypoint (`python -m conpot`)
 - `tools/` — standalone helpers (`start_protocol.py`, `conpot_cloner`, `kamstrup_prober.py`)
 - `docs/` — Sphinx; concepts under `docs/source/concepts/`
@@ -51,12 +51,12 @@ Scanners (nmap `-A`, banner grabs, etc.) often open a socket and idle or die wit
 
 ## Testing
 
-Prefer `spawn_test_server` / `teardown_test_server` from `conpot.utils.greenlet` (loads template + protocol XML, binds `127.0.0.1` on a dedicated asyncio loop thread).
+Prefer `spawn_test_server` / `teardown_test_server` from `conpot.utils.server_tasks` (loads template + protocol XML, binds `127.0.0.1` on a dedicated asyncio loop thread).
 
 Newer tests use class-scoped pytest fixtures — see `conpot/tests/test_guardian_ast.py` and `conpot/tests/test_enip_server.py`. Older tests may still use `unittest.TestCase.setUp`/`tearDown` with the same helpers.
 
 ```python
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 ```
 
 Do **not** import gevent or call `monkey.patch_all()` in tests. Use stdlib `socket` / `time.sleep` / `asyncio`. Session log events live on an `asyncio.Queue`; fetch them with `asyncio.run_coroutine_threadsafe(..., handle._loop)` (see `get_log_event`).

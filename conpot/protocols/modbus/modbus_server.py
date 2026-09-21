@@ -130,7 +130,7 @@ class ModbusServer(object):
                 # MBAP length covers unit id + PDU. Legal minimum is 2
                 # (unit id + function code). Length 0/1 are reserved/malformed;
                 # scanners (e.g. nmap modbus-info) often send length 0, and
-                # length 1 yields an empty PDU that used to crash the greenlet
+                # length 1 yields an empty PDU that used to crash the handler
                 # (issue #511).
                 if length < 2:
                     logger.info(
@@ -147,7 +147,7 @@ class ModbusServer(object):
                 # limit inherited from serial Modbus). An unauthenticated
                 # client can otherwise declare up to 0xFFFF and force this
                 # handler to read that much, which - since Conpot runs every
-                # protocol as greenlets on one shared event loop - can stall
+                # protocol handlers on one shared event loop - can stall
                 # every other emulated service for the duration of the read.
                 if length > 254:
                     logger.info(

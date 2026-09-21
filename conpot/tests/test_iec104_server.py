@@ -21,21 +21,21 @@ import unittest
 from unittest.mock import patch
 import conpot.core as conpot_core
 from conpot.protocols.IEC104 import IEC104_server, frames
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 class TestIEC104Server(unittest.TestCase):
     def setUp(self):
         self.databus = conpot_core.get_databus()
 
-        self.iec104_inst, self.greenlet = spawn_test_server(
+        self.iec104_inst, self.handle = spawn_test_server(
             IEC104_server.IEC104Server, "IEC104", "IEC104", port=2404
         )
 
         self.coa = self.iec104_inst.device_data_controller.common_address
 
     def tearDown(self):
-        teardown_test_server(self.iec104_inst, self.greenlet)
+        teardown_test_server(self.iec104_inst, self.handle)
 
     def test_startdt(self):
         """
@@ -203,7 +203,7 @@ class TestIEC104Server(unittest.TestCase):
         self.assertSequenceEqual(data, act_conf.build())
 
     def _get_log_event(self, timeout=2.0):
-        loop = self.greenlet._loop
+        loop = self.handle._loop
         log_queue = conpot_core.get_sessionManager().log_queue
 
         async def _get():

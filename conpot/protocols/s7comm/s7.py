@@ -73,7 +73,7 @@ def _length_prefixed_strings(blob):
 class S7(object):
     ssl_lists = {}
     memory_map = S7MemoryMap()
-    # Emulated CPU mode. Never stop the listening greenlet; a stop probe must
+    # Emulated CPU mode. Never stop the listening task; a stop probe must
     # not take the honeypot down.
     cpu_running = True
 

@@ -24,7 +24,7 @@ from conpot.tests.helpers.modbus_client import (
     ModbusError,
     TcpMaster,
 )
-from conpot.utils.greenlet import AsyncioTaskHandle, teardown_test_server
+from conpot.utils.server_tasks import AsyncioTaskHandle, teardown_test_server
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(conpot.__file__))
 
@@ -132,14 +132,14 @@ class TestModbusInternalSlaves(unittest.TestCase):
         task = serve_task_ref.get("task")
         if task is None:
             raise RuntimeError("protocol serve task was not registered")
-        self.greenlet = AsyncioTaskHandle(loop, task, self.modbus, th)
+        self.handle = AsyncioTaskHandle(loop, task, self.modbus, th)
 
         self.host = self.modbus.server.server_host
         self.port = self.modbus.server.server_port
         self.databus = conpot_core.get_databus()
 
     def tearDown(self):
-        teardown_test_server(self.modbus, self.greenlet)
+        teardown_test_server(self.modbus, self.handle)
         conpot_core.get_sessionManager().purge_sessions()
 
     def test_tcp_mode_serves_configured_unit_ids(self):

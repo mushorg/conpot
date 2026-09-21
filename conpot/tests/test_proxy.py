@@ -26,7 +26,7 @@ import conpot
 import conpot.core as conpot_core
 from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
 from conpot.protocols.proxy.proxy import Proxy
-from conpot.utils.greenlet import AsyncioTaskHandle, teardown_test_server
+from conpot.utils.server_tasks import AsyncioTaskHandle, teardown_test_server
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 

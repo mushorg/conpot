@@ -29,7 +29,7 @@ from conpot.protocols import schemas as protocol_schemas
 from conpot.protocols.tftp.tftp_server import TftpServer
 from conpot.templates.parse import parse_toml_config
 from conpot.templates.validate import base_schema, validate_toml_template
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
 default_dir = os.path.join(package_directory, "templates", "default")
@@ -130,11 +130,11 @@ def test_discover_protocol_ports_from_toml():
 
 def test_spawn_test_server_passes_tftp_dict():
     conpot_core.initialize_vfs()
-    server, greenlet = spawn_test_server(
+    server, handle = spawn_test_server(
         TftpServer, template="default", protocol="tftp"
     )
     try:
         assert server.root_path == "/data/tftp/"
         assert server.data_fs_subdir == "tftp"
     finally:
-        teardown_test_server(server, greenlet)
+        teardown_test_server(server, handle)

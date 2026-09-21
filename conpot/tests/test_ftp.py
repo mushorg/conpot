@@ -25,7 +25,7 @@ import conpot
 import conpot.core as conpot_core
 from conpot.protocols.ftp.ftp_server import FTPServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 from slugify import slugify
 import ftplib  # Use ftplib's client for more authentic testing
 
@@ -41,7 +41,7 @@ class TestFTPServer(unittest.TestCase):
     def setUp(self):
         conpot_core.initialize_vfs()
 
-        self.ftp_server, self.greenlet = spawn_test_server(FTPServer, "default", "ftp")
+        self.ftp_server, self.handle = spawn_test_server(FTPServer, "default", "ftp")
         self.client = ftplib.FTP()
 
         self.vfs, self.data_fs = conpot_core.get_vfs("ftp")
@@ -53,7 +53,7 @@ class TestFTPServer(unittest.TestCase):
             except ftplib.all_errors:
                 pass
 
-        teardown_test_server(self.ftp_server, self.greenlet)
+        teardown_test_server(self.ftp_server, self.handle)
 
     def client_connect(self):
         return self.client.connect(

@@ -18,26 +18,26 @@
 import pytest
 
 from conpot import protocols
-from conpot.utils.greenlet import init_test_server_by_name
+from conpot.utils.server_tasks import init_test_server_by_name
 
 
 @pytest.mark.parametrize("name", protocols.name_mapping.keys())
 def test_protocols_can_be_stopped(name):
-    server, greenlet = init_test_server_by_name(name)
+    server, handle = init_test_server_by_name(name)
 
     server.stop()
-    greenlet.join(0.2)
+    handle.join(0.2)
 
-    # Greenlets with working shutdown logic will have run to completion
-    # Greenlets with broken shutdown logic will wait to be scheduled again
-    assert greenlet.successful()
+    # Tasks with working shutdown logic will have run to completion
+    # Tasks with broken shutdown logic will wait to be scheduled again
+    assert handle.successful()
 
 
 @pytest.mark.parametrize("name", protocols.name_mapping.keys())
 def test_protocols_serve_forever(name):
-    server, greenlet = init_test_server_by_name(name)
+    server, handle = init_test_server_by_name(name)
 
-    assert not greenlet.ready()
+    assert not handle.ready()
 
     server.stop()
-    greenlet.join(0.2)
+    handle.join(0.2)

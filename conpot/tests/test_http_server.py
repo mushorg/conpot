@@ -22,7 +22,7 @@ import conpot
 import os
 import requests
 from conpot.protocols.http import web_server
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 import conpot.core as conpot_core
 
 

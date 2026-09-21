@@ -6,8 +6,8 @@
 # as published by the Free Software Foundation; either version 2
 # of the License, or (at your option) any later version.
 
-# Test / debug helpers: run asyncio protocol servers from synchronous pytest
-# code using a dedicated event loop thread per server.
+# Run asyncio protocol servers from synchronous pytest code using a dedicated
+# event loop thread per server, and schedule production start() tasks.
 
 import asyncio
 import os
@@ -19,7 +19,7 @@ from conpot import core, protocols
 
 
 class AsyncioTaskHandle:
-    """Mimics gevent Greenlet API used by legacy tests (join, successful, ready, dead)."""
+    """Handle for a protocol/server asyncio.Task (join, successful, ready, dead)."""
 
     def __init__(self, loop, task, server, loop_thread: threading.Thread | None = None):
         self._loop = loop
@@ -74,7 +74,7 @@ class AsyncioTaskHandle:
                     pass
 
     def get(self, timeout=None):
-        """Alias for join(); for other-thread use only (was greenlet.get())."""
+        """Alias for join(); for other-thread use only."""
         self.join(timeout=timeout)
 
     def successful(self):
@@ -97,7 +97,7 @@ class AsyncioTaskHandle:
                 return
             exc = task.exception()
             if exc is not None:
-                # Build a greenlet-like object for the callback.
+                # Build a handle-like object for the callback.
                 class _Dead:
                     def __init__(self, name, exception):
                         self.name = name
@@ -126,11 +126,6 @@ def spawn_startable_task(instance, *args, **kwargs):
     task = loop.create_task(instance.start(*args, **kwargs))
     handle = AsyncioTaskHandle(loop, task, instance)
     return handle
-
-
-async def spawn_startable_greenlet(instance, *args, **kwargs):
-    """Back-compat name: create a Task for ``instance.start`` and return a handle."""
-    return spawn_startable_task(instance, *args, **kwargs)
 
 
 def spawn_test_server(server_class, template, protocol, args=None, port=0):

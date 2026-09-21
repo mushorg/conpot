@@ -26,7 +26,7 @@ import conpot.utils.ext_ip
 
 
 class _AiohttpMockServer:
-    """Minimal aiohttp site on a background thread/greenlet."""
+    """Minimal aiohttp site on a background thread."""
 
     def __init__(self, host="127.0.0.1", port=8000):
         self.host = host

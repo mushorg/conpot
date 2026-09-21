@@ -23,7 +23,7 @@ import socket
 import pytest
 
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 DATA = {
     "I20100": b"\nI20100\n05/30/2018 19:15\n\nSTATOIL STATION\n\n\n\nIN-TANK INVENTORY\n\nTANK PRODUCT             VOLUME TC VOLUME   ULLAGE   HEIGHT    WATER     TEMP\n  1  SUPER                 2428      2540     4465    39.88     6.62    53.74\n  2  UNLEAD                7457      7543     7874    65.59     8.10    58.17\n  3  DIESEL                6532      6664     4597    33.06     5.91    57.91\n  4  PREMIUM               2839      2867     4597    66.57     4.49    57.88\n",
@@ -37,13 +37,13 @@ DATA = {
 @pytest.fixture(scope="class")
 def guardian_ast_server(request):
     """One GuardianAST server for the whole test class (avoids per-test spawn cost)."""
-    server, greenlet = spawn_test_server(
+    server, handle = spawn_test_server(
         GuardianASTServer, "guardian_ast", "guardian_ast"
     )
     request.cls.guardian_ast_server = server
-    request.cls.server_greenlet = greenlet
+    request.cls.server_handle = handle
     yield
-    teardown_test_server(server, greenlet)
+    teardown_test_server(server, handle)
 
 
 @pytest.mark.usefixtures("guardian_ast_server")

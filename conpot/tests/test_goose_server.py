@@ -18,7 +18,7 @@ import pytest
 from conpot.protocols.goose.goose_apdu import decode_goose_apdu, encode_goose_apdu
 from conpot.protocols.goose.goose_server import GooseServer
 from conpot.protocols.goose.session90_5 import pack_rgoose, unpack_rgoose
-from conpot.utils.greenlet import (
+from conpot.utils.server_tasks import (
     drain_log_queue,
     get_log_event,
     spawn_test_server,
@@ -44,11 +44,11 @@ def _sample_packet(**overrides):
 
 @pytest.fixture(scope="class")
 def goose_server(request):
-    server, greenlet = spawn_test_server(GooseServer, "goose", "goose")
+    server, handle = spawn_test_server(GooseServer, "goose", "goose")
     request.cls.goose_server = server
-    request.cls.server_greenlet = greenlet
+    request.cls.server_handle = handle
     yield
-    teardown_test_server(server, greenlet)
+    teardown_test_server(server, handle)
 
 
 class TestGooseCodec(unittest.TestCase):
@@ -82,7 +82,7 @@ class TestGooseServer(unittest.TestCase):
         return self.goose_server.server.server_port
 
     def test_rx_logs_connection_and_request(self):
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         packet = _sample_packet()
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -90,16 +90,16 @@ class TestGooseServer(unittest.TestCase):
         finally:
             sock.close()
 
-        new_event = get_log_event(self.server_greenlet, timeout=2)
+        new_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual(new_event["event_type"], "NEW_CONNECTION")
-        request_event = get_log_event(self.server_greenlet, timeout=2)
+        request_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual(request_event["event_type"], "REQUEST")
         request = request_event["request"]
         self.assertEqual(request["appid"], 1)
         self.assertEqual(request["gocb_ref"], "IED1/LLN0$GO$gcb01")
         self.assertEqual(request["st_num"], 1)
         self.assertEqual(request["sq_num"], 3)
-        lost_event = get_log_event(self.server_greenlet, timeout=2)
+        lost_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual(lost_event["event_type"], "CONNECTION_LOST")
 
     def test_tx_publishes_template_identity(self):
@@ -128,7 +128,7 @@ class TestGooseServer(unittest.TestCase):
             capture.bind(("127.0.0.1", 0))
             capture.settimeout(2.0)
             cap_port = capture.getsockname()[1]
-            loop = self.server_greenlet._loop
+            loop = self.server_handle._loop
             loop.call_soon_threadsafe(
                 self.goose_server.server.sendto,
                 packet,
@@ -146,7 +146,7 @@ class TestGooseServer(unittest.TestCase):
         )
 
     def test_garbage_udp_does_not_traceback(self):
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             sock.sendto(b"", ("127.0.0.1", self._port()))
@@ -156,4 +156,4 @@ class TestGooseServer(unittest.TestCase):
             sock.close()
         time.sleep(0.2)
         # No crash; ignore may produce no events or a decode-error session.
-        drain_log_queue(self.server_greenlet)
+        drain_log_queue(self.server_handle)

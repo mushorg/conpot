@@ -99,8 +99,7 @@ Python API
 
 ``initialize(config_file)`` / ``reset()``
     Load or tear down the key set. Prefer letting Conpot's startup path call these;
-    tests use the same helpers via ``conpot.utils.greenlet`` (asyncio loop-thread
-    harness; name kept for compatibility).
+    tests use the same helpers via ``conpot.utils.server_tasks`` (asyncio loop-thread harness).
 
 Writing an emulator
 -------------------

@@ -20,7 +20,7 @@ from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
 from conpot.protocols.kamstrup_meter.request_parser import KamstrupRequestParser
 from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
 from conpot.templates.parse import parse_toml_config
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 from conpot.utils.networking import chr_py3
 import os
 import socket
@@ -39,12 +39,12 @@ class TestKamstrup(unittest.TestCase):
         )["kamstrup_meter"]
         self.command_responder = CommandResponder(meter_cfg)
 
-        self.kamstrup_management_server, self.server_greenlet = spawn_test_server(
+        self.kamstrup_management_server, self.server_handle = spawn_test_server(
             KamstrupServer, "kamstrup_382", "kamstrup_meter"
         )
 
     def tearDown(self):
-        teardown_test_server(self.kamstrup_management_server, self.server_greenlet)
+        teardown_test_server(self.kamstrup_management_server, self.server_handle)
 
     def test_request_get_register(self):
         # requesting register 1033

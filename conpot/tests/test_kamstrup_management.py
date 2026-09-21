@@ -21,7 +21,7 @@ from conpot.protocols.kamstrup_management.kamstrup_management_server import (
     KamstrupManagementServer,
 )
 from conpot.tests.data.kamstrup_management_data import RESPONSES
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 def check_command_resp_help_message(
@@ -47,12 +47,12 @@ class TestKamstrupManagementProtocol(unittest.TestCase):
     """
 
     def setUp(self):
-        self.kamstrup_management_server, self.server_greenlet = spawn_test_server(
+        self.kamstrup_management_server, self.server_handle = spawn_test_server(
             KamstrupManagementServer, "kamstrup_382", "kamstrup_management"
         )
 
     def tearDown(self):
-        teardown_test_server(self.kamstrup_management_server, self.server_greenlet)
+        teardown_test_server(self.kamstrup_management_server, self.server_handle)
 
     def test_help_command(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

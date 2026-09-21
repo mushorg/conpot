@@ -22,12 +22,12 @@ from struct import pack
 from conpot.protocols.s7comm.s7 import S7
 from conpot.protocols.s7comm.s7_server import S7Server
 from conpot.tests.helpers import s7comm_client
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
 class TestS7Server(unittest.TestCase):
     def setUp(self):
-        self.s7_instance, self.greenlet = spawn_test_server(
+        self.s7_instance, self.handle = spawn_test_server(
             S7Server, "default", "s7comm"
         )
 
@@ -35,7 +35,7 @@ class TestS7Server(unittest.TestCase):
         self.server_port = self.s7_instance.server.server_port
 
     def tearDown(self):
-        teardown_test_server(self.s7_instance, self.greenlet)
+        teardown_test_server(self.s7_instance, self.handle)
 
     def _connect(self, src_tsap=0x100, dst_tsap=0x102):
         con = s7comm_client.s7(self.server_host, self.server_port, src_tsap, dst_tsap)

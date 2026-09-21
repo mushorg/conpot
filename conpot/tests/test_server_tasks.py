@@ -20,9 +20,8 @@ import asyncio
 import pytest
 
 from conpot import core
-from conpot.utils.greenlet import (
+from conpot.utils.server_tasks import (
     AsyncioTaskHandle,
-    spawn_startable_greenlet,
     spawn_startable_task,
     spawn_test_server,
     teardown_test_server,
@@ -42,10 +41,10 @@ class StartableStub:
 
 
 @pytest.mark.parametrize("args", ((), ("127.0.0.1", 8080), (1, 2, 3, 4)))
-def test_spawn_startable_greenlet_passes_args(args):
+def test_spawn_startable_task_passes_args(args):
     async def _run():
         instance = StartableStub()
-        handle = await spawn_startable_greenlet(instance, *args)
+        handle = spawn_startable_task(instance, *args)
         instance._stop.set()
         await handle._task
         return instance
@@ -54,10 +53,10 @@ def test_spawn_startable_greenlet_passes_args(args):
     assert instance.args == args
 
 
-def test_spawn_startable_greenlet_sets_name():
+def test_spawn_startable_task_sets_name():
     async def _run():
         instance = StartableStub()
-        handle = await spawn_startable_greenlet(instance)
+        handle = spawn_startable_task(instance)
         instance._stop.set()
         await handle._task
         return handle
@@ -66,7 +65,7 @@ def test_spawn_startable_greenlet_sets_name():
     assert handle.name == "StartableStub"
 
 
-def test_spawn_startable_greenlet_not_scheduled():
+def test_spawn_startable_task_not_scheduled():
     async def _run():
         instance = StartableStub()
         # create_task without yielding so start() has not set _ready yet
@@ -79,10 +78,10 @@ def test_spawn_startable_greenlet_not_scheduled():
     assert asyncio.run(_run()) is False
 
 
-def test_spawn_startable_greenlet_can_observe_scheduling():
+def test_spawn_startable_task_can_observe_scheduling():
     async def _run():
         instance = StartableStub()
-        handle = await spawn_startable_greenlet(instance)
+        handle = spawn_startable_task(instance)
         await instance._ready.wait()
         scheduled = handle.scheduled_once
         instance._stop.set()
@@ -115,7 +114,7 @@ class ServerStub:
             self._stop.set()
 
 
-def test_spawn_test_server_returns_server_and_greenlet():
+def test_spawn_test_server_returns_server_and_handle():
     server, handle = spawn_test_server(ServerStub, "default", "Fake", args="arbitrary")
     try:
         assert isinstance(server, ServerStub)

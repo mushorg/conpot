@@ -20,7 +20,7 @@ from conpot.core.log_worker import LogWorker
 from conpot.protocols.proxy.proxy import Proxy
 from conpot.templates import parse as template_parse
 from conpot.templates import validate as template_validate
-from conpot.utils.greenlet import AsyncioTaskHandle, spawn_startable_task
+from conpot.utils.server_tasks import AsyncioTaskHandle, spawn_startable_task
 
 logger = logging.getLogger(__name__)
 

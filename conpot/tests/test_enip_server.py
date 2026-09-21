@@ -24,7 +24,7 @@ import pytest
 
 from conpot.protocols.enip.enip_server import EnipServer
 from conpot.tests.helpers.enip_client import EnipClient
-from conpot.utils.greenlet import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 # Values intentionally differ from cm-ethernetip Identity defaults so
 # list_identity tests prove template device_info is wired through.
@@ -67,19 +67,19 @@ class EnipServerUDP(EnipServer):
 @pytest.fixture(scope="class")
 def enip_test_servers(request):
     """One TCP + UDP ENIP server pair for the whole test class."""
-    tcp_server, tcp_greenlet = spawn_test_server(
+    tcp_server, tcp_handle = spawn_test_server(
         EnipServerTCP, "default", "enip", port=50002
     )
-    udp_server, udp_greenlet = spawn_test_server(
+    udp_server, udp_handle = spawn_test_server(
         EnipServerUDP, "default", "enip", port=60002
     )
     request.cls.enip_server_tcp = tcp_server
-    request.cls.server_greenlet_tcp = tcp_greenlet
+    request.cls.server_handle_tcp = tcp_handle
     request.cls.enip_server_udp = udp_server
-    request.cls.server_greenlet_udp = udp_greenlet
+    request.cls.server_handle_udp = udp_handle
     yield
-    teardown_test_server(udp_server, udp_greenlet)
-    teardown_test_server(tcp_server, tcp_greenlet)
+    teardown_test_server(udp_server, udp_handle)
+    teardown_test_server(tcp_server, tcp_handle)
 
 
 @pytest.mark.usefixtures("enip_test_servers")
