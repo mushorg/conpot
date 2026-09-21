@@ -1,5 +1,6 @@
 Conpot (unreleased)
-    * Structured attack-event logging (schema_version 1) across JSON, SQLite, syslog, HPFriends, and TAXII sinks
+    * Structured attack-event logging (schema_version 1) across JSON, SQLite, syslog, and HPFriends sinks
+    * Removed STIX/TAXII reporting sink and related dependencies
     * Attack events now include event_time distinct from session start; syslog receives attack JSON explicitly
     * Breaking: HPFriends/JSON attack payloads use session_id/protocol/flat endpoints instead of id/data_type/remote tuples
 

@@ -117,17 +117,6 @@ def test_discover_protocol_ports_from_toml():
     assert "modbus" in ports
 
 
-def test_stix_transformer_resolves_ports_from_template_dir():
-    from conpot.core.loggers.stix_transform import StixTransformer
-
-    transformer = StixTransformer(None, None, template_directory=default_dir)
-    # Defaults overridden by protocol templates in the default profile.
-    assert transformer.protocol_to_port_mapping["http"] == 8800
-    assert transformer.protocol_to_port_mapping["modbus"] == 5020
-    assert transformer.protocol_to_port_mapping["snmp"] == 16100
-    assert transformer.protocol_to_port_mapping["s7comm"] == 10201
-
-
 def test_spawn_test_server_passes_tftp_dict():
     conpot_core.initialize_vfs()
     server, greenlet = spawn_test_server(

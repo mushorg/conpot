@@ -31,23 +31,14 @@ dependencies = [
     "schema",
     "requests",
     "sphinx",
-    # PyPI 1.1.119 emits SyntaxWarning (invalid escapes) on Python 3.12+;
-    # use fork with raw-string regexes (TAXIIProject/libtaxii#256).
-    "libtaxii @ git+https://github.com/ilia-eiq/libtaxii.git@3bc1c15d9162c0e32bcde2e300056f3db9fd558a",
     "legacy-cgi; python_version >= '3.13'",
     "crc16",
     "natsort",
     "scapy>=2.6.0,<3",
     "hpfeeds3",
     "pymodbus==3.11.4",
-    "stix-validator",
-    "stix",
-    "cybox",
     "bacpypes3==0.0.108",
-    # 1.4.1 emits SyntaxWarning (invalid escapes in lenovo/imm.py) on Python 3.12+;
-    # 1.6.x uses raw-string regexes.
     "pyghmi>=1.6.19,<2",
-    "mixbox",
     "cm-ethernetip==0.1.0",
     # Official fs (pyfilesystem2) last release still imports removed pkg_resources
     # under setuptools>=82; use community fork with that dependency dropped.

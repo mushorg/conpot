@@ -346,15 +346,12 @@ dependencies = [
     { name = "cm-ethernetip" },
     { name = "crc16" },
     { name = "cryptography" },
-    { name = "cybox" },
     { name = "dnp3py" },
     { name = "freezegun" },
     { name = "fs" },
     { name = "hpfeeds3" },
     { name = "legacy-cgi" },
-    { name = "libtaxii" },
     { name = "lxml" },
-    { name = "mixbox" },
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1" },
@@ -370,8 +367,6 @@ dependencies = [
     { name = "setuptools" },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
-    { name = "stix" },
-    { name = "stix-validator" },
     { name = "tftpy" },
 ]
 
@@ -388,15 +383,12 @@ requires-dist = [
     { name = "cm-ethernetip", specifier = "==0.1.0" },
     { name = "crc16" },
     { name = "cryptography", specifier = "==50.0.0" },
-    { name = "cybox" },
     { name = "dnp3py", specifier = "==0.4.0" },
     { name = "freezegun", specifier = "!=0.3.13" },
     { name = "fs", git = "https://github.com/ihaveamac/pyfilesystem2.git?rev=266dff7984b66425d38cbd6cf7c5f18a8a98d369" },
     { name = "hpfeeds3" },
     { name = "legacy-cgi", marker = "python_full_version >= '3.13'" },
-    { name = "libtaxii", git = "https://github.com/ilia-eiq/libtaxii.git?rev=3bc1c15d9162c0e32bcde2e300056f3db9fd558a" },
     { name = "lxml" },
-    { name = "mixbox" },
     { name = "natsort" },
     { name = "psutil" },
     { name = "pyasn1", specifier = "==0.6.4" },
@@ -412,8 +404,6 @@ requires-dist = [
     { name = "setuptools", specifier = ">=83.0.0,<84" },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
-    { name = "stix" },
-    { name = "stix-validator" },
     { name = "tftpy" },
 ]
 
@@ -477,20 +467,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/64/a2/4615c8f7d81a00b1d6e6afe19f694e1543582349fb5f4076f6cb5dc36485/cryptography-50.0.0-cp39-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:c87f62a3d3b9888ed0fdde100ec06aa61ca9cd44bad9057d1dff9a516b5f5bb9", size = 4878208, upload-time = "2026-07-31T14:24:45.522Z" },
     { url = "https://files.pythonhosted.org/packages/d2/1a/efcfb02f91407149a0dacffffab791f7e19bf6385f63b3666dc8b5e5c9c8/cryptography-50.0.0-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:65c2c3add92b45fd0709db8594536aea39c2a67af0e27ffcf049c498501140b7", size = 5037050, upload-time = "2026-07-31T14:24:47.697Z" },
     { url = "https://files.pythonhosted.org/packages/57/30/4a22984d4f1bdfb8c054f07a92bc176b97a3134cc1d6c4b3bffb1f3688b4/cryptography-50.0.0-cp39-abi3-win_amd64.whl", hash = "sha256:d24fead1d4d076e1bfb006dcec392074a3cd8d7b4fc8a595aa64073b2b7a96ba", size = 3874135, upload-time = "2026-07-31T14:24:50.085Z" },
-]
-
-[[package]]
-name = "cybox"
-version = "2.1.0.21"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-    { name = "mixbox" },
-    { name = "python-dateutil" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/16/67/19479c7e065a50795a957f7f6a29eaf4c94fb3910241c9760869a63f8090/cybox-2.1.0.21.tar.gz", hash = "sha256:8b12110180aceed0f85f8d6c1860a32a679c261f097d909384a81b3b73ff9716", size = 510300, upload-time = "2020-03-06T18:02:29.512Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/3e/6e3fa450345836dadcbd07793e6429e06c11b5f93dfef28c7a1933d515a0/cybox-2.1.0.21-py2.py3-none-any.whl", hash = "sha256:19a588bcdce8f3a088f7d5edd3e8862c11b701bb3d64257b18f3092deb9c3b7a", size = 780896, upload-time = "2020-03-06T18:02:27.864Z" },
 ]
 
 [[package]]
@@ -637,16 +613,6 @@ wheels = [
 ]
 
 [[package]]
-name = "libtaxii"
-version = "1.1.119"
-source = { git = "https://github.com/ilia-eiq/libtaxii.git?rev=3bc1c15d9162c0e32bcde2e300056f3db9fd558a#3bc1c15d9162c0e32bcde2e300056f3db9fd558a" }
-dependencies = [
-    { name = "lxml" },
-    { name = "python-dateutil" },
-    { name = "six" },
-]
-
-[[package]]
 name = "lxml"
 version = "6.1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -748,21 +714,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/df/5bd7a48c256faecd1d36edc13133e51397e41b73bb77e1a69deab746ebac/markupsafe-3.0.3-cp314-cp314t-win32.whl", hash = "sha256:915c04ba3851909ce68ccc2b8e2cd691618c4dc4c4232fb7982bca3f41fd8c3d", size = 14819, upload-time = "2025-09-27T18:37:26.285Z" },
     { url = "https://files.pythonhosted.org/packages/1a/8a/0402ba61a2f16038b48b39bccca271134be00c5c9f0f623208399333c448/markupsafe-3.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4faffd047e07c38848ce017e8725090413cd80cbc23d86e55c587bf979e579c9", size = 15426, upload-time = "2025-09-27T18:37:27.316Z" },
     { url = "https://files.pythonhosted.org/packages/70/bc/6f1c2f612465f5fa89b95bead1f44dcb607670fd42891d8fdcd5d039f4f4/markupsafe-3.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:32001d6a8fc98c8cb5c947787c5d08b0a50663d139f1305bac5885d98d9b40fa", size = 14146, upload-time = "2025-09-27T18:37:28.327Z" },
-]
-
-[[package]]
-name = "mixbox"
-version = "1.0.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-    { name = "ordered-set" },
-    { name = "python-dateutil" },
-    { name = "weakrefmethod" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/b1/38a53aa8a059f09a06881e948cccff067c664e88f8a14cbfef8c5c29fac9/mixbox-1.0.5.tar.gz", hash = "sha256:13c618a36967a6906d09e9e5be952656c78279b0e9cb5527e9360416e4d1c057", size = 42198, upload-time = "2020-11-20T20:40:23.148Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/d2/3dc1236f7cf380f2a3dbcba364ed1993eef5693adcaf06bea5826dcb53f7/mixbox-1.0.5-py2.py3-none-any.whl", hash = "sha256:170551ec415a0705b3c26c92e3f75fe1cdc95cc7f71f2b6ada4248fb1e96d035", size = 47757, upload-time = "2020-11-20T20:40:21.72Z" },
 ]
 
 [[package]]
@@ -877,21 +828,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/e2/a9/a0c57aee75f77794a
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/82/7a9d0550484a62c6da82858ee9419f3dd1ccc9aa1c26a1e43da3ecd20b0d/natsort-8.4.0-py3-none-any.whl", hash = "sha256:4732914fb471f56b5cce04d7bae6f164a592c7712e1c85f9ef585e197299521c", size = 38268, upload-time = "2023-06-20T04:17:17.522Z" },
 ]
-
-[[package]]
-name = "ordered-set"
-version = "4.1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/4c/ca/bfac8bc689799bcca4157e0e0ced07e70ce125193fc2e166d2e685b7e2fe/ordered-set-4.1.0.tar.gz", hash = "sha256:694a8e44c87657c59292ede72891eb91d34131f6531463aab3009191c77364a8", size = 12826, upload-time = "2022-01-26T14:38:56.6Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/33/55/af02708f230eb77084a299d7b08175cff006dea4f2721074b92cdb0296c0/ordered_set-4.1.0-py3-none-any.whl", hash = "sha256:046e1132c71fcf3330438a539928932caf51ddbc582496833e23de611de14562", size = 7634, upload-time = "2022-01-26T14:38:48.677Z" },
-]
-
-[[package]]
-name = "ordereddict"
-version = "1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/53/25/ef88e8e45db141faa9598fbf7ad0062df8f50f881a36ed6a0073e1572126/ordereddict-1.1.tar.gz", hash = "sha256:1c35b4ac206cef2d24816c89f89cf289dd3d38cf7c449bb3fab7bf6d43f01b1f", size = 2114, upload-time = "2010-10-28T10:08:17.831Z" }
 
 [[package]]
 name = "packaging"
@@ -1352,38 +1288,6 @@ wheels = [
 ]
 
 [[package]]
-name = "stix"
-version = "1.2.0.11"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cybox" },
-    { name = "lxml" },
-    { name = "mixbox" },
-    { name = "python-dateutil" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/da/8a25577ea9153f009ea28fbdc02fb813580f64e91e9ba5874ebd399607c4/stix-1.2.0.11.tar.gz", hash = "sha256:b23a1ca70227e17f42cd0a9f109737f321175f6fe97be5cb24fd4d189dbb1601", size = 218758, upload-time = "2020-11-16T22:24:54.804Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/60/cfccd12bac1692fce0097ac8be6cbbe7d2c08bc04cbcc118c523ce90a04e/stix-1.2.0.11-py2.py3-none-any.whl", hash = "sha256:a3825e34781d491ac3526111f053db85a2be4549e0c8ce56e05e5eeb5f495e53", size = 290566, upload-time = "2020-11-16T22:24:53.071Z" },
-]
-
-[[package]]
-name = "stix-validator"
-version = "3.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-    { name = "ordereddict" },
-    { name = "packaging" },
-    { name = "python-dateutil" },
-    { name = "setuptools" },
-    { name = "xlrd" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/da/3b/4e6e41c1298a9a211f41e978dfad96f0a7569ab14e4b25f1f980daa62a7a/stix-validator-3.0.0.tar.gz", hash = "sha256:4c9c04e708e6b27bd2469e680dea0cc41ae0cd776066d9daf6cbd8b17c17718b", size = 2409130, upload-time = "2024-02-16T20:08:12.749Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/70/c6120e1d3b9a1e2a3185be2adb1247f8ed3a96ae5ab4dbac1a8e3926dafa/stix_validator-3.0.0-py2.py3-none-any.whl", hash = "sha256:224885f8bfa410060425798b86584521a32089e5366540d74bd6e02c5f0b07ce", size = 3399114, upload-time = "2024-02-16T20:08:10.126Z" },
-]
-
-[[package]]
 name = "text-unidecode"
 version = "1.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1408,21 +1312,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
-]
-
-[[package]]
-name = "weakrefmethod"
-version = "1.0.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/99/82/73a21e3eab9a1ff76d12375f7301fba5c6325b9598eed0ae5b0cf5243656/weakrefmethod-1.0.3.tar.gz", hash = "sha256:37bc1fbb5575acf82172d4eb7b6fc4412d77d5a1d70dff2c1f8a4574301cda66", size = 7472, upload-time = "2016-07-18T19:57:07.158Z" }
-
-[[package]]
-name = "xlrd"
-version = "2.0.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/07/5a/377161c2d3538d1990d7af382c79f3b2372e880b65de21b01b1a2b78691e/xlrd-2.0.2.tar.gz", hash = "sha256:08b5e25de58f21ce71dc7db3b3b8106c1fa776f3024c54e45b45b374e89234c9", size = 100167, upload-time = "2025-06-14T08:46:39.039Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/62/c8d562e7766786ba6587d09c5a8ba9f718ed3fa8af7f4553e8f91c36f302/xlrd-2.0.2-py2.py3-none-any.whl", hash = "sha256:ea762c3d29f4cca48d82df517b6d89fbce4db3107f9d78713e48cd321d5c9aa9", size = 96555, upload-time = "2025-06-14T08:46:37.766Z" },
 ]
 
 [[package]]

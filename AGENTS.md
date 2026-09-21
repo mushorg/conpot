@@ -68,7 +68,7 @@ FTP/TFTP and some protocols need VFS init (`init_test_server_by_name` / `initial
 - Protocol handlers speak to **untrusted** remote clients. Harden parsing and isolation; do not weaken sandboxing or privilege drop.
 - Never commit real credentials or secrets. Treat `conpot/testing.cfg` sample logger settings and template SSL material under `conpot/templates/*/ssl/` as fixtures only.
 - **Proxy mode** can bridge attackers to a real backend — change carefully; misconfig exposes live systems.
-- Outbound sinks (hpfeeds, TAXII/STIX, syslog, JSON/SQLite) must not log or ship live secrets.
+- Outbound sinks (hpfeeds, syslog, JSON/SQLite) must not log or ship live secrets.
 - Emulated auth in templates (FTP, IPMI, SNMP communities, etc.) is for deception — never paste real organization credentials.
 
 ## Do not duplicate here

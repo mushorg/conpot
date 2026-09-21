@@ -19,7 +19,6 @@ import conpot
 from conpot.core.loggers.sqlite_log import SQLiteLogger
 from conpot.core.loggers.hpfriends import HPFriendsLogger
 from conpot.core.loggers.syslog import SysLogger
-from conpot.core.loggers.taxii_log import TaxiiLogger
 from conpot.core.loggers.json_log import JsonLogger
 from .loggers.helpers import json_default
 
@@ -38,7 +37,6 @@ class LogWorker(object):
         self.friends_feeder = None
         self.syslog_client = None
         self.public_ip = public_ip
-        self.taxii_logger = None
         self.template = template
         if template_directory:
             self.template_name = os.path.basename(os.path.normpath(template_directory))
@@ -78,11 +76,6 @@ class LogWorker(object):
             logsocket = config.get("syslog", "socket")
             self.syslog_client = SysLogger(host, port, facility, logdevice, logsocket)
 
-        if config.getboolean("taxii", "enabled"):
-            self.taxii_logger = TaxiiLogger(
-                config, template, template_directory=template_directory
-            )
-
         self.enabled = True
         self._stop = asyncio.Event()
 
@@ -118,9 +111,6 @@ class LogWorker(object):
 
         if self.syslog_client:
             self.syslog_client.log(event)
-
-        if self.taxii_logger:
-            self.taxii_logger.log(event)
 
         if self.json_logger:
             self.json_logger.log(event)

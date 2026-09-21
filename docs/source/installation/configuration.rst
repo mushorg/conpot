@@ -30,13 +30,6 @@ Basic configuration options are provided in the default configuration file:
     secret = 4nFRhpm44QkG9cvD
     channels = ["conpot.events", ]
 
-    [taxii]
-    enabled = False
-    host = taxiitest.mitre.org
-    port = 80
-    inbox_path = /services/inbox/default/
-    use_https = False
-
     [fetch_public_ip]
     enabled = True
     urls = ["http://whatismyip.akamai.com/", "http://wgetip.com/"]
@@ -68,4 +61,4 @@ Enabled sinks all receive the same event object:
 * **json** — one NDJSON line per event
 * **sqlite** — relational columns plus full ``event_json``
 * **syslog** — one JSON line on the ``conpot.attack`` logger
-* **hpfriends** / **taxii** — same structured payload (HPFriends JSON shape changed with schema v1)
+* **hpfriends** — same structured payload (JSON shape changed with schema v1)
