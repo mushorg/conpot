@@ -61,6 +61,10 @@ shipped templates; override them in your profile.
      - 1025
      - ``kamstrup_382``
      - —
+   * - ``knxnetip``
+     - 3671
+     - ``knxnetip``
+     - :doc:`knxnetip`
    * - ``modbus``
      - 5020
      - ``default``, ``plc_modbus``
@@ -93,6 +97,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
    goose
    http
    iccp
+   knxnetip
    modbus
    opcua
    s7comm

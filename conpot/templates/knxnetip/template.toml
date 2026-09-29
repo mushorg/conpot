@@ -1,0 +1,9 @@
+[core.template]
+unit = "KNXnet/IP Interface"
+vendor = "Generic"
+description = "KNXnet/IP tunneling interface discovery and description honeypot"
+protocols = ["knxnetip"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

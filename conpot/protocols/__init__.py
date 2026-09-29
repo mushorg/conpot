@@ -31,6 +31,7 @@ from .dnp3.dnp3_server import DNP3Server
 from .goose.goose_server import GooseServer
 from .iccp.iccp_server import ICCPServer
 from .opcua.opcua_server import OPCUAServer
+from .knxnetip.knxnetip_server import KnxnetipServer
 
 # Defines protocol directory names inside template directories
 name_mapping = {
@@ -51,4 +52,5 @@ name_mapping = {
     "goose": GooseServer,
     "iccp": ICCPServer,
     "opcua": OPCUAServer,
+    "knxnetip": KnxnetipServer,
 }

@@ -40,6 +40,7 @@ def main():
         "dnp3": 20000,
         "iccp": 102,
         "opcua": 4840,
+        "knxnetip": 3671,
     }
 
     port = ports.get(name, 0)
