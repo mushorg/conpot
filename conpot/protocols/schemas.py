@@ -388,3 +388,22 @@ opcua = Schema(
         }
     }
 )
+
+knxnetip = Schema(
+    {
+        "knxnetip": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("friendly_name"): str,
+            Optional("individual_address"): str,
+            Optional("serial_number"): str,
+            Optional("mac_address"): str,
+            Optional("manufacturer_id"): int,
+            Optional("medium"): int,
+            Optional("device_status"): int,
+            Optional("project_installation_id"): int,
+            Optional("multicast_group"): str,
+        }
+    }
+)

@@ -1,0 +1,13 @@
+[knxnetip]
+enabled = true
+host = "0.0.0.0"
+port = 3671
+friendly_name = "Conpot KNX IP"
+individual_address = "1.1.1"
+serial_number = "00fa00000001"
+mac_address = "00:fa:00:00:00:01"
+manufacturer_id = 250
+medium = 2
+device_status = 0
+project_installation_id = 0
+multicast_group = "224.0.23.12"

@@ -38,6 +38,7 @@ kamstrup_382_dir = os.path.join(package_directory, "templates", "kamstrup_382")
 goose_dir = os.path.join(package_directory, "templates", "goose")
 iccp_dir = os.path.join(package_directory, "templates", "iccp")
 opcua_dir = os.path.join(package_directory, "templates", "opcua")
+knxnetip_dir = os.path.join(package_directory, "templates", "knxnetip")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -93,6 +94,18 @@ def test_parse_and_validate_opcua_toml():
     template = parse_toml_config(os.path.join(opcua_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["opcua"]
+
+
+def test_parse_and_validate_knxnetip_toml():
+    protocol = parse_toml_config(os.path.join(knxnetip_dir, "knxnetip.toml"))
+    protocol_schemas.knxnetip.validate(protocol)
+    assert protocol["knxnetip"]["port"] == 3671
+    assert protocol["knxnetip"]["enabled"] is True
+    assert protocol["knxnetip"]["friendly_name"] == "Conpot KNX IP"
+    assert protocol["knxnetip"]["individual_address"] == "1.1.1"
+    template = parse_toml_config(os.path.join(knxnetip_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["knxnetip"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():

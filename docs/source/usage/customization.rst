@@ -30,6 +30,7 @@ Per-protocol template notes
 * R-GOOSE APPID, gocbRef, and publish destination — :doc:`../protocols/goose`
 * ICCP/TASE.2 Identify strings and VCC domain points — :doc:`../protocols/iccp`
 * OPC UA server name and Plant variables — :doc:`../protocols/opcua`
+* KNXnet/IP friendly name, individual address, and DIBs — :doc:`../protocols/knxnetip`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
 :doc:`plc_emulator`.
