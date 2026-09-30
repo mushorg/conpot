@@ -15,16 +15,33 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-import conpot
-from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
-from conpot.protocols.kamstrup_meter.request_parser import KamstrupRequestParser
-from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
-from conpot.templates.parse import parse_toml_config
-from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
-from conpot.utils.networking import chr_py3
 import os
 import socket
 import unittest
+
+from crc16.crc16pure import crc16xmodem
+
+import conpot
+from conpot.protocols.kamstrup_meter import messages
+from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
+from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
+from conpot.protocols.kamstrup_meter.request_parser import KamstrupRequestParser
+from conpot.templates.parse import parse_toml_config
+from conpot.utils.networking import chr_py3
+from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
+
+
+def _build_login_request(comm_address, pin_code):
+    """Build a framed KMP login request (CID 0x92) with CRC and EOT."""
+    body = [
+        comm_address,
+        messages.KamstrupRequestLogin.command_byte,
+        (pin_code >> 8) & 0xFF,
+        pin_code & 0xFF,
+    ]
+    crc = crc16xmodem(bytes(body))
+    frame = [0x80] + body + [crc >> 8, crc & 0xFF, 0x0D]
+    return bytes(frame)
 
 
 class TestKamstrup(unittest.TestCase):
@@ -38,6 +55,7 @@ class TestKamstrup(unittest.TestCase):
             )
         )["kamstrup_meter"]
         self.command_responder = CommandResponder(meter_cfg)
+        self.login_pin = meter_cfg.get("login_pin", 12345)
 
         self.kamstrup_management_server, self.server_handle = spawn_test_server(
             KamstrupServer, "kamstrup_382", "kamstrup_meter"
@@ -81,3 +99,45 @@ class TestKamstrup(unittest.TestCase):
         # FIXME: verify bytes received from server - ask jkv?
         pkt = [hex(data[i]) for i in range(len(data))]
         self.assertTrue(("0x40" in pkt) and ("0x3f" in pkt) and ("0xd" in pkt))
+
+    def test_login_accepted(self):
+        frame = _build_login_request(0x3F, self.login_pin)
+        for b in frame:
+            self.request_parser.add_byte(chr(b))
+        parsed = self.request_parser.get_request()
+        self.assertIsInstance(parsed, messages.KamstrupRequestLogin)
+        self.assertEqual(parsed.pin_code, self.login_pin)
+
+        response = self.command_responder.respond(parsed)
+        self.assertIsInstance(response, messages.KamstrupResponseLogin)
+        self.assertEqual(response.status, messages.KamstrupResponseLogin.STATUS_OK)
+
+        serialized = response.serialize()
+        self.assertEqual(serialized[0], 0x40)
+        self.assertEqual(serialized[1], 0x3F)
+        self.assertEqual(serialized[2], 0x92)
+        self.assertEqual(serialized[3], 0x00)
+        self.assertEqual(serialized[-1], 0x0D)
+
+    def test_login_denied(self):
+        wrong_pin = (self.login_pin + 1) % 65536
+        frame = _build_login_request(0x3F, wrong_pin)
+        for b in frame:
+            self.request_parser.add_byte(chr(b))
+        parsed = self.request_parser.get_request()
+        response = self.command_responder.respond(parsed)
+        self.assertEqual(response.status, messages.KamstrupResponseLogin.STATUS_DENIED)
+
+    def test_login_over_socket(self):
+        frame = _build_login_request(0x3F, self.login_pin)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(5)
+        s.connect(("127.0.0.1", self.kamstrup_management_server.server.server_port))
+        s.sendall(frame)
+        data = s.recv(1024)
+        s.close()
+        self.assertEqual(data[0], 0x40)
+        self.assertEqual(data[1], 0x3F)
+        self.assertEqual(data[2], 0x92)
+        self.assertEqual(data[3], 0x00)
+        self.assertEqual(data[-1], 0x0D)

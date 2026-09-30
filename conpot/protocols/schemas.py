@@ -124,6 +124,7 @@ kamstrup_meter = Schema(
             "host": str,
             "port": int,
             "communication_address": int,
+            Optional("login_pin"): int,
             "registers": [
                 {
                     "name": int,

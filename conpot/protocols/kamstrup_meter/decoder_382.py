@@ -63,7 +63,10 @@ class Decoder382(object):
             0x92: self._decode_cmd_login,
         }
 
-        self.response_map = {0x10: self._decode_cmd_return_register}
+        self.response_map = {
+            0x10: self._decode_cmd_return_register,
+            0x92: self._decode_cmd_login_response,
+        }
 
     def decode_in(self, data):
         for d in data:
@@ -209,6 +212,13 @@ class Decoder382(object):
         assert self.in_data[2] == 0x92
         pin_code = self.in_data[3] * 256 + self.in_data[4]
         return "Login command with pin_code: {0}".format(pin_code)
+
+    def _decode_cmd_login_response(self):
+        assert self.out_data[2] == 0x92
+        status = self.out_data[3]
+        if status == 0:
+            return "Login response: accepted"
+        return "Login response: denied (status={0})".format(status)
 
     # supplied message should be stripped of leading and trailing magic
     @classmethod

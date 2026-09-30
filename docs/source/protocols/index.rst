@@ -64,7 +64,7 @@ shipped templates; override them in your profile.
    * - ``kamstrup_meter``
      - 1025
      - ``kamstrup_382``
-     - —
+     - :doc:`kamstrup_meter`
    * - ``knxnetip``
      - 3671
      - ``knxnetip``
@@ -102,6 +102,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
    hartip
    http
    iccp
+   kamstrup_meter
    knxnetip
    modbus
    opcua
