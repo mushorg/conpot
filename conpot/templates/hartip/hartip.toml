@@ -1,0 +1,21 @@
+[hartip]
+enabled = true
+host = "0.0.0.0"
+port = 5094
+timeout = 5
+manufacturer_id = 176
+private_label_distributor = 176
+expanded_device_type = 45075
+device_id = "000001"
+long_tag = "Conpot HART-IP Gateway"
+hart_revision = 7
+device_revision = 1
+software_revision = 1
+hardware_revision = 1
+min_preambles = 5
+min_preambles_slave = 5
+max_device_variables = 1
+config_change_counter = 0
+extended_device_status = 0
+flags = 0
+device_profile = 1

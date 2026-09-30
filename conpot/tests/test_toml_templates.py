@@ -39,6 +39,7 @@ goose_dir = os.path.join(package_directory, "templates", "goose")
 iccp_dir = os.path.join(package_directory, "templates", "iccp")
 opcua_dir = os.path.join(package_directory, "templates", "opcua")
 knxnetip_dir = os.path.join(package_directory, "templates", "knxnetip")
+hartip_dir = os.path.join(package_directory, "templates", "hartip")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -106,6 +107,19 @@ def test_parse_and_validate_knxnetip_toml():
     template = parse_toml_config(os.path.join(knxnetip_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["knxnetip"]
+
+
+def test_parse_and_validate_hartip_toml():
+    protocol = parse_toml_config(os.path.join(hartip_dir, "hartip.toml"))
+    protocol_schemas.hartip.validate(protocol)
+    assert protocol["hartip"]["port"] == 5094
+    assert protocol["hartip"]["enabled"] is True
+    assert protocol["hartip"]["manufacturer_id"] == 176
+    assert protocol["hartip"]["expanded_device_type"] == 45075
+    assert protocol["hartip"]["long_tag"] == "Conpot HART-IP Gateway"
+    template = parse_toml_config(os.path.join(hartip_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["hartip"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():
