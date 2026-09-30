@@ -2,11 +2,12 @@ ADS
 ===
 
 The ``ads`` template listens for **Beckhoff ADS** over AMS/TCP on port
-**48898**. Conpot emulates a TwinCAT-style ADS endpoint that answers device
-info, ADS state, and index-group read/write requests commonly used by scanners
-and light clients. UDP discovery (port 48899), Secure ADS, notifications, and
-symbolic get-handle / read-by-name are out of scope for this handler; see
-GitHub issue `#277`.
+**48898** and answers TwinCAT broadcast search on UDP port **48899**.
+Conpot emulates a TwinCAT-style ADS endpoint that answers device info, ADS
+state, and index-group read/write requests, plus the UDP Identify banner
+(hostname, AMS NetId, TwinCAT and OS version) used by internet scanners.
+Secure ADS, notifications, symbolic get-handle / read-by-name, and UDP
+AddRoute are out of scope for this handler; see GitHub issue `#277`.
 
 Start the server
 ----------------
@@ -15,7 +16,8 @@ ADS-only profile::
 
     uv run conpot --template ads -f
 
-You should see AdsServer listening on ``0.0.0.0:48898``.
+You should see AdsServer listening on ``0.0.0.0:48898`` and AdsDiscovery on
+``0.0.0.0:48899``.
 
 Template configuration
 ----------------------
@@ -54,6 +56,21 @@ Template configuration
    * - ``symbols``
      - —
      - Index-group table (``name``, ``index_group``, ``index_offset``, ``value_hex``)
+   * - ``discovery_enabled`` / ``discovery_port``
+     - ``true`` / ``48899``
+     - UDP broadcast-search listener
+   * - ``hostname``
+     - ``CX-CONPOT``
+     - ComputerName in the UDP Identify reply
+   * - ``tc_version_major`` / ``tc_version_minor`` / ``tc_version_build``
+     - ``3`` / ``1`` / ``4024``
+     - TwinCAT version in the UDP Identify reply
+   * - ``os_platform`` / ``os_major`` / ``os_minor`` / ``os_build``
+     - ``2`` / ``10`` / ``0`` / ``19045``
+     - OS version (``2`` = Windows NT)
+   * - ``os_service_pack``
+     - empty
+     - UTF-16 service-pack string in the OS version blob
 
 Do not paste real plant AMS NetIds or production symbol tables into templates.
 
@@ -67,6 +84,30 @@ Supported commands
 * ADS Write Control (5) — mocked success
 
 Unknown command IDs return an ADS error result and are still logged.
+
+UDP discovery
+-------------
+
+Port **48899** answers AMS/UDP **Identify** (service 1, magic ``0x71146603``).
+The reply sets the response bit (``0x80000001``), advertises ``ams_net_id``
+with system-service port **10000**, and puts ComputerName in the first TLV.
+**AddRoute** (service 6) is logged by service id only and is not accepted.
+
+Probe Identify (stdlib only)::
+
+    import socket
+    import struct
+
+    netid = bytes(int(p) for p in "10.0.0.1.1.1".split("."))
+    req = struct.pack("<III6sHI", 0x71146603, 0, 1, netid, 10000, 0)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(2)
+    sock.sendto(req, ("127.0.0.1", 48899))
+    data, _addr = sock.recvfrom(2048)
+    tag, length = struct.unpack_from("<HH", data, 24)
+    name = data[28 : 28 + length].split(b"\x00", 1)[0]
+    print(name)
+    sock.close()
 
 Probe with a raw AMS/TCP client
 -------------------------------
@@ -103,4 +144,5 @@ Session events
 
 Each TCP session logs ``NEW_CONNECTION``, per-frame ``REQUEST`` (command name,
 AMS NetIds, invoke id), and ``CONNECTION_LOST`` on close, idle timeout, or peer
-reset.
+reset. Each UDP discovery datagram logs the same trio with the service name
+(``IDENTIFY`` or ``ADD_ROUTE``). AddRoute payloads are not stored.

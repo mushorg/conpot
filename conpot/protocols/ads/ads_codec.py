@@ -15,7 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""Minimal AMS/TCP framing for Beckhoff ADS honeypot responses."""
+"""Minimal AMS/TCP and AMS/UDP framing for Beckhoff ADS honeypot responses."""
 
 from __future__ import annotations
 
@@ -52,6 +52,25 @@ ADSERR_DEVICE_INVALIDSIZE = 0x705
 ADSERR_DEVICE_INVALIDDATA = 0x706
 
 DEVICE_NAME_LEN = 16
+
+# AMS/UDP discovery (port 48899). Magic is little-endian 0x71146603.
+UDP_MAGIC = 0x71146603
+UDP_HEADER_LENGTH = 24
+UDP_SERVICE_IDENTIFY = 1
+UDP_SERVICE_ADD_ROUTE = 6
+UDP_REPLY_FLAG = 0x80000000
+UDP_SYSTEM_PORT = 10000
+
+TAG_STATUS = 1
+TAG_TC_VERSION = 3
+TAG_OS_VERSION = 4
+TAG_COMPUTER_NAME = 5
+TAG_NET_ID = 7
+
+UDP_SERVICE_NAMES = {
+    UDP_SERVICE_IDENTIFY: "IDENTIFY",
+    UDP_SERVICE_ADD_ROUTE: "ADD_ROUTE",
+}
 
 
 class AdsError(ValueError):
@@ -259,6 +278,114 @@ def handle_request(frame: bytes, device: dict[str, Any]) -> bytes:
         return _response_header(request, struct.pack("<I", ADSERR_NOERR))
 
     return _error_response(request, ADSERR_DEVICE_INVALIDDATA)
+
+
+def unpack_udp_header(data: bytes) -> dict[str, Any]:
+    """Decode an AMS/UDP discovery header. TLV bodies are not parsed."""
+    if len(data) < UDP_HEADER_LENGTH:
+        raise AdsError("UDP discovery frame too short")
+    magic, invoke_id, service, source_net_id, source_port, num_items = (
+        struct.unpack_from("<III6sHI", data, 0)
+    )
+    if magic != UDP_MAGIC:
+        raise AdsError("invalid UDP discovery magic")
+    service_id = service & 0x7FFFFFFF
+    return {
+        "magic": magic,
+        "invoke_id": invoke_id,
+        "service": service_id,
+        "service_name": UDP_SERVICE_NAMES.get(service_id, f"SERVICE_{service_id}"),
+        "is_reply": bool(service & UDP_REPLY_FLAG),
+        "source_net_id": source_net_id,
+        "source_port": source_port,
+        "num_items": num_items,
+    }
+
+
+def unpack_udp_tlvs(data: bytes) -> dict[int, bytes]:
+    """Return discovery TLV values keyed by tag. Used for our own replies."""
+    if len(data) < UDP_HEADER_LENGTH:
+        raise AdsError("UDP discovery frame too short")
+    tags: dict[int, bytes] = {}
+    offset = UDP_HEADER_LENGTH
+    while offset + 4 <= len(data):
+        tag, length = struct.unpack_from("<HH", data, offset)
+        offset += 4
+        if length > len(data) - offset:
+            raise AdsError("truncated UDP discovery TLV")
+        tags[tag] = data[offset : offset + length]
+        offset += length
+    return tags
+
+
+def _tlv(tag: int, value: bytes) -> bytes:
+    if len(value) > 0xFFFF:
+        raise AdsError("UDP discovery TLV too large")
+    return struct.pack("<HH", tag, len(value)) + value
+
+
+def _os_version_blob(device: dict[str, Any]) -> bytes:
+    """Windows OSVERSIONINFO-style blob (size, versions, platform, UTF-16 SP)."""
+    service_pack = str(device.get("os_service_pack", ""))
+    sp_utf16 = service_pack.encode("utf-16-le") + b"\x00\x00"
+    body = struct.pack(
+        "<IIII",
+        int(device.get("os_major", 10)) & 0xFFFFFFFF,
+        int(device.get("os_minor", 0)) & 0xFFFFFFFF,
+        int(device.get("os_build", 19045)) & 0xFFFFFFFF,
+        int(device.get("os_platform", 2)) & 0xFFFFFFFF,
+    )
+    body += sp_utf16
+    return struct.pack("<I", 4 + len(body)) + body
+
+
+def build_identify_reply(device: dict[str, Any], invoke_id: int = 0) -> bytes:
+    """Build an Identify (service 1) reply scanners use as a TwinCAT banner."""
+    net_id = device["ams_net_id"]
+    if len(net_id) != 6:
+        raise AdsError("AMS NetId must be 6 bytes")
+    hostname = str(device.get("hostname", "CX-CONPOT"))
+    tc_version = struct.pack(
+        "<BBH",
+        int(device.get("tc_version_major", 3)) & 0xFF,
+        int(device.get("tc_version_minor", 1)) & 0xFF,
+        int(device.get("tc_version_build", 4024)) & 0xFFFF,
+    )
+    # ComputerName first so offset-based scanners still find the hostname.
+    items = [
+        _tlv(TAG_COMPUTER_NAME, hostname.encode("ascii", errors="replace") + b"\x00"),
+        _tlv(TAG_TC_VERSION, tc_version),
+        _tlv(TAG_OS_VERSION, _os_version_blob(device)),
+        _tlv(TAG_NET_ID, net_id),
+        _tlv(TAG_STATUS, struct.pack("<I", 0)),
+    ]
+    header = struct.pack(
+        "<III6sHI",
+        UDP_MAGIC,
+        invoke_id & 0xFFFFFFFF,
+        UDP_SERVICE_IDENTIFY | UDP_REPLY_FLAG,
+        net_id,
+        UDP_SYSTEM_PORT,
+        len(items),
+    )
+    return header + b"".join(items)
+
+
+def build_udp_request(
+    service: int, source_net_id: bytes, source_port: int = UDP_SYSTEM_PORT
+) -> bytes:
+    """Craft an AMS/UDP discovery request with an empty TLV list."""
+    if len(source_net_id) != 6:
+        raise AdsError("AMS NetId must be 6 bytes")
+    return struct.pack(
+        "<III6sHI",
+        UDP_MAGIC,
+        0,
+        service & 0xFFFFFFFF,
+        source_net_id,
+        source_port & 0xFFFF,
+        0,
+    )
 
 
 def build_request(

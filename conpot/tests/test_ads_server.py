@@ -134,6 +134,37 @@ class TestAdsCodec(unittest.TestCase):
         self.assertEqual(parsed["payload"][8:9], b"\x01")
 
 
+class TestAdsDiscoveryCodec(unittest.TestCase):
+    def test_identify_reply_banner_fields(self):
+        device = {
+            "ams_net_id": TARGET_NET_ID,
+            "hostname": "CX-CONPOT",
+            "tc_version_major": 3,
+            "tc_version_minor": 1,
+            "tc_version_build": 4024,
+            "os_platform": 2,
+            "os_major": 10,
+            "os_minor": 0,
+            "os_build": 19045,
+            "os_service_pack": "",
+        }
+        reply = ads.build_identify_reply(device, invoke_id=0)
+        header = ads.unpack_udp_header(reply)
+        self.assertEqual(header["service"], ads.UDP_SERVICE_IDENTIFY)
+        self.assertTrue(header["is_reply"])
+        self.assertEqual(header["source_net_id"], TARGET_NET_ID)
+        self.assertEqual(header["source_port"], ads.UDP_SYSTEM_PORT)
+        # ComputerName is the first TLV (tag at offset 24).
+        first_tag = struct.unpack_from("<H", reply, ads.UDP_HEADER_LENGTH)[0]
+        self.assertEqual(first_tag, ads.TAG_COMPUTER_NAME)
+        tags = ads.unpack_udp_tlvs(reply)
+        self.assertEqual(tags[ads.TAG_COMPUTER_NAME].split(b"\x00", 1)[0], b"CX-CONPOT")
+        major, minor, build = struct.unpack("<BBH", tags[ads.TAG_TC_VERSION])
+        self.assertEqual((major, minor, build), (3, 1, 4024))
+        self.assertEqual(tags[ads.TAG_NET_ID], TARGET_NET_ID)
+        self.assertEqual(struct.unpack("<I", tags[ads.TAG_STATUS])[0], 0)
+
+
 @pytest.mark.usefixtures("ads_server")
 class TestAdsServer(unittest.TestCase):
     def _port(self):
@@ -216,3 +247,68 @@ class TestAdsServer(unittest.TestCase):
         self.assertEqual("NEW_CONNECTION", new_event["event_type"])
         lost_event = get_log_event(self.server_handle, timeout=2)
         self.assertEqual("CONNECTION_LOST", lost_event["event_type"])
+
+    def _discovery_port(self):
+        return self.ads_server.discovery.server.server_port
+
+    def test_udp_identify_returns_template_banner(self):
+        drain_log_queue(self.server_handle)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(2)
+        try:
+            sock.sendto(
+                ads.build_udp_request(ads.UDP_SERVICE_IDENTIFY, SOURCE_NET_ID),
+                ("127.0.0.1", self._discovery_port()),
+            )
+            data, _addr = sock.recvfrom(2048)
+        finally:
+            sock.close()
+
+        header = ads.unpack_udp_header(data)
+        self.assertEqual(header["magic"], ads.UDP_MAGIC)
+        self.assertTrue(header["is_reply"])
+        self.assertEqual(header["source_net_id"], TARGET_NET_ID)
+        self.assertEqual(header["source_port"], ads.UDP_SYSTEM_PORT)
+        tags = ads.unpack_udp_tlvs(data)
+        self.assertEqual(tags[ads.TAG_COMPUTER_NAME].split(b"\x00", 1)[0], b"CX-CONPOT")
+        major, minor, build = struct.unpack("<BBH", tags[ads.TAG_TC_VERSION])
+        self.assertEqual((major, minor, build), (3, 1, 4024))
+
+        time.sleep(0.2)
+        events = []
+        for _ in range(8):
+            try:
+                events.append(get_log_event(self.server_handle, timeout=1))
+            except Exception:
+                break
+        requests = [e for e in events if e["event_type"] == "REQUEST"]
+        self.assertTrue(requests)
+        self.assertEqual(requests[0]["request"]["service"], "IDENTIFY")
+        self.assertEqual(requests[0]["request"]["hostname"], "CX-CONPOT")
+
+    def test_add_route_does_not_return_success(self):
+        drain_log_queue(self.server_handle)
+        secret = b"not-a-real-password"
+        packet = ads.build_udp_request(ads.UDP_SERVICE_ADD_ROUTE, SOURCE_NET_ID)
+        packet += struct.pack("<HH", 2, len(secret)) + secret
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(0.4)
+        try:
+            sock.sendto(packet, ("127.0.0.1", self._discovery_port()))
+            with self.assertRaises(socket.timeout):
+                sock.recvfrom(2048)
+        finally:
+            sock.close()
+
+        time.sleep(0.2)
+        events = []
+        for _ in range(8):
+            try:
+                events.append(get_log_event(self.server_handle, timeout=1))
+            except Exception:
+                break
+        self.assertNotIn("not-a-real-password", repr(events))
+        requests = [e for e in events if e["event_type"] == "REQUEST"]
+        self.assertTrue(requests)
+        self.assertEqual(requests[0]["request"]["service"], "ADD_ROUTE")
+        self.assertNotIn("raw", requests[0]["request"])

@@ -451,6 +451,17 @@ ads = Schema(
             Optional("version_build"): int,
             Optional("ads_state"): int,
             Optional("device_state"): int,
+            Optional("discovery_enabled"): bool,
+            Optional("discovery_port"): int,
+            Optional("hostname"): str,
+            Optional("tc_version_major"): int,
+            Optional("tc_version_minor"): int,
+            Optional("tc_version_build"): int,
+            Optional("os_platform"): int,
+            Optional("os_major"): int,
+            Optional("os_minor"): int,
+            Optional("os_build"): int,
+            Optional("os_service_pack"): str,
             Optional("symbols"): [
                 {
                     Optional("name"): str,

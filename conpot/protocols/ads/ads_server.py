@@ -15,7 +15,7 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-"""Beckhoff ADS/AMS TCP honeypot — device info, state, index-group R/W."""
+"""Beckhoff ADS/AMS honeypot — TCP commands plus UDP Identify for scanners."""
 
 from __future__ import annotations
 
@@ -27,9 +27,20 @@ import struct
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.ads import ads_codec as ads
-from conpot.utils.asyncio_serve import serve_tcp_sync_handler
+from conpot.utils.asyncio_serve import serve_tcp_sync_handler, serve_udp_datagram
 
 logger = logging.getLogger(__name__)
+
+
+class _AdsDiscovery(object):
+    """UDP listener facade so discovery does not replace the TCP ``server``."""
+
+    def __init__(self, owner):
+        self.owner = owner
+        self.server = None
+
+    def handle(self, data, addr):
+        self.owner.handle_discovery(data, addr, self)
 
 
 @conpot_protocol
@@ -38,6 +49,9 @@ class AdsServer(object):
         self.timeout = float(template.get("timeout", 5))
         self.template = template
         self.server = None
+        self.discovery = None
+        self.discovery_enabled = bool(template.get("discovery_enabled", True))
+        self.discovery_port = int(template.get("discovery_port", 48899))
         self.ams_net_id = ads.parse_ams_net_id(
             str(template.get("ams_net_id", "192.168.1.1.1.1"))
         )
@@ -51,6 +65,15 @@ class AdsServer(object):
             "version_build": int(template.get("version_build", 0)),
             "ads_state": int(template.get("ads_state", 5)),
             "device_state": int(template.get("device_state", 0)),
+            "hostname": str(template.get("hostname", "CX-CONPOT")),
+            "tc_version_major": int(template.get("tc_version_major", 3)),
+            "tc_version_minor": int(template.get("tc_version_minor", 1)),
+            "tc_version_build": int(template.get("tc_version_build", 4024)),
+            "os_platform": int(template.get("os_platform", 2)),
+            "os_major": int(template.get("os_major", 10)),
+            "os_minor": int(template.get("os_minor", 0)),
+            "os_build": int(template.get("os_build", 19045)),
+            "os_service_pack": str(template.get("os_service_pack", "")),
             "symbols": self._load_symbols(template),
         }
         logger.info(
@@ -180,18 +203,101 @@ class AdsServer(object):
             except socket.error:
                 pass
 
+    def handle_discovery(self, data, addr, discovery):
+        try:
+            parsed = ads.unpack_udp_header(data)
+        except ads.AdsError:
+            logger.debug("Dropping non-ADS UDP datagram from %s", addr)
+            return
+
+        bound = discovery.server
+        local_host = bound.server_host if bound is not None else "0.0.0.0"
+        local_port = bound.server_port if bound is not None else self.discovery_port
+        session = conpot_core.get_session(
+            "ads", addr[0], addr[1], local_host, local_port
+        )
+        logger.info(
+            "New ADS discovery datagram from %s:%d. (%s)",
+            addr[0],
+            addr[1],
+            session.id,
+        )
+        session.log_event(event_type="NEW_CONNECTION")
+        response = None
+        try:
+            # Identify is the broadcast-search banner. AddRoute carries
+            # credentials; log the service id and do not answer with status 0.
+            if not parsed["is_reply"] and parsed["service"] == ads.UDP_SERVICE_IDENTIFY:
+                response = ads.build_identify_reply(
+                    self.device, invoke_id=parsed["invoke_id"]
+                )
+                if bound is not None:
+                    bound.sendto(response, addr)
+
+            request = {
+                "service": parsed["service_name"],
+                "service_id": parsed["service"],
+                "source_net_id": ads.format_ams_net_id(parsed["source_net_id"]),
+                "source_port": parsed["source_port"],
+            }
+            if response is not None:
+                request["hostname"] = self.device["hostname"]
+            session.log_event(
+                event_type="REQUEST",
+                request=request,
+                response=response.hex() if response else None,
+            )
+        finally:
+            session.log_event(event_type="CONNECTION_LOST")
+
     async def start(self, host, port):
         self._stop = asyncio.Event()
         self._ready = asyncio.Event()
+        self._tcp_ready = asyncio.Event()
+        self._udp_ready = asyncio.Event()
         logger.info("ADS server starting on: %s", (host, port))
-        await serve_tcp_sync_handler(
-            host,
-            port,
-            self,
-            stop_event=self._stop,
-            ready_event=self._ready,
-            name="AdsServer",
-        )
+
+        tasks = [
+            asyncio.create_task(
+                serve_tcp_sync_handler(
+                    host,
+                    port,
+                    self,
+                    stop_event=self._stop,
+                    ready_event=self._tcp_ready,
+                    name="AdsServer",
+                )
+            )
+        ]
+        if self.discovery_enabled:
+            # Tests pass port 0 so TCP binds an ephemeral port; do the same
+            # for discovery so pytest does not grab 48899.
+            discovery_port = 0 if port == 0 else self.discovery_port
+            self.discovery = _AdsDiscovery(self)
+            tasks.append(
+                asyncio.create_task(
+                    serve_udp_datagram(
+                        host,
+                        discovery_port,
+                        self.discovery,
+                        stop_event=self._stop,
+                        ready_event=self._udp_ready,
+                        name="AdsDiscovery",
+                    )
+                )
+            )
+        else:
+            self._udp_ready.set()
+
+        await asyncio.gather(self._tcp_ready.wait(), self._udp_ready.wait())
+        self._ready.set()
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     def stop(self):
         if hasattr(self, "_stop"):
