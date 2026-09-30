@@ -435,3 +435,41 @@ hartip = Schema(
         }
     }
 )
+
+ads = Schema(
+    {
+        "ads": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("timeout"): Or(int, float),
+            Optional("ams_net_id"): str,
+            Optional("ams_port"): int,
+            Optional("device_name"): str,
+            Optional("version_major"): int,
+            Optional("version_minor"): int,
+            Optional("version_build"): int,
+            Optional("ads_state"): int,
+            Optional("device_state"): int,
+            Optional("discovery_enabled"): bool,
+            Optional("discovery_port"): int,
+            Optional("hostname"): str,
+            Optional("tc_version_major"): int,
+            Optional("tc_version_minor"): int,
+            Optional("tc_version_build"): int,
+            Optional("os_platform"): int,
+            Optional("os_major"): int,
+            Optional("os_minor"): int,
+            Optional("os_build"): int,
+            Optional("os_service_pack"): str,
+            Optional("symbols"): [
+                {
+                    Optional("name"): str,
+                    "index_group": int,
+                    "index_offset": int,
+                    Optional("value_hex"): str,
+                }
+            ],
+        }
+    }
+)

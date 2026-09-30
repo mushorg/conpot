@@ -40,6 +40,7 @@ iccp_dir = os.path.join(package_directory, "templates", "iccp")
 opcua_dir = os.path.join(package_directory, "templates", "opcua")
 knxnetip_dir = os.path.join(package_directory, "templates", "knxnetip")
 hartip_dir = os.path.join(package_directory, "templates", "hartip")
+ads_dir = os.path.join(package_directory, "templates", "ads")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -120,6 +121,22 @@ def test_parse_and_validate_hartip_toml():
     template = parse_toml_config(os.path.join(hartip_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["hartip"]
+
+
+def test_parse_and_validate_ads_toml():
+    protocol = parse_toml_config(os.path.join(ads_dir, "ads.toml"))
+    protocol_schemas.ads.validate(protocol)
+    assert protocol["ads"]["port"] == 48898
+    assert protocol["ads"]["enabled"] is True
+    assert protocol["ads"]["ams_net_id"] == "192.168.1.1.1.1"
+    assert protocol["ads"]["device_name"] == "Conpot TwinCAT"
+    assert protocol["ads"]["discovery_port"] == 48899
+    assert protocol["ads"]["hostname"] == "CX-CONPOT"
+    assert protocol["ads"]["tc_version_build"] == 4024
+    assert len(protocol["ads"]["symbols"]) == 2
+    template = parse_toml_config(os.path.join(ads_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["ads"]
 
 
 def test_parse_and_validate_kamstrup_management_toml():

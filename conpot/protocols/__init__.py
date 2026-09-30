@@ -33,6 +33,7 @@ from .iccp.iccp_server import ICCPServer
 from .opcua.opcua_server import OPCUAServer
 from .knxnetip.knxnetip_server import KnxnetipServer
 from .hartip.hartip_server import HartipServer
+from .ads.ads_server import AdsServer
 
 # Defines protocol directory names inside template directories
 name_mapping = {
@@ -55,4 +56,5 @@ name_mapping = {
     "opcua": OPCUAServer,
     "knxnetip": KnxnetipServer,
     "hartip": HartipServer,
+    "ads": AdsServer,
 }

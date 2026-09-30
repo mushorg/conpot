@@ -280,6 +280,7 @@ def init_test_server_by_name(name, port=0):
         "opcua": "opcua",
         "knxnetip": "knxnetip",
         "hartip": "hartip",
+        "ads": "ads",
     }.get(name, "default")
 
     class Args(SimpleNamespace):
