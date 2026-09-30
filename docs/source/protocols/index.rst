@@ -37,6 +37,10 @@ shipped templates; override them in your profile.
      - 10001
      - ``guardian_ast``
      - —
+   * - ``hartip``
+     - 5094
+     - ``hartip``
+     - :doc:`hartip`
    * - ``http``
      - 8800
      - ``default``
@@ -95,6 +99,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
    dnp3
    enip
    goose
+   hartip
    http
    iccp
    knxnetip

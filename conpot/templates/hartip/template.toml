@@ -1,0 +1,9 @@
+[core.template]
+unit = "HART-IP Gateway"
+vendor = "Generic"
+description = "HART-IP TCP gateway honeypot (session + identity commands)"
+protocols = ["hartip"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

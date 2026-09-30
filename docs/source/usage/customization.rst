@@ -31,6 +31,7 @@ Per-protocol template notes
 * ICCP/TASE.2 Identify strings and VCC domain points — :doc:`../protocols/iccp`
 * OPC UA server name and Plant variables — :doc:`../protocols/opcua`
 * KNXnet/IP friendly name, individual address, and DIBs — :doc:`../protocols/knxnetip`
+* HART-IP manufacturer, device type/ID, and long tag — :doc:`../protocols/hartip`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
 :doc:`plc_emulator`.

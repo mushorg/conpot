@@ -5,6 +5,7 @@ Conpot (unreleased)
     * Added IEC 60870-6 ICCP/TASE.2 (ISO-on-TCP) called-endpoint honeypot subset (#70)
     * Added OPC UA (opc.tcp) honeypot via asyncua UaProcessor; Conpot owns accept (#82)
     * Added KNXnet/IP UDP SEARCH/DESCRIPTION gateway honeypot subset (#218)
+    * Added HART-IP TCP gateway honeypot subset (session + Cmd 0/20) (#219)
 
 Conpot 1.0.0 (release 2026-09-20)
     * Platform rewrite: asyncio runtime (gevent removed), current CPython, GitHub Actions CI

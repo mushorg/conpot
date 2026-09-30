@@ -407,3 +407,30 @@ knxnetip = Schema(
         }
     }
 )
+
+hartip = Schema(
+    {
+        "hartip": {
+            "enabled": bool,
+            "host": str,
+            "port": int,
+            Optional("timeout"): Or(int, float),
+            Optional("manufacturer_id"): int,
+            Optional("private_label_distributor"): int,
+            Optional("expanded_device_type"): int,
+            Optional("device_id"): Or(str, int),
+            Optional("long_tag"): str,
+            Optional("hart_revision"): int,
+            Optional("device_revision"): int,
+            Optional("software_revision"): int,
+            Optional("hardware_revision"): int,
+            Optional("min_preambles"): int,
+            Optional("min_preambles_slave"): int,
+            Optional("max_device_variables"): int,
+            Optional("config_change_counter"): int,
+            Optional("extended_device_status"): int,
+            Optional("flags"): int,
+            Optional("device_profile"): int,
+        }
+    }
+)
