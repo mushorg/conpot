@@ -25,10 +25,14 @@ logger = logging.getLogger(__name__)
 
 
 class CommandResponder(object):
+    # Metertool default meter password (deception PIN for the honeypot).
+    DEFAULT_LOGIN_PIN = 12345
+
     def __init__(self, template):
         # key: kamstrup_meter register, value: databus key
         self.registers = {}
         self.communication_address = int(template["communication_address"])
+        self.login_pin = int(template.get("login_pin", self.DEFAULT_LOGIN_PIN))
         for register in template.get("registers", []):
             name = int(register["name"])
             length = int(register["length"])
@@ -55,5 +59,14 @@ class CommandResponder(object):
                 if register in self.registers:
                     response.add_register(copy.deepcopy(self.registers[register]))
             return response
+        elif isinstance(request, messages.KamstrupRequestLogin):
+            if request.pin_code == self.login_pin:
+                status = messages.KamstrupResponseLogin.STATUS_OK
+                logger.info("Kamstrup login accepted (pin_code=%s).", request.pin_code)
+            else:
+                status = messages.KamstrupResponseLogin.STATUS_DENIED
+                logger.info("Kamstrup login denied (pin_code=%s).", request.pin_code)
+            return messages.KamstrupResponseLogin(self.communication_address, status)
         else:
-            assert False
+            logger.warning("Unsupported Kamstrup request: %s", request)
+            return None

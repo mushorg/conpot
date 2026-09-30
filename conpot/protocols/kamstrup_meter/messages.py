@@ -85,6 +85,23 @@ class KamstrupRequestGetRegisters(KamstrupRequestBase):
             self.registers.append(register)
 
 
+class KamstrupRequestLogin(KamstrupRequestBase):
+    """KMP login (CID 0x92): two-byte PIN / meter password."""
+
+    command_byte = 0x92
+
+    def __init__(self, communication_address, command_byte, message_bytes):
+        super(KamstrupRequestLogin, self).__init__(
+            communication_address,
+            KamstrupRequestLogin.command_byte,
+            message_bytes,
+        )
+        if len(message_bytes) < 2:
+            raise ValueError("Login request requires a 2-byte PIN")
+        self.pin_code = message_bytes[0] * 256 + message_bytes[1]
+        logger.debug("Kamstrup login request with pin_code: %s", self.pin_code)
+
+
 # ############ RESPONSE MESSAGES ##############
 class KamstrupResponseBase(KamstrupProtocolBase):
     def __init__(self, communication_address):
@@ -164,3 +181,21 @@ class KamstrupResponseRegister(KamstrupResponseBase):
         # add leading/trailing magic and escape as appropriate
         serialized_message = super(KamstrupResponseRegister, self).serialize(message)
         return bytearray(serialized_message)
+
+
+class KamstrupResponseLogin(KamstrupResponseBase):
+    """Login reply: echo CID 0x92 plus a one-byte status (0 = accepted)."""
+
+    STATUS_OK = 0x00
+    STATUS_DENIED = 0x01
+
+    def __init__(self, communication_address, status):
+        super(KamstrupResponseLogin, self).__init__(communication_address)
+        self.status = status
+
+    def serialize(self, message=None):
+        if not message:
+            message = []
+        message.append(KamstrupRequestLogin.command_byte)
+        message.append(self.status)
+        return bytearray(super(KamstrupResponseLogin, self).serialize(message))

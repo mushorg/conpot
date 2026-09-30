@@ -3,6 +3,8 @@ enabled = true
 host = "0.0.0.0"
 port = 1025
 communication_address = 63
+# Deception meter password for KMP login (CID 0x92); Metertool default is 12345.
+login_pin = 12345
 
 [[kamstrup_meter.registers]]
 name = 1

@@ -21,7 +21,11 @@ from crc16.crc16pure import crc16xmodem
 
 from conpot.utils.networking import chr_py3
 from . import kamstrup_constants
-from .messages import KamstrupRequestGetRegisters, KamstrupRequestUnknown
+from .messages import (
+    KamstrupRequestGetRegisters,
+    KamstrupRequestLogin,
+    KamstrupRequestUnknown,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +37,8 @@ class KamstrupRequestParser(object):
         self.data_escaped = False
         self.done = False
         self.request_map = {
-            KamstrupRequestGetRegisters.command_byte: KamstrupRequestGetRegisters
+            KamstrupRequestGetRegisters.command_byte: KamstrupRequestGetRegisters,
+            KamstrupRequestLogin.command_byte: KamstrupRequestLogin,
         }
 
     def add_byte(self, byte):
