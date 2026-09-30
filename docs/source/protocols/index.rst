@@ -17,6 +17,10 @@ shipped templates; override them in your profile.
      - 47808
      - ``default``
      - —
+   * - ``ads``
+     - 48898
+     - ``ads``
+     - :doc:`ads`
    * - ``dnp3``
      - 20000
      - ``dnp3``
@@ -96,6 +100,7 @@ CPU stop/restart probes are summarized in :doc:`../usage/stop_restart`.
 .. toctree::
    :maxdepth: 1
 
+   ads
    dnp3
    enip
    goose

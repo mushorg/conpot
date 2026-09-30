@@ -1,0 +1,25 @@
+[ads]
+enabled = true
+host = "0.0.0.0"
+port = 48898
+timeout = 5
+ams_net_id = "192.168.1.1.1.1"
+ams_port = 851
+device_name = "Conpot TwinCAT"
+version_major = 3
+version_minor = 1
+version_build = 0
+ads_state = 5
+device_state = 0
+
+[[ads.symbols]]
+name = "MAIN.bRunning"
+index_group = 16448
+index_offset = 0
+value_hex = "01"
+
+[[ads.symbols]]
+name = "MAIN.nCounter"
+index_group = 16448
+index_offset = 4
+value_hex = "00000000"

@@ -32,6 +32,7 @@ Per-protocol template notes
 * OPC UA server name and Plant variables — :doc:`../protocols/opcua`
 * KNXnet/IP friendly name, individual address, and DIBs — :doc:`../protocols/knxnetip`
 * HART-IP manufacturer, device type/ID, and long tag — :doc:`../protocols/hartip`
+* Beckhoff ADS AMS NetId, device name, and index-group symbols — :doc:`../protocols/ads`
 * Kamstrup meter login PIN and register table — :doc:`../protocols/kamstrup_meter`
 
 The ``plc_modbus`` profile adds a scan cycle behind Modbus; see
