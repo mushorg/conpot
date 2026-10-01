@@ -16,6 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import shutil
+import socket
 import unittest
 from subprocess import PIPE, STDOUT, Popen
 from conpot.protocols.ipmi.ipmi_server import IpmiServer
@@ -144,3 +145,29 @@ class TestFakeSession(unittest.TestCase):
         session = FakeSession("127.0.0.1", "", "", 6230)
         self.assertEqual(session.maxtimeout, 3)
         self.assertEqual(session.logontries, 1)
+
+
+# RMCP / IPMI v1.5 Get Channel Authentication Capabilities
+GET_CHANNEL_AUTH_CAP = bytes.fromhex("0600ff07000000000000000000092018c88100388e04b5")
+
+
+class TestIPMISourcePort(unittest.TestCase):
+    def setUp(self):
+        self.ipmi_server, self.handle = spawn_test_server(IpmiServer, "default", "ipmi")
+
+    def tearDown(self):
+        teardown_test_server(self.ipmi_server, self.handle)
+
+    def _request(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.settimeout(2)
+            s.sendto(
+                GET_CHANNEL_AUTH_CAP,
+                ("127.0.0.1", self.ipmi_server.server.server_port),
+            )
+            return s.recvfrom(1024)[0]
+
+    def test_new_source_port_gets_answer(self):
+        # each socket uses its own source port
+        self.assertTrue(self._request().startswith(b"\x06\x00\xff\x07"))
+        self.assertTrue(self._request().startswith(b"\x06\x00\xff\x07"))

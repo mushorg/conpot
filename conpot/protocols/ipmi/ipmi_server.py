@@ -115,8 +115,13 @@ class IpmiServer(object):
 
     def handle(self, data, address):
         self._ensure_sock()
+        # one session per (ip, port): keyed by ip only, a client that comes back
+        # from a new source port gets its answers sent to the old port
+        key = (address[0], address[1])
+        if key in self.sessions:
+            self.session = self.sessions[key]
         # make sure self.session exists
-        if not address[0] in self.sessions.keys() or not hasattr(self, "session"):
+        if key not in self.sessions or not hasattr(self, "session"):
             # new session for new source
             logger.info("New IPMI traffic from %s", address)
             self._log_event(
@@ -130,7 +135,9 @@ class IpmiServer(object):
             self.kg = None
 
             self.session.socket = self.sock
-            self.sessions[address[0]] = self.session
+            while len(self.sessions) >= 1024:
+                self.sessions.pop(next(iter(self.sessions)))
+            self.sessions[key] = self.session
             self.initiate_session(data, address, self.session)
         else:
             # session already exists
@@ -223,7 +230,7 @@ class IpmiServer(object):
         logger.info("IPMI Session closed %s", self.session.sockaddr[0])
         # cleanup session
         self._log_event(self.session.sockaddr, event_type="CONNECTION_LOST")
-        del self.sessions[self.session.sockaddr[0]]
+        self.sessions.pop(tuple(self.session.sockaddr[:2]), None)
         self.attack_sessions.pop(self.session.sockaddr[0], None)
         del self.session
 
