@@ -22,8 +22,13 @@ import socket
 
 import pytest
 
+import conpot.core as conpot_core
 from conpot.protocols.guardian_ast.guardian_ast_server import GuardianASTServer
-from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
+from conpot.utils.server_tasks import (
+    get_log_event,
+    spawn_test_server,
+    teardown_test_server,
+)
 
 DATA = {
     "I20100": b"\nI20100\n05/30/2018 19:15\n\nSTATOIL STATION\n\n\n\nIN-TANK INVENTORY\n\nTANK PRODUCT             VOLUME TC VOLUME   ULLAGE   HEIGHT    WATER     TEMP\n  1  SUPER                 2428      2540     4465    39.88     6.62    53.74\n  2  UNLEAD                7457      7543     7874    65.59     8.10    58.17\n  3  DIESEL                6532      6664     4597    33.06     5.91    57.91\n  4  PREMIUM               2839      2867     4597    66.57     4.49    57.88\n",
@@ -146,3 +151,38 @@ class TestGuardianAST(unittest.TestCase):
         data = self._inventory_after_rename(b"\x01S60200ULTIMATETEST\r\n")
         count = len(re.findall("(?=ULTIMATETEST)", data.decode()))
         self.assertEqual(count, 4)
+
+    def _connection_lost(self, timeout=3.0):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                event = get_log_event(self.server_handle, timeout=0.5)
+            except TimeoutError:
+                continue
+            if event.get("event_type") == "CONNECTION_LOST":
+                return True
+        return False
+
+    def test_close_before_terminator(self):
+        # recv() returns b"" after the close, the read loop must stop
+        conpot_core.get_sessionManager().purge_sessions()
+        s = socket.create_connection(
+            ("127.0.0.1", self.guardian_ast_server.server.server_port)
+        )
+        s.send(b"\x01I201")
+        s.close()
+        self.assertTrue(self._connection_lost())
+
+    def test_unterminated_flood(self):
+        conpot_core.get_sessionManager().purge_sessions()
+        s = socket.create_connection(
+            ("127.0.0.1", self.guardian_ast_server.server.server_port)
+        )
+        try:
+            s.sendall(b"A" * 70000)
+        except OSError:
+            pass
+        try:
+            self.assertTrue(self._connection_lost())
+        finally:
+            s.close()

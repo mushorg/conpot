@@ -333,7 +333,14 @@ class GuardianASTServer(object):
                     if not request:
                         break
                     while not (b"\n" in request or b"00" in request):
-                        request += sock.recv(4096)
+                        chunk = sock.recv(4096)
+                        # b"" means the peer closed, the cap stops unterminated floods
+                        if not chunk or len(request) > 65536:
+                            request = b""
+                            break
+                        request += chunk
+                    if not request:
+                        break
                     # Accept real SOH (\x01) or the literal "^A" typed in telnet/ncat
                     # thanks John(achillean) for the help
                     if request[:1] == b"\x01":
