@@ -77,6 +77,9 @@ async def serve_tcp_sync_handler(
         conn.setblocking(True)
         try:
             await loop.run_in_executor(None, handler_obj.handle, conn, peer)
+        except ConnectionError as exc:
+            # reset / broken pipe by the client is not a handler bug
+            logger.info("%s connection closed by %s: %s", name, peer, exc)
         except Exception:
             logger.exception("%s connection handler crashed for %s", name, peer)
         finally:
