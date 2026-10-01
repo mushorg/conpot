@@ -16,6 +16,7 @@ import unittest
 
 import pytest
 
+import conpot.core as conpot_core
 from conpot.protocols.iccp.ber import (
     decode_tlv,
     encode_integer,
@@ -456,3 +457,37 @@ class TestICCPServer(unittest.TestCase):
         types = [e["event_type"] for e in events]
         self.assertIn("NEW_CONNECTION", types)
         self.assertIn("CONNECTION_LOST", types)
+
+    def _events_until_lost(self, timeout=3.0):
+        events = []
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                event = get_log_event(self.server_handle, timeout=0.5)
+            except TimeoutError:
+                continue
+            events.append(event)
+            if event.get("event_type") == "CONNECTION_LOST":
+                break
+        return events
+
+    def _send_and_close(self, payload):
+        conpot_core.get_sessionManager().purge_sessions()
+        sock = socket.create_connection(("127.0.0.1", self._port()), timeout=2)
+        sock.sendall(payload)
+        sock.close()
+        events = self._events_until_lost()
+        self.assertEqual("CONNECTION_LOST", events[-1]["event_type"])
+        self.assertTrue(any(e.get("error") for e in events))
+
+    def test_short_tpkt_header(self):
+        self._send_and_close(b"\x03\x00\x00")
+
+    def test_invalid_tpkt_length(self):
+        self._send_and_close(b"\x03\x00\x00\x02")
+
+    def test_truncated_cotp_parameter(self):
+        # CR TPDU whose src-TSAP parameter claims 5 bytes but carries none
+        self._send_and_close(
+            bytes.fromhex("0300000d08e000000001 00c105".replace(" ", ""))
+        )

@@ -199,7 +199,12 @@ class ICCPServer(object):
 
         try:
             while True:
-                raw = self._recv_tpkt(sock)
+                try:
+                    raw = self._recv_tpkt(sock)
+                except TPKTError as exc:
+                    logger.debug("ICCP framing error from %s: %s", addr, exc)
+                    session.log_event(error=str(exc))
+                    break
                 if raw is None:
                     break
                 try:
@@ -211,7 +216,12 @@ class ICCPServer(object):
                     break
 
                 if cotp.tpdu_type == TPDU_CR:
-                    cr = COTPConnection().dissect(cotp.payload)
+                    try:
+                        cr = COTPConnection().dissect(cotp.payload)
+                    except COTPError as exc:
+                        logger.debug("ICCP framing error from %s: %s", addr, exc)
+                        session.log_event(error=str(exc))
+                        break
                     cc = COTPConnection(
                         dst_ref=cr.src_ref,
                         src_ref=0x0001,
