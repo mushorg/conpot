@@ -68,7 +68,8 @@ class KamstrupManagementServer(object):
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
                     session.log_event(event_type="CONNECTION_LOST")
                     break
-                request = data.decode()
+                # binary input must not kill the handler
+                request = data.decode(errors="replace")
                 response = self.command_responder.respond(request)
                 logger.info(
                     "Kamstrup management traffic from %s: %s (%s)",
