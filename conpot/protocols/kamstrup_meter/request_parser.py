@@ -50,7 +50,8 @@ class KamstrupRequestParser(object):
         while position < bytes_len:
             d = self.bytes[position]
             if not self.parsing and d != kamstrup_constants.REQUEST_MAGIC:
-                logger.info(
+                # one line per byte would let any client flood the log
+                logger.debug(
                     "Kamstrup skipping byte, expected kamstrup_meter request magic but got: {0}".format(
                         hex(d)
                     )

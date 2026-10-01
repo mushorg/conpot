@@ -141,3 +141,11 @@ class TestKamstrup(unittest.TestCase):
         self.assertEqual(data[2], 0x92)
         self.assertEqual(data[3], 0x00)
         self.assertEqual(data[-1], 0x0D)
+
+    def test_skipped_bytes_not_logged_per_byte(self):
+        with self.assertNoLogs(
+            "conpot.protocols.kamstrup_meter.request_parser", level="INFO"
+        ):
+            for _ in range(1000):
+                self.request_parser.add_byte(chr(0))
+            self.assertIsNone(self.request_parser.get_request())
