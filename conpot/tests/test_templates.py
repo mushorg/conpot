@@ -52,6 +52,11 @@ def test_resolve_packaged_default():
     assert resolved == os.path.join(package_directory, "templates", "default")
 
 
+def test_resolve_packaged_enip():
+    resolved = resolve_template_directory("enip", package_directory)
+    assert resolved == os.path.join(package_directory, "templates", "enip")
+
+
 def test_resolve_custom_template_dir():
     with tempfile.TemporaryDirectory() as tmp:
         open(os.path.join(tmp, "template.toml"), "w").close()
@@ -72,6 +77,16 @@ def test_list_available_includes_default():
     assert "Sample profile" in default_meta["description"]
     for protocol in ("bacnet", "enip", "ftp", "http", "tftp"):
         assert protocol in default_meta["protocols"]
+
+
+def test_list_available_includes_enip():
+    templates = list_available_templates(package_directory)
+    names = [name for name, _ in templates]
+    assert "enip" in names
+    enip_meta = dict(templates)["enip"]
+    assert enip_meta["vendor"] == "Rockwell Automation"
+    assert enip_meta["unit"] == "1756-L61 ControlLogix"
+    assert enip_meta["protocols"] == "enip"
 
 
 def test_default_protocols_match_filesystem():
