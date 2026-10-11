@@ -26,6 +26,7 @@ from conpot.core.templates import (
 )
 from conpot.emulators.misc.uptime import Uptime
 from conpot.protocols import schemas as protocol_schemas
+from conpot.protocols.enip.enip_server import EnipServer
 from conpot.protocols.tftp.tftp_server import TftpServer
 from conpot.templates.parse import parse_toml_config
 from conpot.templates.validate import base_schema, validate_toml_template
@@ -41,6 +42,7 @@ opcua_dir = os.path.join(package_directory, "templates", "opcua")
 knxnetip_dir = os.path.join(package_directory, "templates", "knxnetip")
 hartip_dir = os.path.join(package_directory, "templates", "hartip")
 ads_dir = os.path.join(package_directory, "templates", "ads")
+enip_dir = os.path.join(package_directory, "templates", "enip")
 
 
 def test_parse_and_validate_default_template_toml():
@@ -137,6 +139,24 @@ def test_parse_and_validate_ads_toml():
     template = parse_toml_config(os.path.join(ads_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["ads"]
+
+
+def test_parse_and_validate_enip_standalone_toml():
+    protocol = parse_toml_config(os.path.join(enip_dir, "enip.toml"))
+    protocol_schemas.enip.validate(protocol)
+    assert protocol["enip"]["port"] == 44818
+    assert protocol["enip"]["enabled"] is True
+    assert protocol["enip"]["device_info"]["VendorId"] == 1
+    assert protocol["enip"]["device_info"]["ProductName"] == "1756-L61/B LOGIX5561"
+    assert len(protocol["enip"]["tags"]) == 5
+    template = parse_toml_config(os.path.join(enip_dir, "template.toml"))
+    validate_toml_template(template, base_schema)
+    assert template["core"]["template"]["protocols"] == ["enip"]
+    assert template["core"]["template"]["vendor"] == "Rockwell Automation"
+    server = EnipServer(protocol["enip"], enip_dir, None)
+    assert server.config.product_name == "1756-L61/B LOGIX5561"
+    assert server.config.vendor_id == 1
+    assert len(server.config.dtags) == 5
 
 
 def test_parse_and_validate_kamstrup_management_toml():

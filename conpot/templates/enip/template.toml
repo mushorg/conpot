@@ -1,0 +1,9 @@
+[core.template]
+unit = "1756-L61 ControlLogix"
+vendor = "Rockwell Automation"
+description = "Allen-Bradley ControlLogix PLC with EtherNet/IP (CIP) communication"
+protocols = ["enip"]
+creator = "the conpot team"
+
+[core.databus.key_value_mappings]
+empty = { value = '""' }

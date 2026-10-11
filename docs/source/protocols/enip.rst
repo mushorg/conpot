@@ -1,14 +1,18 @@
 EtherNet/IP (ENIP)
 ==================
 
-The default template listens for EtherNet/IP encapsulation on TCP
-**44818** (UDP when ``<mode>udp</mode>`` in ``enip.xml``). Device identity
-and tags come from ``conpot/templates/default/enip.xml``.
+The default and ``enip`` templates listen for EtherNet/IP encapsulation on TCP
+**44818** (UDP when ``mode = "udp"`` in ``enip.toml``). Device identity
+and tags come from ``conpot/templates/enip/enip.toml`` (or ``default/enip.toml``).
 
 Start the server
 ----------------
 
-Full honeypot (recommended for manual probes)::
+Dedicated EtherNet/IP profile::
+
+    uv run conpot --template enip -f
+
+Full honeypot (multi-protocol)::
 
     uv run conpot --template default -f
 
