@@ -20,7 +20,6 @@ import unittest
 import os
 from datetime import datetime
 from tempfile import NamedTemporaryFile
-from freezegun import freeze_time
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.ftp.ftp_server import FTPServer
@@ -28,6 +27,11 @@ from conpot.protocols.ftp.ftp_utils import ftp_commands
 from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 from slugify import slugify
 import ftplib  # Use ftplib's client for more authentic testing
+
+# Fixed timestamp for mdtm/list assertions. Do not use freezegun here: it hands
+# real time to the server worker threads but frozen time to others, which
+# makes the FTP idle timeout fire on fresh connections.
+FIXED_TIME = datetime(2018, 7, 15, 17, 51, 17)
 
 
 class TestFTPServer(unittest.TestCase):
@@ -335,13 +339,10 @@ class TestFTPServer(unittest.TestCase):
             "rmd ../../",
         )
 
-    @freeze_time("2018-07-15 17:51:17")
     def test_mdtm(self):
         # TODO : test for user that does not have permissions for mdtm
         self.client_init()
-        self.vfs.settimes(
-            "ftp_data.txt", accessed=datetime.now(), modified=datetime.now()
-        )
+        self.vfs.settimes("ftp_data.txt", accessed=FIXED_TIME, modified=FIXED_TIME)
         # test for a file that already exists
         self.assertEqual(self.client.sendcmd("mdtm ftp_data.txt"), "213 20180715175117")
         self.assertRaisesRegex(
@@ -429,28 +430,25 @@ class TestFTPServer(unittest.TestCase):
 
     # ------ Data channel related. -----
 
-    @freeze_time("2018-07-15 17:51:17")
     def test_list(self):
         # TODO: check for a user who does not have permissions to do list!
         self.client_init()
-        self.vfs.settimes(
-            "ftp_data.txt", accessed=datetime.now(), modified=datetime.now()
-        )
+        self.vfs.settimes("ftp_data.txt", accessed=FIXED_TIME, modified=FIXED_TIME)
         # Do a list of directory for passive mode
         _pasv_list = list()
         self.client.retrlines("LIST", _pasv_list.append)
-        # note that this time is set in ftp_server settimes method. Picked up from the default template.
+        # FIXED_TIME is older than 180 days, so LIST shows the year instead of HH:MM.
         self.assertEqual(
-            ["-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt"],
+            ["-rwxrwxrwx   1 nobody   ftp            49 Jul 15  2018 ftp_data.txt"],
             _pasv_list,
         )
         # check list for active mode
         _actv_list = list()
         self.client.set_pasv(False)
         self.client.retrlines("LIST", _actv_list.append)
-        # note that this time is set in ftp_server settimes method. Picked up from the default template.
+        # FIXED_TIME is older than 180 days, so LIST shows the year instead of HH:MM.
         self.assertEqual(
-            ["-rwxrwxrwx   1 nobody   ftp            49 Jul 15 17:51 ftp_data.txt"],
+            ["-rwxrwxrwx   1 nobody   ftp            49 Jul 15  2018 ftp_data.txt"],
             _actv_list,
         )
         # response from active and pasv mode should be same.
@@ -493,7 +491,6 @@ class TestFTPServer(unittest.TestCase):
         )
         # TODO: Add test with existing transfer in progress.
 
-    @freeze_time("2018-07-15 17:51:17")
     def test_stor(self):
         # let us test by uploading a file called ftp_testing.txt
         self.client_init()
