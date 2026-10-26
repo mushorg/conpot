@@ -87,10 +87,10 @@ conpot = ["**/__pycache__/*", "**/*.py", "**/*.pyc", "ConpotTempFS/**"]
 
 [dependency-groups]
 dev = [
-    "black==26.5.1",
+    "black==26.10.1",
     "pytest",
 ]
 
 [tool.black]
 target-version = ["py314"]
-required-version = "26.5.1"
+required-version = "26.10.1"
