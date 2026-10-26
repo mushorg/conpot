@@ -93,4 +93,4 @@ dev = [
 
 [tool.black]
 target-version = ["py314"]
-required-version = "26.5.1"
+required-version = "26.10.1"

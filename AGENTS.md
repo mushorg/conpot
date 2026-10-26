@@ -24,7 +24,7 @@ uv run black .               # make format; make lint = black --check
 uv run conpot --template default -f
 ```
 
-- Python 3.14; Black **26.5.1** (pinned in `pyproject.toml`)
+- Python 3.14; Black **26.10.1** (pinned in `pyproject.toml`)
 - Dependency changes: edit `pyproject.toml`, run `uv lock`, commit `uv.lock` with the change
 - CI: pytest (`.github/workflows/python.yml`), black check; TOML templates validated via `schema` at startup
 - Deeper contributor notes: `docs/source/development/guidelines.rst`
