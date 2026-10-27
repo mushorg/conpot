@@ -170,6 +170,7 @@ s7comm = Schema(
                             "id": str,
                             Optional("name"): str,
                             Optional("value"): str,
+                            Optional("version"): str,
                         }
                     ],
                 }

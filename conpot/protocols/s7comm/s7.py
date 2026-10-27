@@ -52,6 +52,81 @@ def _item_byte_length(word_len, count):
     return count * unit
 
 
+# SZL 0x0011 returns these records: module, basic hardware, basic firmware,
+# and the boot loader record (0x0081) when the template configures one.
+_MODULE_IDENTIFICATION_INDEXES = (1, 6, 7, 0x81)
+
+# BGTyp (module type class) reported by S7-300 CPUs for records 1, 6 and 7.
+_CPU_MODULE_TYPE_CLASS = 0x00C0
+
+
+def _szl_response_params(sequence=0x01):
+    """Userdata parameter block for a Read SZL response (12 bytes).
+
+    The length byte announces 8 trailing bytes, so the data unit reference,
+    last-data-unit flag and error code must be present; clients such as
+    nmap's s7-info read the SZL data at offsets that assume them.
+    """
+    return pack(
+        "!BBBBBBBBBBH",
+        0x00,  # parameter head
+        0x01,
+        0x12,
+        0x08,  # length of the parameters that follow
+        0x12,  # method: response
+        0x84,  # type 8 (response) | function group 4 (SZL)
+        0x01,  # subfunction: read SZL
+        sequence,  # sequence number
+        0x00,  # data unit reference number
+        0x00,  # last data unit (0x00 = yes)
+        0x0000,  # error code
+    )
+
+
+def _blank_padded(value, size):
+    """Pad or truncate to a fixed-width field using blanks, as Siemens does."""
+    return value[:size].ljust(size, b" ")
+
+
+def _version_numbers(text, count):
+    """Pull ``count`` dotted numbers (0-255) from text such as '3.2.8'."""
+    parts = text.split(".")
+    numbers = []
+    for part in parts[:count]:
+        try:
+            numbers.append(max(0, min(255, int(part))))
+        except ValueError:
+            numbers.append(0)
+    numbers += [0] * (count - len(numbers))
+    return numbers
+
+
+def _parse_firmware_version(text, default_prefix="V"):
+    """Turn 'V3.2.8' into (ord('V'), 3, 2, 8).
+
+    The leading letter (e.g. 'V' for firmware, 'A' for the boot loader)
+    goes in the high byte of Ausbg1; the numbers are binary. A missing
+    letter falls back to ``default_prefix``.
+    """
+    if isinstance(text, bytes):
+        text = text.decode("ascii", "ignore")
+    text = str(text).strip()
+    prefix = default_prefix
+    if text and text[0].isalpha():
+        prefix, text = text[0], text[1:]
+    return (ord(prefix), *_version_numbers(text, 3))
+
+
+def _parse_hardware_version(text):
+    """Turn '3.1' into the two Ausbg words (3, 1) of a module record."""
+    if isinstance(text, bytes):
+        text = text.decode("ascii", "ignore")
+    text = str(text).strip().lstrip("Vv")
+    if not text:
+        return 0, 0
+    return tuple(_version_numbers(text, 2))
+
+
 def _length_prefixed_strings(blob):
     """Pull ASCII strings stored as a length byte plus that many characters."""
     found = []
@@ -72,6 +147,8 @@ def _length_prefixed_strings(blob):
 # S7 packet
 class S7(object):
     ssl_lists = {}
+    # Optional per-item databus keys for version words, keyed like ssl_lists
+    ssl_versions = {}
     memory_map = S7MemoryMap()
     # Emulated CPU mode. Never stop the listening task; a stop probe must
     # not take the honeypot down.
@@ -431,99 +508,100 @@ class S7(object):
         return b"", b""
 
     # W#16#xy11 - module identification
-    def request_ssl_17(self, data_ssl_index):
-        # just for convenience
-        current_ssl = S7.ssl_lists["W#16#xy11"]
+    def _module_identification_record(self, data_ssl_index):
+        """Build one 28-byte SZL 0xxy11 record, or None for unsupported indexes.
 
-        if data_ssl_index == 1:  # 0x0001 - component identification
-            ssl_index_description = "Component identification"
+        Record layout: Index (WORD), MLFB (20 chars, blank padded),
+        BGTyp (WORD), Ausbg1 (WORD), Ausbg2 (WORD). Records 1 and 6 carry
+        an order number and two hardware version words; records 7 (firmware)
+        and 0x81 (boot loader) carry a letter plus binary major/minor/patch.
+        Layout and values follow a capture of a CPU 315-2 PN/DP.
+        """
+        current_ssl = S7.ssl_lists.get("W#16#xy11", {})
+        versions = S7.ssl_versions.get("W#16#xy11", {})
+        item_id = "W#16#{0:04X}".format(data_ssl_index)
 
-            ssl_resp_data = pack(
-                "!HHHHH20sHHH",
-                17,  # 1  WORD   ( ID )
-                data_ssl_index,  # 1  WORD   ( Index )
-                28,  # 1  WORD   ( Length of payload after element count )
-                0x01,  # 1  WORD   ( 1 element follows )
-                data_ssl_index,  # 1  WORD   ( Data Index )
-                str_to_bytes(self.data_bus.get_value(current_ssl["W#16#0001"])),
-                # 10 WORDS  ( MLFB of component: 20 bytes => 19 chars + 1 blank (0x20) )
-                0x0,  # 1  WORD   ( RESERVED )
-                0x0,  # 1  WORD   ( Output state of component )
-                0x0,
-            )  # 1  WORD   ( RESERVED )
-
-            ssl_resp_head = pack(
-                "!BBH",
-                0xFF,  # 1  BYTE   ( Data Error Code. 0xFF = OK )
-                0x09,  # 1  BYTE   ( Data Type. 0x09 = Char/String )
-                len(ssl_resp_data),
-            )  # 1  WORD   ( Length of following data )
-
-        elif data_ssl_index == 6:  # 0x0006 - hardware identification
-            ssl_index_description = "Hardware identification"
-
-            ssl_resp_data = pack(
-                "!HHHHH20sHHH",
-                17,  # 1  WORD   ( ID )
-                data_ssl_index,  # 1  WORD   ( Index )
-                28,  # 1  WORD   ( Length of payload after element count )
-                0x01,  # 1  WORD   ( 1 element follows )
-                data_ssl_index,  # 1  WORD   ( Data Index )
-                str_to_bytes(self.data_bus.get_value(current_ssl["W#16#0006"])),
-                # 10 WORDS  ( MLFB of component: 20 bytes => 19 chars + 1 blank (0x20) )
-                0x0,  # 1  WORD   ( RESERVED )
-                0x5633,  # 1  WORD   ( 'V' and first digit '3' as ASCII bytes )
-                0x539,
-            )  # 1  WORD   ( remaining digits of version number )
-
-            ssl_resp_head = pack(
-                "!BBH",
-                0xFF,  # 1  BYTE   ( Data Error Code. 0xFF = OK )
-                0x09,  # 1  BYTE   ( Data Type. 0x09 = Char/String )
-                len(ssl_resp_data),
-            )  # 1  WORD   ( Length of following data )
-
-        elif data_ssl_index == 7:  # 0x0007 - firmware identification
-            ssl_index_description = "Firmware identification"
-
-            ssl_resp_data = pack(
-                "!HHHHH20sHHH",
-                17,  # 1  WORD   ( ID )
-                data_ssl_index,  # 1  WORD   ( Index )
-                28,  # 1  WORD   ( Length of payload after element count )
-                0x01,  # 1  WORD   ( 1 element follows )
-                data_ssl_index,  # 1  WORD   ( Data Index )
-                str_to_bytes(str(0x0)),  # 10 WORDS  ( RESERVED )
-                0x0,  # 1  WORD   ( RESERVED )
-                0x5633,  # 1  WORD   ( 'V' and first digit '3' as ASCII bytes )
-                0x53A,
-            )  # 1  WORD   ( remaining digits of version number )
-
-            ssl_resp_head = pack(
-                "!BBH",
-                0xFF,  # 1  BYTE   ( Data Error Code. 0xFF = OK )
-                0x09,  # 1  BYTE   ( Data Type. 0x09 = Char/String )
-                len(ssl_resp_data),
-            )  # 1  WORD   ( Length of following data )
-        else:
-            ssl_index_description = "UNKNOWN / UNDEFINED / RESERVED {0}".format(
-                hex(data_ssl_index)
+        if data_ssl_index in (1, 6):
+            # 1: module identification, 6: basic hardware identification
+            mlfb = self._databus_text(current_ssl.get(item_id))
+            hw_major, hw_minor = _parse_hardware_version(
+                self._databus_text(versions.get(item_id))
             )
-            ssl_resp_data = ""
-            ssl_resp_head = ""
+            return pack(
+                "!H20sHHH",
+                data_ssl_index,
+                _blank_padded(mlfb, 20),
+                _CPU_MODULE_TYPE_CLASS,  # BGTyp
+                hw_major,  # Ausbg1
+                hw_minor,  # Ausbg2
+            )
+        if data_ssl_index == 7 or (data_ssl_index == 0x81 and item_id in current_ssl):
+            # 7: basic firmware, 0x81: boot loader; version in Ausbg1/2
+            if data_ssl_index == 7:
+                name, module_class, default_prefix = b"", _CPU_MODULE_TYPE_CLASS, "V"
+            else:
+                name, module_class, default_prefix = b"Boot Loader", 0x0000, "A"
+            prefix, major, minor, patch = _parse_firmware_version(
+                self._databus_text(current_ssl.get(item_id)), default_prefix
+            )
+            return pack(
+                "!H20sHBBBB",
+                data_ssl_index,
+                _blank_padded(name, 20),
+                module_class,  # BGTyp
+                prefix,
+                major,
+                minor,
+                patch,
+            )
+        return None
 
-        ssl_resp_params = pack(
-            "!BBBBBBBB",
-            0x00,  # SSL DIAG
-            0x01,  # unknown
-            0x12,  # unknown
-            0x08,  # bytes following
-            0x12,  # unknown, maybe 0x11 + 1
-            0x84,  # function; response to 0x44
-            0x01,  # subfunction; readszl
-            0x01,
-        )  # sequence ( = sequence + 1 )
-        return ssl_index_description, ssl_resp_params, ssl_resp_head + ssl_resp_data
+    def _databus_text(self, key):
+        if not key:
+            return b""
+        try:
+            return str_to_bytes(self.data_bus.get_value(key))
+        except AssertionError, UnicodeEncodeError:
+            logger.warning("S7 SZL databus key %r is missing or not ASCII", key)
+            return b""
+
+    def _module_identification_response(self, szl_id, data_ssl_index, indexes):
+        records = b""
+        for index in indexes:
+            record = self._module_identification_record(index)
+            if record is not None:
+                records += record
+        ssl_resp_data = (
+            pack(
+                "!HHHH",
+                szl_id,  # SZL-ID as requested
+                data_ssl_index,  # Index as requested
+                28,  # LENTHDR: bytes per record
+                len(records) // 28,  # N_DR: number of records
+            )
+            + records
+        )
+        ssl_resp_head = pack(
+            "!BBH",
+            0xFF,  # Data Error Code. 0xFF = OK
+            0x09,  # Transport size. 0x09 = octet string
+            len(ssl_resp_data),
+        )
+        return ssl_resp_head + ssl_resp_data
+
+    # W#16#0011 - all module identification records (index is ignored)
+    def request_ssl_17(self, data_ssl_index):
+        data = self._module_identification_response(
+            0x0011, data_ssl_index, _MODULE_IDENTIFICATION_INDEXES
+        )
+        return "Module identification", _szl_response_params(), data
+
+    # W#16#0111 - a single module identification record selected by index
+    def request_ssl_273(self, data_ssl_index):
+        data = self._module_identification_response(
+            0x0111, data_ssl_index, (data_ssl_index,)
+        )
+        return "Module identification", _szl_response_params(), data
 
     # W#16#011C
     def request_ssl_28(self, data_ssl_index):
@@ -623,16 +701,6 @@ class S7(object):
         )  # 1  WORD   ( Length of following data )
 
         ssl_resp_packet = ssl_resp_head + ssl_resp_data
-        ssl_resp_params = pack(
-            "!BBBBBBBB",
-            0x00,  # SSL DIAG
-            0x01,  # unknown
-            0x12,  # unknown
-            0x08,  # bytes following
-            0x12,  # unknown, maybe 0x11 + 1
-            0x84,  # function; response to 0x44
-            0x01,  # subfunction; readszl
-            0x01,
-        )  # sequence ( = sequence + 1 )
+        ssl_resp_params = _szl_response_params()
 
         return "", ssl_resp_params, ssl_resp_packet
