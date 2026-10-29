@@ -20,6 +20,7 @@ import os
 import socket
 import ssl
 import threading
+import time
 import unittest
 
 import conpot
@@ -165,6 +166,44 @@ class TestProxy(unittest.TestCase):
                 received = self._exchange(proxy, self.test_input, ssl_files=ssl_files)
                 self.assertEqual(self.test_input, received)
             finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
+
+    def test_ssl_proxy_closes_client_that_does_not_start_handshake(self):
+        keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
+        certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
+        _host, backend_port, stop, thread = _start_echo_backend()
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend_port,
+                keyfile=keyfile,
+                certfile=certfile,
+            )
+            proxy.tls_handshake_timeout = 0.2
+            handle = _start_proxy(proxy)
+            client = socket.create_connection(
+                ("127.0.0.1", proxy.server.server_port), timeout=2
+            )
+            client.settimeout(2)
+            deadline = time.monotonic() + 2
+            try:
+                while time.monotonic() < deadline:
+                    try:
+                        data = client.recv(1024)
+                    except ConnectionResetError:
+                        break
+                    if not data:
+                        break
+                else:
+                    self.fail(
+                        "proxy did not close the client after the TLS handshake timeout"
+                    )
+            finally:
+                client.close()
                 teardown_test_server(proxy, handle)
         finally:
             stop.set()
