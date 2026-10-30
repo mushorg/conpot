@@ -15,6 +15,8 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import socket
+import struct
 import time
 
 import pytest
@@ -137,6 +139,54 @@ class TestPlcModbus:
             quantity_of_x=1,
         )[0]
         assert later == frozen
+
+    def test_umas_stop_pauses_scan_until_restart(self):
+        master = self._master()
+        master.execute(
+            slave=1,
+            function_code=WRITE_MULTIPLE_COILS,
+            starting_address=1,
+            output_value=[1, 0],
+        )
+        time.sleep(SCAN_WAIT)
+
+        def umas_command(code):
+            pdu = bytes((0x5A, 0x00, code))
+            header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
+            with socket.create_connection(
+                (self.host, self.port), timeout=2.0
+            ) as client:
+                client.sendall(header + pdu)
+                return client.recv(1024)
+
+        assert umas_command(0x41) == (b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+        assert not self.modbus._databank.get_slave(1).running
+        time.sleep(SCAN_WAIT)
+        first = master.execute(
+            slave=1,
+            function_code=READ_HOLDING_REGISTERS,
+            starting_address=40001,
+            quantity_of_x=1,
+        )[0]
+        time.sleep(SCAN_WAIT)
+        second = master.execute(
+            slave=1,
+            function_code=READ_HOLDING_REGISTERS,
+            starting_address=40001,
+            quantity_of_x=1,
+        )[0]
+        assert second == first
+
+        assert umas_command(0x40) == (b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+        assert self.modbus._databank.get_slave(1).running
+        time.sleep(SCAN_WAIT)
+        resumed = master.execute(
+            slave=1,
+            function_code=READ_HOLDING_REGISTERS,
+            starting_address=40001,
+            quantity_of_x=1,
+        )[0]
+        assert resumed > second
 
 
 def test_awlsim_engine_requires_package():

@@ -50,6 +50,7 @@ class PlcScanCycle:
         discrete_key="memoryModbusSlave1BlockB",
         holding_key="memoryModbusSlave1BlockD",
         analog_key="memoryModbusSlave1BlockC",
+        cpu_state_key="plc_cpu_running",
     ):
         self.scan_ms = int(scan_ms)
         self.engine_name = engine_name
@@ -57,6 +58,7 @@ class PlcScanCycle:
         self.discrete_key = discrete_key
         self.holding_key = holding_key
         self.analog_key = analog_key
+        self.cpu_state_key = cpu_state_key
         self._enabled = True
         self.stopped = threading.Event()
         threading.Thread(target=self.initialize, daemon=True).start()
@@ -73,6 +75,7 @@ class PlcScanCycle:
             return
         try:
             engine = _make_engine(self.engine_name)
+            cpu_state = databus.get_value(self.cpu_state_key)
             image = ProcessImage(
                 coils=databus.get_value(self.coils_key),
                 discrete=databus.get_value(self.discrete_key),
@@ -87,7 +90,8 @@ class PlcScanCycle:
         scan_s = max(self.scan_ms, 1) / 1000.0
         while self._enabled:
             try:
-                engine.scan(image)
+                if cpu_state[0]:
+                    engine.scan(image)
             except Exception:
                 logger.exception("PLC scan failed")
             time.sleep(scan_s)
