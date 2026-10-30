@@ -284,11 +284,8 @@ class MBSlave(object):
         return struct.pack(">BBB", _UMAS_FUNCTION, session_key, status)
 
     def _report_slave_id(self):
-        # Historical Conpot PDU: function code is present twice. Scanners and
-        # test_report_slave_id lock this layout; pymodbus ReportDeviceIdResponse
-        # encodes a different one.
         logger.debug("Requested to report slave ID (0x11)")
-        return bytes((0x11, 0x11, 0x01, 0x01, 0xFF))
+        return bytes((0x11, 0x02, self._id, 0xFF if self.running else 0x00))
 
     def _device_info(self, request_pdu):
         # Always return all three objects. The stock MEI handler would return
