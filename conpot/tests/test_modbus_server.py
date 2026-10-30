@@ -193,6 +193,13 @@ class TestModbusServer(unittest.TestCase):
         s.close()
         self.assertEqual(data, b"\x00\x00\x00\x00\x00\x06\x01\x11\x11\x01\x01\xff")
 
+    def test_non_modbus_protocol_id_is_discarded(self):
+        # The MBAP protocol identifier must be zero for Modbus/TCP.
+        with socket.create_connection((self.host, self.port), timeout=2.0) as client:
+            client.settimeout(2.0)
+            client.sendall(struct.pack(">HHHB", 0, 1, 2, 1) + b"\x11")
+            self.assertEqual(client.recv(1024), b"")
+
     def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
