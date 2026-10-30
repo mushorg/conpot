@@ -24,6 +24,7 @@ from pymodbus.pdu.register_message import (
     WriteSingleRegisterResponse,
 )
 
+import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
 
 from .modbus_block_databus_mediator import DatabusBlock
@@ -265,6 +266,13 @@ class MBSlave(object):
             return _exception_pdu(self.function_code, ExcCodes.ILLEGAL_VALUE)
         session_key = request_pdu[1]
         umas_code = request_pdu[2]
+        cpu_state_key = self.template.get("umas_cpu_state_key")
+        if cpu_state_key and umas_code in (_UMAS_START, _UMAS_STOP):
+            try:
+                cpu_state = conpot_core.get_databus().get_value(cpu_state_key)
+                cpu_state[0] = 1 if umas_code == _UMAS_START else 0
+            except AssertionError, IndexError, TypeError:
+                return _exception_pdu(self.function_code, ExcCodes.DEVICE_FAILURE)
         if umas_code == _UMAS_START:
             self.running = True
             self.event_type = "UMAS_START"
