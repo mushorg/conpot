@@ -47,9 +47,13 @@ class SlaveBase(object):
                 raise ModbusInvalidRequestError(
                     "Request length is only %d bytes" % len(request)
                 )
-            _transaction, _protocol, length, slave_id = struct.unpack(
+            _transaction, protocol_id, length, slave_id = struct.unpack(
                 ">HHHB", request[:7]
             )
+            if protocol_id != 0:
+                raise ModbusInvalidRequestError(
+                    "MBAP protocol identifier %s is not Modbus" % protocol_id
+                )
             request_pdu = request[7:]
             if length != len(request_pdu) + 1:
                 raise ModbusInvalidRequestError(
