@@ -5,6 +5,7 @@ import asyncio
 import logging
 import socket
 
+from pyasn1.type import univ
 from pysmi.reader import FileReader, HttpReader
 from pysnmp.carrier.asyncio.dgram import udp
 from pysnmp.entity import config, engine
@@ -18,7 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 class CommandResponder(object):
-    def __init__(self, host, port, raw_mibs, compiled_mibs):
+    def __init__(self, host, port, raw_mibs, compiled_mibs, engine_id=None):
+        """
+        :param engine_id: snmpEngineID as bytes. Pass one in: PySNMP's default
+            embeds its own enterprise number (20408) and the host name, which
+            fingerprints the honeypot to any SNMPv3 discovery probe.
+        """
         self.oid_mapping = {}
         self.databus_mediator = DatabusMediator(self.oid_mapping)
         self.host = host
@@ -28,7 +34,12 @@ class CommandResponder(object):
         self._udp_sock = None
 
         # Create SNMP engine
-        self.snmpEngine = engine.SnmpEngine()
+        if engine_id is not None:
+            self.snmpEngine = engine.SnmpEngine(
+                snmpEngineID=univ.OctetString(engine_id)
+            )
+        else:
+            self.snmpEngine = engine.SnmpEngine()
 
         # Configure SNMP compiler
         mib_builder = self.snmpEngine.get_mib_builder()

@@ -2,6 +2,10 @@
 enabled = true
 host = "0.0.0.0"
 port = 16100
+# Optional snmpEngineID (hex, 5..32 octets). When unset, Conpot derives a
+# stable one from sysObjectID's enterprise number and never exposes the host
+# name (PySNMP's own default does).
+# engine_id = "800010e905a1b2c3d4e5f60718"
 
 [[snmp.config]]
 name = "tarpit"
@@ -47,6 +51,7 @@ value = "120;240"
 name = "SNMPv2-MIB"
 symbols = [
     { "name" = "sysDescr", "value" = "SystemDescription" },
+    { "name" = "sysObjectID", "value" = "sysObjectID" },
     { "name" = "sysUpTime", "value" = "Uptime" },
     { "name" = "sysContact", "value" = "sysContact" },
     { "name" = "sysName", "value" = "sysName" },

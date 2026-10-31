@@ -140,3 +140,29 @@ the evasion value "100:200" for ``get`` requests results in the following restri
 Keep in mind that snmpwalks are in fact a large number of ``next`` requests, while ``bulk`` requests may contain several
 answers within one reply. Therefore, the evasion limits for ``next`` should be chosen more generous while the limits for
 ``bulk`` requests should be kept rather conservative due to its risk of being abused for traffic amp attacks.
+
+Device identity: sysObjectID and snmpEngineID
+---------------------------------------------
+
+PySNMP's built-in defaults identify the honeypot: ``sysObjectID.0`` would be
+PySNMP's own enterprise OID (``1.3.6.1.4.1.20408``), and the default
+``snmpEngineID`` embeds that enterprise number plus the host name, which any
+SNMPv3 discovery probe (for example nmap ``snmp-info``) reads back.
+
+Conpot avoids both:
+
+* If a template does not map ``SNMPv2-MIB::sysObjectID``, Conpot registers it
+  from the databus key ``sysObjectID``, or ``1.3.6.1.4.1.4329.6`` (Siemens
+  automation) if that key is missing too. Set a vendor OID that matches the
+  device you emulate.
+* The engine ID is derived from the enterprise number in ``sysObjectID`` and a
+  hash of the identity strings (RFC 3411 format, stable across restarts). To
+  pin it, set ``engine_id`` (hex, 5 to 32 octets) in ``snmp.toml``:
+
+.. code-block:: toml
+
+    [snmp]
+    enabled = true
+    host = "0.0.0.0"
+    port = 16100
+    engine_id = "800010e905a1b2c3d4e5f60718"

@@ -16,14 +16,33 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import asyncio
+import hashlib
 import logging
 import os
+import struct
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.protocols.snmp.command_responder import CommandResponder
 
 logger = logging.getLogger()
+
+# Served when a template does not map sysObjectID itself; otherwise PySNMP
+# answers with its own enterprise OID (1.3.6.1.4.1.20408). This is the Siemens
+# AG automation subtree (AUTOMATION-SMI), matching the shipped templates.
+DEFAULT_SYS_OBJECT_ID = "1.3.6.1.4.1.4329.6"
+ENTERPRISE_PREFIX = (1, 3, 6, 1, 4, 1)
+DEFAULT_ENTERPRISE = 4329
+# RFC 3411 snmpEngineID is 5..32 octets.
+ENGINE_ID_MIN_OCTETS = 5
+ENGINE_ID_MAX_OCTETS = 32
+
+
+def _databus_value(key):
+    try:
+        return conpot_core.get_databus().get_value(key)
+    except AssertionError, KeyError:
+        return None
 
 
 @conpot_protocol
@@ -69,6 +88,7 @@ class SNMPServer(object):
                     self.cmd_responder.resp_app_bulk.threshold = sanitized
 
     def apply_mib_config(self):
+        has_sys_object_id = False
         for mib in self.template.get("mibs", []):
             mib_name = mib["name"]
             for symbol in mib.get("symbols", []):
@@ -84,6 +104,81 @@ class SNMPServer(object):
                 self.cmd_responder.register(
                     mib_name, symbol_name, symbol_instance, value, profile_map_name
                 )
+                if (mib_name, symbol_name, symbol_instance) == (
+                    "SNMPv2-MIB",
+                    "sysObjectID",
+                    (0,),
+                ):
+                    has_sys_object_id = True
+
+        if not has_sys_object_id:
+            # Never fall through to PySNMP's built-in sysObjectID.
+            if _databus_value("sysObjectID") is None:
+                conpot_core.get_databus().set_value(
+                    "sysObjectID", DEFAULT_SYS_OBJECT_ID
+                )
+            self.cmd_responder.register(
+                "SNMPv2-MIB",
+                "sysObjectID",
+                (0,),
+                conpot_core.get_databus().get_value("sysObjectID"),
+                "sysObjectID",
+            )
+
+    def _sys_object_id(self):
+        """The sysObjectID this template will serve, as a dotted string."""
+        for mib in self.template.get("mibs", []):
+            if mib["name"] != "SNMPv2-MIB":
+                continue
+            for symbol in mib.get("symbols", []):
+                if symbol["name"] == "sysObjectID" and "instance" not in symbol:
+                    value = _databus_value(symbol["value"])
+                    if value is not None:
+                        return str(value)
+        value = _databus_value("sysObjectID")
+        return str(value) if value is not None else DEFAULT_SYS_OBJECT_ID
+
+    def engine_id(self):
+        """snmpEngineID bytes: the template's ``engine_id`` or a derived one.
+
+        The derived ID follows RFC 3411 (enterprise number with the high bit
+        set, format 0x05 = opaque octets) and is stable across restarts. It
+        uses the enterprise from sysObjectID and a hash of the identity
+        strings, never the host name.
+        """
+        configured = self.template.get("engine_id")
+        if configured:
+            try:
+                engine_id = bytes.fromhex(str(configured).replace(":", ""))
+            except ValueError:
+                raise ValueError("SNMP engine_id must be hex: %r" % configured)
+            if not (ENGINE_ID_MIN_OCTETS <= len(engine_id) <= ENGINE_ID_MAX_OCTETS):
+                raise ValueError(
+                    "SNMP engine_id must be %d..%d octets, got %d"
+                    % (ENGINE_ID_MIN_OCTETS, ENGINE_ID_MAX_OCTETS, len(engine_id))
+                )
+            return engine_id
+
+        sys_object_id = self._sys_object_id()
+        enterprise = DEFAULT_ENTERPRISE
+        try:
+            arcs = tuple(int(x) for x in sys_object_id.strip(".").split("."))
+            if len(arcs) > len(ENTERPRISE_PREFIX) and (
+                arcs[: len(ENTERPRISE_PREFIX)] == ENTERPRISE_PREFIX
+            ):
+                enterprise = arcs[len(ENTERPRISE_PREFIX)]
+        except ValueError:
+            pass
+        if not 0 < enterprise < 0x80000000:
+            enterprise = DEFAULT_ENTERPRISE
+
+        seed = "|".join(
+            str(_databus_value(key) or "")
+            for key in ("sysName", "SystemDescription", "sysDescr")
+        )
+        seed += "|" + sys_object_id
+        suffix = hashlib.sha256(seed.encode("utf-8")).digest()[:8]
+        return struct.pack(">IB", 0x80000000 | enterprise, 0x05) + suffix
 
     def config_sanitize_tarpit(self, value):
         # checks tarpit value for being either a single int or float,
@@ -145,7 +240,11 @@ class SNMPServer(object):
         self._stop = asyncio.Event()
         self._ready = asyncio.Event()
         self.cmd_responder = CommandResponder(
-            host, port, self.raw_mibs, self.compiled_mibs
+            host,
+            port,
+            self.raw_mibs,
+            self.compiled_mibs,
+            engine_id=self.engine_id(),
         )
         await self.cmd_responder.start()
         self.apply_general_config()

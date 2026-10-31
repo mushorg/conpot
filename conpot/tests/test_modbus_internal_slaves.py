@@ -93,6 +93,14 @@ class TestModbusInternalSlaves(unittest.TestCase):
         conpot_core.get_databus().initialize(
             parse_toml_config(os.path.join(template_dir, "template.toml"))
         )
+        # Block size must match the databus value; this template uses 8-wide
+        # blocks over keys the default template defines with other lengths.
+        for block_key in (
+            "memoryModbusSlave1BlockA",
+            "memoryModbusSlave2BlockD",
+            "memoryModbusSlave255BlockA",
+        ):
+            conpot_core.get_databus().set_value(block_key, [0] * 8)
 
         self.modbus = modbus_server.ModbusServer(
             template=_tcp_mode_template(), template_directory=template_dir, args=None

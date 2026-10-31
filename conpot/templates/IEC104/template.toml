@@ -7,7 +7,8 @@ creator = "Patrick Reichenberger"
 
 [core.databus.key_value_mappings]
 SystemDescription = "Siemens, SIMATIC, S7-300"
-sysObjectID = "0.0"
+sysObjectID = "1.3.6.1.4.1.4329.6"
+ifSpecific = "0.0"
 Uptime = { function = "conpot.emulators.misc.uptime.Uptime" }
 sysContact = ""
 sysName = ""

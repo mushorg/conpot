@@ -248,6 +248,7 @@ snmp = Schema(
             "enabled": bool,
             "host": str,
             "port": int,
+            Optional("engine_id"): str,
             Optional("config"): [
                 {
                     "name": str,

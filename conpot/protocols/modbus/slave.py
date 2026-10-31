@@ -82,7 +82,13 @@ class MBSlave(object):
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
 
-    def add_block(self, block_name, block_type, starting_address, size):
+    def add_block(self, block_name, block_type, starting_address, size, content=None):
+        """Add a block whose values live under databus key ``content``.
+
+        ``content`` defaults to ``block_name`` (the historical behaviour).
+        """
+        if content is None:
+            content = block_name
         if size <= 0:
             raise ValueError("size must be a positive number")
         if starting_address < 0:
@@ -102,10 +108,10 @@ class MBSlave(object):
                 index = i
                 break
 
+        # Build the block first: it validates size against the databus.
+        block = DatabusBlock(content, starting_address, size)
         self._blocks[block_name] = (block_type, starting_address)
-        self._memory[block_type].insert(
-            index, DatabusBlock(block_name, starting_address)
-        )
+        self._memory[block_type].insert(index, block)
 
     def handle_request(self, request_pdu, broadcast=False):
         """Return a response PDU, or None when a broadcast must stay silent."""

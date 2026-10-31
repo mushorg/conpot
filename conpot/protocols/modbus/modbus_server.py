@@ -53,31 +53,35 @@ class ModbusServer(object):
             sys.exit(3)
 
     def _configure_slaves(self, template):
-        slaves = template.get("slaves", [])
-        try:
-            for slave_cfg in slaves:
-                slave_id = int(slave_cfg["id"])
-                slave = self._databank.add_slave(slave_id)
-                logger.debug("Added slave with id %s.", slave_id)
-                for block in slave_cfg.get("blocks", []):
-                    name = block["name"]
-                    block_type_name = block["type"]
-                    request_type = BLOCK_TYPES[block_type_name]
-                    start_addr = int(block["starting_address"])
-                    size = int(block["size"])
-                    slave.add_block(name, request_type, start_addr, size)
-                    logger.debug(
-                        "Added block %s to slave %s. (type=%s, start=%s, size=%s)",
-                        name,
-                        slave_id,
-                        request_type,
-                        start_addr,
-                        size,
-                    )
+        # Errors propagate: a half-configured slave map would serve the wrong
+        # address space. protocol_startup reports them and exits.
+        for slave_cfg in template.get("slaves", []):
+            slave_id = int(slave_cfg["id"])
+            slave = self._databank.add_slave(slave_id)
+            logger.debug("Added slave with id %s.", slave_id)
+            for block in slave_cfg.get("blocks", []):
+                name = block["name"]
+                block_type_name = block["type"]
+                request_type = BLOCK_TYPES[block_type_name]
+                start_addr = int(block["starting_address"])
+                size = int(block["size"])
+                slave.add_block(
+                    name,
+                    request_type,
+                    start_addr,
+                    size,
+                    content=block.get("content", name),
+                )
+                logger.debug(
+                    "Added block %s to slave %s. (type=%s, start=%s, size=%s)",
+                    name,
+                    slave_id,
+                    request_type,
+                    start_addr,
+                    size,
+                )
 
-            logger.info("Conpot modbus initialized")
-        except Exception as exc:
-            logger.error(exc)
+        logger.info("Conpot modbus initialized")
 
     def handle(self, sock, address):
         sock.settimeout(self.timeout)

@@ -53,7 +53,13 @@ def _create_protocol_from_toml(
     if "testing.cfg" in args.config and "127." not in host:
         logger.warning("Running on non-local interface: %s", host)
     port = protocol_cfg["port"]
-    server = server_class(protocol_cfg, root_template_directory, args)
+    try:
+        server = server_class(protocol_cfg, root_template_directory, args)
+    except (KeyError, ValueError) as exc:
+        # Template passed the schema but is semantically invalid (e.g. a
+        # Modbus block whose size disagrees with its databus value).
+        logger.error("Invalid %s template: %s", protocol_name, exc)
+        sys.exit(1)
     logger.info("Found and enabled %s protocol.", protocol_name)
     return server, host, port
 

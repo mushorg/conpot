@@ -79,7 +79,7 @@ symbols = [
     { "name" = "ifOutDiscards", "value" = "0", "instance" = "1" },
     { "name" = "ifOutErrors", "value" = "0", "instance" = "1" },
     { "name" = "ifOutQLen", "value" = "1", "instance" = "1" },
-    { "name" = "ifSpecific", "value" = "sysObjectID", "instance" = "1" },
+    { "name" = "ifSpecific", "value" = "ifSpecific", "instance" = "1" },
 ]
 
 [[snmp.mibs]]

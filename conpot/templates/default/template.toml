@@ -23,7 +23,7 @@ FacilityName = "Mouser Factory"
 SystemName = "Technodrome"
 SystemDescription = "Siemens, SIMATIC, S7-200"
 Uptime = { function = "conpot.emulators.misc.uptime.Uptime" }
-sysObjectID = "0.0"
+sysObjectID = "1.3.6.1.4.1.4329.6"
 sysContact = "Siemens AG"
 sysName = "CP 443-1 EX40"
 sysLocation = "Venus"
@@ -35,7 +35,7 @@ memoryModbusSlave255BlockB = { value = "[random.randint(0,1) for b in range(0,32
 memoryModbusSlave1BlockA = { value = "[random.randint(0,1) for b in range(0,128)]" }
 memoryModbusSlave1BlockB = { value = "[random.randint(0,1) for b in range(0,32)]" }
 memoryModbusSlave2BlockC = { value = "[random.randint(0,1) for b in range(0,8)]" }
-memoryModbusSlave2BlockD = { value = "[0 for b in range(0,32)]" }
+memoryModbusSlave2BlockD = { value = "[0 for b in range(0,8)]" }
 Copyright = "Original Siemens Equipment"
 s7_id = "88111222"
 s7_module_type = "IM151-8 PN/DP CPU"
