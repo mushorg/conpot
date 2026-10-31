@@ -27,12 +27,47 @@ import conpot
 import conpot.core as conpot_core
 from conpot.protocols.proxy.ascii_decoder import AsciiDecoder
 from conpot.protocols.proxy.proxy import Proxy
-from conpot.utils.server_tasks import AsyncioTaskHandle, teardown_test_server
+from conpot.utils.server_tasks import (
+    AsyncioTaskHandle,
+    drain_log_queue,
+    get_log_event,
+    teardown_test_server,
+)
 
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
+KEYFILE = os.path.join(package_directory, "templates/default/ssl/ssl.key")
+CERTFILE = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
 
 
-def _start_echo_backend(ssl_files=None):
+def _wait_for_close(sock, timeout):
+    """Return True if the peer closes ``sock`` within ``timeout`` seconds."""
+    sock.settimeout(timeout)
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            data = sock.recv(1024)
+        except ConnectionResetError:
+            return True
+        except TimeoutError:
+            return False
+        if not data:
+            return True
+    return False
+
+
+def _event_types_until(handle, last_type, timeout=5.0):
+    """Collect session event types until ``last_type`` is seen."""
+    types = []
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        event = get_log_event(handle, timeout=max(deadline - time.monotonic(), 0.1))
+        types.append(event.get("event_type"))
+        if types[-1] == last_type:
+            return types
+    return types
+
+
+def _start_echo_backend(ssl_files=None, recv_size=1024):
     """Threaded stdlib echo server. Returns (host, port, stop_event, thread)."""
     ready = threading.Event()
     stop = threading.Event()
@@ -57,7 +92,15 @@ def _start_echo_backend(ssl_files=None):
                     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
                     ctx.load_cert_chain(certfile=certfile, keyfile=keyfile)
                     conn = ctx.wrap_socket(conn, server_side=True)
-                data = conn.recv(1024)
+                conn.settimeout(5)
+                data = b""
+                while len(data) < recv_size:
+                    chunk = conn.recv(recv_size - len(data))
+                    if not chunk:
+                        break
+                    data += chunk
+                    if recv_size == 1024:
+                        break
                 if data:
                     conn.sendall(data)
             except Exception:
@@ -127,7 +170,12 @@ class TestProxy(unittest.TestCase):
             sock = ctx.wrap_socket(sock)
         sock.connect(("127.0.0.1", proxy.server.server_port))
         sock.sendall(payload)
-        received = sock.recv(len(payload))
+        received = b""
+        while len(received) < len(payload):
+            chunk = sock.recv(len(payload) - len(received))
+            if not chunk:
+                break
+            received += chunk
         sock.close()
         return received
 
@@ -172,38 +220,147 @@ class TestProxy(unittest.TestCase):
             thread.join(timeout=5)
 
     def test_ssl_proxy_closes_client_that_does_not_start_handshake(self):
-        keyfile = os.path.join(package_directory, "templates/default/ssl/ssl.key")
-        certfile = os.path.join(package_directory, "templates/default/ssl/ssl.crt")
-        _host, backend_port, stop, thread = _start_echo_backend()
+        _host, backend_port, stop, thread = _start_echo_backend(
+            ssl_files=(KEYFILE, CERTFILE)
+        )
         try:
             proxy = Proxy(
                 "proxy",
                 "127.0.0.1",
                 backend_port,
-                keyfile=keyfile,
-                certfile=certfile,
+                keyfile=KEYFILE,
+                certfile=CERTFILE,
+                timeout=0.2,
             )
-            proxy.tls_handshake_timeout = 0.2
             handle = _start_proxy(proxy)
-            client = socket.create_connection(
-                ("127.0.0.1", proxy.server.server_port), timeout=2
-            )
-            client.settimeout(2)
-            deadline = time.monotonic() + 2
             try:
-                while time.monotonic() < deadline:
-                    try:
-                        data = client.recv(1024)
-                    except ConnectionResetError:
-                        break
-                    if not data:
-                        break
-                else:
-                    self.fail(
-                        "proxy did not close the client after the TLS handshake timeout"
+                drain_log_queue(handle)
+                client = socket.create_connection(
+                    ("127.0.0.1", proxy.server.server_port), timeout=2
+                )
+                try:
+                    self.assertTrue(
+                        _wait_for_close(client, 2),
+                        "proxy did not close the client after the TLS handshake timeout",
                     )
+                finally:
+                    client.close()
+                self.assertEqual(
+                    ["NEW_CONNECTION", "TLS_HANDSHAKE_FAILED", "CONNECTION_LOST"],
+                    _event_types_until(handle, "CONNECTION_LOST"),
+                )
+                # A well-behaved TLS client still gets proxied afterwards.
+                self.test_input = b"after a failed handshake"
+                received = self._exchange(
+                    proxy, self.test_input, ssl_files=(KEYFILE, CERTFILE)
+                )
+                self.assertEqual(self.test_input, received)
             finally:
-                client.close()
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
+
+    def test_ssl_proxy_bad_certfile_fails_at_construction(self):
+        with self.assertRaises(OSError):
+            Proxy(
+                "proxy",
+                "127.0.0.1",
+                1,
+                keyfile=KEYFILE,
+                certfile=os.path.join(package_directory, "does-not-exist.crt"),
+            )
+
+    def test_proxy_closes_idle_connection(self):
+        _host, backend_port, stop, thread = _start_echo_backend()
+        try:
+            proxy = Proxy("proxy", "127.0.0.1", backend_port, idle_timeout=0.3)
+            handle = _start_proxy(proxy)
+            try:
+                drain_log_queue(handle)
+                client = socket.create_connection(
+                    ("127.0.0.1", proxy.server.server_port), timeout=2
+                )
+                try:
+                    self.assertTrue(
+                        _wait_for_close(client, 3),
+                        "proxy did not close an idle connection",
+                    )
+                finally:
+                    client.close()
+                self.assertEqual(
+                    ["NEW_CONNECTION", "CONNECTION_LOST"],
+                    _event_types_until(handle, "CONNECTION_LOST"),
+                )
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            stop.set()
+            thread.join(timeout=5)
+
+    def test_ssl_proxy_times_out_unresponsive_backend(self):
+        # Backend accepts TCP but never answers the TLS ClientHello.
+        backend = socket.socket()
+        backend.bind(("127.0.0.1", 0))
+        backend.listen(5)
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend.getsockname()[1],
+                keyfile=KEYFILE,
+                certfile=CERTFILE,
+                timeout=0.3,
+            )
+            handle = _start_proxy(proxy)
+            try:
+                drain_log_queue(handle)
+                ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                client = ctx.wrap_socket(
+                    socket.create_connection(
+                        ("127.0.0.1", proxy.server.server_port), timeout=2
+                    )
+                )
+                try:
+                    self.assertTrue(
+                        _wait_for_close(client, 3),
+                        "proxy did not give up on an unresponsive backend",
+                    )
+                finally:
+                    client.close()
+                self.assertEqual(
+                    ["NEW_CONNECTION", "CONNECTION_FAILED", "CONNECTION_LOST"],
+                    _event_types_until(handle, "CONNECTION_LOST"),
+                )
+            finally:
+                teardown_test_server(proxy, handle)
+        finally:
+            backend.close()
+
+    def test_ssl_proxy_forwards_record_larger_than_recv_size(self):
+        # One TLS record bigger than a single recv() must be forwarded whole,
+        # not left in the SSL buffer where select() cannot see it.
+        self.test_input = os.urandom(12000)
+        _host, backend_port, stop, thread = _start_echo_backend(
+            ssl_files=(KEYFILE, CERTFILE), recv_size=len(self.test_input)
+        )
+        try:
+            proxy = Proxy(
+                "proxy",
+                "127.0.0.1",
+                backend_port,
+                keyfile=KEYFILE,
+                certfile=CERTFILE,
+            )
+            handle = _start_proxy(proxy)
+            try:
+                received = self._exchange(
+                    proxy, self.test_input, ssl_files=(KEYFILE, CERTFILE)
+                )
+                self.assertEqual(self.test_input, received)
+            finally:
                 teardown_test_server(proxy, handle)
         finally:
             stop.set()

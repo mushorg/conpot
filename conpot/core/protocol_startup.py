@@ -143,7 +143,10 @@ def collect_proxies(root_template_directory):
         proxy_host = p["proxy_host"]
         proxy_port = int(p["proxy_port"])
         decoder = p.get("decoder") or None
-        proxy_instance = Proxy(name, proxy_host, proxy_port, decoder, keyfile, certfile)
+        timeouts = {k: p[k] for k in ("timeout", "idle_timeout") if k in p}
+        proxy_instance = Proxy(
+            name, proxy_host, proxy_port, decoder, keyfile, certfile, **timeouts
+        )
         servers.append((proxy_instance, host, port))
     return servers
 

@@ -311,6 +311,8 @@ proxies = Schema(
                     Optional("decoder"): str,
                     Optional("keyfile"): str,
                     Optional("certfile"): str,
+                    Optional("timeout"): Or(int, float),
+                    Optional("idle_timeout"): Or(int, float),
                 }
             ],
         }
