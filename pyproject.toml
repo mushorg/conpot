@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=83.0.0", "wheel"]
+requires = ["setuptools>=84.1.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -22,7 +22,7 @@ classifiers = [
 requires-python = ">=3.14"
 dynamic = ["version"]
 dependencies = [
-    "setuptools>=83.0.0,<85",
+    "setuptools>=84.1.0,<85",
     "pysnmp>=7.1.22,<8",
     "pysnmp-mibs",
     "pysmi>=1.6.1",
