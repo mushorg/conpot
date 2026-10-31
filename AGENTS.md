@@ -71,6 +71,10 @@ FTP/TFTP and some protocols need VFS init (`init_test_server_by_name` / `initial
 - Outbound sinks (hpfeeds, syslog, JSON/SQLite) must not log or ship live secrets.
 - Emulated auth in templates (FTP, IPMI, SNMP communities, etc.) is for deception — never paste real organization credentials.
 
+## Disclosure
+
+- Keep the `Co-Authored-By:` trailer naming the agent on commits it substantially wrote, and say in the PR description that an AI agent was used and for what. See "Use of AI coding agents" in `docs/source/development/guidelines.rst`.
+
 ## Do not duplicate here
 
 For architecture depth (databus, templates, protocols, VFS, proxy), read `docs/source/concepts/`. Do not invent new dependency managers, linters, or async stacks without an explicit project decision.
