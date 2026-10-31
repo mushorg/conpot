@@ -22,12 +22,19 @@ import logging
 import select
 import socket
 import ssl
+import time
 
 import conpot.core as conpot_core
 from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
-TLS_HANDSHAKE_TIMEOUT = 5
+
+# Bounds every blocking socket operation: client TLS handshake, backend
+# connect/handshake, and reads/writes on an already-readable socket.
+DEFAULT_TIMEOUT = 5
+# Close a proxied connection when neither side has sent data for this long.
+DEFAULT_IDLE_TIMEOUT = 300
+RECV_SIZE = 4096
 
 
 class ProxyDecoder(abc.ABC):
@@ -42,7 +49,15 @@ class ProxyDecoder(abc.ABC):
 
 class Proxy(object):
     def __init__(
-        self, name, proxy_host, proxy_port, decoder=None, keyfile=None, certfile=None
+        self,
+        name,
+        proxy_host,
+        proxy_port,
+        decoder=None,
+        keyfile=None,
+        certfile=None,
+        timeout=DEFAULT_TIMEOUT,
+        idle_timeout=DEFAULT_IDLE_TIMEOUT,
     ):
         self.proxy_host = proxy_host
         self.proxy_port = proxy_port
@@ -53,7 +68,23 @@ class Proxy(object):
         self.server = None
         self.keyfile = keyfile
         self.certfile = certfile
-        self.tls_handshake_timeout = TLS_HANDSHAKE_TIMEOUT
+        self.timeout = timeout
+        self.idle_timeout = idle_timeout
+        # Build TLS contexts once so a bad cert/key path fails at startup
+        # instead of looking like a per-client handshake failure.
+        self._server_ctx = None
+        self._client_ctx = None
+        if self.keyfile and self.certfile:
+            self._server_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            self._server_ctx.load_cert_chain(
+                certfile=self.certfile, keyfile=self.keyfile
+            )
+            self._client_ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            self._client_ctx.check_hostname = False
+            self._client_ctx.verify_mode = ssl.CERT_NONE
+            self._client_ctx.load_cert_chain(
+                certfile=self.certfile, keyfile=self.keyfile
+            )
         if decoder:
             try:
                 namespace, _classname = decoder.rsplit(".", 1)
@@ -67,20 +98,6 @@ class Proxy(object):
                 )
         else:
             self.decoder = None
-
-    def _ssl_wrap(self, sock, *, server_side):
-        if server_side:
-            sock.settimeout(self.tls_handshake_timeout)
-            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            ctx.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
-            wrapped_sock = ctx.wrap_socket(sock, server_side=True)
-            wrapped_sock.settimeout(None)
-            return wrapped_sock
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        ctx.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
-        return ctx.wrap_socket(sock)
 
     async def start(self, host, port):
         self.host = host
@@ -110,19 +127,10 @@ class Proxy(object):
         # asyncio start_server hands over a non-blocking fd; SSL wrap and
         # blocking recv/select in this worker thread need a blocking socket.
         sock.setblocking(True)
-        if self.keyfile and self.certfile:
-            try:
-                sock = self._ssl_wrap(sock, server_side=True)
-            except OSError as err:
-                logger.warning("TLS handshake with client %s failed: %s", address, err)
-                sock.close()
-                return
+        sock.settimeout(self.timeout)
+        local_host, local_port = sock.getsockname()[:2]
         session = conpot_core.get_session(
-            self.proxy_id,
-            address[0],
-            address[1],
-            sock.getsockname()[0],
-            sock.getsockname()[1],
+            self.proxy_id, address[0], address[1], local_host, local_port
         )
         logger.info(
             "New connection from %s:%s on %s proxy. (%s)",
@@ -132,85 +140,139 @@ class Proxy(object):
             session.id,
         )
         session.log_event(event_type="NEW_CONNECTION")
-        proxy_socket = socket.socket()
-
-        if self.keyfile and self.certfile:
-            proxy_socket = self._ssl_wrap(proxy_socket, server_side=False)
-
+        proxy_socket = None
         try:
-            proxy_socket.connect((self.proxy_host, self.proxy_port))
-        except OSError:
-            logger.exception(
-                "Error while connecting to proxied service at ({}, {})".format(
-                    self.proxy_host, self.proxy_port
+            if self._server_ctx is not None:
+                try:
+                    sock = self._server_ctx.wrap_socket(sock, server_side=True)
+                except OSError as err:
+                    # ssl.SSLError and socket.timeout are both OSError.
+                    logger.info(
+                        "TLS handshake with %s:%s on %s proxy failed: %s (%s)",
+                        address[0],
+                        address[1],
+                        self.proxy_id,
+                        err,
+                        session.id,
+                    )
+                    session.log_event(event_type="TLS_HANDSHAKE_FAILED", error=str(err))
+                    return
+
+            try:
+                proxy_socket = self._connect_backend()
+            except OSError as err:
+                logger.warning(
+                    "Error while connecting to proxied service at (%s, %s): %s",
+                    self.proxy_host,
+                    self.proxy_port,
+                    err,
                 )
+                session.log_event(event_type="CONNECTION_FAILED", error=str(err))
+                return
+
+            self._relay(sock, proxy_socket, address, session)
+        finally:
+            logger.info(
+                "Connection from %s:%s on %s proxy closed. (%s)",
+                address[0],
+                address[1],
+                self.proxy_id,
+                session.id,
             )
-            session.log_event(event_type="CONNECTION_FAILED")
+            session.log_event(event_type="CONNECTION_LOST")
+            session.set_ended()
             self._close([proxy_socket, sock])
-            return
 
+    def _connect_backend(self):
+        backend = socket.create_connection(
+            (self.proxy_host, self.proxy_port), timeout=self.timeout
+        )
+        if self._client_ctx is not None:
+            try:
+                backend = self._client_ctx.wrap_socket(backend)
+            except OSError:
+                backend.close()
+                raise
+        return backend
+
+    def _recv(self, sock):
+        """Read what select() reported as readable.
+
+        Returns the data, ``b""`` when the peer closed, or ``None`` when a TLS
+        socket was readable but carried no application data (e.g. a TLS 1.3
+        session ticket). A blocking read in that case would stall the relay
+        while the other direction still has data to forward.
+        """
+        if not isinstance(sock, ssl.SSLSocket):
+            return sock.recv(RECV_SIZE)
+        sock.settimeout(0)
+        try:
+            try:
+                data = sock.recv(RECV_SIZE)
+            except ssl.SSLWantReadError:
+                return None
+            # A TLS record can decrypt to more than one recv() worth of data;
+            # the rest sits in the SSL object where select() cannot see it.
+            pending = sock.pending()
+            while data and pending:
+                data += sock.recv(pending)
+                pending = sock.pending()
+            return data
+        finally:
+            sock.settimeout(self.timeout)
+
+    def _relay(self, sock, proxy_socket, address, session):
         sockets = [proxy_socket, sock]
-        while len(sockets) == 2:
-            sockets_read, _, sockets_err = select.select(sockets, [], sockets, 10)
-
-            if len(sockets_err) > 0:
-                self._close([proxy_socket, sock])
-                break
+        last_activity = time.monotonic()
+        while True:
+            remaining = self.idle_timeout - (time.monotonic() - last_activity)
+            if remaining <= 0:
+                logger.info(
+                    "Closing idle connection from %s:%s on %s proxy after %ss.",
+                    address[0],
+                    address[1],
+                    self.proxy_id,
+                    self.idle_timeout,
+                )
+                return
+            sockets_read, _, sockets_err = select.select(
+                sockets, [], sockets, remaining
+            )
+            if sockets_err:
+                return
 
             for s in sockets_read:
-                socket_close_reason = "socket closed"
+                if s is proxy_socket:
+                    peer = "proxied service (%s, %s)" % (
+                        self.proxy_host,
+                        self.proxy_port,
+                    )
+                else:
+                    peer = "remote (%s, %s)" % (address[0], address[1])
                 try:
-                    data = s.recv(1024)
+                    data = self._recv(s)
                 except OSError as socket_err:
-                    data = []
-                    socket_close_reason = str(socket_err)
-                if len(data) == 0:
-                    self._close([proxy_socket, sock])
-                    if s is proxy_socket:
-                        logging.warning(
-                            "Closing proxied socket while receiving (%s, %s): %s.",
-                            self.proxy_host,
-                            self.proxy_port,
-                            socket_close_reason,
-                        )
-                        sockets = []
-                        break
-                    elif s is sock:
-                        logging.warning(
-                            "Closing connection to remote while receiving from remote (%s, %s): %s",
-                            socket_close_reason,
-                            address[0],
-                            address[1],
-                        )
-                        sockets = []
-                        break
-                    else:
-                        assert False
+                    logger.warning(
+                        "Error while receiving from %s: %s.", peer, socket_err
+                    )
+                    return
+                if data is None:
+                    continue
+                if not data:
+                    logger.info("Connection closed by %s.", peer)
+                    return
 
+                last_activity = time.monotonic()
                 try:
                     if s is proxy_socket:
                         self.handle_out_data(data, sock, session)
-                    elif s is sock:
+                    else:
                         self.handle_in_data(data, proxy_socket, session)
-                    else:
-                        assert False
                 except OSError as socket_err:
-                    if s is proxy_socket:
-                        destination = "proxied socket"
-                    else:
-                        destination = "remote connection"
                     logger.warning(
-                        "Error while sending data to %s: %s.",
-                        destination,
-                        str(socket_err),
+                        "Error while forwarding data from %s: %s.", peer, socket_err
                     )
-                    sockets = []
-                    break
-
-        session.log_event(event_type="CONNECTION_LOST")
-        session.set_ended()
-        proxy_socket.close()
-        sock.close()
+                    return
 
     def handle_in_data(self, data, sock, session):
         # convert the data from bytes to hex string
@@ -224,7 +286,7 @@ class Proxy(object):
             decoded = self.decoder.decode_in(data)
             logger.debug("Decoded request: %s", decoded)
             session.log_event(request=decoded)
-        sock.send(data)
+        sock.sendall(data)
 
     def handle_out_data(self, data, sock, session):
         hex_data = codecs.encode(data, "hex_codec")
@@ -235,11 +297,16 @@ class Proxy(object):
             decoded = self.decoder.decode_out(data)
             logger.debug("Decoded response: %s", decoded)
             session.log_event(response=decoded)
-        sock.send(data)
+        sock.sendall(data)
 
     def _close(self, sockets):
         for s in sockets:
-            s.close()
+            if s is None:
+                continue
+            try:
+                s.close()
+            except OSError:
+                pass
 
     def stop(self):
         if hasattr(self, "_stop"):
