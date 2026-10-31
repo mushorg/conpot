@@ -27,6 +27,7 @@ import conpot.core as conpot_core
 from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
+TLS_HANDSHAKE_TIMEOUT = 5
 
 
 class ProxyDecoder(abc.ABC):
@@ -52,6 +53,7 @@ class Proxy(object):
         self.server = None
         self.keyfile = keyfile
         self.certfile = certfile
+        self.tls_handshake_timeout = TLS_HANDSHAKE_TIMEOUT
         if decoder:
             try:
                 namespace, _classname = decoder.rsplit(".", 1)
@@ -68,9 +70,12 @@ class Proxy(object):
 
     def _ssl_wrap(self, sock, *, server_side):
         if server_side:
+            sock.settimeout(self.tls_handshake_timeout)
             ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             ctx.load_cert_chain(certfile=self.certfile, keyfile=self.keyfile)
-            return ctx.wrap_socket(sock, server_side=True)
+            wrapped_sock = ctx.wrap_socket(sock, server_side=True)
+            wrapped_sock.settimeout(None)
+            return wrapped_sock
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
@@ -106,7 +111,12 @@ class Proxy(object):
         # blocking recv/select in this worker thread need a blocking socket.
         sock.setblocking(True)
         if self.keyfile and self.certfile:
-            sock = self._ssl_wrap(sock, server_side=True)
+            try:
+                sock = self._ssl_wrap(sock, server_side=True)
+            except OSError as err:
+                logger.warning("TLS handshake with client %s failed: %s", address, err)
+                sock.close()
+                return
         session = conpot_core.get_session(
             self.proxy_id,
             address[0],
