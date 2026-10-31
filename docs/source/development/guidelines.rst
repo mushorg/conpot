@@ -1,18 +1,32 @@
-================
+======================
 Development Guidelines
-================
+======================
 
 Developers Guide
 ================
 
-Indentation
------------
-* We are using 4 tab-spaces
-* No one line conditionals
+Style and formatting
+--------------------
+* Follow `PEP 8 <https://peps.python.org/pep-0008/>`_.
+* Indent with 4 spaces (no tabs).
+* No one-line conditionals.
+* Code is formatted with `Black <https://black.readthedocs.io/>`_. The version is pinned in
+  ``pyproject.toml``; run ``uv run black .`` (``make format``) before committing. CI runs
+  ``uv run black --check .`` (``make lint``) and fails on unformatted code.
+* Match the style of neighboring protocols and tests when editing existing code.
 
-Style
------
-* We obey to the `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_
+Code conventions
+----------------
+* Conpot runs on **asyncio**. Do not add gevent or ``monkey.patch_all()``.
+* Protocol servers live in ``conpot/protocols/<name>/``, use the ``@conpot_protocol`` decorator
+  and are registered in ``conpot/protocols/__init__.py``.
+* Protocol handlers talk to untrusted clients: set socket timeouts, bound every read, and always
+  log ``CONNECTION_LOST`` and close the socket (use ``try``/``finally``).
+* Never commit real credentials. Emulated credentials in templates are for deception only.
+
+``AGENTS.md`` in the repository root keeps a more detailed, up-to-date list of these rules. For
+architecture background see :doc:`../concepts/protocols`, :doc:`../concepts/templates` and
+:doc:`../concepts/databus`.
 
 Python environment (uv)
 -----------------------
@@ -59,6 +73,30 @@ CI (``.github/workflows/python.yml``) installs ``gcc`` and ``ipmitool``, runs
 Copyright
 ---------
 * If you are adding a file/code which is produced only by you, feel free to add the license information and a notice who holds the copyrights.
+
+Use of AI coding agents
+-----------------------
+
+Contributions written with the help of AI coding agents or assistants (for example Claude Code,
+GitHub Copilot, Cursor or Codex) are welcome, under these conditions:
+
+* **Disclose it.** State in the pull request description that an AI agent was used, which tool,
+  and roughly for what (e.g. "tests generated with Claude Code, protocol parser written by hand").
+  Commits substantially authored by an agent should carry a ``Co-Authored-By:`` trailer naming the
+  tool, as most agents add by default. Do not strip it.
+* **You are the author.** You must understand, review and be able to explain every line you
+  submit. "The agent wrote it" is not an answer in code review.
+* **Verify it.** Run ``make test`` and ``make lint`` locally. Do not submit code or tests you have
+  not run, and do not let an agent weaken or delete tests to make them pass.
+* **Mind the threat model.** Conpot parses traffic from hostile clients. Pay particular attention
+  to agent-generated parsing code, timeouts, proxy mode and anything touching privilege drop or
+  sandboxing.
+* **No secrets.** Never paste credentials, tokens or private data into an agent session.
+* **Licensing.** You are responsible for making sure agent output does not reproduce code under
+  an incompatible license. Conpot is GPL-2.0.
+
+Agents should read ``AGENTS.md`` in the repository root, which contains the project's working
+rules for automated contributors. Keep it in sync when conventions in this document change.
 
 Recommended git workflow
 ------------------------
@@ -129,7 +167,7 @@ Do not use 'git commit' in rebase if you don't know what you are doing.
 
 ::
 
-  git push -f feature_branch
+  git push --force-with-lease origin feature_branch
 
 5, Comment in pull request to let us know about your new code.
 
@@ -150,7 +188,7 @@ To avoid additional Merge commits, use cherry-pick:
 
 Comment on pull request that you added it to main, and close pull request.
 
-This approach is usefull for majority of pull requests (1-3 commits).
+This approach is useful for majority of pull requests (1-3 commits).
 
 If you expect conflicts (a lot of commits in feature branch with a lot of changes) you can use GitHub Merge button.
 
