@@ -36,6 +36,12 @@ def _make_engine(engine_name):
     raise ValueError("Unknown PLC engine: {!r}".format(engine_name))
 
 
+def _cpu_state_running(cpu_state):
+    if not isinstance(cpu_state, list) or not cpu_state:
+        raise ValueError("PLC CPU state must be a non-empty list")
+    return bool(cpu_state[0])
+
+
 class PlcScanCycle:
     """Cyclic PLC scan over databus lists that Modbus already serves.
 
@@ -75,7 +81,14 @@ class PlcScanCycle:
             return
         try:
             engine = _make_engine(self.engine_name)
-            cpu_state = databus.get_value(self.cpu_state_key)
+            cpu_state_key = self.cpu_state_key
+            if cpu_state_key:
+                try:
+                    _cpu_state_running(databus.get_value(cpu_state_key))
+                except AssertionError, KeyError:
+                    # Existing templates do not have a CPU-state key. Keep
+                    # their historical always-running scan behavior.
+                    cpu_state_key = None
             image = ProcessImage(
                 coils=databus.get_value(self.coils_key),
                 discrete=databus.get_value(self.discrete_key),
@@ -85,12 +98,17 @@ class PlcScanCycle:
         except Exception:
             logger.exception("PLC scan cycle failed to start")
             self.stopped.set()
-            raise
+            return
 
         scan_s = max(self.scan_ms, 1) / 1000.0
         while self._enabled:
             try:
-                if cpu_state[0]:
+                # UMAS uses Databus.set_value(), which can replace the stored
+                # object. Read it again so STOP/START and callable-backed
+                # values are observed by the scan thread.
+                if cpu_state_key is None or _cpu_state_running(
+                    databus.get_value(cpu_state_key)
+                ):
                     engine.scan(image)
             except Exception:
                 logger.exception("PLC scan failed")

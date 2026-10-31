@@ -77,11 +77,28 @@ class MBSlave(object):
         self.template = template
         self.function_code = None
         self.event_type = None
-        self.running = True
+        self._running = True
         self._umas_enabled = bool(template.get("umas_enabled", False))
+        self._cpu_state_key = template.get("umas_cpu_state_key")
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
+
+    @property
+    def running(self):
+        if self._cpu_state_key:
+            try:
+                cpu_state = conpot_core.get_databus().get_value(self._cpu_state_key)
+                if not isinstance(cpu_state, list) or not cpu_state:
+                    raise ValueError
+                return bool(cpu_state[0])
+            except AssertionError, KeyError, TypeError, ValueError:
+                pass
+        return self._running
+
+    @running.setter
+    def running(self, value):
+        self._running = bool(value)
 
     def add_block(self, block_name, block_type, starting_address, size):
         if size <= 0:
@@ -266,24 +283,29 @@ class MBSlave(object):
             return _exception_pdu(self.function_code, ExcCodes.ILLEGAL_VALUE)
         session_key = request_pdu[1]
         umas_code = request_pdu[2]
-        cpu_state_key = self.template.get("umas_cpu_state_key")
-        if cpu_state_key and umas_code in (_UMAS_START, _UMAS_STOP):
-            try:
-                cpu_state = conpot_core.get_databus().get_value(cpu_state_key)
-                cpu_state[0] = 1 if umas_code == _UMAS_START else 0
-            except AssertionError, IndexError, TypeError:
-                return _exception_pdu(self.function_code, ExcCodes.DEVICE_FAILURE)
         if umas_code == _UMAS_START:
-            self.running = True
+            running = True
             self.event_type = "UMAS_START"
-            status = _UMAS_OK
         elif umas_code == _UMAS_STOP:
-            self.running = False
+            running = False
             self.event_type = "UMAS_STOP"
-            status = _UMAS_OK
         else:
-            status = _UMAS_ERROR
-        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, status)
+            return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_ERROR)
+
+        if self._cpu_state_key:
+            try:
+                databus = conpot_core.get_databus()
+                cpu_state = databus.get_value(self._cpu_state_key)
+                if not isinstance(cpu_state, list) or not cpu_state:
+                    raise ValueError
+                updated_state = list(cpu_state)
+                updated_state[0] = 1 if running else 0
+                databus.set_value(self._cpu_state_key, updated_state)
+            except AssertionError, KeyError, TypeError, ValueError:
+                return _exception_pdu(self.function_code, ExcCodes.DEVICE_FAILURE)
+
+        self._running = running
+        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_OK)
 
     def _report_slave_id(self):
         # Historical Conpot PDU: function code is present twice. Scanners and

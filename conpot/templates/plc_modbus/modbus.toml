@@ -5,6 +5,7 @@ port = 5020
 mode = "serial"
 delay = 0
 umas_enabled = true
+# Keep this equal to PlcScanCycle's cpu_state_key.
 umas_cpu_state_key = "plc_cpu_running"
 
 [modbus.device_info]
