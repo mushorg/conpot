@@ -532,9 +532,6 @@ class FTPCommandChannel(FTPHandlerBase):
         Starts an active data channel by using IPv4. We don't actually need to start the full duplex connection here.
         Just need to figure the host ip and the port. The DTP connection would start in each command.
         """
-        if self._data_channel:
-            self.stop_data_channel(purge=True, reason="Switching from PORT mode.")
-        self.active_passive_mode = "PORT"
         try:
             addr = list(map(int, arg.split(",")))
             if len(addr) != 6:
@@ -546,6 +543,17 @@ class FTPCommandChannel(FTPHandlerBase):
             port = (addr[4] * 256) + addr[5]
             if not 0 <= port <= 65535:
                 raise ValueError
+            if ip != self.client_address[0]:
+                logger.info(
+                    "Rejected FTP PORT target {}:{} from control client {}.".format(
+                        ip, port, self.client_address
+                    )
+                )
+                self.respond(b"501 Rejected data connection to foreign address.")
+                return
+            if self._data_channel:
+                self.stop_data_channel(purge=True, reason="Switching from PORT mode.")
+            self.active_passive_mode = "PORT"
             self.cli_ip, self.cli_port = ip, port
             self._data_sock = socket.socket()
             self._data_sock.setblocking(True)
