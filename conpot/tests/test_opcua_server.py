@@ -16,8 +16,11 @@ import time
 import unittest
 
 import pytest
-from asyncua import Client
+from asyncua import Client, ua
+from asyncua.common.connection import TransportLimits
+from asyncua.ua.ua_binary import uatcp_to_binary
 
+from conpot.protocols.opcua import session as opcua_session
 from conpot.protocols.opcua.opcua_server import OPCUAServer
 from conpot.utils.server_tasks import (
     drain_log_queue,
@@ -52,6 +55,161 @@ async def _read_plant_variables(host: str, port: int) -> dict:
 
 def _run(coro):
     return asyncio.run(coro)
+
+
+class _ScriptedReader:
+    def __init__(self, chunks, fail_after_chunks=False):
+        self.chunks = list(chunks)
+        self.calls = 0
+        self.fail_after_chunks = fail_after_chunks
+
+    async def read(self, size):
+        self.calls += 1
+        if self.chunks:
+            return self.chunks.pop(0)
+        if self.fail_after_chunks:
+            raise AssertionError("session read again before rejecting the frame")
+        return b""
+
+
+class _RecordingWriter:
+    def __init__(self):
+        self.writes = []
+
+    def write(self, data):
+        self.writes.append(data)
+
+    def close(self):
+        pass
+
+    def get_extra_info(self, name, default=None):
+        return {"peername": ("127.0.0.1", 12345), "sockname": ("127.0.0.1", 4840)}.get(
+            name, default
+        )
+
+    def is_closing(self):
+        return False
+
+    async def drain(self):
+        pass
+
+    async def wait_closed(self):
+        pass
+
+
+class _RecordingSession:
+    id = "test-session"
+
+    def __init__(self):
+        self.events = []
+
+    def log_event(self, **event):
+        self.events.append(event)
+
+
+@pytest.mark.parametrize("message_type", [b"HEL", b"MSG"])
+def test_oversized_declared_frame_is_rejected_before_reading_its_body(message_type):
+    async def run():
+        receive_limit = 4096
+        header = message_type + b"F" + struct.pack("<I", 2**31 - 1)
+        if message_type == b"MSG":
+            header += struct.pack("<I", 0)
+            chunks = [header[:8], header[8:]]
+        else:
+            chunks = [header]
+        reader = _ScriptedReader(chunks, fail_after_chunks=True)
+        writer = _RecordingWriter()
+        session = _RecordingSession()
+
+        await opcua_session.run_opcua_session(
+            iserver=None,
+            policies=[],
+            limits=TransportLimits(max_recv_buffer=receive_limit),
+            reader=reader,
+            writer=writer,
+            session=session,
+            read_timeout=1,
+        )
+
+        assert reader.calls == len(chunks)
+        assert writer.writes == []
+        assert session.events == []
+
+    _run(run())
+
+
+def test_fragmented_frame_at_receive_limit_is_processed():
+    async def run():
+        receive_limit = 4096
+        hello = ua.Hello()
+        hello.ProtocolVersion = 0
+        hello.ReceiveBufferSize = receive_limit
+        hello.SendBufferSize = receive_limit
+        hello.MaxMessageSize = receive_limit
+        hello.MaxChunkCount = 1
+        hello.EndpointUrl = ""
+        empty_url_frame = uatcp_to_binary(ua.MessageType.Hello, hello)
+        hello.EndpointUrl = "x" * (receive_limit - len(empty_url_frame))
+        frame = uatcp_to_binary(ua.MessageType.Hello, hello)
+        assert len(frame) == receive_limit
+
+        reader = _ScriptedReader(
+            [frame[:3], frame[3:8], frame[8:128], frame[128:1024], frame[1024:]]
+        )
+        writer = _RecordingWriter()
+        session = _RecordingSession()
+
+        await opcua_session.run_opcua_session(
+            iserver=None,
+            policies=[],
+            limits=TransportLimits(max_recv_buffer=receive_limit),
+            reader=reader,
+            writer=writer,
+            session=session,
+            read_timeout=1,
+        )
+
+        assert len(writer.writes) == 1
+        assert writer.writes[0].startswith(b"ACKF")
+        assert session.events == [{"event_type": "REQUEST", "request": "Hello"}]
+
+    _run(run())
+
+
+def test_negotiated_receive_limit_applies_to_later_frames():
+    async def run():
+        receive_limit = 4096
+        negotiated_limit = 2048
+        hello = ua.Hello()
+        hello.ProtocolVersion = 0
+        hello.ReceiveBufferSize = receive_limit
+        hello.SendBufferSize = negotiated_limit
+        hello.MaxMessageSize = receive_limit
+        hello.MaxChunkCount = 1
+        hello.EndpointUrl = "opc.tcp://conpot"
+        hello_frame = uatcp_to_binary(ua.MessageType.Hello, hello)
+        oversized_header = b"HELF" + struct.pack("<I", negotiated_limit + 1)
+        reader = _ScriptedReader(
+            [hello_frame + oversized_header], fail_after_chunks=True
+        )
+        writer = _RecordingWriter()
+        session = _RecordingSession()
+
+        await opcua_session.run_opcua_session(
+            iserver=None,
+            policies=[],
+            limits=TransportLimits(max_recv_buffer=receive_limit),
+            reader=reader,
+            writer=writer,
+            session=session,
+            read_timeout=1,
+        )
+
+        assert reader.calls == 1
+        assert len(writer.writes) == 1
+        assert session.events == [{"event_type": "REQUEST", "request": "Hello"}]
+
+    _run(run())
 
 
 @pytest.fixture(scope="class")

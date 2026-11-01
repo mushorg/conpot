@@ -100,6 +100,11 @@ class LoggingUaProcessor(UaProcessor):
         super().__init__(internal_server, transport, limits)
         self._conpot_session = session
 
+    @property
+    def max_recv_buffer(self) -> int:
+        """Return asyncua's active per-chunk receive limit for this connection."""
+        return self._limits.max_recv_buffer
+
     async def process(self, header, body):
         if header.MessageType == ua.MessageType.Hello:
             self._conpot_session.log_event(event_type="REQUEST", request="Hello")
@@ -139,7 +144,7 @@ async def run_opcua_session(
     transport = WriterTransport(writer)
     processor = LoggingUaProcessor(iserver, transport, limits, session)
     processor.set_policies(policies)
-    buffer = b""
+    buffer = bytearray()
 
     try:
         while True:
@@ -157,22 +162,31 @@ async def run_opcua_session(
             if not chunk:
                 break
 
-            buffer += chunk
+            buffer.extend(chunk)
             while buffer:
                 try:
                     view = Buffer(buffer)
                     header = header_from_binary(view)
                 except NotEnoughData:
                     break
-                if header.header_size + header.body_size <= header.header_size:
+                if header.packet_size <= header.header_size:
                     logger.warning(
                         "Malformed OPC UA header from client (%s)", session.id
                     )
                     return
-                needed = header.header_size + header.body_size
+                needed = header.packet_size
+                if needed > processor.max_recv_buffer:
+                    logger.warning(
+                        "OPC UA frame exceeds receive buffer limit (%s > %s). (%s)",
+                        needed,
+                        processor.max_recv_buffer,
+                        session.id,
+                    )
+                    return
                 if len(buffer) < needed:
                     break
-                body = Buffer(buffer, header.header_size, header.body_size)
+                frame = bytes(buffer[:needed])
+                body = Buffer(frame, header.header_size, header.body_size)
                 try:
                     keep_going = await processor.process(header, body)
                 except Exception as exc:
@@ -180,7 +194,7 @@ async def run_opcua_session(
                         return
                     logger.exception("OPC UA processor error (%s)", session.id)
                     return
-                buffer = buffer[needed:]
+                del buffer[:needed]
                 if not keep_going:
                     return
                 try:
