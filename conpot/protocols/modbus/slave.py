@@ -1,5 +1,6 @@
 import logging
 import struct
+import threading
 
 from pymodbus.constants import ExcCodes
 from pymodbus.pdu import DecodePDU, ExceptionResponse
@@ -23,6 +24,7 @@ from pymodbus.pdu.register_message import (
     WriteSingleRegisterRequest,
     WriteSingleRegisterResponse,
 )
+from pymodbus.pdu.other_message import ReportDeviceIdResponse
 
 from conpot.utils.networking import str_to_bytes
 
@@ -68,19 +70,62 @@ class ModbusInvalidRequestError(Exception):
     """A PDU that cannot be turned into an exception response."""
 
 
+class SharedCpuState(object):
+    """The device-level CPU state shared by all Modbus unit ids."""
+
+    def __init__(self):
+        self._running = True
+        self._lock = threading.Lock()
+
+    @property
+    def running(self):
+        with self._lock:
+            return self._running
+
+    @running.setter
+    def running(self, value):
+        with self._lock:
+            self._running = bool(value)
+
+
 class MBSlave(object):
     """One Modbus unit id: template blocks plus pymodbus encode/decode."""
 
-    def __init__(self, slave_id, template):
+    def __init__(self, slave_id, template, cpu_state=None):
         self._id = slave_id
         self.template = template
         self.function_code = None
         self.event_type = None
-        self.running = True
+        self._cpu_state = cpu_state or SharedCpuState()
         self._umas_enabled = bool(template.get("umas_enabled", False))
+        self._report_slave_id_bytes = self._parse_report_slave_id()
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
+
+    @property
+    def running(self):
+        return self._cpu_state.running
+
+    @running.setter
+    def running(self, value):
+        self._cpu_state.running = value
+
+    def _parse_report_slave_id(self):
+        configured = self.template.get("device_info", {}).get("ReportSlaveId")
+        if configured is None:
+            return bytes((self._id,))
+        try:
+            identifier = bytes.fromhex(configured)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("ReportSlaveId must contain hexadecimal bytes") from exc
+        if not identifier:
+            raise ValueError("ReportSlaveId must contain at least one byte")
+        # A Modbus PDU is at most 253 bytes: function, byte count, identifier,
+        # and run indicator leave at most 250 bytes for the identifier.
+        if len(identifier) > 250:
+            raise ValueError("ReportSlaveId can contain at most 250 bytes")
+        return identifier
 
     def add_block(self, block_name, block_type, starting_address, size, content=None):
         """Add a block whose values live under databus key ``content``.
@@ -285,7 +330,10 @@ class MBSlave(object):
 
     def _report_slave_id(self):
         logger.debug("Requested to report slave ID (0x11)")
-        return bytes((0x11, 0x02, self._id, 0xFF if self.running else 0x00))
+        response = ReportDeviceIdResponse(
+            identifier=self._report_slave_id_bytes, status=self.running
+        )
+        return _success_pdu(response)
 
     def _device_info(self, request_pdu):
         # Always return all three objects. The stock MEI handler would return

@@ -399,6 +399,11 @@ class TestModbusUmas(unittest.TestCase):
         stopped = self._exchange(b"\x11")
         self.assertEqual(stopped, b"\x00\x00\x00\x00\x00\x05\x01\x11\x02\x01\x00")
 
+        start = self._exchange(b"\x5a\x00\x40")
+        self.assertEqual(start, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+        restarted = self._exchange(b"\x11")
+        self.assertEqual(restarted, b"\x00\x00\x00\x00\x00\x05\x01\x11\x02\x01\xff")
+
     def test_other_umas_code_is_rejected(self):
         data = self._exchange(b"\x5a\x00\x02")
         self.assertEqual(data, b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfd")

@@ -1,4 +1,5 @@
 Conpot (unreleased)
+    * Corrected Modbus Function 17 framing and made its device identifier configurable
     * Added Beckhoff ADS/AMS TCP honeypot subset (#277)
     * ADS honeypot answers UDP/48899 Identify for TwinCAT broadcast search (#277)
     * Added DNP3/TCP outstation honeypot (#647)
