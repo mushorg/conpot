@@ -14,7 +14,8 @@ import pytest
 from conpot import cli
 
 
-def test_root_force_drops_privileges_before_file_logging(monkeypatch, tmp_path):
+@pytest.mark.parametrize("uids", [(1000, 0, 0), (1000, 1000, 0)])
+def test_root_force_drops_privileges_before_file_logging(monkeypatch, tmp_path, uids):
     events = []
     logfile = tmp_path / "already-open.log"
     old_handler = logging.FileHandler(logfile)
@@ -28,7 +29,11 @@ def test_root_force_drops_privileges_before_file_logging(monkeypatch, tmp_path):
     monkeypatch.setattr(cli.sys, "argv", ["conpot", "--force"])
     monkeypatch.setattr(cli, "package_directory", str(config_dir))
     monkeypatch.setattr(cli, "core_interface", SimpleNamespace(config=None))
-    monkeypatch.setattr(cli.os, "getuid", lambda: 0)
+    # A nonroot real UID must not bypass the root-only startup path when the
+    # effective or saved UID is 0.
+    monkeypatch.setattr(cli.os, "getuid", lambda: uids[0])
+    monkeypatch.setattr(cli.os, "geteuid", lambda: uids[1])
+    monkeypatch.setattr(cli.os, "getresuid", lambda: uids, raising=False)
     setup_console_logging = cli.setup_console_logging
 
     def configure_console(verbose, reset=False):
@@ -64,6 +69,8 @@ def test_non_root_force_keeps_file_logging_without_privilege_drop(monkeypatch):
     monkeypatch.setattr(cli.sys, "argv", ["conpot", "--force"])
     monkeypatch.setattr(cli, "core_interface", SimpleNamespace(config=None))
     monkeypatch.setattr(cli.os, "getuid", lambda: 1000)
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(cli.os, "getresuid", lambda: (1000, 1000, 1000), raising=False)
     monkeypatch.setattr(
         cli,
         "setup_console_logging",
@@ -91,6 +98,8 @@ def test_root_without_force_exits_before_file_logging(monkeypatch):
     monkeypatch.setattr(cli.sys, "argv", ["conpot"])
     monkeypatch.setattr(cli, "core_interface", SimpleNamespace(config=None))
     monkeypatch.setattr(cli.os, "getuid", lambda: 0)
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(cli.os, "getresuid", lambda: (0, 0, 0), raising=False)
     monkeypatch.setattr(
         cli,
         "setup_console_logging",
@@ -122,10 +131,17 @@ def test_drop_privileges_clears_supplementary_groups_first(monkeypatch):
     )
     monkeypatch.setattr(cli.os, "setgid", lambda gid: events.append(("gid", gid)))
     monkeypatch.setattr(cli.os, "setuid", lambda uid: events.append(("uid", uid)))
+    monkeypatch.setattr(cli.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(cli.os, "seteuid", lambda uid: events.append(("euid", uid)))
     monkeypatch.setattr(cli.os, "getuid", lambda: 1000)
     monkeypatch.setattr(cli.os, "getgid", lambda: 1000)
     monkeypatch.setattr(cli, "logger", Mock())
 
     cli.drop_privileges("conpot", "conpot")
 
-    assert events == [("groups", []), ("gid", 1000), ("uid", 1000)]
+    assert events == [
+        ("euid", 0),
+        ("groups", []),
+        ("gid", 1000),
+        ("uid", 1000),
+    ]

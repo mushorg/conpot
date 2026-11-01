@@ -46,6 +46,9 @@ def logo():
 
 
 def drop_privileges(uid_name=None, gid_name=None):
+    if os.geteuid() != 0:
+        os.seteuid(0)
+
     if uid_name is None:
         uid_name = "nobody"
 
@@ -206,7 +209,10 @@ def main():
     )
     args = parser.parse_args()
 
-    is_root = os.getuid() == 0
+    try:
+        is_root = 0 in os.getresuid()
+    except AttributeError:
+        is_root = os.getuid() == 0 or os.geteuid() == 0
     setup_console_logging(args.verbose, reset=is_root)
 
     core_interface.config = ConfigParser(os.environ)
