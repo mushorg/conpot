@@ -195,6 +195,18 @@ def parse_device_info(body):
     return info
 
 
+def parse_report_slave_id(body):
+    """Return the device-specific Function 17 identifier as hex."""
+    if (
+        len(body) < 4
+        or body[0] != 0x11
+        or body[1] != len(body) - 2
+        or body[-1] not in (0x00, 0xFF)
+    ):
+        return None
+    return body[2:-1].hex()
+
+
 async def modbus_probe_unit(host, port, timeout, unit_id):
     """Return a dict describing ``unit_id`` if something answers, else None."""
     result = {"id": unit_id}
@@ -224,7 +236,9 @@ async def modbus_probe_unit(host, port, timeout, unit_id):
             return None
         try:
             body = await conn.request(unit_id, bytes((0x11,)))
-            result["report_slave_id"] = body.hex()
+            report_slave_id = parse_report_slave_id(body)
+            if report_slave_id is not None:
+                result["report_slave_id"] = report_slave_id
         except ModbusException, ModbusNoResponse:
             pass
         return result
@@ -420,6 +434,10 @@ def render_modbus_toml(units, port):
         found = unit.get("device_info") or {}
         if any(found.get(k) for k in device_info):
             device_info.update({k: found.get(k, "") for k in device_info})
+            break
+    for unit in units:
+        if unit.get("report_slave_id"):
+            device_info["ReportSlaveId"] = unit["report_slave_id"]
             break
     lines = [
         "[modbus]",
