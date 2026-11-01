@@ -25,7 +25,7 @@ from conpot.core.templates import (
     resolve_template_directory,
 )
 from conpot.utils import ext_ip
-from conpot.utils.logging import setup_logging
+from conpot.utils.logging import setup_console_logging, setup_file_logging
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -46,6 +46,9 @@ def logo():
 
 
 def drop_privileges(uid_name=None, gid_name=None):
+    if os.geteuid() != 0:
+        os.seteuid(0)
+
     if uid_name is None:
         uid_name = "nobody"
 
@@ -73,6 +76,7 @@ def drop_privileges(uid_name=None, gid_name=None):
             wanted_user.pw_name, wanted_group.gr_name
         )
     )
+    os.setgroups([])
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
     new_user = pwd.getpwuid(os.getuid())
@@ -205,12 +209,16 @@ def main():
     )
     args = parser.parse_args()
 
-    setup_logging(args.logfile, args.verbose)
+    try:
+        is_root = 0 in os.getresuid()
+    except AttributeError:
+        is_root = os.getuid() == 0 or os.geteuid() == 0
+    setup_console_logging(args.verbose, reset=is_root)
 
     core_interface.config = ConfigParser(os.environ)
     config = core_interface.config
 
-    if os.getuid() == 0:
+    if is_root:
         if not args.force:
             logger.critical(
                 "Can't start conpot with root. Please ref user docs for more info."
@@ -221,7 +229,11 @@ def main():
                 "Running conpot with root. Running conpot with root isn't recommended. "
             )
 
-    if os.getuid() == 0:
+    if args.force:
+        args.config = os.path.join(package_directory, "testing.cfg")
+        config.read(args.config)
+
+    if is_root:
         try:
             conpot_user = config.get("daemon", "user")
         except NoSectionError, NoOptionError:
@@ -233,10 +245,10 @@ def main():
             conpot_group = None
         drop_privileges(conpot_user, conpot_group)
 
+    setup_file_logging(args.logfile, args.verbose)
+
     if args.force:
-        args.config = os.path.join(package_directory, "testing.cfg")
         logger.warning("--force option specified. Using testing configuration")
-        config.read(args.config)
     else:
         if not (args.config and args.template):
             print(
