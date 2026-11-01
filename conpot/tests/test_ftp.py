@@ -20,8 +20,10 @@ import unittest
 import os
 from datetime import datetime
 from tempfile import NamedTemporaryFile
+from unittest import mock
 import conpot
 import conpot.core as conpot_core
+from conpot.protocols.ftp.ftp_handler import FTPCommandChannel
 from conpot.protocols.ftp.ftp_server import FTPServer
 from conpot.protocols.ftp.ftp_utils import ftp_commands
 from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
@@ -429,6 +431,86 @@ class TestFTPServer(unittest.TestCase):
         self.assertIn("ftp_data.txt", self.client.sendcmd("stat /"))
 
     # ------ Data channel related. -----
+
+    @staticmethod
+    def _port_handler():
+        handler = object.__new__(FTPCommandChannel)
+        handler._data_channel = False
+        handler.disconnect_client = True
+        handler.active_passive_mode = None
+        handler.client_address = ("127.0.0.1", 1234)
+        handler.cli_ip = None
+        handler.cli_port = None
+        handler._data_sock = None
+        handler.respond = mock.Mock()
+        return handler
+
+    def test_port_rejects_foreign_addresses_before_connect(self):
+        for port_arg in (
+            "10,0,0,1,195,80",
+            "+10,0,0,1,195,80",
+            "127,0,0,2,195,80",
+        ):
+            with self.subTest(port_arg=port_arg):
+                handler = self._port_handler()
+
+                with mock.patch(
+                    "conpot.protocols.ftp.ftp_handler.socket.socket"
+                ) as socket_factory:
+                    handler.do_PORT(port_arg)
+
+                socket_factory.assert_not_called()
+                handler.respond.assert_called_once_with(
+                    b"501 Rejected data connection to foreign address."
+                )
+                self.assertIsNone(handler.active_passive_mode)
+                self.assertIsNone(handler.cli_ip)
+                self.assertIsNone(handler.cli_port)
+                self.assertIsNone(handler._data_sock)
+
+    def test_port_rejection_preserves_active_data_channel(self):
+        handler = self._port_handler()
+        existing_socket = object()
+        handler._data_channel = True
+        handler.active_passive_mode = "PORT"
+        handler.cli_ip = "127.0.0.1"
+        handler.cli_port = 40000
+        handler._data_sock = existing_socket
+        handler.stop_data_channel = mock.Mock()
+
+        with mock.patch(
+            "conpot.protocols.ftp.ftp_handler.socket.socket"
+        ) as socket_factory:
+            handler.do_PORT("10,0,0,1,195,80")
+
+        handler.stop_data_channel.assert_not_called()
+        socket_factory.assert_not_called()
+        handler.respond.assert_called_once_with(
+            b"501 Rejected data connection to foreign address."
+        )
+        self.assertEqual(handler.active_passive_mode, "PORT")
+        self.assertEqual(handler.cli_ip, "127.0.0.1")
+        self.assertEqual(handler.cli_port, 40000)
+        self.assertIs(handler._data_sock, existing_socket)
+
+    def test_port_allows_control_peer(self):
+        handler = self._port_handler()
+
+        with mock.patch(
+            "conpot.protocols.ftp.ftp_handler.socket.socket"
+        ) as socket_factory:
+            handler.do_PORT("127,000,0,1,195,80")
+
+        data_socket = socket_factory.return_value
+        data_socket.setblocking.assert_called_once_with(True)
+        data_socket.connect.assert_called_once_with(("127.0.0.1", 50000))
+        handler.respond.assert_called_once_with(
+            b"200 PORT Command Successful. Consider using PASV."
+        )
+        self.assertEqual(handler.active_passive_mode, "PORT")
+        self.assertEqual(handler.cli_ip, "127.0.0.1")
+        self.assertEqual(handler.cli_port, 50000)
+        self.assertIs(handler._data_sock, data_socket)
 
     def test_list(self):
         # TODO: check for a user who does not have permissions to do list!
