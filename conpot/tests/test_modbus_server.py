@@ -28,6 +28,7 @@ from conpot.tests.helpers.modbus_client import (
     WRITE_MULTIPLE_COILS,
     ModbusError,
     TcpMaster,
+    exchange_pdu,
 )
 from conpot.utils.server_tasks import (
     drain_log_queue,
@@ -361,14 +362,7 @@ class TestModbusUmas(unittest.TestCase):
         teardown_test_server(self.modbus, self.handle)
 
     def _exchange(self, pdu):
-        header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2.0)
-        s.connect((self.host, self.port))
-        s.sendall(header + pdu)
-        data = s.recv(1024)
-        s.close()
-        return data
+        return exchange_pdu(self.host, self.port, pdu)
 
     def test_stop_and_start(self):
         slave = self.modbus._databank.get_slave(1)

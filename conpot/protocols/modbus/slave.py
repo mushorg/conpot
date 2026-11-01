@@ -1,5 +1,6 @@
 import logging
 import struct
+import threading
 
 from pymodbus.constants import ExcCodes
 from pymodbus.pdu import DecodePDU, ExceptionResponse
@@ -24,6 +25,7 @@ from pymodbus.pdu.register_message import (
     WriteSingleRegisterResponse,
 )
 
+import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
 
 from .modbus_block_databus_mediator import DatabusBlock
@@ -68,19 +70,65 @@ class ModbusInvalidRequestError(Exception):
     """A PDU that cannot be turned into an exception response."""
 
 
+class SharedCpuState(object):
+    """One mutable, synchronized PLC CPU state shared by all unit ids."""
+
+    def __init__(self, databus, key):
+        self._databus = databus
+        self._key = key
+        try:
+            self._values = databus.get_stored_value(key)
+        except AssertionError as exc:
+            raise ValueError("UMAS CPU state %r does not exist" % key) from exc
+        if not isinstance(self._values, list) or not self._values:
+            raise ValueError(
+                "UMAS CPU state %r must be backed by a non-empty databus list" % key
+            )
+        self._lock = threading.Lock()
+
+    @property
+    def running(self):
+        with self._lock:
+            return bool(self._values[0])
+
+    def set_running(self, running):
+        with self._lock:
+            self._values[0] = 1 if running else 0
+        self._databus.notify_observers(self._key)
+
+
 class MBSlave(object):
     """One Modbus unit id: template blocks plus pymodbus encode/decode."""
 
-    def __init__(self, slave_id, template):
+    def __init__(self, slave_id, template, cpu_state=None):
         self._id = slave_id
         self.template = template
         self.function_code = None
         self.event_type = None
-        self.running = True
+        self._running = True
         self._umas_enabled = bool(template.get("umas_enabled", False))
+        self._cpu_state_key = template.get("umas_cpu_state_key")
+        self._cpu_state = cpu_state
+        if self._cpu_state_key and self._cpu_state is None:
+            self._cpu_state = SharedCpuState(
+                conpot_core.get_databus(), self._cpu_state_key
+            )
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
         logger.debug("Modbus slave (ID: %d) created", self._id)
+
+    @property
+    def running(self):
+        if self._cpu_state is not None:
+            return self._cpu_state.running
+        return self._running
+
+    @running.setter
+    def running(self, value):
+        if self._cpu_state is not None:
+            self._cpu_state.set_running(value)
+        else:
+            self._running = bool(value)
 
     def add_block(self, block_name, block_type, starting_address, size, content=None):
         """Add a block whose values live under databus key ``content``.
@@ -272,16 +320,16 @@ class MBSlave(object):
         session_key = request_pdu[1]
         umas_code = request_pdu[2]
         if umas_code == _UMAS_START:
-            self.running = True
+            running = True
             self.event_type = "UMAS_START"
-            status = _UMAS_OK
         elif umas_code == _UMAS_STOP:
-            self.running = False
+            running = False
             self.event_type = "UMAS_STOP"
-            status = _UMAS_OK
         else:
-            status = _UMAS_ERROR
-        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, status)
+            return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_ERROR)
+
+        self.running = running
+        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_OK)
 
     def _report_slave_id(self):
         # Historical Conpot PDU: function code is present twice. Scanners and

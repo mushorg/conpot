@@ -2,19 +2,19 @@ Modbus
 ======
 
 The default and ``plc_modbus`` templates listen on TCP **5020**. Configuration
-lives in ``modbus.xml``; process values live on the databus (see
+lives in ``modbus.toml``; process values live on the databus (see
 :doc:`../concepts/databus`).
 
 Template configuration
 ----------------------
 
-The ``<device_info />`` section defines the device info returned to a Modbus 43
-function call.
+The ``[modbus.device_info]`` table defines the device info returned to a
+Modbus 43 function call.
 
-The ``<slave />`` section defines **internal** Modbus slaves. Each slave is a
-databus-backed memory map (``<blocks />``) addressed by its ``id`` (Modbus unit
-id). Conpot never forwards requests to an external PLC; every unit id you
-configure is served from the template.
+Each ``[[modbus.slaves]]`` table defines an **internal** Modbus slave. Each
+slave is a databus-backed memory map addressed by its ``id`` (Modbus unit id).
+Conpot never forwards requests to an external PLC; every unit id you configure
+is served from the template.
 
 ``mode`` selects addressing semantics:
 
@@ -27,26 +27,24 @@ A binary output block has the type ``COILS``, binary input blocks
 ``DISCRETE_INPUTS``. ``ANALOG_INPUTS`` and ``HOLDING_REGISTERS`` hold 16-bit
 register values. You define the starting address and size.
 
-The block ``name`` attribute is the **databus key**. Payload lives in
+The block ``name`` field is the **databus key**. Payload lives in
 ``template.toml``, not inline in ``modbus.toml``.
-``<content>`` is documentation only; the Python handler never reads it.
+``content`` is documentation only; the Python handler never reads it.
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <block name="memoryModbusSlave1BlockA">
-        <type>COILS</type>
-        <starting_address>1</starting_address>
-        <size>8</size>
-        <content>memoryModbusSlave1BlockA</content>
-    </block>
+    [[modbus.slaves]]
+    id = 1
+    blocks = [
+      { name = "memoryModbusSlave1BlockA", type = "COILS", starting_address = 1, size = 8, content = "memoryModbusSlave1BlockA" },
+    ]
 
 Initialize that key as a list on the databus (evaluated once at startup):
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <key name="memoryModbusSlave1BlockA">
-        <value type="value">[0 for b in range(0,8)]</value>
-    </key>
+    [core.databus.key_value_mappings]
+    memoryModbusSlave1BlockA = { value = "[0 for b in range(0,8)]" }
 
 The ``plc_modbus`` profile wires those lists to a scan cycle so coil writes
 produce changing discrete inputs, holding registers, and analog inputs.
@@ -60,35 +58,46 @@ running.
 
 Example with several internal slaves (each ``id`` is a distinct unit id):
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <mode>tcp</mode>
-    <slaves>
-        <slave id="1">
-            <blocks>
-                <!-- coils / registers for unit id 1 -->
-            </blocks>
-        </slave>
-        <slave id="2">
-            <blocks>
-                <!-- independent memory map for unit id 2 -->
-            </blocks>
-        </slave>
-        <slave id="255">
-            <blocks>
-                <!-- conventional Modbus/TCP “this device” unit id -->
-            </blocks>
-        </slave>
-    </slaves>
+    [modbus]
+    mode = "tcp"
+
+    [[modbus.slaves]]
+    id = 1
+    blocks = [] # coils / registers for unit id 1
+
+    [[modbus.slaves]]
+    id = 2
+    blocks = [] # independent memory map for unit id 2
+
+    [[modbus.slaves]]
+    id = 255
+    blocks = [] # conventional Modbus/TCP "this device" unit id
 
 Schneider UMAS (function 90)
 ----------------------------
 
-Optional Schneider UMAS is controlled by ``<umas enabled="true"/>``. When
-enabled, UMAS start (``0x40``) and stop (``0x41``) return status ``0xFE`` and
-log ``UMAS_START`` / ``UMAS_STOP``. Other UMAS codes return ``0xFD``. Leave it
-off on Siemens-flavored profiles. ``plc_modbus`` turns it on and sets
+Optional Schneider UMAS is controlled by ``umas_enabled`` in ``modbus.toml``:
+
+.. code-block:: toml
+
+    [modbus]
+    umas_enabled = true
+    umas_cpu_state_key = "plc_cpu_running"
+
+When enabled, UMAS start (``0x40``) and stop (``0x41``) return status ``0xFE``
+and log ``UMAS_START`` / ``UMAS_STOP``. Other UMAS codes return ``0xFD``.
+Leave it off on Siemens-flavored profiles. ``plc_modbus`` turns it on and sets
 ``device_info`` to a Modicon identity.
+
+``umas_cpu_state_key`` is optional. When set, it must name an existing databus
+value backed directly by a non-empty list; callable and emulator-backed values
+are rejected because replacing them would detach their lifecycle. Element zero
+is ``1`` for RUN and ``0`` for STOP. Set it to the same key as
+``PlcScanCycle.cpu_state_key`` to couple UMAS to the process scan. A missing or
+malformed configured value fails protocol startup rather than serving a
+fingerprintable half-configured device.
 
 The default Modbus profile stays Siemens-flavored and rejects function 90 with
 an illegal-function exception. The listening process itself is **never**
@@ -137,8 +146,14 @@ Conpot logs should include ``UMAS_STOP`` / ``UMAS_START``. Against the
 (illegal function).
 
 To enable UMAS on a custom Modbus template, set a Schneider-style
-``device_info`` and add::
+``device_info`` and add:
 
-    <umas enabled="true"/>
+.. code-block:: toml
+
+    [modbus]
+    umas_enabled = true
+
+Add ``umas_cpu_state_key`` as shown above when UMAS should also control a PLC
+scan cycle.
 
 Related probes on S7comm and EtherNet/IP: :doc:`../usage/stop_restart`.

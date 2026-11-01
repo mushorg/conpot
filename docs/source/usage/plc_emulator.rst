@@ -107,13 +107,12 @@ Databus lists
 
 Each Modbus block ``name`` must exist as a list on the databus, with the
 same length as the block ``size``. Initialize with zeros (or any starting
-process image) using ``type="value"``:
+process image) using a ``value`` mapping:
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <key name="memoryModbusSlave1BlockA">
-        <value type="value">[0 for b in range(0,8)]</value>
-    </key>
+    [core.databus.key_value_mappings]
+    memoryModbusSlave1BlockA = { value = "[0 for b in range(0,8)]" }
 
 ``PlcScanCycle`` must be constructed **after** those keys exist. Put it
 last in ``key_value_mappings`` so ``databus.initialized`` is set only
@@ -122,16 +121,25 @@ when the lists are present.
 Scan-cycle parameters
 ~~~~~~~~~~~~~~~~~~~~~
 
-The class is registered as ``type="function"``. The optional ``param``
-attribute is a Python list evaluated at startup and passed as
-constructor arguments:
+The class is registered with a ``function`` mapping. The optional ``params``
+array is passed as constructor arguments:
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <key name="plc_scan">
-        <value type="function"
-               param="[50, 'native', 'memoryModbusSlave1BlockA', 'memoryModbusSlave1BlockB', 'memoryModbusSlave1BlockD', 'memoryModbusSlave1BlockC']">conpot.emulators.plc.scan_cycle.PlcScanCycle</value>
-    </key>
+    [core.databus.key_value_mappings]
+    plc_cpu_running = { value = "[1]" }
+
+    [core.databus.key_value_mappings.plc_scan]
+    function = "conpot.emulators.plc.scan_cycle.PlcScanCycle"
+    params = [
+        50,
+        "native",
+        "memoryModbusSlave1BlockA",
+        "memoryModbusSlave1BlockB",
+        "memoryModbusSlave1BlockD",
+        "memoryModbusSlave1BlockC",
+        "plc_cpu_running",
+    ]
 
 In order:
 
@@ -141,26 +149,35 @@ In order:
 4. ``discrete_key`` — databus key for discrete inputs
 5. ``holding_key`` — databus key for holding registers
 6. ``analog_key`` — databus key for analog / input registers
+7. ``cpu_state_key`` — databus key for CPU RUN/STOP state
 
 The constructor has the same defaults as the ``plc_modbus`` template, so
-an empty ``param`` still works if your keys keep those names.
+an empty ``params`` array still works if your keys keep those names. The CPU
+state must be a non-empty list; element zero is ``1`` for RUN and ``0`` for
+STOP. If the key is absent, the scan remains always running for compatibility
+with existing templates. A configured UMAS CPU-state key must be backed
+directly by that list, not by a callable or emulator object. CPU STOP retains
+the output image and counters while clearing the native engine's running-status
+input.
+
+To let Modbus UMAS start and stop this scan, set
+``[modbus].umas_cpu_state_key`` to the same value as ``cpu_state_key``. If the
+two names differ, UMAS and the process scan will expose contradictory state.
 
 Modbus blocks
 ~~~~~~~~~~~~~
 
-Point each ``<block name="...">`` at the same databus key. Example coil
-block:
+Point each block's ``name`` field at the same databus key. Example coil block:
 
-.. code-block:: xml
+.. code-block:: toml
 
-    <block name="memoryModbusSlave1BlockA">
-        <type>COILS</type>
-        <starting_address>1</starting_address>
-        <size>8</size>
-        <content>memoryModbusSlave1BlockA</content>
-    </block>
+    [[modbus.slaves]]
+    id = 1
+    blocks = [
+      { name = "memoryModbusSlave1BlockA", type = "COILS", starting_address = 1, size = 8, content = "memoryModbusSlave1BlockA" },
+    ]
 
-``<content>`` is documentation only. Keep ``size`` equal to the list
+``content`` is documentation only. Keep ``size`` equal to the list
 length. ``delay`` in the shipped template is ``0`` so tests and interactive
 clients are not slowed by an extra turnaround wait.
 
