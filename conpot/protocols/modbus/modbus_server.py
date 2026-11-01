@@ -130,7 +130,21 @@ class ModbusServer(object):
                     )
                     session.log_event(event_type="CONNECTION_TERMINATED")
                     break
-                _transaction, _protocol, length = struct.unpack(">HHH", request[:6])
+                _transaction, protocol_id, length = struct.unpack(">HHH", request[:6])
+                if protocol_id != 0:
+                    logger.info(
+                        "Modbus client %s used non-Modbus protocol identifier %s, "
+                        "dropping connection. (%s)",
+                        address[0],
+                        protocol_id,
+                        session.id,
+                    )
+                    session.log_event(
+                        event_type="CONNECTION_TERMINATED",
+                        request=codecs.encode(request, "hex"),
+                        protocol_id=protocol_id,
+                    )
+                    break
                 # MBAP length covers unit id + PDU. Legal minimum is 2
                 # (unit id + function code). Length 0/1 are reserved/malformed;
                 # scanners (e.g. nmap modbus-info) often send length 0, and

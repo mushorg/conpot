@@ -40,6 +40,7 @@ class SlaveBase(object):
         """
         slave_id = None
         function_code = None
+        protocol_id = None
         response_pdu = b""
 
         try:
@@ -47,9 +48,13 @@ class SlaveBase(object):
                 raise ModbusInvalidRequestError(
                     "Request length is only %d bytes" % len(request)
                 )
-            _transaction, _protocol, length, slave_id = struct.unpack(
+            _transaction, protocol_id, length, slave_id = struct.unpack(
                 ">HHHB", request[:7]
             )
+            if protocol_id != 0:
+                raise ModbusInvalidRequestError(
+                    "MBAP protocol identifier %s is not Modbus" % protocol_id
+                )
             request_pdu = request[7:]
             if length != len(request_pdu) + 1:
                 raise ModbusInvalidRequestError(
@@ -66,6 +71,7 @@ class SlaveBase(object):
                     None,
                     {
                         "request": codecs.encode(request, "hex"),
+                        "protocol_id": protocol_id,
                         "slave_id": slave_id,
                         "function_code": None,
                         "response": b"",
@@ -91,6 +97,7 @@ class SlaveBase(object):
                         None,
                         {
                             "request": request_pdu.hex(),
+                            "protocol_id": protocol_id,
                             "slave_id": slave_id,
                             "function_code": function_code,
                             "response": "",
@@ -108,6 +115,7 @@ class SlaveBase(object):
                     None,
                     {
                         "request": codecs.encode(request, "hex"),
+                        "protocol_id": protocol_id,
                         "slave_id": slave_id,
                         "function_code": function_code,
                         "response": b"",
@@ -124,6 +132,7 @@ class SlaveBase(object):
                 None,
                 {
                     "request": codecs.encode(request, "hex"),
+                    "protocol_id": protocol_id,
                     "slave_id": slave_id,
                     "function_code": function_code,
                     "response": b"",
@@ -137,6 +146,7 @@ class SlaveBase(object):
 
         logdata = {
             "request": codecs.encode(request_pdu, "hex"),
+            "protocol_id": protocol_id,
             "slave_id": slave_id,
             "function_code": logged_function,
             "response": codecs.encode(response_pdu, "hex"),
