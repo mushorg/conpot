@@ -133,6 +133,61 @@ class TestAdsCodec(unittest.TestCase):
         self.assertEqual(length, 1)
         self.assertEqual(parsed["payload"][8:9], b"\x01")
 
+    def test_read_rejects_response_larger_than_frame(self):
+        device = {
+            "device_name": "x",
+            "symbols": [
+                {
+                    "name": "MAIN.bRunning",
+                    "index_group": 16448,
+                    "index_offset": 0,
+                    "value": bytearray(b"\x01"),
+                }
+            ],
+        }
+        max_read_length = (
+            ads.MAX_FRAME_LENGTH - ads.AMS_HEADER_LENGTH - struct.calcsize("<II")
+        )
+        for requested_length in (max_read_length + 1, 0xFFFFFFFF):
+            with self.subTest(requested_length=requested_length):
+                req = _read_req(16448, 0, requested_length)
+
+                resp = ads.handle_request(req, device)
+                parsed = ads.unpack_ams_tcp_frame(resp)
+
+                self.assertEqual(
+                    struct.unpack("<I", parsed["payload"])[0],
+                    ads.ADSERR_DEVICE_INVALIDSIZE,
+                )
+                self.assertEqual(len(parsed["payload"]), struct.calcsize("<I"))
+
+    def test_read_allows_largest_frame(self):
+        device = {
+            "device_name": "x",
+            "symbols": [
+                {
+                    "name": "MAIN.bRunning",
+                    "index_group": 16448,
+                    "index_offset": 0,
+                    "value": bytearray(b"\x01"),
+                }
+            ],
+        }
+        max_read_length = (
+            ads.MAX_FRAME_LENGTH - ads.AMS_HEADER_LENGTH - struct.calcsize("<II")
+        )
+        req = _read_req(16448, 0, max_read_length)
+
+        resp = ads.handle_request(req, device)
+        parsed = ads.unpack_ams_tcp_frame(resp)
+        result, length = struct.unpack_from("<II", parsed["payload"], 0)
+
+        self.assertEqual(result, ads.ADSERR_NOERR)
+        self.assertEqual(length, max_read_length)
+        self.assertEqual(parsed["payload"][8:9], b"\x01")
+        self.assertEqual(parsed["payload"][9:], b"\x00" * (max_read_length - 1))
+        self.assertEqual(len(resp) - ads.AMS_TCP_HEADER_LENGTH, ads.MAX_FRAME_LENGTH)
+
 
 class TestAdsDiscoveryCodec(unittest.TestCase):
     def test_identify_reply_banner_fields(self):
