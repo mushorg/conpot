@@ -40,6 +40,7 @@ class SlaveBase(object):
         """
         slave_id = None
         function_code = None
+        protocol_id = None
         response_pdu = b""
 
         try:
@@ -70,6 +71,7 @@ class SlaveBase(object):
                     None,
                     {
                         "request": codecs.encode(request, "hex"),
+                        "protocol_id": protocol_id,
                         "slave_id": slave_id,
                         "function_code": None,
                         "response": b"",
@@ -95,6 +97,7 @@ class SlaveBase(object):
                         None,
                         {
                             "request": request_pdu.hex(),
+                            "protocol_id": protocol_id,
                             "slave_id": slave_id,
                             "function_code": function_code,
                             "response": "",
@@ -112,6 +115,7 @@ class SlaveBase(object):
                     None,
                     {
                         "request": codecs.encode(request, "hex"),
+                        "protocol_id": protocol_id,
                         "slave_id": slave_id,
                         "function_code": function_code,
                         "response": b"",
@@ -128,6 +132,7 @@ class SlaveBase(object):
                 None,
                 {
                     "request": codecs.encode(request, "hex"),
+                    "protocol_id": protocol_id,
                     "slave_id": slave_id,
                     "function_code": function_code,
                     "response": b"",
@@ -141,6 +146,7 @@ class SlaveBase(object):
 
         logdata = {
             "request": codecs.encode(request_pdu, "hex"),
+            "protocol_id": protocol_id,
             "slave_id": slave_id,
             "function_code": logged_function,
             "response": codecs.encode(response_pdu, "hex"),

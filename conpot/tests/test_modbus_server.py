@@ -195,10 +195,32 @@ class TestModbusServer(unittest.TestCase):
 
     def test_non_modbus_protocol_id_is_discarded(self):
         # The MBAP protocol identifier must be zero for Modbus/TCP.
+        drain_log_queue(self.handle)
         with socket.create_connection((self.host, self.port), timeout=2.0) as client:
-            client.settimeout(2.0)
-            client.sendall(struct.pack(">HHHB", 0, 1, 2, 1) + b"\x11")
-            self.assertEqual(client.recv(1024), b"")
+            # Send only the header: rejection must not wait for the declared PDU.
+            client.sendall(struct.pack(">HHHB", 0, 1, 2, 1))
+            client.shutdown(socket.SHUT_WR)
+            try:
+                data = client.recv(1024)
+            except socket.timeout:
+                raise TimeoutError("server never closed the connection")
+            self.assertEqual(data, b"")
+
+        connection = get_log_event(self.handle, timeout=2)
+        self.assertEqual(connection["event_type"], "NEW_CONNECTION")
+        terminated = get_log_event(self.handle, timeout=2)
+        self.assertEqual(terminated["event_type"], "CONNECTION_TERMINATED")
+        self.assertEqual(terminated["data"]["protocol_id"], 1)
+
+    def test_non_modbus_protocol_id_is_discarded_by_serial_databank(self):
+        request = struct.pack(">HHHB", 0, 1, 2, 1) + b"\x11"
+
+        response, logdata = self.modbus._databank.handle_request(request, "serial")
+
+        self.assertIsNone(response)
+        self.assertEqual(logdata["protocol_id"], 1)
+        self.assertEqual(logdata["slave_id"], 1)
+        self.assertEqual(logdata["response"], b"")
 
     def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
