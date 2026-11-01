@@ -92,11 +92,12 @@ Leave it off on Siemens-flavored profiles. ``plc_modbus`` turns it on and sets
 ``device_info`` to a Modicon identity.
 
 ``umas_cpu_state_key`` is optional. When set, it must name an existing databus
-value stored as a non-empty list; element zero is ``1`` for RUN and ``0`` for
-STOP. Set it to the same key as ``PlcScanCycle.cpu_state_key`` to couple UMAS
-to the process scan. A missing or malformed configured value returns a Modbus
-device-failure exception, while the attempted ``UMAS_START`` or ``UMAS_STOP``
-event is still logged.
+value backed directly by a non-empty list; callable and emulator-backed values
+are rejected because replacing them would detach their lifecycle. Element zero
+is ``1`` for RUN and ``0`` for STOP. Set it to the same key as
+``PlcScanCycle.cpu_state_key`` to couple UMAS to the process scan. A missing or
+malformed configured value fails protocol startup rather than serving a
+fingerprintable half-configured device.
 
 The default Modbus profile stays Siemens-flavored and rejects function 90 with
 an illegal-function exception. The listening process itself is **never**

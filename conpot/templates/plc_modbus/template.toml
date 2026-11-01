@@ -11,5 +11,5 @@ memoryModbusSlave1BlockB = { value = "[0 for b in range(0,8)]" }
 memoryModbusSlave1BlockC = { value = "[0 for b in range(0,8)]" }
 memoryModbusSlave1BlockD = { value = "[0 for b in range(0,8)]" }
 # Keep this key equal to [modbus].umas_cpu_state_key.
-plc_cpu_running = { value = "[1]" } # STOP retains the last output image
+plc_cpu_running = { value = "[1]" } # STOP retains outputs/counters, not RUN status
 plc_scan = { function = "conpot.emulators.plc.scan_cycle.PlcScanCycle" }

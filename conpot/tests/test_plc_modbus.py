@@ -35,6 +35,7 @@ from conpot.emulators.plc.awlsim_engine import AwlsimEngine
 from conpot.emulators.plc.scan_cycle import PlcScanCycle, _make_engine
 from conpot.protocols.modbus import modbus_server
 from conpot.protocols.modbus.slave import MBSlave
+from conpot.protocols.modbus.slave_db import SlaveBase
 from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 SCAN_WAIT = 0.2
@@ -175,6 +176,13 @@ class TestPlcModbus:
                 quantity_of_x=1,
             )[0]
             assert second == first
+            running = master.execute(
+                slave=1,
+                function_code=READ_DISCRETE_INPUTS,
+                starting_address=10001,
+                quantity_of_x=1,
+            )
+            assert running[0] == 0
         finally:
             start_response = umas_command(0x40)
 
@@ -188,6 +196,13 @@ class TestPlcModbus:
             quantity_of_x=1,
         )[0]
         assert resumed > second
+        running = master.execute(
+            slave=1,
+            function_code=READ_DISCRETE_INPUTS,
+            starting_address=10001,
+            quantity_of_x=1,
+        )
+        assert running[0] == 1
 
     def test_umas_and_scan_share_cpu_state_key(self):
         scan = conpot_core.get_databus().get_value("plc_scan")
@@ -237,32 +252,87 @@ def test_malformed_cpu_state_stops_before_scan(monkeypatch, caplog, cpu_state):
 
 def test_umas_state_update_persists_and_notifies_observers(monkeypatch):
     databus = Databus()
-    databus.set_value("cpu", lambda: [0])
+    cpu_state = [0]
+    databus.set_value("cpu", cpu_state)
     monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
-    first = MBSlave(1, {"umas_enabled": True, "umas_cpu_state_key": "cpu"})
-    second = MBSlave(2, {"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+    slaves = SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+    first = slaves.add_slave(1)
+    second = slaves.add_slave(2)
     assert not first.running
     assert not second.running
+    assert first._cpu_state is second._cpu_state
 
     notified = threading.Event()
     databus.observe_value("cpu", lambda _key: notified.set())
     response = first.handle_request(b"\x5a\x00\x40")
 
     assert response == b"\x5a\x00\xfe"
-    assert databus.get_value("cpu") == [1]
+    assert databus.get_stored_value("cpu") is cpu_state
+    assert cpu_state == [1]
     assert notified.wait(timeout=1.0)
     assert first.running
     assert second.running
 
 
-def test_failed_umas_state_write_keeps_event_type(monkeypatch):
+@pytest.mark.parametrize("cpu_state", [None, [], 1, lambda: [0]])
+def test_configured_umas_state_must_be_a_stored_nonempty_list(monkeypatch, cpu_state):
     databus = Databus()
+    if cpu_state is not None:
+        databus.set_value("cpu", cpu_state)
     monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
-    slave = MBSlave(1, {"umas_enabled": True, "umas_cpu_state_key": "missing"})
 
-    assert slave.handle_request(b"\x5a\x00\x41") == b"\xda\x04"
-    assert slave.event_type == "UMAS_STOP"
-    assert slave.running
+    with pytest.raises(ValueError, match="UMAS CPU state"):
+        SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+
+    if cpu_state is not None:
+        assert databus.get_stored_value("cpu") is cpu_state
+
+
+def test_umas_state_updates_are_serialized(monkeypatch):
+    class TrackingList(list):
+        def __init__(self, values):
+            super().__init__(values)
+            self.active_writers = 0
+            self.max_active_writers = 0
+            self.guard = threading.Lock()
+
+        def __setitem__(self, key, value):
+            with self.guard:
+                self.active_writers += 1
+                self.max_active_writers = max(
+                    self.max_active_writers, self.active_writers
+                )
+            time.sleep(0.01)
+            super().__setitem__(key, value)
+            with self.guard:
+                self.active_writers -= 1
+
+    databus = Databus()
+    cpu_state = TrackingList([1])
+    databus.set_value("cpu", cpu_state)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+    slaves = SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+    first = slaves.add_slave(1)
+    second = slaves.add_slave(2)
+    barrier = threading.Barrier(3)
+    responses = []
+
+    def command(slave, code):
+        barrier.wait()
+        responses.append(slave.handle_request(bytes((0x5A, 0, code))))
+
+    threads = [
+        threading.Thread(target=command, args=(first, 0x40)),
+        threading.Thread(target=command, args=(second, 0x41)),
+    ]
+    for thread in threads:
+        thread.start()
+    barrier.wait()
+    for thread in threads:
+        thread.join(timeout=1.0)
+
+    assert responses == [b"\x5a\x00\xfe", b"\x5a\x00\xfe"]
+    assert cpu_state.max_active_writers == 1
 
 
 def test_awlsim_engine_requires_package():

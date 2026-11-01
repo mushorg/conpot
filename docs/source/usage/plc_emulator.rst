@@ -155,7 +155,10 @@ The constructor has the same defaults as the ``plc_modbus`` template, so
 an empty ``params`` array still works if your keys keep those names. The CPU
 state must be a non-empty list; element zero is ``1`` for RUN and ``0`` for
 STOP. If the key is absent, the scan remains always running for compatibility
-with existing templates.
+with existing templates. A configured UMAS CPU-state key must be backed
+directly by that list, not by a callable or emulator object. CPU STOP retains
+the output image and counters while clearing the native engine's running-status
+input.
 
 To let Modbus UMAS start and stop this scan, set
 ``[modbus].umas_cpu_state_key`` to the same value as ``cpu_state_key``. If the

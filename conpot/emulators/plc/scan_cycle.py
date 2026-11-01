@@ -82,9 +82,11 @@ class PlcScanCycle:
         try:
             engine = _make_engine(self.engine_name)
             cpu_state_key = self.cpu_state_key
+            cpu_state = None
             if cpu_state_key:
                 try:
-                    _cpu_state_running(databus.get_value(cpu_state_key))
+                    cpu_state = databus.get_stored_value(cpu_state_key)
+                    _cpu_state_running(cpu_state)
                 except AssertionError, KeyError:
                     # Existing templates do not have a CPU-state key. Keep
                     # their historical always-running scan behavior.
@@ -103,13 +105,13 @@ class PlcScanCycle:
         scan_s = max(self.scan_ms, 1) / 1000.0
         while self._enabled:
             try:
-                # UMAS uses Databus.set_value(), which can replace the stored
-                # object. Read it again so STOP/START and callable-backed
-                # values are observed by the scan thread.
-                if cpu_state_key is None or _cpu_state_running(
-                    databus.get_value(cpu_state_key)
-                ):
+                # UMAS mutates this shared list under its command lock.
+                if cpu_state_key is None or _cpu_state_running(cpu_state):
                     engine.scan(image)
+                else:
+                    # CPU STOP freezes the process image, but its running
+                    # status input must not contradict the CPU state.
+                    image.discrete[0] = 0
             except Exception:
                 logger.exception("PLC scan failed")
             time.sleep(scan_s)

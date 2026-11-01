@@ -4,7 +4,12 @@ import struct
 
 from pymodbus.constants import ExcCodes
 
-from conpot.protocols.modbus.slave import MBSlave, ModbusInvalidRequestError
+import conpot.core as conpot_core
+from conpot.protocols.modbus.slave import (
+    MBSlave,
+    ModbusInvalidRequestError,
+    SharedCpuState,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +20,19 @@ class SlaveBase(object):
     def __init__(self, template):
         self._slaves = {}
         self.template = template
+        self._cpu_state = None
+        cpu_state_key = template.get("umas_cpu_state_key")
+        if cpu_state_key:
+            self._cpu_state = SharedCpuState(conpot_core.get_databus(), cpu_state_key)
 
     def add_slave(self, slave_id):
         if (slave_id < 0) or (slave_id > 255):
             raise ValueError("Invalid slave id %d" % slave_id)
         if slave_id in self._slaves:
             raise ValueError("Slave %d already exists" % slave_id)
-        self._slaves[slave_id] = MBSlave(slave_id, self.template)
+        self._slaves[slave_id] = MBSlave(
+            slave_id, self.template, cpu_state=self._cpu_state
+        )
         return self._slaves[slave_id]
 
     def get_slave(self, slave_id):
