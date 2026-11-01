@@ -25,7 +25,7 @@ import time
 
 import conpot.core as conpot_core
 from conpot.utils.networking import chr_py3
-from .request_parser import KamstrupRequestParser
+from .request_parser import KamstrupRequestParser, RequestFrameTooLarge
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.asyncio_serve import serve_tcp_sync_handler
@@ -82,13 +82,20 @@ class KamstrupServer(object):
                     session.log_event(event_type="CONNECTION_LOST")
                     break
 
-                for x in raw_request:
-                    parser.add_byte(chr_py3(x))
+                frame_too_large = False
+                try:
+                    for x in raw_request:
+                        parser.add_byte(chr_py3(x))
+                except RequestFrameTooLarge:
+                    logger.warning(
+                        "Kamstrup request exceeds the maximum frame size (%s)",
+                        session.id,
+                    )
+                    frame_too_large = True
 
                 while True:
                     request = parser.get_request()
                     if not request:
-                        session.log_event(event_type="CONNECTION_LOST")
                         break
                     else:
                         request_hex = binascii.hexlify(bytearray(request.message_bytes))
@@ -110,13 +117,17 @@ class KamstrupServer(object):
                             )
                         else:
                             session.log_event(request=request_hex)
-                            break
+                            continue
+
+                if frame_too_large:
+                    session.log_event(event_type="CONNECTION_LOST")
+                    break
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
             session.log_event(event_type="CONNECTION_LOST")
-
-        sock.close()
+        finally:
+            sock.close()
 
     async def start(self, host, port):
         self.host = host
