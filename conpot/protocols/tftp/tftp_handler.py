@@ -41,7 +41,7 @@ class TFTPServerState(TFTPState):
         self.context.options = {"blksize": tftpy.DEF_BLKSIZE}
 
         if options:
-            logger.debug("Options requested: %s", options)
+            logger.debug("Options requested: %r", options)
             supported_options = self.returnSupportedOptions(options)
             self.context.options.update(supported_options)
             sendoack = True
@@ -58,13 +58,13 @@ class TFTPServerState(TFTPState):
             )
             # Return same state, we're still waiting for valid traffic.
             return self
-        logger.debug("Requested filename is %s", pkt.filename)
+        logger.debug("Requested filename is %r", pkt.filename)
         if pkt.filename.startswith(self.context.root):
             full_path = pkt.filename
         else:
             full_path = os.path.join(self.context.root, pkt.filename.lstrip("/"))
         try:
-            logger.info("Full path of file to be uploaded is {}".format(full_path))
+            logger.info("Full path of file to be uploaded is %r", full_path)
             self.full_path = full_path
         except fs.errors.FSError:
             logger.warning("requested file is not within the server root - bad")
@@ -73,6 +73,11 @@ class TFTPServerState(TFTPState):
         self.context.file_to_transfer = pkt.filename
         return sendoack
 
+    def _raise_file_not_found(self, path):
+        logger.info("File not found: %r", path.replace(self.context.root + "/", ""))
+        self.sendError(TftpErrors.FileNotFound)
+        raise TftpException("File not found: %r" % path)
+
 
 class TFTPStateServerRecvRRQ(TFTPServerState):
     def handle(self, pkt, raddress, rport):
@@ -80,15 +85,15 @@ class TFTPStateServerRecvRRQ(TFTPServerState):
         logger.debug("In TftpStateServerRecvRRQ.handle")
         sendoack = self.serverInitial(pkt, raddress, rport)
         path = self.full_path
-        logger.info("Opening file %s for reading" % path)
-        if self.context.vfs.norm_path(path):
+        logger.info("Opening file %r for reading", path)
+        if not self.context.vfs.norm_path(path):
+            self._raise_file_not_found(path)
+        try:
             self.context.fileobj = self.context.vfs.open(
                 path.replace(self.context.root + "/", ""), "rb"
             )
-        else:
-            logger.info("File not found: %s", path.replace(self.context.root + "/", ""))
-            self.sendError(TftpErrors.FileNotFound)
-            raise TftpException("File not found: {}".format(path))
+        except fs.errors.ResourceNotFound:
+            self._raise_file_not_found(path)
 
         # Options negotiation.
         if sendoack and "tsize" in self.context.options:
@@ -128,17 +133,17 @@ class TFTPStateServerRecvWRQ(TFTPServerState):
         # Pull off everything below the root.
         subpath = self.full_path[len(self.context.root) :]
         subpath = subpath.decode() if isinstance(subpath, bytes) else subpath
-        logger.debug("make_subdirs: subpath is %s", subpath)
+        logger.debug("make_subdirs: subpath is %r", subpath)
         # Split on directory separators, but drop the last one, as it should
         # be the filename.
         dirs = subpath.split("/")[:-1]
-        logger.debug("dirs is %s", dirs)
+        logger.debug("dirs is %r", dirs)
         current = self.context.root
         for dir in dirs:
             if dir:
                 current = os.path.join(current, dir)
                 if self.context.vfs.isdir(current):
-                    logger.debug("%s is already an existing directory", current)
+                    logger.debug("%r is already an existing directory", current)
                 else:
                     self.context.vfs.makedir(current, 0o700)
 
@@ -149,10 +154,10 @@ class TFTPStateServerRecvWRQ(TFTPServerState):
         path = self.full_path
         self.context.file_path = path
         path = path.decode() if isinstance(path, bytes) else path
-        logger.info("Opening file %s for writing" % path)
+        logger.info("Opening file %r for writing", path)
         if self.context.vfs.exists(path):
             logger.warning(
-                "File %s exists already, overwriting..."
+                "File %r exists already, overwriting..."
                 % (self.context.file_to_transfer)
             )
         self.make_subdirs()

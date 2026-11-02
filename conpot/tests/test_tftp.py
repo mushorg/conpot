@@ -1,7 +1,9 @@
 import unittest
 import filecmp
+import os
+import tempfile
 import time
-from tftpy import TftpClient
+from tftpy import TftpClient, TftpException
 
 import conpot
 import conpot.core as conpot_core
@@ -70,3 +72,28 @@ class TestTFTPServer(unittest.TestCase):
         finally:
             _, _data_fs = conpot_core.get_vfs("tftp")
             _data_fs.remove("download")
+
+    def test_tftp_filename_control_characters_are_escaped_in_logs(self):
+        rrq_marker = "INJECTED_RRQ_LOG_LINE"
+        wrq_marker = "INJECTED_WRQ_LOG_LINE"
+        malicious_rrq = "missing\r\n" + rrq_marker
+        malicious_wrq = "uploaded\r" + wrq_marker
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            missing_path = os.path.join(temp_dir, "missing")
+            with self.assertLogs("conpot", level="INFO") as captured:
+                with self.assertRaises(TftpException):
+                    self.client.download(malicious_rrq, missing_path)
+                self.client.upload(malicious_wrq, self._test_file)
+
+        log_output = "\n".join(captured.output)
+        self.assertIn(rrq_marker, log_output)
+        self.assertIn(wrq_marker, log_output)
+        self.assertNotIn("\n" + rrq_marker, log_output)
+        self.assertNotIn("\r" + rrq_marker, log_output)
+        self.assertNotIn("\n" + wrq_marker, log_output)
+        self.assertNotIn("\r" + wrq_marker, log_output)
+
+        _, data_fs = conpot_core.get_vfs("tftp")
+        uploaded_file = self._wait_uploaded(data_fs, needle="uploaded")
+        data_fs.remove(uploaded_file)
