@@ -195,6 +195,7 @@ modbus = Schema(
             "mode": str,
             "delay": int,
             Optional("umas_enabled"): bool,
+            Optional("umas_cpu_state_key"): str,
             "device_info": {
                 "VendorName": str,
                 "ProductCode": str,
