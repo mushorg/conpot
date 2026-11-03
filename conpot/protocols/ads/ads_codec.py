@@ -25,6 +25,7 @@ from typing import Any
 AMS_TCP_HEADER_LENGTH = 6
 AMS_HEADER_LENGTH = 32
 MAX_FRAME_LENGTH = 4096
+MAX_READ_DATA_LENGTH = MAX_FRAME_LENGTH - AMS_HEADER_LENGTH - struct.calcsize("<II")
 
 # ADS command IDs (request).
 CMD_READ_DEVICE_INFO = 1
@@ -251,6 +252,8 @@ def handle_request(frame: bytes, device: dict[str, Any]) -> bytes:
         symbol = _find_symbol(symbols, index_group, index_offset)
         if symbol is None:
             return _error_response(request, ADSERR_DEVICE_SYMBOLNOTFOUND)
+        if length > MAX_READ_DATA_LENGTH:
+            return _error_response(request, ADSERR_DEVICE_INVALIDSIZE)
         data = bytes(symbol.get("value") or b"")
         if length > len(data):
             # Pad with zeros when client asks for more than we store.
