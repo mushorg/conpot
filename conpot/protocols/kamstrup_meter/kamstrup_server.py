@@ -25,12 +25,14 @@ import time
 
 import conpot.core as conpot_core
 from conpot.utils.networking import chr_py3
-from .request_parser import KamstrupRequestParser
+from .request_parser import KamstrupRequestParser, RequestFrameTooLarge
 from .command_responder import CommandResponder
 from conpot.core.protocol_wrapper import conpot_protocol
 from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
+
+MAX_REQUESTS_PER_RECV = 4
 
 
 @conpot_protocol
@@ -79,18 +81,26 @@ class KamstrupServer(object):
 
                 if not raw_request:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.log_event(event_type="CONNECTION_LOST")
                     break
 
-                for x in raw_request:
-                    parser.add_byte(chr_py3(x))
+                frame_too_large = False
+                try:
+                    for x in raw_request:
+                        parser.add_byte(chr_py3(x))
+                except RequestFrameTooLarge:
+                    logger.warning(
+                        "Kamstrup request exceeds the maximum frame size (%s)",
+                        session.id,
+                    )
+                    frame_too_large = True
 
-                while True:
+                requests_handled = 0
+                while requests_handled < MAX_REQUESTS_PER_RECV:
                     request = parser.get_request()
                     if not request:
-                        session.log_event(event_type="CONNECTION_LOST")
                         break
                     else:
+                        requests_handled += 1
                         request_hex = binascii.hexlify(bytearray(request.message_bytes))
                         response = self.command_responder.respond(request)
                         # real Kamstrup meters has delay in this interval
@@ -110,13 +120,32 @@ class KamstrupServer(object):
                             )
                         else:
                             session.log_event(request=request_hex)
-                            break
+                            continue
+
+                if frame_too_large:
+                    break
+                if parser.has_queued_requests():
+                    logger.warning(
+                        "Kamstrup request burst exceeded %d frames; closing connection (%s)",
+                        MAX_REQUESTS_PER_RECV,
+                        session.id,
+                    )
+                    break
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.log_event(event_type="CONNECTION_LOST")
-
-        sock.close()
+        except socket.error as exc:
+            logger.debug(
+                "Kamstrup socket error from %s: %s. (%s)",
+                address[0],
+                exc,
+                session.id,
+            )
+        finally:
+            try:
+                session.log_event(event_type="CONNECTION_LOST")
+            finally:
+                sock.close()
 
     async def start(self, host, port):
         self.host = host

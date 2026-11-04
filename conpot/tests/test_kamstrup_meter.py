@@ -18,30 +18,194 @@
 import os
 import socket
 import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+import pytest
 from crc16.crc16pure import crc16xmodem
 
 import conpot
 from conpot.protocols.kamstrup_meter import messages
+from conpot.protocols.kamstrup_meter import kamstrup_constants
 from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
-from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
-from conpot.protocols.kamstrup_meter.request_parser import KamstrupRequestParser
+from conpot.protocols.kamstrup_meter import kamstrup_server as kamstrup_server_module
+from conpot.protocols.kamstrup_meter.kamstrup_server import (
+    MAX_REQUESTS_PER_RECV,
+    KamstrupServer,
+)
+from conpot.protocols.kamstrup_meter.request_parser import (
+    MAX_FRAME_SIZE,
+    KamstrupRequestParser,
+    RequestFrameTooLarge,
+)
 from conpot.templates.parse import parse_toml_config
 from conpot.utils.networking import chr_py3
 from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 
-def _build_login_request(comm_address, pin_code):
-    """Build a framed KMP login request (CID 0x92) with CRC and EOT."""
-    body = [
-        comm_address,
-        messages.KamstrupRequestLogin.command_byte,
-        (pin_code >> 8) & 0xFF,
-        pin_code & 0xFF,
-    ]
+def _frame_request(body, corrupt_crc=False):
+    """Build and escape a KMP request body, including CRC and frame markers."""
     crc = crc16xmodem(bytes(body))
-    frame = [0x80] + body + [crc >> 8, crc & 0xFF, 0x0D]
+    if corrupt_crc:
+        crc ^= 1
+    decoded = [
+        kamstrup_constants.REQUEST_MAGIC,
+        *body,
+        crc >> 8,
+        crc & 0xFF,
+        kamstrup_constants.EOT_MAGIC,
+    ]
+    frame = bytearray([decoded[0]])
+    for value in decoded[1:-1]:
+        if value in kamstrup_constants.NEED_ESCAPE:
+            frame.extend((kamstrup_constants.ESCAPE, value ^ 0xFF))
+        else:
+            frame.append(value)
+    frame.append(decoded[-1])
     return bytes(frame)
+
+
+def _build_login_request(comm_address, pin_code, corrupt_crc=False):
+    """Build a framed KMP login request (CID 0x92) with CRC and EOT."""
+    return _frame_request(
+        [
+            comm_address,
+            messages.KamstrupRequestLogin.command_byte,
+            (pin_code >> 8) & 0xFF,
+            pin_code & 0xFF,
+        ],
+        corrupt_crc=corrupt_crc,
+    )
+
+
+def _feed(parser, frame):
+    for byte in frame:
+        parser.add_byte(chr_py3(byte))
+
+
+def _make_kamstrup_server(monkeypatch):
+    monkeypatch.setattr(
+        kamstrup_server_module.conpot_core,
+        "get_databus",
+        lambda: SimpleNamespace(observe_value=lambda *args: None),
+    )
+    server = KamstrupServer({"communication_address": 0x3F}, None, None)
+    server.wrapped.command_responder = Mock()
+    return server
+
+
+def test_escaped_frame_split_after_escape_byte():
+    parser = KamstrupRequestParser()
+    frame = _build_login_request(0x3F, 0x0D1B)
+    escape_index = frame.index(kamstrup_constants.ESCAPE)
+
+    for byte in frame[: escape_index + 1]:
+        parser.add_byte(chr_py3(byte))
+    assert parser.get_request() is None
+
+    parser.add_byte(chr_py3(frame[escape_index + 1]))
+    assert parser.get_request() is None
+    for byte in frame[escape_index + 2 :]:
+        parser.add_byte(chr_py3(byte))
+
+    parsed = parser.get_request()
+    assert isinstance(parsed, messages.KamstrupRequestLogin)
+    assert parsed.pin_code == 0x0D1B
+
+
+def test_concatenated_malformed_and_bad_crc_frames_are_discarded():
+    parser = KamstrupRequestParser()
+    short_login = _frame_request([0x3F, messages.KamstrupRequestLogin.command_byte])
+    truncated_registers = _frame_request(
+        [0x3F, messages.KamstrupRequestGetRegisters.command_byte, 2, 0x01]
+    )
+    bad_crc = _build_login_request(0x3F, 12345, corrupt_crc=True)
+    valid = _build_login_request(0x3F, 12345)
+    _feed(parser, short_login + truncated_registers + bad_crc + valid)
+
+    parsed = parser.get_request()
+    assert isinstance(parsed, messages.KamstrupRequestLogin)
+    assert parsed.pin_code == 12345
+    assert parser.get_request() is None
+
+
+def test_maximum_register_request_fits_frame_limit():
+    parser = KamstrupRequestParser()
+    body = [
+        0x3F,
+        messages.KamstrupRequestGetRegisters.command_byte,
+        255,
+        *([0x06, 0x06] * 255),
+    ]
+    frame = _frame_request(body)
+    assert len(frame) <= MAX_FRAME_SIZE
+
+    _feed(parser, frame)
+    parsed = parser.get_request()
+    assert isinstance(parsed, messages.KamstrupRequestGetRegisters)
+    assert parsed.registers == [0x0606] * 255
+
+
+def test_unterminated_frame_is_bounded_and_raises():
+    parser = KamstrupRequestParser()
+    parser.add_byte(chr_py3(kamstrup_constants.REQUEST_MAGIC))
+    for _ in range(MAX_FRAME_SIZE - 1):
+        parser.add_byte(chr_py3(0x01))
+
+    assert parser._frame_wire_size == MAX_FRAME_SIZE
+    assert len(parser.bytes) == MAX_FRAME_SIZE
+    assert parser.get_request() is None
+    with pytest.raises(RequestFrameTooLarge):
+        parser.add_byte(chr_py3(0x02))
+    assert len(parser.bytes) == 0
+
+
+def test_server_caps_requests_processed_from_one_recv(monkeypatch):
+    session = Mock()
+    sock = Mock()
+    sock.getsockname.return_value = ("127.0.0.1", 502)
+    sock.recv.side_effect = [
+        _build_login_request(0x3F, 12345) * (MAX_REQUESTS_PER_RECV + 2)
+    ]
+    server = _make_kamstrup_server(monkeypatch)
+    server.wrapped.command_responder.respond.return_value = None
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.time.sleep", lambda _: None
+    )
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.conpot_core.get_session",
+        lambda *args: session,
+    )
+
+    server.handle(sock, ("127.0.0.1", 12345))
+
+    assert server.wrapped.command_responder.respond.call_count == MAX_REQUESTS_PER_RECV
+    sock.recv.assert_called_once_with(1024)
+    assert [call.kwargs for call in session.log_event.call_args_list].count(
+        {"event_type": "CONNECTION_LOST"}
+    ) == 1
+    sock.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize("failure", [socket.timeout(), ConnectionResetError()])
+def test_server_logs_connection_lost_for_all_socket_exits(monkeypatch, failure):
+    session = Mock()
+    sock = Mock()
+    sock.getsockname.return_value = ("127.0.0.1", 502)
+    sock.recv.side_effect = failure
+    server = _make_kamstrup_server(monkeypatch)
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.conpot_core.get_session",
+        lambda *args: session,
+    )
+
+    server.handle(sock, ("127.0.0.1", 12345))
+
+    session.log_event.assert_any_call(event_type="CONNECTION_LOST")
+    assert [call.kwargs for call in session.log_event.call_args_list].count(
+        {"event_type": "CONNECTION_LOST"}
+    ) == 1
+    sock.close.assert_called_once_with()
 
 
 class TestKamstrup(unittest.TestCase):
@@ -141,6 +305,16 @@ class TestKamstrup(unittest.TestCase):
         self.assertEqual(data[2], 0x92)
         self.assertEqual(data[3], 0x00)
         self.assertEqual(data[-1], 0x0D)
+
+    def test_socket_closes_oversized_stream(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(5)
+        sock.connect(("127.0.0.1", self.kamstrup_management_server.server.server_port))
+        sock.sendall(
+            bytes([kamstrup_constants.REQUEST_MAGIC]) + bytes([0x01]) * MAX_FRAME_SIZE
+        )
+        self.assertEqual(sock.recv(1), b"")
+        sock.close()
 
     def test_skipped_bytes_not_logged_per_byte(self):
         with self.assertNoLogs(
