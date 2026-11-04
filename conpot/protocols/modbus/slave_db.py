@@ -19,15 +19,20 @@ class SlaveBase(object):
     def __init__(self, template):
         self._slaves = {}
         self.template = template
-        self._cpu_state = SharedCpuState()
+        self._cpu_state = (
+            SharedCpuState() if template.get("share_cpu_state", False) else None
+        )
 
-    def add_slave(self, slave_id):
+    def add_slave(self, slave_id, slave_config=None):
         if (slave_id < 0) or (slave_id > 255):
             raise ValueError("Invalid slave id %d" % slave_id)
         if slave_id in self._slaves:
             raise ValueError("Slave %d already exists" % slave_id)
         self._slaves[slave_id] = MBSlave(
-            slave_id, self.template, cpu_state=self._cpu_state
+            slave_id,
+            self.template,
+            cpu_state=self._cpu_state,
+            slave_config=slave_config,
         )
         return self._slaves[slave_id]
 

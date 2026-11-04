@@ -195,15 +195,19 @@ modbus = Schema(
             "mode": str,
             "delay": int,
             Optional("umas_enabled"): bool,
+            Optional("share_cpu_state"): bool,
             "device_info": {
                 "VendorName": str,
                 "ProductCode": str,
                 "MajorMinorRevision": str,
                 Optional("ReportSlaveId"): str,
+                Optional("ReportSlaveIdAdditionalData"): str,
             },
             "slaves": [
                 {
                     "id": int,
+                    Optional("ReportSlaveId"): str,
+                    Optional("ReportSlaveIdAdditionalData"): str,
                     "blocks": [
                         {
                             "name": str,
