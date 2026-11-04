@@ -18,6 +18,8 @@
 import os
 import socket
 import unittest
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from crc16.crc16pure import crc16xmodem
@@ -26,7 +28,11 @@ import conpot
 from conpot.protocols.kamstrup_meter import messages
 from conpot.protocols.kamstrup_meter import kamstrup_constants
 from conpot.protocols.kamstrup_meter.command_responder import CommandResponder
-from conpot.protocols.kamstrup_meter.kamstrup_server import KamstrupServer
+from conpot.protocols.kamstrup_meter import kamstrup_server as kamstrup_server_module
+from conpot.protocols.kamstrup_meter.kamstrup_server import (
+    MAX_REQUESTS_PER_RECV,
+    KamstrupServer,
+)
 from conpot.protocols.kamstrup_meter.request_parser import (
     MAX_FRAME_SIZE,
     KamstrupRequestParser,
@@ -75,6 +81,17 @@ def _build_login_request(comm_address, pin_code, corrupt_crc=False):
 def _feed(parser, frame):
     for byte in frame:
         parser.add_byte(chr_py3(byte))
+
+
+def _make_kamstrup_server(monkeypatch):
+    monkeypatch.setattr(
+        kamstrup_server_module.conpot_core,
+        "get_databus",
+        lambda: SimpleNamespace(observe_value=lambda *args: None),
+    )
+    server = KamstrupServer({"communication_address": 0x3F}, None, None)
+    server.wrapped.command_responder = Mock()
+    return server
 
 
 def test_escaped_frame_split_after_escape_byte():
@@ -141,6 +158,54 @@ def test_unterminated_frame_is_bounded_and_raises():
     with pytest.raises(RequestFrameTooLarge):
         parser.add_byte(chr_py3(0x02))
     assert len(parser.bytes) == 0
+
+
+def test_server_caps_requests_processed_from_one_recv(monkeypatch):
+    session = Mock()
+    sock = Mock()
+    sock.getsockname.return_value = ("127.0.0.1", 502)
+    sock.recv.side_effect = [
+        _build_login_request(0x3F, 12345) * (MAX_REQUESTS_PER_RECV + 2)
+    ]
+    server = _make_kamstrup_server(monkeypatch)
+    server.wrapped.command_responder.respond.return_value = None
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.time.sleep", lambda _: None
+    )
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.conpot_core.get_session",
+        lambda *args: session,
+    )
+
+    server.handle(sock, ("127.0.0.1", 12345))
+
+    assert server.wrapped.command_responder.respond.call_count == MAX_REQUESTS_PER_RECV
+    sock.recv.assert_called_once_with(1024)
+    assert [call.kwargs for call in session.log_event.call_args_list].count(
+        {"event_type": "CONNECTION_LOST"}
+    ) == 1
+    sock.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize("failure", [socket.timeout(), ConnectionResetError()])
+def test_server_logs_connection_lost_for_all_socket_exits(monkeypatch, failure):
+    session = Mock()
+    sock = Mock()
+    sock.getsockname.return_value = ("127.0.0.1", 502)
+    sock.recv.side_effect = failure
+    server = _make_kamstrup_server(monkeypatch)
+    monkeypatch.setattr(
+        "conpot.protocols.kamstrup_meter.kamstrup_server.conpot_core.get_session",
+        lambda *args: session,
+    )
+
+    server.handle(sock, ("127.0.0.1", 12345))
+
+    session.log_event.assert_any_call(event_type="CONNECTION_LOST")
+    assert [call.kwargs for call in session.log_event.call_args_list].count(
+        {"event_type": "CONNECTION_LOST"}
+    ) == 1
+    sock.close.assert_called_once_with()
 
 
 class TestKamstrup(unittest.TestCase):

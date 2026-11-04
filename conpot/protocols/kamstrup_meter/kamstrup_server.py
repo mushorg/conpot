@@ -32,6 +32,8 @@ from conpot.utils.asyncio_serve import serve_tcp_sync_handler
 
 logger = logging.getLogger(__name__)
 
+MAX_REQUESTS_PER_RECV = 4
+
 
 @conpot_protocol
 class KamstrupServer(object):
@@ -79,7 +81,6 @@ class KamstrupServer(object):
 
                 if not raw_request:
                     logger.info("Kamstrup client disconnected. (%s)", session.id)
-                    session.log_event(event_type="CONNECTION_LOST")
                     break
 
                 frame_too_large = False
@@ -93,11 +94,13 @@ class KamstrupServer(object):
                     )
                     frame_too_large = True
 
-                while True:
+                requests_handled = 0
+                while requests_handled < MAX_REQUESTS_PER_RECV:
                     request = parser.get_request()
                     if not request:
                         break
                     else:
+                        requests_handled += 1
                         request_hex = binascii.hexlify(bytearray(request.message_bytes))
                         response = self.command_responder.respond(request)
                         # real Kamstrup meters has delay in this interval
@@ -120,14 +123,29 @@ class KamstrupServer(object):
                             continue
 
                 if frame_too_large:
-                    session.log_event(event_type="CONNECTION_LOST")
+                    break
+                if parser.has_queued_requests():
+                    logger.warning(
+                        "Kamstrup request burst exceeded %d frames; closing connection (%s)",
+                        MAX_REQUESTS_PER_RECV,
+                        session.id,
+                    )
                     break
 
         except socket.timeout:
             logger.debug("Socket timeout, remote: %s. (%s)", address[0], session.id)
-            session.log_event(event_type="CONNECTION_LOST")
+        except socket.error as exc:
+            logger.debug(
+                "Kamstrup socket error from %s: %s. (%s)",
+                address[0],
+                exc,
+                session.id,
+            )
         finally:
-            sock.close()
+            try:
+                session.log_event(event_type="CONNECTION_LOST")
+            finally:
+                sock.close()
 
     async def start(self, host, port):
         self.host = host

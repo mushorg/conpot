@@ -134,6 +134,10 @@ class KamstrupRequestParser(object):
             return request_class(communication_address, command_byte, message_bytes)
         return None
 
+    def has_queued_requests(self):
+        """Return whether complete frames remain after the processing budget."""
+        return bool(self._completed_frames)
+
     @classmethod
     def valid_crc(cls, message):
         supplied_crc = message[-2] * 256 + message[-1]
