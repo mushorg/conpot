@@ -20,7 +20,7 @@ from asyncua.common.connection import TransportLimits
 from asyncua.common.utils import Buffer, NotEnoughData
 from asyncua.server.internal_server import InternalServer
 from asyncua.server.uaprocessor import UaProcessor
-from asyncua.ua.ua_binary import header_from_binary, nodeid_from_binary
+from asyncua.ua.ua_binary import header_from_binary, nodeid_from_binary, uatcp_to_binary
 
 logger = logging.getLogger(__name__)
 
@@ -175,13 +175,26 @@ async def run_opcua_session(
                     )
                     return
                 needed = header.packet_size
-                if needed > processor.max_recv_buffer:
+                receive_limit = processor.max_recv_buffer
+                if needed > receive_limit:
                     logger.warning(
                         "OPC UA frame exceeds receive buffer limit (%s > %s). (%s)",
                         needed,
-                        processor.max_recv_buffer,
+                        receive_limit,
                         session.id,
                     )
+                    session.log_event(
+                        event_type="REQUEST",
+                        request="OversizedFrame",
+                        packet_size=needed,
+                        receive_buffer_limit=receive_limit,
+                    )
+                    error = ua.ErrorMessage(
+                        ua.StatusCode(ua.StatusCodes.BadTcpMessageTooLarge),
+                        "Message size exceeds the negotiated receive buffer limit",
+                    )
+                    writer.write(uatcp_to_binary(ua.MessageType.Error, error))
+                    await writer.drain()
                     return
                 if len(buffer) < needed:
                     break
@@ -203,6 +216,27 @@ async def run_opcua_session(
                     if _is_peer_disconnect(exc):
                         return
                     raise
+                if (
+                    header.MessageType == ua.MessageType.Hello
+                    and processor.max_recv_buffer < header.header_size
+                ):
+                    logger.warning(
+                        "OPC UA negotiated receive limit is unusable (%s). (%s)",
+                        processor.max_recv_buffer,
+                        session.id,
+                    )
+                    session.log_event(
+                        event_type="REQUEST",
+                        request="UnusableReceiveBuffer",
+                        receive_buffer_limit=processor.max_recv_buffer,
+                    )
+                    error = ua.ErrorMessage(
+                        ua.StatusCode(ua.StatusCodes.BadTcpMessageTooLarge),
+                        "Negotiated receive buffer cannot hold a UA TCP header",
+                    )
+                    writer.write(uatcp_to_binary(ua.MessageType.Error, error))
+                    await writer.drain()
+                    return
     finally:
         try:
             await processor.close()

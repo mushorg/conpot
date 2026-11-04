@@ -132,8 +132,16 @@ def test_oversized_declared_frame_is_rejected_before_reading_its_body(message_ty
         )
 
         assert reader.calls == len(chunks)
-        assert writer.writes == []
-        assert session.events == []
+        assert len(writer.writes) == 1
+        assert writer.writes[0].startswith(b"ERRF")
+        assert session.events == [
+            {
+                "event_type": "REQUEST",
+                "request": "OversizedFrame",
+                "packet_size": 2**31 - 1,
+                "receive_buffer_limit": receive_limit,
+            }
+        ]
 
     _run(run())
 
@@ -206,8 +214,58 @@ def test_negotiated_receive_limit_applies_to_later_frames():
         )
 
         assert reader.calls == 1
-        assert len(writer.writes) == 1
-        assert session.events == [{"event_type": "REQUEST", "request": "Hello"}]
+        assert len(writer.writes) == 2
+        assert writer.writes[0].startswith(b"ACKF")
+        assert writer.writes[1].startswith(b"ERRF")
+        assert session.events == [
+            {"event_type": "REQUEST", "request": "Hello"},
+            {
+                "event_type": "REQUEST",
+                "request": "OversizedFrame",
+                "packet_size": negotiated_limit + 1,
+                "receive_buffer_limit": negotiated_limit,
+            },
+        ]
+
+    _run(run())
+
+
+def test_unusable_tiny_negotiated_limit_is_rejected_with_protocol_error():
+    async def run():
+        receive_limit = 4096
+        hello = ua.Hello()
+        hello.ProtocolVersion = 0
+        hello.ReceiveBufferSize = receive_limit
+        hello.SendBufferSize = 1
+        hello.MaxMessageSize = receive_limit
+        hello.MaxChunkCount = 1
+        hello.EndpointUrl = "opc.tcp://conpot"
+        hello_frame = uatcp_to_binary(ua.MessageType.Hello, hello)
+        reader = _ScriptedReader([hello_frame])
+        writer = _RecordingWriter()
+        session = _RecordingSession()
+
+        await opcua_session.run_opcua_session(
+            iserver=None,
+            policies=[],
+            limits=TransportLimits(max_recv_buffer=receive_limit),
+            reader=reader,
+            writer=writer,
+            session=session,
+            read_timeout=1,
+        )
+
+        assert len(writer.writes) == 2
+        assert writer.writes[0].startswith(b"ACKF")
+        assert writer.writes[1].startswith(b"ERRF")
+        assert session.events == [
+            {"event_type": "REQUEST", "request": "Hello"},
+            {
+                "event_type": "REQUEST",
+                "request": "UnusableReceiveBuffer",
+                "receive_buffer_limit": 1,
+            },
+        ]
 
     _run(run())
 
