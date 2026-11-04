@@ -20,16 +20,33 @@
 import logging
 
 
-def setup_logging(log_file, verbose):
+def _get_log_level(verbose):
     if verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
+        return logging.DEBUG
+    return logging.INFO
+
+
+def setup_console_logging(verbose, reset=False):
+    log_level = _get_log_level(verbose)
 
     log_format = logging.Formatter("%(asctime)-15s %(message)s")
+    root_logger = logging.getLogger()
+    if reset:
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+            handler.close()
+
     console_log = logging.StreamHandler()
     console_log.setLevel(log_level)
     console_log.setFormatter(log_format)
+
+    root_logger.setLevel(log_level)
+    root_logger.addHandler(console_log)
+
+
+def setup_file_logging(log_file, verbose):
+    log_level = _get_log_level(verbose)
+    log_format = logging.Formatter("%(asctime)-15s %(message)s")
 
     file_log = logging.FileHandler(log_file)
     file_log.setFormatter(log_format)
@@ -37,5 +54,9 @@ def setup_logging(log_file, verbose):
 
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
-    root_logger.addHandler(console_log)
     root_logger.addHandler(file_log)
+
+
+def setup_logging(log_file, verbose):
+    setup_console_logging(verbose)
+    setup_file_logging(log_file, verbose)

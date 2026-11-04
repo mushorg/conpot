@@ -25,7 +25,7 @@ from conpot.core.templates import (
     resolve_template_directory,
 )
 from conpot.utils import ext_ip
-from conpot.utils.logging import setup_logging
+from conpot.utils.logging import setup_console_logging, setup_file_logging
 
 logger = logging.getLogger()
 package_directory = os.path.dirname(os.path.abspath(conpot.__file__))
@@ -46,6 +46,11 @@ def logo():
 
 
 def drop_privileges(uid_name=None, gid_name=None):
+    if os.geteuid() != 0:
+        os.seteuid(0)
+        if os.geteuid() != 0:
+            raise RuntimeError("Could not regain root before dropping privileges")
+
     if uid_name is None:
         uid_name = "nobody"
 
@@ -68,20 +73,31 @@ def drop_privileges(uid_name=None, gid_name=None):
         )
         sys.exit(1)
 
-    logger.debug(
-        'Attempting to drop privileges to "{}:{}"'.format(
-            wanted_user.pw_name, wanted_group.gr_name
-        )
-    )
+    os.setgroups([])
     os.setgid(wanted_group.gr_gid)
     os.setuid(wanted_user.pw_uid)
+    if hasattr(os, "getresuid"):
+        if os.getresuid() != (wanted_user.pw_uid,) * 3:
+            raise RuntimeError("Privilege drop did not clear all user IDs")
+    elif os.getuid() != wanted_user.pw_uid or os.geteuid() != wanted_user.pw_uid:
+        raise RuntimeError("Privilege drop did not set the requested user IDs")
+    if hasattr(os, "getresgid"):
+        if os.getresgid() != (wanted_group.gr_gid,) * 3:
+            raise RuntimeError("Privilege drop did not clear all group IDs")
+    elif os.getgid() != wanted_group.gr_gid or os.getegid() != wanted_group.gr_gid:
+        raise RuntimeError("Privilege drop did not set the requested group IDs")
+    if hasattr(os, "getgroups") and os.getgroups():
+        raise RuntimeError("Privilege drop left supplementary groups configured")
+    if hasattr(os, "getresuid") and hasattr(os, "seteuid"):
+        try:
+            os.seteuid(0)
+        except OSError:
+            pass
+        else:
+            raise RuntimeError("Privilege drop left the process able to regain root")
     new_user = pwd.getpwuid(os.getuid())
     new_group = grp.getgrgid(os.getgid())
-    logger.info(
-        'Privileges dropped, running as "{}:{}"'.format(
-            new_user.pw_name, new_group.gr_name
-        )
-    )
+    return new_user.pw_name, new_group.gr_name
 
 
 async def _async_main(args, config, root_template_directory, template, template_base):
@@ -205,23 +221,24 @@ def main():
     )
     args = parser.parse_args()
 
-    setup_logging(args.logfile, args.verbose)
+    try:
+        is_root = 0 in os.getresuid()
+    except AttributeError:
+        is_root = os.getuid() == 0 or os.geteuid() == 0
+    setup_console_logging(args.verbose, reset=is_root)
 
     core_interface.config = ConfigParser(os.environ)
     config = core_interface.config
 
-    if os.getuid() == 0:
+    if is_root:
         if not args.force:
             logger.critical(
                 "Can't start conpot with root. Please ref user docs for more info."
             )
             sys.exit(3)
-        else:
-            logger.warning(
-                "Running conpot with root. Running conpot with root isn't recommended. "
-            )
 
-    if os.getuid() == 0:
+    dropped_identity = None
+    if is_root:
         try:
             conpot_user = config.get("daemon", "user")
         except NoSectionError, NoOptionError:
@@ -231,12 +248,30 @@ def main():
             conpot_group = config.get("daemon", "group")
         except NoSectionError, NoOptionError:
             conpot_group = None
-        drop_privileges(conpot_user, conpot_group)
+        dropped_identity = drop_privileges(conpot_user, conpot_group)
+
+    try:
+        setup_file_logging(args.logfile, args.verbose)
+    except OSError as exc:
+        logger.error(
+            "Could not open logfile %r after dropping privileges; continuing with console logging only: %s",
+            args.logfile,
+            exc,
+        )
+    if dropped_identity is not None:
+        logger.warning(
+            "Root --force startup was requested; privileges have now been dropped."
+        )
+        logger.info(
+            'Privileges dropped, running as "%s:%s".',
+            dropped_identity[0],
+            dropped_identity[1],
+        )
 
     if args.force:
         args.config = os.path.join(package_directory, "testing.cfg")
-        logger.warning("--force option specified. Using testing configuration")
         config.read(args.config)
+        logger.warning("--force option specified. Using testing configuration")
     else:
         if not (args.config and args.template):
             print(
