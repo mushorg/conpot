@@ -30,6 +30,15 @@ class TFTPServerState(TFTPState):
     def handle(self, pkt, raddress, rport):
         raise NotImplementedError
 
+    def sendDAT(self):
+        """Escape the untrusted filename in tftpy's EOF log message."""
+        filename = self.context.file_to_transfer
+        self.context.file_to_transfer = repr(filename)
+        try:
+            return super().sendDAT()
+        finally:
+            self.context.file_to_transfer = filename
+
     def serverInitial(self, pkt, raddress, rport):
         options = pkt.options
         sendoack = False
@@ -251,7 +260,7 @@ class TFTPContextServer(tftpy.TftpContexts.TftpContextServer):
                 _data_fs_filename = sanitize_file_name(
                     "".join(_file_path.split("/")[-1:]), self.host, self.port
                 )
-                logger.info("Opening {} for data_fs writing.".format(_data_fs_filename))
+                logger.info("Opening %r for data_fs writing.", _data_fs_filename)
                 with self.vfs.open(_file_path, "rb") as _vfs_file:
                     with self.data_fs.open(_data_fs_filename, "wb") as _data_file:
                         content = _vfs_file.read()

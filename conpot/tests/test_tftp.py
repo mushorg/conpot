@@ -81,19 +81,34 @@ class TestTFTPServer(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temp_dir:
             missing_path = os.path.join(temp_dir, "missing")
-            with self.assertLogs("conpot", level="INFO") as captured:
+            download_path = os.path.join(temp_dir, "downloaded")
+            with self.assertLogs(level="INFO") as captured:
                 with self.assertRaises(TftpException):
                     self.client.download(malicious_rrq, missing_path)
                 self.client.upload(malicious_wrq, self._test_file)
+                _, data_fs = conpot_core.get_vfs("tftp")
+                uploaded_file = self._wait_uploaded(data_fs, needle="uploaded")
+                self.client.download(malicious_wrq, download_path)
 
-        log_output = "\n".join(captured.output)
-        self.assertIn(rrq_marker, log_output)
-        self.assertIn(wrq_marker, log_output)
-        self.assertNotIn("\n" + rrq_marker, log_output)
-        self.assertNotIn("\r" + rrq_marker, log_output)
-        self.assertNotIn("\n" + wrq_marker, log_output)
-        self.assertNotIn("\r" + wrq_marker, log_output)
+        conpot_logs = "\n".join(
+            record.getMessage()
+            for record in captured.records
+            if record.name.startswith("conpot")
+        )
+        all_logs = "\n".join(captured.output)
+        self.assertIn(rrq_marker, conpot_logs)
+        self.assertIn(wrq_marker, conpot_logs)
+        self.assertNotIn("\n" + rrq_marker, conpot_logs)
+        self.assertNotIn("\r" + rrq_marker, conpot_logs)
+        self.assertNotIn("\n" + wrq_marker, conpot_logs)
+        self.assertNotIn("\r" + wrq_marker, conpot_logs)
+        self.assertIn(r"\r\n" + rrq_marker, conpot_logs)
+        self.assertIn(r"uploaded\r" + wrq_marker, conpot_logs)
+        self.assertIn(r"Reached EOF on file 'uploaded\r" + wrq_marker + "'", all_logs)
+        completion_log = next(
+            line for line in all_logs.splitlines() if "data_fs writing" in line
+        )
+        self.assertIn("Opening '", completion_log)
+        self.assertTrue(completion_log.endswith("for data_fs writing."))
 
-        _, data_fs = conpot_core.get_vfs("tftp")
-        uploaded_file = self._wait_uploaded(data_fs, needle="uploaded")
         data_fs.remove(uploaded_file)
