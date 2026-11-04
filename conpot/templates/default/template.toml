@@ -39,6 +39,10 @@ memoryModbusSlave2BlockD = { value = "[0 for b in range(0,8)]" }
 Copyright = "Original Siemens Equipment"
 s7_id = "88111222"
 s7_module_type = "IM151-8 PN/DP CPU"
+s7_order_number = "6ES7 151-8AB01-0AB0"
+s7_firmware_version = "V3.2.8"
+s7_hardware_version = "3.1"
+s7_boot_loader_version = "A32.9.9"
 empty = ""
 # S7 process images (bytearray); wired from s7comm.xml memory_areas
 s7_db1 = { value = "bytearray(256)" }

@@ -41,18 +41,24 @@ class S7Server(object):
     def __init__(self, template, template_directory, args):
         self.timeout = 5
         self.ssl_lists = {}
+        self.ssl_versions = {}
         self.memory_map = S7MemoryMap()
         self.server = None
         S7.ssl_lists = self.ssl_lists
+        S7.ssl_versions = self.ssl_versions
         S7.memory_map = self.memory_map
         self.start_time = None  # Initialize later
 
         for ssl in template.get("system_status_lists", []):
             ssl_id = ssl["id"]
             ssl_dict = {}
+            version_dict = {}
             self.ssl_lists[ssl_id] = ssl_dict
+            self.ssl_versions[ssl_id] = version_dict
             for item in ssl.get("items", []):
                 ssl_dict[item["id"]] = item.get("value", "")
+                if "version" in item:
+                    version_dict[item["id"]] = item["version"]
 
         self.memory_map.load_config(template.get("memory_areas", []))
 

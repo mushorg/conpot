@@ -17,7 +17,7 @@
 
 import socket
 import unittest
-from struct import pack
+from struct import pack, unpack
 
 from conpot.protocols.s7comm.s7 import S7
 from conpot.protocols.s7comm.s7_server import S7Server
@@ -69,7 +69,12 @@ class TestS7Server(unittest.TestCase):
         s7_con.plc_stop_function()
 
         dic = {
-            17: {1: "v.0.0"},
+            17: {
+                1: "6ES7 151-8AB01-0AB0  v.0.3",
+                6: "6ES7 151-8AB01-0AB0  v.0.3",
+                7: "v.3.2.8",
+                129: "Boot Loader           A",
+            },
             28: {
                 1: "Technodrome",
                 2: "Siemens, SIMATIC, S7-200",
@@ -158,14 +163,133 @@ class TestS7Server(unittest.TestCase):
         self.assertIn(bytes.fromhex("c1020162"), reply)
 
     def test_szl_module_identification_hardware_firmware(self):
-        """SZL 0x0011 indexes 6/7 must pack version words without struct.error."""
+        """SZL 0x0011 returns every identification record for any index."""
         con = self._connect()
-        for index in (6, 7):
+        for index in (0, 1, 6, 7):
             data = con.Function(0x04, 0x04, 0x01, pack("!HH", 0x0011, index))
-            self.assertGreaterEqual(len(data), 8)
-            # Wire format carries ASCII 'V''3' in the version word (0x5633).
-            self.assertIn(b"V3", data)
+            szl_id, _, length, count = unpack("!HHHH", data[:8])
+            self.assertEqual((szl_id, length, count), (0x0011, 28, 4))
+            records = [data[8 + i * 28 : 8 + (i + 1) * 28] for i in range(4)]
+            self.assertEqual(
+                [r[:2] for r in records],
+                [b"\x00\x01", b"\x00\x06", b"\x00\x07", b"\x00\x81"],
+            )
+            # Hardware version words, then binary 'V'/'A' + major.minor.patch
+            self.assertEqual(records[0][22:28], b"\x00\xc0\x00\x03\x00\x01")
+            self.assertEqual(records[2][24:28], b"V\x03\x02\x08")
+            self.assertEqual(records[3][24:28], b"A\x20\x09\x09")
         con.s.close()
+
+    def test_szl_0011_matches_real_cpu_315_2_pn_dp(self):
+        """With a real CPU's values, SZL 0x0011 must match its reply byte for byte.
+
+        Reference: Read SZL 0x0011 reply of a CPU 315-2 PN/DP
+        (6ES7 315-2EH14-0AB0, firmware V3.2.7), github.com/gymgit/s7-pcaps,
+        snap7_s300_everything.pcapng frame 4.
+        """
+        import conpot.core as conpot_core
+
+        databus = conpot_core.get_databus()
+        saved = {
+            key: databus.get_value(key)
+            for key in ("s7_order_number", "s7_firmware_version")
+        }
+        databus.set_value("s7_order_number", "6ES7 315-2EH14-0AB0")
+        databus.set_value("s7_firmware_version", "V3.2.7")
+        try:
+            con = self._connect()
+            params = pack("!LBBBB", 0x00011204, 0x11, 0x44, 0x01, 0x00)
+            data = pack("!BBH", 0xFF, 0x09, 4) + pack("!HH", 0x0011, 0x0000)
+            response = con.Request(0x07, params, data)
+            con.s.close()
+        finally:
+            for key, value in saved.items():
+                databus.set_value(key, value)
+        real_cpu_data = bytes.fromhex(
+            "ff09007800110000001c0004"
+            "000136455337203331352d32454831342d304142302000c000030001"
+            "000636455337203331352d32454831342d304142302000c000030001"
+            "0007202020202020202020202020202020202020202000c056030207"
+            "0081426f6f74204c6f61646572202020202020202020000041200909"
+        )
+        self.assertEqual(response.parameters[:7], bytes.fromhex("00011208128401"))
+        self.assertEqual(response.parameters[8:], b"\x00\x00\x00\x00")
+        self.assertEqual(response.data, real_cpu_data)
+
+    def test_nmap_s7_info_probe(self):
+        """Replay nmap's s7-info.nse request sequence and apply its parser offsets.
+
+        s7-info waits for at least 125 bytes after the SZL 0x0011 read and
+        180 bytes after the SZL 0x001C read, then reads fixed offsets.
+        """
+        sock = socket.socket()
+        sock.settimeout(2)
+        sock.connect((self.server_host, self.server_port))
+
+        def exchange(hex_request, minimum):
+            sock.sendall(bytes.fromhex(hex_request))
+            reply = b""
+            while len(reply) < minimum:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                reply += chunk
+            return reply
+
+        def cstring(buf, offset):
+            # Lua string.unpack("z", s, i) with 1-based i
+            start = offset - 1
+            end = buf.index(b"\x00", start) if b"\x00" in buf[start:] else len(buf)
+            return buf[start:end]
+
+        exchange("0300001611e00000001400c1020100c2020102c0010a", 6)
+        setup = exchange("0300001902f08032010000000000080000f0000001000101e0", 8)
+        self.assertEqual(setup[7], 0x32)
+        szl_11 = "0300002102f080320700000000000800080001120411440100ff09000400110001"
+        exchange(szl_11, 8)
+
+        first = exchange(szl_11, 125)
+        self.assertEqual(first[7], 0x32)
+        self.assertGreaterEqual(len(first), 125)
+        self.assertEqual(cstring(first, 44).strip(), b"6ES7 151-8AB01-0AB0")
+        self.assertEqual(cstring(first, 72).strip(), b"6ES7 151-8AB01-0AB0")
+        self.assertEqual(tuple(first[122:125]), (3, 2, 8))
+
+        second = exchange(
+            "0300002102f080320700000000000800080001120411440100ff090004001c0001",
+            180,
+        )
+        sock.close()
+        self.assertEqual(second[7], 0x32)
+        self.assertGreaterEqual(len(second), 180)
+        offset = 0 if second[30] == 0x1C else 4
+        self.assertEqual(cstring(second, 40 + offset), b"Technodrome")
+        self.assertEqual(cstring(second, 108 + offset), b"Mouser Factory")
+        self.assertEqual(cstring(second, 176 + offset), b"88111222")
+
+    def test_szl_userdata_params_match_declared_length(self):
+        """Userdata response params declare 8 trailing bytes and must carry them."""
+        con = self._connect()
+        params = pack("!LBBBB", 0x00011204, 0x11, 0x44, 0x01, 0x00)
+        data = pack("!BBH", 0xFF, 0x09, 4) + pack("!HH", 0x0011, 0x0001)
+        response = con.Request(0x07, params, data)
+        con.s.close()
+        self.assertEqual(len(response.parameters), 12)
+        self.assertEqual(response.parameters[3], 8)
+        self.assertEqual(response.parameters[8:12], b"\x00\x00\x00\x00")
+
+    def test_szl_0111_returns_single_record(self):
+        """SZL 0x0111 returns only the record selected by the index."""
+        con = self._connect()
+        data = con.Function(0x04, 0x04, 0x01, pack("!HH", 0x0111, 0x0007))
+        con.s.close()
+        szl_id, index, length, count = unpack("!HHHH", data[:8])
+        self.assertEqual((szl_id, index, length, count), (0x0111, 7, 28, 1))
+        record = data[8:]
+        self.assertEqual(len(record), 28)
+        self.assertEqual(record[:2], b"\x00\x07")
+        # Ausbg1 = 'V' + major, Ausbg2 = minor, patch (binary)
+        self.assertEqual(record[24:28], b"V\x03\x02\x08")
 
     def test_read_write_db_via_databus(self):
         """Read/Write VAR on DB1 must use the databus-backed bytearray (issue #524)."""

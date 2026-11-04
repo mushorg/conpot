@@ -20,10 +20,15 @@ items = [
 [[s7comm.system_status_lists]]
 id = "W#16#xy11"
 name = "Module Identification"
+# W#16#0001 / W#16#0006: order number (MLFB) of the module and its basic hardware;
+#   optional "version" names a databus key with the two hardware version words, e.g. "3.1".
+# W#16#0007: firmware version, e.g. "V3.2.8".
+# W#16#0081: boot loader version, e.g. "A32.9.9" (omit the item to leave the record out).
 items = [
-  { id = "W#16#0001", name = "module_identification", value = "empty" },
-  { id = "W#16#0006", name = "hardware_identification", value = "empty" },
-  { id = "W#16#0006", name = "firmware_identification", value = "empty" },
+  { id = "W#16#0001", name = "module_identification", value = "s7_order_number", version = "s7_hardware_version" },
+  { id = "W#16#0006", name = "hardware_identification", value = "s7_order_number", version = "s7_hardware_version" },
+  { id = "W#16#0007", name = "firmware_identification", value = "s7_firmware_version" },
+  { id = "W#16#0081", name = "boot_loader", value = "s7_boot_loader_version" },
 ]
 
 [[s7comm.memory_areas]]
