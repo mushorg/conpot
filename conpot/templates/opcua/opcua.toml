@@ -7,6 +7,10 @@ endpoint_path = "/conpot/server/"
 server_name = "Conpot OPC UA Server"
 namespace_uri = "http://conpot.org/OPCUA/"
 application_uri = "urn:conpot:opcua"
+opcua_root_path = "/data/opcua/"
+add_src = ""
+data_fs_subdir = "opcua"
+max_file_size = 1048576
 
 [[opcua.variables]]
 name = "Temperature"
@@ -27,3 +31,16 @@ value = true
 name = "BatchId"
 type = "integer"
 value = 42
+
+[[opcua.files]]
+name = "firmware.bin"
+content = "CONPOT_PLC_FW_V2.1.0"
+writable = true
+mime_type = "application/octet-stream"
+
+[[opcua.files]]
+name = "configuration.xml"
+content = "<DeviceConfiguration><StationId>Plant-01</StationId></DeviceConfiguration>"
+writable = true
+mime_type = "text/xml"
+

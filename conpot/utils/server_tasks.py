@@ -286,7 +286,7 @@ def init_test_server_by_name(name, port=0):
     class Args(SimpleNamespace):
         mibcache = None
 
-    if name in ("ftp", "tftp"):
+    if name in ("ftp", "tftp", "opcua"):
         core.initialize_vfs()
 
     server, handle = spawn_test_server(

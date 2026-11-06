@@ -383,6 +383,9 @@ opcua = Schema(
             Optional("server_name"): str,
             Optional("namespace_uri"): str,
             Optional("application_uri"): str,
+            Optional("opcua_root_path"): str,
+            Optional("add_src"): str,
+            Optional("data_fs_subdir"): str,
             Optional("variables"): [
                 {
                     "name": str,
@@ -390,6 +393,15 @@ opcua = Schema(
                     Optional("value"): Or(bool, int, float, str),
                 }
             ],
+            Optional("files"): [
+                {
+                    "name": str,
+                    Optional("content"): str,
+                    Optional("writable"): bool,
+                    Optional("mime_type"): str,
+                }
+            ],
+            Optional("max_file_size"): int,
         }
     }
 )
