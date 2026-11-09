@@ -195,6 +195,18 @@ def parse_device_info(body):
     return info
 
 
+def parse_report_slave_id(body):
+    """Return the server ID and additional data from a Function 17 response."""
+    if (
+        len(body) < 4
+        or body[0] != 0x11
+        or body[1] != len(body) - 2
+        or body[3] not in (0x00, 0xFF)
+    ):
+        return None
+    return body[2:3].hex(), body[4:].hex()
+
+
 async def modbus_probe_unit(host, port, timeout, unit_id):
     """Return a dict describing ``unit_id`` if something answers, else None."""
     result = {"id": unit_id}
@@ -224,7 +236,10 @@ async def modbus_probe_unit(host, port, timeout, unit_id):
             return None
         try:
             body = await conn.request(unit_id, bytes((0x11,)))
-            result["report_slave_id"] = body.hex()
+            report_slave_id = parse_report_slave_id(body)
+            if report_slave_id is not None:
+                result["report_slave_id"] = report_slave_id[0]
+                result["report_slave_id_additional_data"] = report_slave_id[1]
         except ModbusException, ModbusNoResponse:
             pass
         return result
@@ -434,7 +449,15 @@ def render_modbus_toml(units, port):
     lines += ["%s = %s" % (k, toml_str(v)) for k, v in device_info.items()]
     databus = {}
     for unit in units:
-        lines += ["", "[[modbus.slaves]]", "id = %d" % unit["id"], "blocks = ["]
+        lines += ["", "[[modbus.slaves]]", "id = %d" % unit["id"]]
+        if unit.get("report_slave_id"):
+            lines.append("ReportSlaveId = %s" % toml_str(unit["report_slave_id"]))
+        if unit.get("report_slave_id_additional_data"):
+            lines.append(
+                "ReportSlaveIdAdditionalData = %s"
+                % toml_str(unit["report_slave_id_additional_data"])
+            )
+        lines.append("blocks = [")
         for n, block in enumerate(unit.get("blocks", [])):
             name = "memoryModbusSlave%dBlock%d" % (unit["id"], n)
             lines.append(

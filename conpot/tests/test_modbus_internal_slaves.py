@@ -15,6 +15,8 @@ import unittest
 import conpot
 import conpot.core as conpot_core
 from conpot.protocols.modbus import modbus_server
+from conpot.protocols.modbus.slave import MBSlave
+from conpot.protocols.modbus.slave_db import SlaveBase
 from conpot.tests.helpers.modbus_client import (
     READ_COILS,
     READ_HOLDING_REGISTERS,
@@ -225,3 +227,61 @@ class TestModbusInternalSlaves(unittest.TestCase):
             )
         master.close()
         self.assertEqual(cm.exception.get_exception_code(), SLAVE_DEVICE_FAILURE)
+
+    def test_cpu_state_is_shared_across_unit_ids(self):
+        template = _tcp_mode_template()
+        template["umas_enabled"] = True
+        template["umas_cpu_state_key"] = "memoryModbusSlave1BlockA"
+        conpot_core.get_databus().set_value("memoryModbusSlave1BlockA", [1])
+        databank = SlaveBase(template)
+        unit_1 = databank.add_slave(1)
+        unit_255 = databank.add_slave(255)
+
+        self.assertEqual(unit_1.handle_request(b"\x5a\x00\x41"), b"\x5a\x00\xfe")
+        self.assertFalse(unit_255.running)
+        self.assertEqual(unit_255.handle_request(b"\x11"), b"\x11\x02\xff\x00")
+
+        self.assertEqual(unit_255.handle_request(b"\x5a\x00\x40"), b"\x5a\x00\xfe")
+        self.assertTrue(unit_1.running)
+        self.assertEqual(unit_1.handle_request(b"\x11"), b"\x11\x02\x01\xff")
+
+    def test_cpu_state_remains_per_unit_by_default(self):
+        template = _tcp_mode_template()
+        template["umas_enabled"] = True
+        databank = SlaveBase(template)
+        unit_1 = databank.add_slave(1)
+        unit_255 = databank.add_slave(255)
+
+        unit_1.handle_request(b"\x5a\x00\x41")
+
+        self.assertFalse(unit_1.running)
+        self.assertTrue(unit_255.running)
+        self.assertEqual(unit_255.handle_request(b"\x11"), b"\x11\x02\xff\xff")
+
+    def test_report_slave_id_supports_per_unit_data(self):
+        template = _tcp_mode_template()
+        databank = SlaveBase(template)
+        unit_1 = databank.add_slave(
+            1, {"ReportSlaveId": "09", "ReportSlaveIdAdditionalData": "41"}
+        )
+        unit_2 = databank.add_slave(
+            2, {"ReportSlaveId": "0a", "ReportSlaveIdAdditionalData": "42"}
+        )
+
+        self.assertEqual(unit_1.handle_request(b"\x11"), b"\x11\x03\x09\xffA")
+        self.assertEqual(unit_2.handle_request(b"\x11"), b"\x11\x03\x0a\xffB")
+
+    def test_report_slave_id_can_be_configured(self):
+        template = _tcp_mode_template()
+        template["device_info"]["ReportSlaveId"] = "09"
+        template["device_info"]["ReportSlaveIdAdditionalData"] = "4d333430"
+        slave = MBSlave(1, template)
+
+        self.assertEqual(slave.handle_request(b"\x11"), b"\x11\x06\x09\xffM340")
+
+    def test_invalid_report_slave_id_is_rejected_at_startup(self):
+        template = _tcp_mode_template()
+        template["device_info"]["ReportSlaveId"] = "not hex"
+
+        with self.assertRaisesRegex(ValueError, "hexadecimal bytes"):
+            MBSlave(1, template)

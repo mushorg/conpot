@@ -200,10 +200,14 @@ modbus = Schema(
                 "VendorName": str,
                 "ProductCode": str,
                 "MajorMinorRevision": str,
+                Optional("ReportSlaveId"): str,
+                Optional("ReportSlaveIdAdditionalData"): str,
             },
             "slaves": [
                 {
                     "id": int,
+                    Optional("ReportSlaveId"): str,
+                    Optional("ReportSlaveIdAdditionalData"): str,
                     "blocks": [
                         {
                             "name": str,

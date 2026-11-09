@@ -57,7 +57,7 @@ class ModbusServer(object):
         # address space. protocol_startup reports them and exits.
         for slave_cfg in template.get("slaves", []):
             slave_id = int(slave_cfg["id"])
-            slave = self._databank.add_slave(slave_id)
+            slave = self._databank.add_slave(slave_id, slave_cfg)
             logger.debug("Added slave with id %s.", slave_id)
             for block in slave_cfg.get("blocks", []):
                 name = block["name"]

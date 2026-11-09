@@ -24,6 +24,7 @@ from pymodbus.pdu.register_message import (
     WriteSingleRegisterRequest,
     WriteSingleRegisterResponse,
 )
+from pymodbus.pdu.other_message import ReportDeviceIdResponse
 
 import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
@@ -100,9 +101,10 @@ class SharedCpuState(object):
 class MBSlave(object):
     """One Modbus unit id: template blocks plus pymodbus encode/decode."""
 
-    def __init__(self, slave_id, template, cpu_state=None):
+    def __init__(self, slave_id, template, cpu_state=None, slave_config=None):
         self._id = slave_id
         self.template = template
+        self.slave_config = slave_config or {}
         self.function_code = None
         self.event_type = None
         self._running = True
@@ -112,6 +114,21 @@ class MBSlave(object):
         if self._cpu_state_key and self._cpu_state is None:
             self._cpu_state = SharedCpuState(
                 conpot_core.get_databus(), self._cpu_state_key
+            )
+        self._report_slave_id_bytes = self._parse_report_slave_id(
+            "ReportSlaveId", bytes((self._id,))
+        )
+        self._report_slave_id_additional_data = self._parse_report_slave_id(
+            "ReportSlaveIdAdditionalData", b""
+        )
+        if (
+            len(self._report_slave_id_bytes)
+            + 1
+            + len(self._report_slave_id_additional_data)
+            > 251
+        ):
+            raise ValueError(
+                "ReportSlaveId response data can contain at most 251 bytes"
             )
         self._blocks = {}
         self._memory = {block_type: [] for block_type in BLOCK_TYPES.values()}
@@ -129,6 +146,22 @@ class MBSlave(object):
             self._cpu_state.set_running(value)
         else:
             self._running = bool(value)
+
+    def _parse_report_slave_id(self, key, default):
+        configured = self.slave_config.get(key)
+        if configured is None:
+            configured = self.template.get("device_info", {}).get(key)
+        if configured is None:
+            return default
+        try:
+            identifier = bytes.fromhex(configured)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{key} must contain hexadecimal bytes") from exc
+        if not identifier:
+            raise ValueError(f"{key} must contain at least one byte")
+        if key == "ReportSlaveId" and len(identifier) != 1:
+            raise ValueError("ReportSlaveId must contain exactly one byte")
+        return identifier
 
     def add_block(self, block_name, block_type, starting_address, size, content=None):
         """Add a block whose values live under databus key ``content``.
@@ -332,11 +365,20 @@ class MBSlave(object):
         return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_OK)
 
     def _report_slave_id(self):
-        # Historical Conpot PDU: function code is present twice. Scanners and
-        # test_report_slave_id lock this layout; pymodbus ReportDeviceIdResponse
-        # encodes a different one.
         logger.debug("Requested to report slave ID (0x11)")
-        return bytes((0x11, 0x11, 0x01, 0x01, 0xFF))
+        response = ReportDeviceIdResponse(
+            identifier=self._report_slave_id_bytes, status=self.running
+        )
+        pdu = _success_pdu(response)
+        if self._report_slave_id_additional_data:
+            byte_count = pdu[1] + len(self._report_slave_id_additional_data)
+            pdu = (
+                pdu[:1]
+                + bytes((byte_count,))
+                + pdu[2:]
+                + self._report_slave_id_additional_data
+            )
+        return pdu
 
     def _device_info(self, request_pdu):
         # Always return all three objects. The stock MEI handler would return
