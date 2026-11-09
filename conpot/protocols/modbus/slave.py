@@ -26,6 +26,7 @@ from pymodbus.pdu.register_message import (
 )
 from pymodbus.pdu.other_message import ReportDeviceIdResponse
 
+import conpot.core as conpot_core
 from conpot.utils.networking import str_to_bytes
 
 from .modbus_block_databus_mediator import DatabusBlock
@@ -71,21 +72,30 @@ class ModbusInvalidRequestError(Exception):
 
 
 class SharedCpuState(object):
-    """The device-level CPU state shared by all Modbus unit ids."""
+    """One mutable, synchronized PLC CPU state shared by all unit ids."""
 
-    def __init__(self):
-        self._running = True
+    def __init__(self, databus, key):
+        self._databus = databus
+        self._key = key
+        try:
+            self._values = databus.get_stored_value(key)
+        except AssertionError as exc:
+            raise ValueError("UMAS CPU state %r does not exist" % key) from exc
+        if not isinstance(self._values, list) or not self._values:
+            raise ValueError(
+                "UMAS CPU state %r must be backed by a non-empty databus list" % key
+            )
         self._lock = threading.Lock()
 
     @property
     def running(self):
         with self._lock:
-            return self._running
+            return bool(self._values[0])
 
-    @running.setter
-    def running(self, value):
+    def set_running(self, running):
         with self._lock:
-            self._running = bool(value)
+            self._values[0] = 1 if running else 0
+        self._databus.notify_observers(self._key)
 
 
 class MBSlave(object):
@@ -97,8 +107,14 @@ class MBSlave(object):
         self.slave_config = slave_config or {}
         self.function_code = None
         self.event_type = None
-        self._cpu_state = cpu_state or SharedCpuState()
+        self._running = True
         self._umas_enabled = bool(template.get("umas_enabled", False))
+        self._cpu_state_key = template.get("umas_cpu_state_key")
+        self._cpu_state = cpu_state
+        if self._cpu_state_key and self._cpu_state is None:
+            self._cpu_state = SharedCpuState(
+                conpot_core.get_databus(), self._cpu_state_key
+            )
         self._report_slave_id_bytes = self._parse_report_slave_id(
             "ReportSlaveId", bytes((self._id,))
         )
@@ -120,11 +136,16 @@ class MBSlave(object):
 
     @property
     def running(self):
-        return self._cpu_state.running
+        if self._cpu_state is not None:
+            return self._cpu_state.running
+        return self._running
 
     @running.setter
     def running(self, value):
-        self._cpu_state.running = value
+        if self._cpu_state is not None:
+            self._cpu_state.set_running(value)
+        else:
+            self._running = bool(value)
 
     def _parse_report_slave_id(self, key, default):
         configured = self.slave_config.get(key)
@@ -332,16 +353,16 @@ class MBSlave(object):
         session_key = request_pdu[1]
         umas_code = request_pdu[2]
         if umas_code == _UMAS_START:
-            self.running = True
+            running = True
             self.event_type = "UMAS_START"
-            status = _UMAS_OK
         elif umas_code == _UMAS_STOP:
-            self.running = False
+            running = False
             self.event_type = "UMAS_STOP"
-            status = _UMAS_OK
         else:
-            status = _UMAS_ERROR
-        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, status)
+            return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_ERROR)
+
+        self.running = running
+        return struct.pack(">BBB", _UMAS_FUNCTION, session_key, _UMAS_OK)
 
     def _report_slave_id(self):
         logger.debug("Requested to report slave ID (0x11)")

@@ -31,6 +31,16 @@ WRITE_MULTIPLE_REGISTERS = 16
 SLAVE_DEVICE_FAILURE = 4
 
 
+def exchange_pdu(host, port, pdu, slave=1, transaction_id=0, timeout=2.0):
+    """Send one raw Modbus/TCP PDU and return the complete response frame."""
+    frame = struct.pack(">HHHB", transaction_id, 0, len(pdu) + 1, slave) + pdu
+    with socket.create_connection((host, port), timeout=timeout) as sock:
+        sock.sendall(frame)
+        header = _recv_exact(sock, 7)
+        _transaction, _protocol, length, _unit = struct.unpack(">HHHB", header)
+        return header + _recv_exact(sock, length - 1)
+
+
 class ModbusError(Exception):
     def __init__(self, exception_code):
         super().__init__("Modbus exception %s" % exception_code)

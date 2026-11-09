@@ -231,7 +231,8 @@ class TestModbusInternalSlaves(unittest.TestCase):
     def test_cpu_state_is_shared_across_unit_ids(self):
         template = _tcp_mode_template()
         template["umas_enabled"] = True
-        template["share_cpu_state"] = True
+        template["umas_cpu_state_key"] = "memoryModbusSlave1BlockA"
+        conpot_core.get_databus().set_value("memoryModbusSlave1BlockA", [1])
         databank = SlaveBase(template)
         unit_1 = databank.add_slave(1)
         unit_255 = databank.add_slave(255)

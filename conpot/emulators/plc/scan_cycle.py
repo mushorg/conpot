@@ -36,6 +36,12 @@ def _make_engine(engine_name):
     raise ValueError("Unknown PLC engine: {!r}".format(engine_name))
 
 
+def _cpu_state_running(cpu_state):
+    if not isinstance(cpu_state, list) or not cpu_state:
+        raise ValueError("PLC CPU state must be a non-empty list")
+    return bool(cpu_state[0])
+
+
 class PlcScanCycle:
     """Cyclic PLC scan over databus lists that Modbus already serves.
 
@@ -50,6 +56,7 @@ class PlcScanCycle:
         discrete_key="memoryModbusSlave1BlockB",
         holding_key="memoryModbusSlave1BlockD",
         analog_key="memoryModbusSlave1BlockC",
+        cpu_state_key="plc_cpu_running",
     ):
         self.scan_ms = int(scan_ms)
         self.engine_name = engine_name
@@ -57,6 +64,7 @@ class PlcScanCycle:
         self.discrete_key = discrete_key
         self.holding_key = holding_key
         self.analog_key = analog_key
+        self.cpu_state_key = cpu_state_key
         self._enabled = True
         self.stopped = threading.Event()
         threading.Thread(target=self.initialize, daemon=True).start()
@@ -73,6 +81,16 @@ class PlcScanCycle:
             return
         try:
             engine = _make_engine(self.engine_name)
+            cpu_state_key = self.cpu_state_key
+            cpu_state = None
+            if cpu_state_key:
+                try:
+                    cpu_state = databus.get_stored_value(cpu_state_key)
+                    _cpu_state_running(cpu_state)
+                except AssertionError, KeyError:
+                    # Existing templates do not have a CPU-state key. Keep
+                    # their historical always-running scan behavior.
+                    cpu_state_key = None
             image = ProcessImage(
                 coils=databus.get_value(self.coils_key),
                 discrete=databus.get_value(self.discrete_key),
@@ -82,12 +100,18 @@ class PlcScanCycle:
         except Exception:
             logger.exception("PLC scan cycle failed to start")
             self.stopped.set()
-            raise
+            return
 
         scan_s = max(self.scan_ms, 1) / 1000.0
         while self._enabled:
             try:
-                engine.scan(image)
+                # UMAS mutates this shared list under its command lock.
+                if cpu_state_key is None or _cpu_state_running(cpu_state):
+                    engine.scan(image)
+                else:
+                    # CPU STOP freezes the process image, but its running
+                    # status input must not contradict the CPU state.
+                    image.discrete[0] = 0
             except Exception:
                 logger.exception("PLC scan failed")
             time.sleep(scan_s)

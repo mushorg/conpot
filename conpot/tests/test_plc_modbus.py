@@ -15,21 +15,27 @@
 # Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import logging
+import threading
 import time
 
 import pytest
 
 import conpot.core as conpot_core
+from conpot.core.databus import Databus
 from conpot.tests.helpers.modbus_client import (
     READ_DISCRETE_INPUTS,
     READ_HOLDING_REGISTERS,
     READ_INPUT_REGISTERS,
     WRITE_MULTIPLE_COILS,
     TcpMaster,
+    exchange_pdu,
 )
 from conpot.emulators.plc.awlsim_engine import AwlsimEngine
-from conpot.emulators.plc.scan_cycle import _make_engine
+from conpot.emulators.plc.scan_cycle import PlcScanCycle, _make_engine
 from conpot.protocols.modbus import modbus_server
+from conpot.protocols.modbus.slave import MBSlave
+from conpot.protocols.modbus.slave_db import SlaveBase
 from conpot.utils.server_tasks import spawn_test_server, teardown_test_server
 
 SCAN_WAIT = 0.2
@@ -137,6 +143,196 @@ class TestPlcModbus:
             quantity_of_x=1,
         )[0]
         assert later == frozen
+
+    def test_umas_stop_pauses_scan_until_restart(self):
+        master = self._master()
+        master.execute(
+            slave=1,
+            function_code=WRITE_MULTIPLE_COILS,
+            starting_address=1,
+            output_value=[1, 0],
+        )
+        time.sleep(SCAN_WAIT)
+
+        def umas_command(code):
+            return exchange_pdu(self.host, self.port, bytes((0x5A, 0x00, code)))
+
+        start_response = None
+        try:
+            assert umas_command(0x41) == (b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe")
+            assert not self.modbus._databank.get_slave(1).running
+            time.sleep(SCAN_WAIT)
+            first = master.execute(
+                slave=1,
+                function_code=READ_HOLDING_REGISTERS,
+                starting_address=40001,
+                quantity_of_x=1,
+            )[0]
+            time.sleep(SCAN_WAIT)
+            second = master.execute(
+                slave=1,
+                function_code=READ_HOLDING_REGISTERS,
+                starting_address=40001,
+                quantity_of_x=1,
+            )[0]
+            assert second == first
+            running = master.execute(
+                slave=1,
+                function_code=READ_DISCRETE_INPUTS,
+                starting_address=10001,
+                quantity_of_x=1,
+            )
+            assert running[0] == 0
+        finally:
+            start_response = umas_command(0x40)
+
+        assert start_response == b"\x00\x00\x00\x00\x00\x04\x01\x5a\x00\xfe"
+        assert self.modbus._databank.get_slave(1).running
+        time.sleep(SCAN_WAIT)
+        resumed = master.execute(
+            slave=1,
+            function_code=READ_HOLDING_REGISTERS,
+            starting_address=40001,
+            quantity_of_x=1,
+        )[0]
+        assert resumed > second
+        running = master.execute(
+            slave=1,
+            function_code=READ_DISCRETE_INPUTS,
+            starting_address=10001,
+            quantity_of_x=1,
+        )
+        assert running[0] == 1
+
+    def test_umas_and_scan_share_cpu_state_key(self):
+        scan = conpot_core.get_databus().get_value("plc_scan")
+        slave = self.modbus._databank.get_slave(1)
+        assert slave._cpu_state_key == scan.cpu_state_key
+
+
+def _scan_databus(cpu_state=None, include_cpu_state=True):
+    databus = Databus()
+    databus.set_value("memoryModbusSlave1BlockA", [1, 0])
+    databus.set_value("memoryModbusSlave1BlockB", [0, 0])
+    databus.set_value("memoryModbusSlave1BlockC", [0, 0])
+    databus.set_value("memoryModbusSlave1BlockD", [0, 0])
+    if include_cpu_state:
+        databus.set_value("plc_cpu_running", cpu_state)
+    databus.initialized.set()
+    return databus
+
+
+def test_scan_without_cpu_state_key_keeps_running(monkeypatch):
+    databus = _scan_databus(include_cpu_state=False)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+    scan = PlcScanCycle(scan_ms=1)
+    try:
+        deadline = time.monotonic() + 1.0
+        while databus.get_value("memoryModbusSlave1BlockD")[0] == 0:
+            assert time.monotonic() < deadline
+            time.sleep(0.01)
+    finally:
+        scan.stop()
+
+
+@pytest.mark.parametrize("cpu_state", [[], 1])
+def test_malformed_cpu_state_stops_before_scan(monkeypatch, caplog, cpu_state):
+    databus = _scan_databus(cpu_state=cpu_state)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+    with caplog.at_level(logging.ERROR):
+        scan = PlcScanCycle(scan_ms=1)
+        assert scan.stopped.wait(timeout=1.0)
+    assert databus.get_value("memoryModbusSlave1BlockD")[0] == 0
+    assert [
+        record.message
+        for record in caplog.records
+        if record.message == "PLC scan cycle failed to start"
+    ] == ["PLC scan cycle failed to start"]
+
+
+def test_umas_state_update_persists_and_notifies_observers(monkeypatch):
+    databus = Databus()
+    cpu_state = [0]
+    databus.set_value("cpu", cpu_state)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+    slaves = SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+    first = slaves.add_slave(1)
+    second = slaves.add_slave(2)
+    assert not first.running
+    assert not second.running
+    assert first._cpu_state is second._cpu_state
+
+    notified = threading.Event()
+    databus.observe_value("cpu", lambda _key: notified.set())
+    response = first.handle_request(b"\x5a\x00\x40")
+
+    assert response == b"\x5a\x00\xfe"
+    assert databus.get_stored_value("cpu") is cpu_state
+    assert cpu_state == [1]
+    assert notified.wait(timeout=1.0)
+    assert first.running
+    assert second.running
+
+
+@pytest.mark.parametrize("cpu_state", [None, [], 1, lambda: [0]])
+def test_configured_umas_state_must_be_a_stored_nonempty_list(monkeypatch, cpu_state):
+    databus = Databus()
+    if cpu_state is not None:
+        databus.set_value("cpu", cpu_state)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+
+    with pytest.raises(ValueError, match="UMAS CPU state"):
+        SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+
+    if cpu_state is not None:
+        assert databus.get_stored_value("cpu") is cpu_state
+
+
+def test_umas_state_updates_are_serialized(monkeypatch):
+    class TrackingList(list):
+        def __init__(self, values):
+            super().__init__(values)
+            self.active_writers = 0
+            self.max_active_writers = 0
+            self.guard = threading.Lock()
+
+        def __setitem__(self, key, value):
+            with self.guard:
+                self.active_writers += 1
+                self.max_active_writers = max(
+                    self.max_active_writers, self.active_writers
+                )
+            time.sleep(0.01)
+            super().__setitem__(key, value)
+            with self.guard:
+                self.active_writers -= 1
+
+    databus = Databus()
+    cpu_state = TrackingList([1])
+    databus.set_value("cpu", cpu_state)
+    monkeypatch.setattr(conpot_core, "get_databus", lambda: databus)
+    slaves = SlaveBase({"umas_enabled": True, "umas_cpu_state_key": "cpu"})
+    first = slaves.add_slave(1)
+    second = slaves.add_slave(2)
+    barrier = threading.Barrier(3)
+    responses = []
+
+    def command(slave, code):
+        barrier.wait()
+        responses.append(slave.handle_request(bytes((0x5A, 0, code))))
+
+    threads = [
+        threading.Thread(target=command, args=(first, 0x40)),
+        threading.Thread(target=command, args=(second, 0x41)),
+    ]
+    for thread in threads:
+        thread.start()
+    barrier.wait()
+    for thread in threads:
+        thread.join(timeout=1.0)
+
+    assert responses == [b"\x5a\x00\xfe", b"\x5a\x00\xfe"]
+    assert cpu_state.max_active_writers == 1
 
 
 def test_awlsim_engine_requires_package():

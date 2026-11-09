@@ -28,6 +28,7 @@ from conpot.tests.helpers.modbus_client import (
     WRITE_MULTIPLE_COILS,
     ModbusError,
     TcpMaster,
+    exchange_pdu,
 )
 from conpot.utils.server_tasks import (
     drain_log_queue,
@@ -192,6 +193,35 @@ class TestModbusServer(unittest.TestCase):
         data = s.recv(1024)
         s.close()
         self.assertEqual(data, b"\x00\x00\x00\x00\x00\x05\x01\x11\x02\x01\xff")
+
+    def test_non_modbus_protocol_id_is_discarded(self):
+        # The MBAP protocol identifier must be zero for Modbus/TCP.
+        drain_log_queue(self.handle)
+        with socket.create_connection((self.host, self.port), timeout=2.0) as client:
+            # Send only the header: rejection must not wait for the declared PDU.
+            client.sendall(struct.pack(">HHHB", 0, 1, 2, 1))
+            client.shutdown(socket.SHUT_WR)
+            try:
+                data = client.recv(1024)
+            except socket.timeout:
+                raise TimeoutError("server never closed the connection")
+            self.assertEqual(data, b"")
+
+        connection = get_log_event(self.handle, timeout=2)
+        self.assertEqual(connection["event_type"], "NEW_CONNECTION")
+        terminated = get_log_event(self.handle, timeout=2)
+        self.assertEqual(terminated["event_type"], "CONNECTION_TERMINATED")
+        self.assertEqual(terminated["data"]["protocol_id"], 1)
+
+    def test_non_modbus_protocol_id_is_discarded_by_serial_databank(self):
+        request = struct.pack(">HHHB", 0, 1, 2, 1) + b"\x11"
+
+        response, logdata = self.modbus._databank.handle_request(request, "serial")
+
+        self.assertIsNone(response)
+        self.assertEqual(logdata["protocol_id"], 1)
+        self.assertEqual(logdata["slave_id"], 1)
+        self.assertEqual(logdata["response"], b"")
 
     def test_response_function_43_device_info(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -361,14 +391,7 @@ class TestModbusUmas(unittest.TestCase):
         teardown_test_server(self.modbus, self.handle)
 
     def _exchange(self, pdu):
-        header = struct.pack(">HHHB", 0, 0, len(pdu) + 1, 1)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(2.0)
-        s.connect((self.host, self.port))
-        s.sendall(header + pdu)
-        data = s.recv(1024)
-        s.close()
-        return data
+        return exchange_pdu(self.host, self.port, pdu)
 
     def test_stop_and_start(self):
         slave = self.modbus._databank.get_slave(1)

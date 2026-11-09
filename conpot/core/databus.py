@@ -37,6 +37,12 @@ class Databus(object):
             logger.debug("(K, V): (%s, %s)" % (key, item))
             return item
 
+    def get_stored_value(self, key):
+        """Return the object backing ``key`` without invoking it."""
+        logger.debug("DataBus: Get stored value from key: [%s]", key)
+        assert key in self._data
+        return self._data[key]
+
     def set_value(self, key, value):
         logger.debug("DataBus: Storing key: [%s] value: [%s]", key, value)
         self._data[key] = value
