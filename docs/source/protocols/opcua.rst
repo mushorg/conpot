@@ -74,6 +74,12 @@ Template configuration
    * - ``max_file_size``
      - ``1048576``
      - Maximum allowed uploaded payload size in bytes (1 MB)
+   * - ``max_handles_per_session``
+     - ``16``
+     - Maximum concurrent open FileType handles per attack session
+   * - ``max_handles_total``
+     - ``100``
+     - Maximum concurrent open FileType handles per file node
 
 If ``variables`` is empty, the server seeds ``Temperature = 25.0``. If ``files``
 is empty, the server seeds decoy ``firmware.bin`` and ``configuration.xml``

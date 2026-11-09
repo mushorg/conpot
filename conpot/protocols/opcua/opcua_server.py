@@ -69,6 +69,8 @@ class OPCUAServer(object):
         self._variables = list(template.get("variables", []) or [])
         self._files = list(template.get("files", []) or [])
         self.max_file_size = int(template.get("max_file_size", 1048576))
+        self.max_handles_per_session = int(template.get("max_handles_per_session", 16))
+        self.max_handles_total = int(template.get("max_handles_total", 100))
 
         # VFS and data_fs configuration
         self.root_path = str(template.get("opcua_root_path", "/data/opcua/"))
@@ -148,6 +150,8 @@ class OPCUAServer(object):
             data_fs_subdir=self.data_fs_subdir,
             files_config=self._files,
             max_file_size=self.max_file_size,
+            max_handles_per_session=self.max_handles_per_session,
+            max_handles_total=self.max_handles_total,
         )
         await self.file_manager.setup()
 

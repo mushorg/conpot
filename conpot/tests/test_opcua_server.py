@@ -16,6 +16,7 @@ import socket
 import struct
 import time
 import unittest
+from unittest.mock import MagicMock, patch
 
 import pytest
 from asyncua import Client, Server, ua
@@ -23,6 +24,7 @@ from asyncua import Client, Server, ua
 import conpot.core as conpot_core
 from conpot.protocols.opcua.file_type import FileTypeHandler, OPCUAFileManager
 from conpot.protocols.opcua.opcua_server import OPCUAServer
+from conpot.protocols.opcua.session import current_opcua_session
 from conpot.utils.server_tasks import (
     drain_log_queue,
     get_log_event,
@@ -304,6 +306,142 @@ class TestOPCUAServer(unittest.TestCase):
         self.assertEqual(data_fs.readbytes(data_fs_filename), payload)
         self.assertEqual(vfs.readbytes("firmware.bin"), payload)
 
+    def test_handle_ownership_isolation(self):
+        drain_log_queue(self.server_handle)
+        port = self._port()
+
+        async def _test():
+            def _create_distinct_session(
+                protocol, source_ip, source_port, *args, **kwargs
+            ):
+                from conpot.core.attack_session import AttackSession
+
+                return AttackSession(
+                    protocol,
+                    source_ip,
+                    source_port,
+                    *args,
+                    log_queue=conpot_core.get_sessionManager().log_queue,
+                    loop=asyncio.get_event_loop(),
+                )
+
+            with patch.object(
+                conpot_core, "get_session", side_effect=_create_distinct_session
+            ):
+                client_a = Client(
+                    url=_endpoint("127.0.0.1", port), timeout=READ_TIMEOUT
+                )
+                client_b = Client(
+                    url=_endpoint("127.0.0.1", port), timeout=READ_TIMEOUT
+                )
+                await client_a.connect()
+                await client_b.connect()
+                try:
+                    idx = await client_a.get_namespace_index(NAMESPACE_URI)
+                    files_a = await client_a.nodes.objects.get_child([f"{idx}:Files"])
+                    fw_a = await files_a.get_child([f"{idx}:firmware.bin"])
+
+                    files_b = await client_b.nodes.objects.get_child([f"{idx}:Files"])
+                    fw_b = await files_b.get_child([f"{idx}:firmware.bin"])
+
+                    # Client A opens handle
+                    handle_a = await fw_a.call_method(
+                        "0:Open", ua.Variant(6, ua.VariantType.Byte)
+                    )
+
+                    # Client B attempts operations with Client A's handle
+                    for method, args in [
+                        (
+                            "0:Read",
+                            [
+                                ua.Variant(handle_a, ua.VariantType.UInt32),
+                                ua.Variant(4, ua.VariantType.Int32),
+                            ],
+                        ),
+                        (
+                            "0:Write",
+                            [
+                                ua.Variant(handle_a, ua.VariantType.UInt32),
+                                ua.Variant(b"HIJACK", ua.VariantType.ByteString),
+                            ],
+                        ),
+                        (
+                            "0:GetPosition",
+                            [ua.Variant(handle_a, ua.VariantType.UInt32)],
+                        ),
+                        (
+                            "0:SetPosition",
+                            [
+                                ua.Variant(handle_a, ua.VariantType.UInt32),
+                                ua.Variant(0, ua.VariantType.UInt64),
+                            ],
+                        ),
+                        ("0:Close", [ua.Variant(handle_a, ua.VariantType.UInt32)]),
+                    ]:
+                        with self.assertRaises(ua.UaStatusCodeError) as cm:
+                            await fw_b.call_method(method, *args)
+                        self.assertEqual(
+                            cm.exception.code, ua.StatusCodes.BadInvalidArgument
+                        )
+
+                    # Client A can still write and close their own handle
+                    await fw_a.call_method(
+                        "0:Write",
+                        ua.Variant(handle_a, ua.VariantType.UInt32),
+                        ua.Variant(b"VALID_WRITE_FROM_A", ua.VariantType.ByteString),
+                    )
+                    await fw_a.call_method(
+                        "0:Close", ua.Variant(handle_a, ua.VariantType.UInt32)
+                    )
+                finally:
+                    await client_b.disconnect()
+                    await client_a.disconnect()
+
+        _run(_test())
+
+    def test_open_handle_limits_enforced(self):
+        drain_log_queue(self.server_handle)
+        port = self._port()
+
+        async def _test():
+            client = Client(url=_endpoint("127.0.0.1", port), timeout=READ_TIMEOUT)
+            await client.connect()
+            try:
+                idx = await client.get_namespace_index(NAMESPACE_URI)
+                files = await client.nodes.objects.get_child([f"{idx}:Files"])
+                fw = await files.get_child([f"{idx}:firmware.bin"])
+
+                # Open up to the default per-session cap (16)
+                handles = []
+                for _ in range(16):
+                    h = await fw.call_method(
+                        "0:Open", ua.Variant(1, ua.VariantType.Byte)
+                    )
+                    handles.append(h)
+
+                # 17th handle must be rejected with BadTooManyOperations
+                with self.assertRaises(ua.UaStatusCodeError) as cm:
+                    await fw.call_method("0:Open", ua.Variant(1, ua.VariantType.Byte))
+                self.assertEqual(cm.exception.code, ua.StatusCodes.BadTooManyOperations)
+
+                # Close 1 handle, then open should succeed again
+                await fw.call_method(
+                    "0:Close", ua.Variant(handles.pop(), ua.VariantType.UInt32)
+                )
+                new_h = await fw.call_method(
+                    "0:Open", ua.Variant(1, ua.VariantType.Byte)
+                )
+                handles.append(new_h)
+
+                for h in handles:
+                    await fw.call_method(
+                        "0:Close", ua.Variant(h, ua.VariantType.UInt32)
+                    )
+            finally:
+                await client.disconnect()
+
+        _run(_test())
+
 
 class TestOPCUAFileTypeUnit(unittest.TestCase):
     def setUp(self):
@@ -418,17 +556,70 @@ class TestOPCUAFileTypeUnit(unittest.TestCase):
                 handle4_v = await handler.open(None, ua.Variant(2, ua.VariantType.Byte))
                 handle4 = handle4_v[0].Value
                 handler.max_file_size = 10
-                with self.assertRaises(ua.UaStatusCodeError):
-                    await handler.write(
-                        None,
-                        ua.Variant(handle4, ua.VariantType.UInt32),
-                        ua.Variant(b"TOO_LONG_PAYLOAD", ua.VariantType.ByteString),
-                    )
+                res_write = await handler.write(
+                    None,
+                    ua.Variant(handle4, ua.VariantType.UInt32),
+                    ua.Variant(b"TOO_LONG_PAYLOAD", ua.VariantType.ByteString),
+                )
+                self.assertEqual(res_write, ua.StatusCode(ua.StatusCodes.BadOutOfRange))
 
                 # Test write on non-writable
                 handler.writable = False
-                with self.assertRaises(ua.UaStatusCodeError):
-                    await handler.open(None, ua.Variant(2, ua.VariantType.Byte))
+                res_open = await handler.open(None, ua.Variant(2, ua.VariantType.Byte))
+                self.assertEqual(res_open, ua.StatusCode(ua.StatusCodes.BadNotWritable))
+
+                # Test handle ownership isolation in unit handler
+                handler.writable = True
+                h5_v = await handler.open(None, ua.Variant(6, ua.VariantType.Byte))
+                h5 = h5_v[0].Value
+                handler.handles[h5]["session_id"] = "session-owner-A"
+                # Mock calling session as session-attacker-B
+                mock_attacker = MagicMock()
+                mock_attacker.id = "session-attacker-B"
+                token = current_opcua_session.set(mock_attacker)
+                try:
+                    res_read = await handler.read(
+                        None,
+                        ua.Variant(h5, ua.VariantType.UInt32),
+                        ua.Variant(4, ua.VariantType.Int32),
+                    )
+                    self.assertEqual(
+                        res_read, ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
+                    )
+
+                    res_close = await handler.close(
+                        None, ua.Variant(h5, ua.VariantType.UInt32)
+                    )
+                    self.assertEqual(
+                        res_close, ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
+                    )
+                finally:
+                    current_opcua_session.reset(token)
+
+                # Test invalid / non-existent handle
+                res_bad = await handler.read(
+                    None,
+                    ua.Variant(999999, ua.VariantType.UInt32),
+                    ua.Variant(4, ua.VariantType.Int32),
+                )
+                self.assertEqual(
+                    res_bad, ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
+                )
+
+                # Test total handle limit enforcement
+                handler.max_handles_total = len(handler.handles) + 2
+                h_limit1 = (
+                    await handler.open(None, ua.Variant(1, ua.VariantType.Byte))
+                )[0].Value
+                h_limit2 = (
+                    await handler.open(None, ua.Variant(1, ua.VariantType.Byte))
+                )[0].Value
+                res_overflow = await handler.open(
+                    None, ua.Variant(1, ua.VariantType.Byte)
+                )
+                self.assertEqual(
+                    res_overflow, ua.StatusCode(ua.StatusCodes.BadTooManyOperations)
+                )
 
             finally:
                 await server.stop()

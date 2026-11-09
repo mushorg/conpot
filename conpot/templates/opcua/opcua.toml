@@ -11,6 +11,8 @@ opcua_root_path = "/data/opcua/"
 add_src = ""
 data_fs_subdir = "opcua"
 max_file_size = 1048576
+max_handles_per_session = 16
+max_handles_total = 100
 
 [[opcua.variables]]
 name = "Temperature"

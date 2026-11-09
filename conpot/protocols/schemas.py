@@ -398,6 +398,8 @@ opcua = Schema(
                 }
             ],
             Optional("max_file_size"): int,
+            Optional("max_handles_per_session"): int,
+            Optional("max_handles_total"): int,
         }
     }
 )

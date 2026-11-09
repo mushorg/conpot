@@ -30,6 +30,8 @@ MODE_ERASE_EXISTING = 0x04
 MODE_APPEND = 0x08
 
 DEFAULT_MAX_FILE_SIZE = 1048576  # 1 MB
+DEFAULT_MAX_HANDLES_PER_SESSION = 16
+DEFAULT_MAX_HANDLES_TOTAL = 100
 
 
 class FileTypeHandler:
@@ -48,6 +50,8 @@ class FileTypeHandler:
         writable: bool = True,
         mime_type: str = "application/octet-stream",
         max_file_size: int = DEFAULT_MAX_FILE_SIZE,
+        max_handles_per_session: int = DEFAULT_MAX_HANDLES_PER_SESSION,
+        max_handles_total: int = DEFAULT_MAX_HANDLES_TOTAL,
     ):
         self.server = server
         self.node = node
@@ -63,6 +67,8 @@ class FileTypeHandler:
         self.writable = bool(writable)
         self.mime_type = str(mime_type)
         self.max_file_size = int(max_file_size)
+        self.max_handles_per_session = int(max_handles_per_session)
+        self.max_handles_total = int(max_handles_total)
 
         self.handles: dict[int, dict[str, Any]] = {}
         self._next_handle: int = 1
@@ -133,7 +139,27 @@ class FileTypeHandler:
             await self.node.get_child("0:SetPosition"), self.set_position
         )
 
-    async def open(self, parent: Node, mode_v: Any) -> list[ua.Variant]:
+    def _get_owned_handle_info(
+        self, handle: int
+    ) -> tuple[dict[str, Any] | None, ua.StatusCode | None]:
+        """Validate handle existence and ensure the caller owns the handle."""
+        info = self.handles.get(handle)
+        if not info:
+            return None, ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
+
+        session = current_opcua_session.get()
+        if session is not None and info.get("session_id") is not None:
+            if str(session.id) != info["session_id"]:
+                logger.warning(
+                    "OPC UA FileType handle ownership violation: handle %d owned by session %s, called by %s",
+                    handle,
+                    info["session_id"],
+                    session.id,
+                )
+                return None, ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
+        return info, None
+
+    async def open(self, parent: Node, mode_v: Any) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType Open method."""
         mode = int(mode_v.Value if isinstance(mode_v, ua.Variant) else mode_v)
 
@@ -142,7 +168,31 @@ class FileTypeHandler:
         is_append = bool(mode & MODE_APPEND)
 
         if is_write and not self.writable:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadNotWritable)
+            return ua.StatusCode(ua.StatusCodes.BadNotWritable)
+
+        # Enforce open handle limits (DoS protection & UInt16 OpenCount bounds)
+        if len(self.handles) >= self.max_handles_total:
+            logger.warning(
+                "OPC UA FileType Open rejected: total open handle limit reached (%d/%d)",
+                len(self.handles),
+                self.max_handles_total,
+            )
+            return ua.StatusCode(ua.StatusCodes.BadTooManyOperations)
+
+        session = current_opcua_session.get()
+        session_id = str(session.id) if session is not None else None
+        if session_id is not None:
+            session_handles = sum(
+                1 for h in self.handles.values() if h.get("session_id") == session_id
+            )
+            if session_handles >= self.max_handles_per_session:
+                logger.warning(
+                    "OPC UA FileType Open rejected: session %s reached open handle limit (%d/%d)",
+                    session_id,
+                    session_handles,
+                    self.max_handles_per_session,
+                )
+                return ua.StatusCode(ua.StatusCodes.BadTooManyOperations)
 
         handle = self._next_handle
         self._next_handle += 1
@@ -163,11 +213,10 @@ class FileTypeHandler:
             buf = bytearray(existing_data)
             pos = 0
 
-        session = current_opcua_session.get()
         self.handles[handle] = {
             "handle": handle,
             "session": session,
-            "session_id": str(session.id) if session is not None else None,
+            "session_id": session_id,
             "mode": mode,
             "pos": pos,
             "buffer": buf,
@@ -188,10 +237,11 @@ class FileTypeHandler:
                 handle=handle,
             )
         logger.info(
-            "OPC UA FileType Open: %s (mode=0x%02x, handle=%d)",
+            "OPC UA FileType Open: %s (mode=0x%02x, handle=%d, session=%s)",
             self.name,
             mode,
             handle,
+            session_id,
         )
         return [ua.Variant(handle, ua.VariantType.UInt32)]
 
@@ -200,6 +250,7 @@ class FileTypeHandler:
     ) -> None:
         """Persist written data to VFS + data_fs and emit capture event."""
         handle = info.get("handle", 0)
+        owner_session = info.get("session") or session
         if info["is_write"] and info["has_written"]:
             payload = bytes(info["buffer"])
             md5_hash = hashlib.md5(payload).hexdigest()
@@ -207,11 +258,13 @@ class FileTypeHandler:
             # Update file in VFS
             self.vfs.writebytes(self.name, payload)
 
-            # Persist upload to data_fs using Conpot's standard sanitized filename
+            # Persist upload to data_fs using the handle creator session's address
             peer_host = (
-                getattr(session, "source_ip", "127.0.0.1") if session else "127.0.0.1"
+                getattr(owner_session, "source_ip", "127.0.0.1")
+                if owner_session
+                else "127.0.0.1"
             )
-            peer_port = getattr(session, "source_port", 0) if session else 0
+            peer_port = getattr(owner_session, "source_port", 0) if owner_session else 0
             base_filename = sanitize_file_name(self.name, peer_host, peer_port)
             data_fs_filename = base_filename
             counter = 1
@@ -233,8 +286,8 @@ class FileTypeHandler:
                     ua.Variant(datetime.now(timezone.utc), ua.VariantType.DateTime)
                 )
 
-            if session is not None:
-                session.log_event(
+            if owner_session is not None:
+                owner_session.log_event(
                     event_type="OPCUA_FILE_CAPTURED",
                     file=self.name,
                     handle=handle,
@@ -254,8 +307,8 @@ class FileTypeHandler:
                 reason,
             )
 
-        if reason == "close" and session is not None:
-            session.log_event(
+        if reason == "close" and owner_session is not None:
+            owner_session.log_event(
                 event_type="OPCUA_FILE_CLOSE",
                 file=self.name,
                 handle=handle,
@@ -266,14 +319,17 @@ class FileTypeHandler:
                 ua.Variant(len(self.handles), ua.VariantType.UInt16)
             )
 
-    async def close(self, parent: Node, handle_v: Any) -> list[ua.Variant]:
+    async def close(
+        self, parent: Node, handle_v: Any
+    ) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType Close method."""
         handle = int(handle_v.Value if isinstance(handle_v, ua.Variant) else handle_v)
-        info = self.handles.pop(handle, None)
-        if not info:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+        info, err = self._get_owned_handle_info(handle)
+        if err is not None:
+            return err
+        self.handles.pop(handle, None)
 
-        session = current_opcua_session.get() or info.get("session")
+        session = info.get("session") or current_opcua_session.get()
         await self._finalize_handle(info, session, reason="close")
         return []
 
@@ -293,21 +349,23 @@ class FileTypeHandler:
 
     async def read(
         self, parent: Node, handle_v: Any, length_v: Any
-    ) -> list[ua.Variant]:
+    ) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType Read method."""
         handle = int(handle_v.Value if isinstance(handle_v, ua.Variant) else handle_v)
         length = int(length_v.Value if isinstance(length_v, ua.Variant) else length_v)
 
-        info = self.handles.get(handle)
-        if not info or length < 0:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+        info, err = self._get_owned_handle_info(handle)
+        if err is not None:
+            return err
+        if length < 0:
+            return ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
 
         length = min(length, 65536)
         pos = info["pos"]
         chunk = bytes(info["buffer"][pos : pos + length])
         info["pos"] += len(chunk)
 
-        session = current_opcua_session.get() or info.get("session")
+        session = info.get("session") or current_opcua_session.get()
         if session is not None:
             session.log_event(
                 event_type="OPCUA_FILE_READ",
@@ -318,23 +376,25 @@ class FileTypeHandler:
             )
         return [ua.Variant(chunk, ua.VariantType.ByteString)]
 
-    async def write(self, parent: Node, handle_v: Any, data_v: Any) -> list[ua.Variant]:
+    async def write(
+        self, parent: Node, handle_v: Any, data_v: Any
+    ) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType Write method."""
         handle = int(handle_v.Value if isinstance(handle_v, ua.Variant) else handle_v)
         data = data_v.Value if isinstance(data_v, ua.Variant) else data_v
         if not isinstance(data, (bytes, bytearray)):
             data = bytes(data)
 
-        info = self.handles.get(handle)
-        if not info:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+        info, err = self._get_owned_handle_info(handle)
+        if err is not None:
+            return err
         if not info["is_write"]:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadNotWritable)
+            return ua.StatusCode(ua.StatusCodes.BadNotWritable)
 
         pos = info["pos"]
         buf = info["buffer"]
         if pos + len(data) > self.max_file_size:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadOutOfRange)
+            return ua.StatusCode(ua.StatusCodes.BadOutOfRange)
 
         if pos > len(buf):
             buf.extend(b"\x00" * (pos - len(buf)))
@@ -342,7 +402,7 @@ class FileTypeHandler:
         info["pos"] += len(data)
         info["has_written"] = True
 
-        session = current_opcua_session.get() or info.get("session")
+        session = info.get("session") or current_opcua_session.get()
         if session is not None:
             session.log_event(
                 event_type="OPCUA_FILE_WRITE",
@@ -353,26 +413,28 @@ class FileTypeHandler:
             )
         return []
 
-    async def get_position(self, parent: Node, handle_v: Any) -> list[ua.Variant]:
+    async def get_position(
+        self, parent: Node, handle_v: Any
+    ) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType GetPosition method."""
         handle = int(handle_v.Value if isinstance(handle_v, ua.Variant) else handle_v)
-        info = self.handles.get(handle)
-        if not info:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+        info, err = self._get_owned_handle_info(handle)
+        if err is not None:
+            return err
         return [ua.Variant(info["pos"], ua.VariantType.UInt64)]
 
     async def set_position(
         self, parent: Node, handle_v: Any, pos_v: Any
-    ) -> list[ua.Variant]:
+    ) -> list[ua.Variant] | ua.StatusCode:
         """OPC UA FileType SetPosition method."""
         handle = int(handle_v.Value if isinstance(handle_v, ua.Variant) else handle_v)
         pos = int(pos_v.Value if isinstance(pos_v, ua.Variant) else pos_v)
 
-        info = self.handles.get(handle)
-        if not info:
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+        info, err = self._get_owned_handle_info(handle)
+        if err is not None:
+            return err
         if pos < 0 or pos > len(info["buffer"]):
-            raise ua.UaStatusCodeError(ua.StatusCodes.BadInvalidArgument)
+            return ua.StatusCode(ua.StatusCodes.BadInvalidArgument)
 
         info["pos"] = pos
         return []
@@ -395,6 +457,8 @@ class OPCUAFileManager:
         data_fs_subdir: str = "opcua",
         files_config: list[dict[str, Any]] | None = None,
         max_file_size: int = DEFAULT_MAX_FILE_SIZE,
+        max_handles_per_session: int = DEFAULT_MAX_HANDLES_PER_SESSION,
+        max_handles_total: int = DEFAULT_MAX_HANDLES_TOTAL,
     ):
         self.server = server
         self.idx = idx
@@ -404,6 +468,8 @@ class OPCUAFileManager:
         self.data_fs_subdir = data_fs_subdir
         self.files_config = list(files_config or [])
         self.max_file_size = int(max_file_size)
+        self.max_handles_per_session = int(max_handles_per_session)
+        self.max_handles_total = int(max_handles_total)
         self.handlers: dict[str, FileTypeHandler] = {}
         self.folder: Node | None = None
 
@@ -458,6 +524,8 @@ class OPCUAFileManager:
                 writable=writable,
                 mime_type=mime_type,
                 max_file_size=self.max_file_size,
+                max_handles_per_session=self.max_handles_per_session,
+                max_handles_total=self.max_handles_total,
             )
             await handler.init_nodes()
             self.handlers[name] = handler
@@ -482,6 +550,8 @@ class OPCUAFileManager:
                 writable=True,
                 mime_type="application/octet-stream",
                 max_file_size=self.max_file_size,
+                max_handles_per_session=self.max_handles_per_session,
+                max_handles_total=self.max_handles_total,
             )
             await handler.init_nodes()
             self.handlers[vfs_file] = handler
