@@ -8,8 +8,9 @@ attack-session logging; protocol PDUs and the address space are handled by
 ``InternalServer``). ``BinaryServer`` is not used.
 
 This is a honeypot subset for scanners and clients — SecurityPolicy **None**
-only. FileType transfer capture, Sign/Encrypt, and proxying to a live PLC are
-out of scope; see GitHub issue `#82`.
+only. Sign/Encrypt and proxying to a live PLC are out of scope (see GitHub
+issue `#82`). File transfer capture via standard OPC UA **FileType** objects
+is supported (see GitHub issue `#651`).
 
 ``asyncua`` is licensed LGPL-3+. That is an explicit maintainer tradeoff with
 Conpot's GPL-2.0-only license.
@@ -58,9 +59,31 @@ Template configuration
    * - ``variables``
      - —
      - Address-space variables (``name``, ``type``, ``value``)
+   * - ``files``
+     - —
+     - Address-space FileType nodes (``name``, ``content``, ``writable``, ``mime_type``)
+   * - ``opcua_root_path``
+     - ``/data/opcua/``
+     - Subdirectory within Conpot VFS for OPC UA files
+   * - ``add_src``
+     - —
+     - Optional host directory path to mirror files into VFS
+   * - ``data_fs_subdir``
+     - ``opcua``
+     - Subdirectory under ``data_fs`` where uploaded payloads are captured
+   * - ``max_file_size``
+     - ``1048576``
+     - Maximum allowed uploaded payload size in bytes (1 MB)
+   * - ``max_handles_per_session``
+     - ``16``
+     - Maximum concurrent open FileType handles per attack session
+   * - ``max_handles_total``
+     - ``100``
+     - Maximum concurrent open FileType handles per file node
 
-If ``variables`` is empty, the server seeds ``Temperature = 25.0``. Concurrent
-TCP clients share one ``InternalServer`` address space.
+If ``variables`` is empty, the server seeds ``Temperature = 25.0``. If ``files``
+is empty, the server seeds decoy ``firmware.bin`` and ``configuration.xml``
+FileType nodes. Concurrent TCP clients share one ``InternalServer`` address space.
 
 Shipped variables (``opcua`` template)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -100,13 +123,22 @@ Example excerpt::
     type = "float"
     value = 25.0
 
+    [[opcua.files]]
+    name = "firmware.bin"
+    content = "CONPOT_PLC_FW_V2.1.0"
+    writable = true
+    mime_type = "application/octet-stream"
+
 Session events
 --------------
 
 Each TCP client gets an attack session. Typical ``event_type`` values:
 
 * ``NEW_CONNECTION`` / ``CONNECTION_LOST`` — connect and cleanup
-* ``REQUEST`` — Hello, OpenSecureChannel, CreateSession, Read, Browse, …
+* ``REQUEST`` — Hello, OpenSecureChannel, CreateSession, Read, Browse, Call, …
+* ``OPCUA_FILE_OPEN`` / ``OPCUA_FILE_CLOSE`` — FileType Open / Close invocations
+* ``OPCUA_FILE_READ`` / ``OPCUA_FILE_WRITE`` — File transfer reads and writes
+* ``OPCUA_FILE_CAPTURED`` — Logged upon write finalization, including payload ``size``, ``md5``, and saved ``path``
 
 Idle sockets time out after ``timeout`` seconds so banner scans do not leave
 sessions hung open.

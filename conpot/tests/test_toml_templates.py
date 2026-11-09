@@ -95,6 +95,7 @@ def test_parse_and_validate_opcua_toml():
     assert protocol["opcua"]["enabled"] is True
     assert protocol["opcua"]["server_name"] == "Conpot OPC UA Server"
     assert len(protocol["opcua"]["variables"]) == 4
+    assert len(protocol["opcua"]["files"]) == 2
     template = parse_toml_config(os.path.join(opcua_dir, "template.toml"))
     validate_toml_template(template, base_schema)
     assert template["core"]["template"]["protocols"] == ["opcua"]

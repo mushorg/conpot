@@ -18,6 +18,7 @@ from asyncua import Server, ua
 
 import conpot.core as conpot_core
 from conpot.core.protocol_wrapper import conpot_protocol
+from conpot.protocols.opcua.file_type import OPCUAFileManager
 from conpot.protocols.opcua.session import run_opcua_session
 from conpot.utils.asyncio_serve import _set_listener_addrs
 
@@ -66,6 +67,37 @@ class OPCUAServer(object):
         )
         self.application_uri = str(template.get("application_uri", "urn:conpot:opcua"))
         self._variables = list(template.get("variables", []) or [])
+        self._files = list(template.get("files", []) or [])
+        self.max_file_size = int(template.get("max_file_size", 1048576))
+        self.max_handles_per_session = int(template.get("max_handles_per_session", 16))
+        self.max_handles_total = int(template.get("max_handles_total", 100))
+
+        # VFS and data_fs configuration
+        self.root_path = str(template.get("opcua_root_path", "/data/opcua/"))
+        if not self.root_path.startswith("/"):
+            self.root_path = "/" + self.root_path
+        if not self.root_path.endswith("/"):
+            self.root_path = self.root_path + "/"
+        add_src = template.get("add_src")
+        self.add_src = str(add_src).lower() if add_src else None
+        self.data_fs_subdir = str(template.get("data_fs_subdir", "opcua")).lower()
+
+        if conpot_core.get_vfs() is None:
+            conpot_core.initialize_vfs()
+
+        base_vfs = conpot_core.get_vfs()
+        norm_root = base_vfs.norm_path(self.root_path)
+        if not (base_vfs.exists(norm_root) and base_vfs.isdir(norm_root)):
+            base_vfs.makedir(norm_root)
+
+        self.vfs, self.data_fs = conpot_core.add_protocol(
+            protocol_name="opcua",
+            data_fs_subdir=self.data_fs_subdir,
+            vfs_dst_path=self.root_path,
+            src_path=self.add_src,
+        )
+
+        self.file_manager: OPCUAFileManager | None = None
 
         self._ua: Server | None = None
         self._ua_started = False
@@ -101,14 +133,27 @@ class OPCUAServer(object):
             var = await folder.add_variable(idx, "Temperature", 25.0)
             await var.set_writable()
             logger.debug("Seeded default OPC UA variable Temperature=25.0")
-            return
+        else:
+            for entry in self._variables:
+                name = str(entry["name"])
+                value = self._coerce_value(entry)
+                var = await folder.add_variable(idx, name, value)
+                await var.set_writable()
+                logger.debug("Added OPC UA variable %s=%r", name, value)
 
-        for entry in self._variables:
-            name = str(entry["name"])
-            value = self._coerce_value(entry)
-            var = await folder.add_variable(idx, name, value)
-            await var.set_writable()
-            logger.debug("Added OPC UA variable %s=%r", name, value)
+        self.file_manager = OPCUAFileManager(
+            server=self._ua,
+            idx=idx,
+            vfs=self.vfs,
+            data_fs=self.data_fs,
+            root_path=self.root_path,
+            data_fs_subdir=self.data_fs_subdir,
+            files_config=self._files,
+            max_file_size=self.max_file_size,
+            max_handles_per_session=self.max_handles_per_session,
+            max_handles_total=self.max_handles_total,
+        )
+        await self.file_manager.setup()
 
     async def _bootstrap_ua(self, host: str, port: int) -> None:
         """Init address space + endpoints for the bound host:port (no listen)."""
@@ -126,6 +171,8 @@ class OPCUAServer(object):
     async def _shutdown_ua(self) -> None:
         # Bound shutdown so Conpot stop()/test join(0.2) stays responsive;
         # asyncua InternalServer.stop can otherwise take ~1s.
+        if self.file_manager is not None:
+            self.file_manager.close_all_handles()
         ua_server = self._ua
         self._ua = None
         started = self._ua_started
@@ -183,6 +230,13 @@ class OPCUAServer(object):
             else:
                 logger.exception("OPC UA session error (%s)", session.id)
         finally:
+            if self.file_manager is not None:
+                try:
+                    await self.file_manager.session_disconnected(str(session.id))
+                except Exception:
+                    logger.exception(
+                        "Error finalizing OPC UA session files (%s)", session.id
+                    )
             logger.info("OPC UA client disconnected. (%s)", session.id)
             session.log_event(event_type="CONNECTION_LOST")
 

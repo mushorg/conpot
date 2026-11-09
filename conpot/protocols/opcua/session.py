@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import logging
 from typing import Any
 
@@ -87,6 +88,11 @@ class WriterTransport:
         return self._writer.is_closing()
 
 
+current_opcua_session: contextvars.ContextVar[Any] = contextvars.ContextVar(
+    "current_opcua_session", default=None
+)
+
+
 class LoggingUaProcessor(UaProcessor):
     """UaProcessor that records service names on the Conpot attack session."""
 
@@ -101,17 +107,21 @@ class LoggingUaProcessor(UaProcessor):
         self._conpot_session = session
 
     async def process(self, header, body):
-        if header.MessageType == ua.MessageType.Hello:
-            self._conpot_session.log_event(event_type="REQUEST", request="Hello")
-        elif header.MessageType == ua.MessageType.SecureOpen:
-            self._conpot_session.log_event(
-                event_type="REQUEST", request="OpenSecureChannel"
-            )
-        elif header.MessageType == ua.MessageType.SecureClose:
-            self._conpot_session.log_event(
-                event_type="REQUEST", request="CloseSecureChannel"
-            )
-        return await super().process(header, body)
+        token = current_opcua_session.set(self._conpot_session)
+        try:
+            if header.MessageType == ua.MessageType.Hello:
+                self._conpot_session.log_event(event_type="REQUEST", request="Hello")
+            elif header.MessageType == ua.MessageType.SecureOpen:
+                self._conpot_session.log_event(
+                    event_type="REQUEST", request="OpenSecureChannel"
+                )
+            elif header.MessageType == ua.MessageType.SecureClose:
+                self._conpot_session.log_event(
+                    event_type="REQUEST", request="CloseSecureChannel"
+                )
+            return await super().process(header, body)
+        finally:
+            current_opcua_session.reset(token)
 
     async def process_message(self, seqhdr, body):
         peek = body.copy()
