@@ -129,27 +129,27 @@ class TftpServer(object):
             context.start(buffer)
             context.cycle()
         except TftpTimeout as err:
-            logger.info("Timeout occurred %s: %s" % (context, str(err)))
+            logger.info("Timeout occurred %r: %r", str(context), str(err))
             session.log_event(event_type="CONNECTION_TIMEOUT")
             context.retry_count += 1
             # TODO: We should accept retries from the user.
             if context.retry_count >= self.TIMEOUT_RETRIES:
                 logger.info(
-                    "TFTP: Hit max {} retries on {}, giving up".format(
-                        self.TIMEOUT_RETRIES, context
-                    )
+                    "TFTP: Hit max %d retries on %r, giving up",
+                    self.TIMEOUT_RETRIES,
+                    str(context),
                 )
             else:
-                logger.info("TFTP: resending on session %s" % context)
+                logger.info("TFTP: resending on session %r", str(context))
                 context.state.resendLast()
         except TftpException as err:
             logger.info(
-                "TFTP: Fatal exception thrown from session {}: {}".format(
-                    context, str(err)
-                )
+                "TFTP: Fatal exception thrown from session %r: %r",
+                str(context),
+                str(err),
             )
             session.log_event(event_type="CONNECTION_LOST")
-        logger.info("TFTP: terminating connection: {}".format(context))
+        logger.info("TFTP: terminating connection: %r", str(context))
         session.set_ended()
         context.end()
         # Gathering up metrics before terminating the connection.
