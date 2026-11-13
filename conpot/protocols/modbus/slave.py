@@ -66,6 +66,11 @@ _UMAS_STOP = 0x41
 _UMAS_OK = 0xFE
 _UMAS_ERROR = 0xFD
 
+# Function 43 / MEI type 14: Read Device Identification. Valid Read Device
+# ID codes are 01-03 (stream access) and 04 (individual access).
+_MEI_READ_DEVICE_ID = 0x0E
+_READ_DEVICE_ID_CODES = (0x01, 0x02, 0x03, 0x04)
+
 
 class ModbusInvalidRequestError(Exception):
     """A PDU that cannot be turned into an exception response."""
@@ -389,13 +394,23 @@ class MBSlave(object):
             vendor_name = info["VendorName"]
             product_code = info["ProductCode"]
             major_minor_revision = info["MajorMinorRevision"]
-            _req_device_id, _object_id = struct.unpack(">BB", request_pdu[2:4])
+            mei_type, _req_device_id, _object_id = struct.unpack(
+                ">BBB", request_pdu[1:4]
+            )
         except struct.error, IndexError, KeyError, TypeError:
+            return _exception_pdu(0x2B, ExcCodes.ILLEGAL_VALUE)
+        # Only MEI type 14 (Read Device Identification) is emulated; other
+        # MEI types (e.g. 13, CANopen) are not supported by this unit.
+        if mei_type != _MEI_READ_DEVICE_ID:
+            return _exception_pdu(0x2B, ExcCodes.ILLEGAL_FUNCTION)
+        # Modbus Application Protocol V1.1b3, 6.21: "An exception code 03 is
+        # sent back in the response if the Read device ID code is illegal."
+        if _req_device_id not in _READ_DEVICE_ID_CODES:
             return _exception_pdu(0x2B, ExcCodes.ILLEGAL_VALUE)
 
         device_info = {0: vendor_name, 1: product_code, 2: major_minor_revision}
         response = struct.pack(">B", 0x2B)
-        response += struct.pack(">B", 0x0E)
+        response += struct.pack(">B", _MEI_READ_DEVICE_ID)
         response += struct.pack(">B", _req_device_id)
         response += struct.pack(">B", 0x01)
         response += struct.pack(">B", 0x00)

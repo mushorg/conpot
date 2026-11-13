@@ -231,6 +231,39 @@ class TestModbusServer(unittest.TestCase):
         s.close()
         self.assertTrue(b"SIMATIC" in data and b"Siemens" in data)
 
+    def test_function_43_illegal_read_device_id_code(self):
+        """
+        Objective: Read Device ID codes other than 01-04 get exception 03,
+        as required by Modbus Application Protocol V1.1b3, section 6.21.
+        """
+        for read_dev_id in (0x00, 0x05, 0xFF):
+            with self.subTest(read_dev_id=read_dev_id):
+                data = exchange_pdu(
+                    self.host, self.port, bytes((0x2B, 0x0E, read_dev_id, 0x00))
+                )
+                self.assertEqual(data[7:], b"\xab\x03")
+
+    def test_function_43_unsupported_mei_type(self):
+        """
+        Objective: only MEI type 14 (Read Device Identification) is answered;
+        other MEI types are rejected instead of being answered as type 14.
+        """
+        for mei_type in (0x0D, 0x2A):
+            with self.subTest(mei_type=mei_type):
+                data = exchange_pdu(
+                    self.host, self.port, bytes((0x2B, mei_type, 0x01, 0x00))
+                )
+                self.assertEqual(data[7:], b"\xab\x01")
+
+    def test_function_43_valid_read_device_id_codes(self):
+        for read_dev_id in (0x01, 0x02, 0x03, 0x04):
+            with self.subTest(read_dev_id=read_dev_id):
+                data = exchange_pdu(
+                    self.host, self.port, bytes((0x2B, 0x0E, read_dev_id, 0x00))
+                )
+                self.assertEqual(data[7:10], bytes((0x2B, 0x0E, read_dev_id)))
+                self.assertIn(b"Siemens", data)
+
     def test_oversized_length_is_rejected_without_reading_body(self):
         """
         Regression test for the DoS in issue #619.
